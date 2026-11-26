@@ -1,7 +1,7 @@
 import { defineCollection, reference } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { idSchema, problemSchema, roleSchema, textSchema } from './lib/problem-schema';
+import { problemSchema, roleSchema, textSchema } from './lib/problem-schema';
 
 const load = (base: string, extension: 'md' | 'yaml') => glob({
   base: `./content/${base}`,
@@ -22,11 +22,19 @@ export const collections = {
     loader: load('questions', 'md'),
     schema: z.strictObject({
       title: textSchema,
-      topic: idSchema,
-      modelAnswer: textSchema,
-      looksFor: z.array(textSchema).min(1),
-      mistakes: z.array(textSchema).min(1),
-      followUps: z.array(textSchema).min(1),
+      topic: z.enum([
+        'fundamentals', 'test-design', 'bug-reports', 'agile', 'automation-strategy',
+        'locators-waits', 'flaky-tests', 'playwright', 'selenium', 'api',
+        'ci-git-docker', 'behavioral', 'leadership',
+      ]),
+      roles: z.array(roleSchema).min(1),
+      level: z.enum(['junior', 'mid', 'senior']),
+      type: z.enum(['concept', 'scenario', 'behavioral', 'tooling']),
+      oneLine: textSchema,
+      looksFor: z.array(textSchema).min(3).max(5),
+      trap: textSchema,
+      followUps: z.array(z.strictObject({ question: textSchema, answer: textSchema })).min(1).max(3),
+      sources: z.array(z.strictObject({ label: textSchema, url: z.url({ protocol: /^https?$/ }) })).optional(),
     }),
   }),
   tracks: defineCollection({
@@ -34,7 +42,14 @@ export const collections = {
     schema: z.strictObject({
       title: textSchema,
       role: roleSchema,
-      problems: z.array(reference('problems')).min(1),
+      summary: textSchema,
+      sections: z.array(z.strictObject({
+        title: textSchema,
+        note: textSchema.optional(),
+        problems: z.array(reference('problems')),
+        questions: z.array(reference('questions')),
+      }).refine(({ problems, questions }) => problems.length + questions.length > 0,
+        'Each section needs at least one problem or question')).min(1),
     }),
   }),
 };

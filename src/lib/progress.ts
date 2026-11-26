@@ -1,9 +1,31 @@
 import { progressStorageKey, type CreateProgressStore, type ProgressAttempt, type ProgressSnapshot, type ProgressStore } from './contracts';
+import type { CardState } from './review';
 
+const reviewStorageKey = 'pom-proof:review';
 const empty = (): ProgressSnapshot => ({ version: 1, attempts: [] });
 const failure = (message: string) => ({ ok: false as const, message });
 
-function decode(json: string): ReturnType<ProgressStore['importJson']> {
+type ReviewSnapshot = Record<string, CardState>;
+type Decoded = ReturnType<ProgressStore['importJson']> & { review?: ReviewSnapshot };
+
+function decodeReview(value: unknown): ReviewSnapshot | undefined {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return;
+  const entries: [string, CardState][] = [];
+  for (const [id, card] of Object.entries(value)) {
+    if (!id.trim() || typeof card !== 'object' || card === null || Array.isArray(card)) return;
+    const { box, due, seen, last } = card as Partial<CardState>;
+    if (
+      typeof box !== 'number' || !Number.isInteger(box) || box < 0 || box > 4 ||
+      typeof due !== 'string' || !Number.isFinite(Date.parse(due)) ||
+      typeof seen !== 'number' || !Number.isSafeInteger(seen) || seen <= 0 ||
+      (last !== 'missed' && last !== 'shaky' && last !== 'solid')
+    ) return;
+    entries.push([id, { box, due, seen, last }]);
+  }
+  return Object.fromEntries(entries);
+}
+
+function decode(json: string): Decoded {
   let value: unknown;
   try {
     value = JSON.parse(json);
@@ -35,7 +57,11 @@ function decode(json: string): ReturnType<ProgressStore['importJson']> {
     }
     attempts.push({ problemId, completedAt, score });
   }
-  return { ok: true, snapshot: { version: 1, attempts } };
+  const review = 'review' in value ? decodeReview(value.review) : undefined;
+  if ('review' in value && review === undefined) {
+    return failure('The review data is invalid; choose a POM Proof export.');
+  }
+  return { ok: true, snapshot: { version: 1, attempts }, review };
 }
 
 export const createProgressStore: CreateProgressStore = (storage) => {
@@ -54,16 +80,36 @@ export const createProgressStore: CreateProgressStore = (storage) => {
       snapshot.attempts.push(attempt);
       write(snapshot);
     },
-    exportJson: () => JSON.stringify(read(), null, 2),
+    exportJson() {
+      const stored = storage.getItem(reviewStorageKey);
+      let review: ReviewSnapshot | undefined;
+      try {
+        review = decodeReview(JSON.parse(stored ?? '{}'));
+      } catch {
+        review = undefined;
+      }
+      return JSON.stringify({ ...read(), review }, null, 2);
+    },
     importJson(json) {
       const decoded = decode(json);
       if (!decoded.ok) return decoded;
       try {
-        write(decoded.snapshot);
+        if (decoded.review === undefined) {
+          write(decoded.snapshot);
+        } else {
+          const previous = storage.getItem(reviewStorageKey);
+          storage.setItem(reviewStorageKey, JSON.stringify(decoded.review));
+          try {
+            write(decoded.snapshot);
+          } catch (error) {
+            storage.setItem(reviewStorageKey, previous ?? '{}');
+            throw error;
+          }
+        }
       } catch {
         return failure('Progress could not be saved; check this browser’s storage settings and try again.');
       }
-      return decoded;
+      return { ok: true, snapshot: decoded.snapshot };
     },
   };
 };

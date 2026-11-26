@@ -1,0 +1,145 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  id: string;
+  answer: CollectionEntry<'questions'>['data'];
+}
+
+const { id, answer } = Astro.props;
+const sources = answer.sources ?? [];
+const ratings = [
+  { key: '1', id: 'missed', label: 'Missed' },
+  { key: '2', id: 'shaky', label: 'Shaky' },
+  { key: '3', id: 'solid', label: 'Solid' },
+];
+---
+
+<p class="muted"><strong>Think first.</strong> Say your answer out loud before reading the example.</p>
+<details class="answer" data-answer data-id={id}>
+  <summary aria-keyshortcuts="Space">
+    <span class="show-label">Show answer</span>
+    <span class="hide-label">Hide answer</span>
+    <span class="muted shortcut" aria-hidden="true" data-space-key hidden>Space</span>
+  </summary>
+  <div class="answer-body">
+    <p class="one-line"><strong>{answer.oneLine}</strong></p>
+    <h2>Full answer</h2>
+    <slot />
+
+    <h2>What interviewers look for</h2>
+    <ul>{answer.looksFor.map((item) => <li>{item}</li>)}</ul>
+
+    <h2>The trap</h2>
+    <p>{answer.trap}</p>
+
+    <h2>Follow-ups</h2>
+    {answer.followUps.map(({ question, answer: followUpAnswer }) => (
+      <details class="follow-up" name="question-follow-ups">
+        <summary>{question}</summary>
+        <p>{followUpAnswer}</p>
+      </details>
+    ))}
+
+    {sources.length > 0 && (
+      <>
+        <h2>Sources</h2>
+        <ul>{sources.map(({ label, url }) => <li><a href={url}>{label}</a></li>)}</ul>
+      </>
+    )}
+
+    <div class="rating" role="group" aria-label="Rate your answer" data-ratings hidden>
+      <h2>Rate your answer</h2>
+      {ratings.map(({ key, id, label }) => (
+        <button type="button" data-rating={id} aria-keyshortcuts={key}>
+          <kbd aria-hidden="true">{key}</kbd> {label}
+        </button>
+      ))}
+      <p role="alert" data-rating-error hidden></p>
+    </div>
+  </div>
+</details>
+
+<script>
+  import { dueIds, rate, type Rating } from '../../lib/review';
+  import { filterParams, questionListUrl, questionUrl, remainingSession, withParams } from './questions';
+
+  const answer = document.querySelector<HTMLDetailsElement>('[data-answer]');
+  const reveal = answer?.querySelector('summary');
+  if (answer && reveal) {
+    const id = answer.dataset.id ?? '';
+    const params = new URLSearchParams(window.location.search);
+    const filters = filterParams(params);
+    const back = document.querySelector<HTMLAnchorElement>('[data-questions-back]');
+    const error = answer.querySelector<HTMLElement>('[data-rating-error]');
+    let rated = false;
+
+    if (back) back.href = withParams(questionListUrl, filters);
+    const shortcuts = answer.querySelectorAll<HTMLElement>('[data-space-key], [data-ratings]');
+    shortcuts.forEach((element) => { element.hidden = false; });
+
+    const rateAndContinue = (rating: Rating) => {
+      if (rated) return;
+      try {
+        rate(id, rating);
+      } catch {
+        if (error) {
+          error.textContent = 'Rating could not be saved; check this browser’s storage settings and try again.';
+          error.hidden = false;
+        }
+        return;
+      }
+      rated = true;
+      const next = params.get('review') === '1' ? dueIds(remainingSession(id))[0] : undefined;
+      if (next) {
+        filters.set('review', '1');
+        window.location.replace(withParams(questionUrl(next), filters));
+      } else {
+        window.location.replace(withParams(questionListUrl, filters));
+      }
+    };
+
+    const buttons = Array.from(answer.querySelectorAll<HTMLButtonElement>('[data-rating]'));
+    buttons.forEach((button) => button.addEventListener('click', () => rateAndContinue(button.dataset.rating as Rating)));
+    document.addEventListener('keydown', (event) => {
+      if (event.defaultPrevented || event.repeat || event.isComposing ||
+        event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      const target = event.target;
+      if (target instanceof Element && target.closest('input, select, textarea, [contenteditable]')) return;
+
+      if (event.key === ' ' && !answer.open &&
+        !(target instanceof Element && target.closest('a, button, summary'))) {
+        event.preventDefault();
+        answer.open = true;
+        reveal.focus();
+      } else if (answer.open && target instanceof Node && answer.contains(target)) {
+        const button = buttons.find((entry) => entry.getAttribute('aria-keyshortcuts') === event.key);
+        if (button) {
+          event.preventDefault();
+          button.click();
+        }
+      }
+    });
+  }
+</script>
+
+<style>
+  .answer {
+    margin-block-start: 1rem;
+    border-block: var(--rule);
+  }
+  summary { cursor: pointer; overflow-wrap: anywhere; }
+  .answer > summary { padding-block: .65rem; color: var(--accent); }
+  .answer[open] .show-label, .answer:not([open]) .hide-label { display: none; }
+  .shortcut { margin-inline-start: .65rem; font-size: .85em; font-weight: var(--regular); }
+  .answer-body { padding-block: 0 1rem; }
+  .one-line { margin-block: .4rem .8rem; }
+  .answer-body h2 { margin-block-start: 1.2rem; }
+  .answer-body ul { padding-inline-start: 1.3rem; }
+  .follow-up { border-block-end: var(--rule); }
+  .follow-up > summary { padding-block: .45rem; }
+  .follow-up > p { margin-block: 0 .65rem; }
+  .rating { border-block-start: var(--rule); margin-block-start: 1.25rem; }
+  .rating button { margin: 0 .35rem .35rem 0; }
+  kbd { font: .9em var(--font-code); color: var(--muted); margin-inline-end: .15rem; }
+</style>
