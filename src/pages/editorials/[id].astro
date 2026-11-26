@@ -1,0 +1,24 @@
+---
+import { getCollection, getEntry, render, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { url } from '../../lib/url';
+
+export async function getStaticPaths() {
+  return (await getCollection('editorials')).map((entry) => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props as { entry: CollectionEntry<'editorials'> };
+const problem = await getEntry(entry.data.problem);
+if (!problem) throw new Error(`Editorial "${entry.id}" references missing problem "${entry.data.problem.id}"`);
+const { Content } = await render(entry);
+---
+<Base title={`${problem.data.title}: solution`} section="practice">
+  <article class="prose">
+    <p><a href={url(`/practice/${problem.id}/`)}>Back to exercise</a></p>
+    <h1>{problem.data.title}: solution</h1>
+    <Content />
+  </article>
+</Base>

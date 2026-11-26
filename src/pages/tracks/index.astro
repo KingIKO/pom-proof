@@ -1,0 +1,25 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { resolveTrack } from '../../lib/catalog';
+import { url } from '../../lib/url';
+
+const problems = new Map((await getCollection('problems')).map((entry) => [entry.id, entry]));
+const tracks = (await getCollection('tracks'))
+  .sort((a, b) => a.data.title.localeCompare(b.data.title))
+  .map((track) => ({ title: track.data.title, problems: resolveTrack(track, problems) }));
+---
+<Base title="Tracks" section="tracks">
+  <h1>Tracks</h1>
+  <p class="prose">Practice in the order listed for each role.</p>
+  {tracks.map((track) => (
+    <section class="prose">
+      <h2>{track.title}</h2>
+      <ol>
+        {track.problems.map((problem) => (
+          <li><a href={url(`/practice/${problem.id}/`)}>{problem.data.title}</a></li>
+        ))}
+      </ol>
+    </section>
+  ))}
+</Base>

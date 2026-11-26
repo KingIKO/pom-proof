@@ -1,0 +1,42 @@
+---
+import { getCollection, getEntry, render, type CollectionEntry } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import Structured from '../../../engines/structured/index';
+import Mutation from '../../../engines/mutation/index';
+import Locator from '../../../engines/locator/index';
+import Sql from '../../../engines/sql/index';
+import Code from '../../../engines/code/index';
+import type { Problem } from '../../../lib/contracts';
+import { kindLabel, roleLabel } from '../../../lib/labels';
+import { url } from '../../../lib/url';
+
+export async function getStaticPaths() {
+  return (await getCollection('problems')).map((entry) => ({
+    params: { kind: entry.data.kind, id: entry.id.split('/').at(-1) },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props as { entry: CollectionEntry<'problems'> };
+const problem: Problem = { ...entry.data, id: entry.id };
+const { Content } = await render(entry);
+const editorial = Astro.params.id ? await getEntry('editorials', Astro.params.id) : undefined;
+---
+<Base title={problem.title} section="practice">
+  <article class="prose">
+    <h1>{problem.title}</h1>
+    <p class="muted">
+      {kindLabel[problem.kind]} · {problem.difficulty} · {problem.minutes} min · {problem.roles.map((role) => roleLabel[role]).join(', ')}
+    </p>
+    <Content />
+  </article>
+  <section aria-labelledby="workspace-heading" class="prose">
+    <h2 id="workspace-heading">Workspace</h2>
+    {problem.kind === 'test-design' ? <Mutation client:load problem={problem} />
+      : problem.kind === 'locator' ? <Locator client:load problem={problem} />
+      : problem.kind === 'sql' ? <Sql client:load problem={problem} />
+      : problem.kind === 'code' ? <Code client:load problem={problem} />
+      : <Structured client:load problem={problem} />}
+    {editorial && <p><a href={url(`/editorials/${editorial.id}/`)}>Read the solution</a></p>}
+  </section>
+</Base>

@@ -1,0 +1,6 @@
+title: QA automation
+role: automation
+problems:
+  - locator/refund-order-action
+  - diagnosis/late-shipping-route
+  - test-design/delivery-fee-mutants
