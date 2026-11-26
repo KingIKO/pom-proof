@@ -1,9 +1,10 @@
 import { join } from 'node:path';
 import initSqlJs from 'sql.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Problem } from '../../src/lib/contracts';
 import { checkSql, createSqlGrader } from '../../src/engines/sql/grade';
-import { createSqlRunner, hasOutputOrder, sameRows } from '../../src/runners/sql';
+import { sqlRunner } from '../../src/runners/sql-browser';
+import { createSqlRunner, hasOutputOrder, sameRows, SQL_WORKER_TIMEOUT_MS, SqlTimeoutError } from '../../src/runners/sql';
 import { root } from '../support/problems';
 
 const runner = createSqlRunner(() => initSqlJs({ locateFile: (file) => join(root, 'node_modules', 'sql.js', 'dist', file) }));
@@ -113,4 +114,53 @@ describe('SQL grader', () => {
     const { table } = await checkSql(problem, { kind: 'sql', value: problem.reference }, runner);
     expect(table).toEqual({ columns: ['name', 'avg_ms'], values: [['checkout', 1500], ['pickup', 250]] });
   });
+
+  it('does not score a Submit that times out only on the altered dataset', async () => {
+    const compare = vi.fn(runner.compare);
+    compare.mockImplementationOnce(runner.compare).mockRejectedValueOnce(new SqlTimeoutError());
+    const report = await checkSql(problem, { kind: 'sql', value: problem.reference }, { compare });
+    expect(compare.mock.calls.map(([, seed]) => seed)).toEqual([problem.seed, problem.alteredSeed]);
+    expect(report.result).toEqual({ kind: 'sql', status: 'invalid-answer', message: new SqlTimeoutError().message });
+    expect(report.table).toBeUndefined();
+  });
+});
+
+it('starts the SQL timeout only after SQLite is ready and recovers with a fresh worker', async () => {
+  const workers: TestWorker[] = [];
+  const table = { columns: ['answer'], values: [[42]] };
+  class TestWorker extends EventTarget {
+    constructor() {
+      super();
+      workers.push(this);
+      if (workers.length === 2) queueMicrotask(() => this.ready());
+    }
+    ready() { this.dispatchEvent(new MessageEvent('message', { data: { ready: true } })); }
+    terminate = vi.fn();
+    postMessage = vi.fn(() => {
+      if (workers.length === 2) {
+        queueMicrotask(() => this.dispatchEvent(new MessageEvent('message', { data: { method: 'query', value: table } })));
+      }
+    });
+  }
+
+  vi.stubGlobal('Worker', TestWorker);
+  vi.useFakeTimers();
+  try {
+    const stopped = expect(sqlRunner.query('', '', 'SELECT sum(x) FROM t')).rejects.toThrow(SqlTimeoutError);
+    await vi.advanceTimersByTimeAsync(SQL_WORKER_TIMEOUT_MS);
+    expect(workers[0].postMessage).not.toHaveBeenCalled();
+    expect(workers[0].terminate).not.toHaveBeenCalled();
+    workers[0].ready();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(workers[0].postMessage).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(SQL_WORKER_TIMEOUT_MS);
+    await stopped;
+    expect(workers[0].terminate).toHaveBeenCalledOnce();
+    await expect(sqlRunner.query('', '', 'SELECT 42 AS answer')).resolves.toEqual(table);
+    expect(workers).toHaveLength(2);
+    expect(workers[1].terminate).toHaveBeenCalledOnce();
+  } finally {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  }
 });

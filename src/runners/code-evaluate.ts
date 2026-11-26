@@ -8,6 +8,7 @@ export interface CodeRequest {
   language: CodeLanguage;
   source: string;
   exportName: string;
+  allowInputMutation?: boolean;
   vectors: Array<{ args: Json[]; expected: Json; visible: boolean }>;
 }
 
@@ -54,6 +55,21 @@ function equalJson(actual: Json, expected: Json): boolean {
     && keys.every((key) => Object.hasOwn(expected, key) && equalJson(actual[key], expected[key]));
 }
 
+function sameInput(actual: unknown, before: unknown): boolean {
+  if (Object.is(actual, before)) return true;
+  if (!actual || !before || typeof actual !== 'object' || typeof before !== 'object') return false;
+  if (Object.getPrototypeOf(actual) !== Object.getPrototypeOf(before)
+    || Object.isExtensible(actual) !== Object.isExtensible(before)) return false;
+  const keys = Reflect.ownKeys(before);
+  return keys.length === Reflect.ownKeys(actual).length && keys.every((key) => {
+    const previous = Object.getOwnPropertyDescriptor(before, key)!;
+    const current = Object.getOwnPropertyDescriptor(actual, key);
+    return !!current && 'value' in current && current.writable === previous.writable
+      && current.enumerable === previous.enumerable && current.configurable === previous.configurable
+      && sameInput(current.value, previous.value);
+  });
+}
+
 function describeLog(value: unknown): string {
   if (typeof value === 'string') return value;
   try {
@@ -67,7 +83,7 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export const evaluateCode: CodeRunner = async ({ language, source, exportName, vectors }) => {
+export const evaluateCode: CodeRunner = async ({ language, source, exportName, vectors, allowInputMutation }) => {
   const checks: CodeCheck[] = [];
   let logs: string[] | undefined;
   let solution: (...args: Json[]) => unknown;
@@ -92,7 +108,17 @@ export const evaluateCode: CodeRunner = async ({ language, source, exportName, v
   for (const vector of vectors) {
     logs = vector.visible ? [] : undefined;
     try {
-      const actual = readJson(await solution(...vector.args));
+      const args = structuredClone(vector.args);
+      const before = allowInputMutation ? undefined : structuredClone(args);
+      let returned: unknown;
+      try {
+        returned = await solution(...args);
+      } finally {
+        if (before && !sameInput(args, before)) {
+          throw new Error('Your function changed its input. The problem asks you to leave it unchanged.');
+        }
+      }
+      const actual = readJson(returned);
       const passed = equalJson(actual, vector.expected);
       checks.push(logs ? { visible: true, passed, actual, logs } : { visible: false, passed });
     } catch (error) {

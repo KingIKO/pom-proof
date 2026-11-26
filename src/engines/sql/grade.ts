@@ -1,5 +1,5 @@
 import type { Answer, GradeResult, Grader, Problem } from '../../lib/contracts';
-import { hasOutputOrder, sameRows, type SqlRunner, type SqlTable } from '../../runners/sql';
+import { hasOutputOrder, sameRows, SqlTimeoutError, type SqlRunner, type SqlTable } from '../../runners/sql';
 
 export const hiddenDatasetMiss = 'Your query matches the visible data but not a second dataset with different rows. Check for hard-coded values or a missing join condition.';
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : String(error);
@@ -29,6 +29,7 @@ export async function checkSql(
     const { actual, expected } = await runner.compare(schema, alteredSeed, reference.query, query);
     hiddenPassed = sameRows(actual, expected, ordered);
   } catch (error) {
+    if (error instanceof SqlTimeoutError) return invalid(error.message);
     hiddenError = errorMessage(error);
   }
 

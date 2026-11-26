@@ -17,6 +17,23 @@ export type SchemaTable = { name: string; columns: Array<{ name: string; type: s
 export type SqlLoader = () => Promise<{ Database: new () => Database }>;
 export type SqlRunner = ReturnType<typeof createSqlRunner>;
 
+export const SQL_WORKER_TIMEOUT_MS = 2_000;
+
+export class SqlTimeoutError extends Error {
+  constructor() {
+    super(`Stopped after ${SQL_WORKER_TIMEOUT_MS / 1000} seconds. Look for a recursive query that never ends.`);
+  }
+}
+
+type SqlMethod = keyof SqlRunner;
+export type SqlWorkerRequest<M extends SqlMethod = SqlMethod> = {
+  [K in M]: { method: K; args: Parameters<SqlRunner[K]> };
+}[M];
+export type SqlWorkerValue<M extends SqlMethod> = Awaited<ReturnType<SqlRunner[M]>>;
+export type SqlWorkerReply = {
+  [K in SqlMethod]: { method: K; value: SqlWorkerValue<K> };
+}[SqlMethod] | { error: string };
+
 function singleQuery(db: Database, query: string): SqlTable {
   const statements = db.iterateStatements(query);
   let exhausted = false;

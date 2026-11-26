@@ -22,6 +22,7 @@ export async function checkCode(
   try {
     reply = await run({
       source, language, exportName: problem.exportName,
+      allowInputMutation: problem.allowInputMutation,
       vectors: vectors.map(({ args, expected }, index) => ({ args, expected, visible: index < visible })),
     });
   } catch (error) {

@@ -54,6 +54,30 @@ describe('code grader', () => {
     expect(await submit(problem.decoy.source)).toMatchObject({ status: 'graded', score: 2 / 5 });
   });
 
+  describe('input preservation', () => {
+    const mutationMessage = 'Your function changed its input. The problem asks you to leave it unchanged.';
+    const mutating = {
+      language: 'js',
+      source: problem.reference.source.replace('return { items: [...xs],', 'const items = [...xs]; xs.push(0); return { items,'),
+    } as const;
+
+    it('fails otherwise correct answers that mutate their input on Run and Submit', async () => {
+      for (const mode of ['run', 'submit'] as const) {
+        const target = structuredClone(problem);
+        const { result, checks } = await checkCode(target, { kind: 'code', value: mutating }, evaluateCode, mode);
+        expect(result).toMatchObject({ status: 'graded', score: 0 });
+        expect(checks?.[0]).toMatchObject({ visible: true, passed: false, error: mutationMessage });
+        if (mode === 'submit') expect(checks?.at(-1)).toEqual({ visible: false, passed: false });
+        expect(target.vectors).toEqual(problem.vectors);
+      }
+    });
+
+    it('accepts mutation only when the problem opts in', async () => {
+      const optedIn = { ...structuredClone(problem), allowInputMutation: true };
+      expect(await grade(optedIn, { kind: 'code', value: mutating })).toMatchObject({ status: 'graded', score: 1 });
+    });
+  });
+
   describe('deep equality', () => {
     it.each([
       { name: 'keys in another order', body: 'return { b: [1, { c: null }], a: "x" };', expected: { a: 'x', b: [1, { c: null }] }, passed: true },

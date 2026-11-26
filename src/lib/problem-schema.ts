@@ -103,6 +103,7 @@ const problem = z.discriminatedUnion('kind', [
     ...common,
     kind: z.literal('code'),
     exportName,
+    allowInputMutation: z.boolean().optional(),
     starters: z.strictObject({ js: source, ts: source, python: source }),
     vectors: z.array(z.strictObject({ name: idSchema, args: z.array(z.json()), expected: z.json() })).min(1),
     reference: codeAnswer,
