@@ -1,0 +1,81 @@
+---
+import { url } from '../lib/url';
+import '../styles/tokens.css';
+
+interface Props {
+  title: string;
+  section?: 'practice' | 'questions' | 'tracks' | 'progress';
+}
+
+const { title, section } = Astro.props;
+const nav = [
+  { id: 'practice', label: 'Practice', href: url('/') },
+  { id: 'questions', label: 'Questions', href: url('/questions/') },
+  { id: 'tracks', label: 'Tracks', href: url('/tracks/') },
+  { id: 'progress', label: 'Progress', href: url('/progress/') },
+] as const;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} | POM Proof</title>
+  </head>
+  <body>
+    <a class="skip" href={url('#main')}>Skip to content</a>
+    <header>
+      <div class="wrap header-row">
+        <span class="brand">POM Proof</span>
+        <nav aria-label="Main">
+          <ul>
+            {nav.map(({ id, label, href }) => (
+              <li>
+                <a href={href} aria-current={id === section ? (Astro.url.pathname === href ? 'page' : 'location') : undefined}>
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="wrap">
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style>
+  .wrap {
+    inline-size: min(100% - 2rem, 58rem);
+    margin-inline: auto;
+  }
+  header { border-block-end: var(--rule); }
+  .header-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: .25rem 1.75rem;
+    padding-block: .8rem;
+  }
+  .brand { font-weight: var(--strong); }
+  nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  nav a { display: inline-block; padding-block: .2rem; }
+  nav a[aria-current] { font-weight: var(--strong); text-decoration-thickness: 2px; }
+  main { padding-block: 1.8rem 3rem; }
+  .skip {
+    position: absolute;
+    inset: .4rem auto auto .4rem;
+    padding: .4rem .7rem;
+    background: var(--paper);
+  }
+  .skip:not(:focus) { clip-path: inset(50%); }
+</style>

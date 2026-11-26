@@ -1,0 +1,6 @@
+title: SDET
+role: sdet
+problems:
+  - test-design/delivery-fee-mutants
+  - sql/latest-executed-run
+  - code/classify-test-retries

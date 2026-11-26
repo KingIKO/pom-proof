@@ -1,0 +1,5 @@
+title: Manual QA
+role: manual-qa
+problems:
+  - bug-report/refund-duplicate-receipts
+  - scenario/last-pickup-slot

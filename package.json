@@ -1,0 +1,38 @@
+{
+  "name": "pom-proof",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "verify": "astro check && astro build && vitest run && playwright test"
+  },
+  "dependencies": {
+    "@astrojs/preact": "6.1.6",
+    "@astrojs/sitemap": "3.7.6",
+    "@codemirror/lang-javascript": "6.2.5",
+    "@codemirror/lang-python": "6.2.1",
+    "@codemirror/lang-sql": "6.10.0",
+    "astro": "7.4.13",
+    "codemirror": "6.0.2",
+    "ivya": "1.8.2",
+    "preact": "11.2.0",
+    "sql.js": "1.17.0",
+    "sucrase": "3.35.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@axe-core/playwright": "4.14.1",
+    "@playwright/test": "1.65.1",
+    "typescript": "5.9.3",
+    "vitest": "5.1.2"
+  }
+}

@@ -1,0 +1,58 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Runtime checks">
+  <h1>Runtime checks</h1>
+  <table class="prose">
+    <thead>
+      <tr><th scope="col">Check</th><th scope="col">Result</th></tr>
+    </thead>
+    <tbody>
+      <tr><th scope="row">Module worker: 1 + 1</th><td><output id="worker-result" class="result">Running…</output></td></tr>
+      <tr><th scope="row">SQL WebAssembly: SELECT 1</th><td><output id="sql-result" class="result">Running…</output></td></tr>
+    </tbody>
+  </table>
+</Base>
+
+<script>
+  import initSqlJs from 'sql.js';
+  import wasmUrl from 'sql.js/dist/sql-wasm-browser.wasm?url&no-inline';
+  import { JS_WORKER_TIMEOUT_MS, runWorker } from '../lib/run-worker';
+
+  async function showResult(id: string, run: () => Promise<number>, expected: number) {
+    const output = document.getElementById(id);
+    if (!output) return;
+    try {
+      const value = await run();
+      if (value !== expected) throw new Error(`Expected ${expected}, got ${value}`);
+      output.textContent = String(value);
+      output.dataset.status = 'pass';
+    } catch (error) {
+      output.textContent = `Failed: ${error instanceof Error ? error.message : String(error)}`;
+      output.dataset.status = 'fail';
+    }
+  }
+
+  function runAddition() {
+    const worker = new Worker(new URL('../lib/spike.worker.ts', import.meta.url), { type: 'module' });
+    return runWorker(worker, [1, 1], (value) => {
+      if (typeof value !== 'number') throw new Error('The worker did not return a number');
+      return value;
+    }, JS_WORKER_TIMEOUT_MS);
+  }
+
+  async function runSql() {
+    const SQL = await initSqlJs({ locateFile: () => wasmUrl });
+    const db = new SQL.Database();
+    try {
+      const value = db.exec('SELECT 1')[0]?.values[0]?.[0];
+      if (typeof value !== 'number') throw new Error('SQL did not return a number');
+      return value;
+    } finally {
+      db.close();
+    }
+  }
+
+  void showResult('worker-result', runAddition, 2);
+  void showResult('sql-result', runSql, 1);
+</script>

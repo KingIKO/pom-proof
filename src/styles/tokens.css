@@ -1,0 +1,98 @@
+:root {
+  color-scheme: light dark;
+  --paper: #faf8f2;
+  --ink: #22221f;
+  --muted: #565650;
+  --line: #c5c2b8;
+  --surface: #f0eee6;
+  --accent: #1b3a8a;
+  --on-accent: #fff;
+  --pass: #1e6242;
+  --fail: #9d2929;
+  --warn: #794700;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-code: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --regular: 400;
+  --strong: 600;
+  --radius: 4px;
+  --prose: 72ch;
+  --rule: 1px solid var(--line);
+  --result-duration: 120ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #1d1d1b;
+    --ink: #f0eee6;
+    --muted: #bebbb0;
+    --line: #646158;
+    --surface: #272723;
+    --accent: #a9bfff;
+    --on-accent: #121c36;
+    --pass: #93d7af;
+    --fail: #ffaeaa;
+    --warn: #efc77a;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --result-duration: 0ms; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--regular) 1rem/1.55 var(--font-body);
+}
+
+a {
+  color: var(--accent);
+  text-underline-offset: .16em;
+}
+
+button, input, select, textarea { font: inherit; }
+
+.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: .38rem .8rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+h1, h2, h3, strong, b, summary, th { font-weight: var(--strong); }
+h1, h2, h3 { line-height: 1.2; }
+h1 { font-size: clamp(1.75rem, 5vw, 2.25rem); margin: 0 0 .6em; }
+h2 { font-size: 1.25rem; margin: 1.75rem 0 .6rem; }
+h3 { font-size: 1rem; margin: 1rem 0 .35rem; }
+p { margin: .65rem 0; }
+.prose { max-inline-size: var(--prose); overflow-wrap: anywhere; }
+.muted { color: var(--muted); }
+
+pre, code { font-family: var(--font-code); font-size: .94em; }
+pre {
+  padding: .8rem;
+  overflow: auto;
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--radius);
+}
+
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .55rem .4rem; text-align: start; border-block-end: var(--rule); }
+
+.result[data-status="pass"] { color: var(--pass); }
+.result[data-status="fail"] { color: var(--fail); }
+.result[data-status="warn"] { color: var(--warn); }
+.result:is([data-status="pass"], [data-status="fail"], [data-status="warn"]) {
+  animation: result-in var(--result-duration) ease-out;
+}
+@keyframes result-in { from { opacity: 0; } to { opacity: 1; } }
