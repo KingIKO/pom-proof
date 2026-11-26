@@ -1,33 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
-import { validatedCatalog } from '../lib/catalog';
-import { kindLabel } from '../lib/labels';
-import { url } from '../lib/url';
+import PracticeList from '../components/shell/PracticeList';
+import { catalogProblem, orderedProblems } from '../lib/catalog';
+import '../styles/catalog.css';
 
-const problems = (await validatedCatalog()).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const problems = (await orderedProblems()).map(catalogProblem);
 ---
 <Base title="Practice" section="practice">
   <h1>Practice</h1>
-  <p class="prose">Choose a QA interview exercise. Each sample includes a worked solution.</p>
-  <ul class="problem-list" aria-label="Practice problems">
-    {problems.map(({ id, data }) => (
-      <li>
-        <a href={url(`/practice/${id}/`)}>{data.title}</a>
-        <span class="muted">{kindLabel[data.kind]} · {data.difficulty} · {data.minutes} min</span>
-      </li>
-    ))}
-  </ul>
+  <p class="prose page-intro">Free interview practice for QA and SDET roles.</p>
+  <PracticeList client:load problems={problems} />
 </Base>
-
-<style>
-  .problem-list { list-style: none; padding: 0; }
-  li {
-    border-block-end: var(--rule);
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: .15rem 1rem;
-    padding-block: .55rem;
-  }
-  .muted { font-size: .94rem; }
-</style>

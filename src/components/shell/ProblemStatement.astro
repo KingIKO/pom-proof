@@ -1,0 +1,63 @@
+---
+interface Props {
+  problemId: string;
+  editorialHref?: string;
+}
+
+const { problemId, editorialHref } = Astro.props;
+---
+<div class="statement" data-statement={problemId}>
+  {editorialHref && (
+    <div class="statement-switch" role="group" aria-label="Reading pane" hidden>
+      <button type="button" aria-controls="problem-statement" aria-pressed="true">Problem</button>
+      <button type="button" aria-controls="problem-editorial" aria-pressed="false">Show editorial</button>
+    </div>
+  )}
+  <article id="problem-statement" class="prose">
+    <h2 class:list={editorialHref && 'statement-heading'}>Problem</h2>
+    <slot />
+  </article>
+  {editorialHref && (
+    <>
+      <article id="problem-editorial" class="prose" hidden>
+        <h2 class="visually-hidden">Editorial</h2>
+        <slot name="editorial" />
+      </article>
+      <noscript><p><a href={editorialHref}>Show editorial</a></p></noscript>
+    </>
+  )}
+</div>
+
+<script>
+  import { onProgressChange, readProgress } from '../../lib/progress';
+
+  for (const statement of document.querySelectorAll<HTMLElement>('[data-statement]')) {
+    const switcher = statement.querySelector<HTMLElement>('.statement-switch');
+    const problem = statement.querySelector<HTMLElement>('#problem-statement');
+    const editorial = statement.querySelector<HTMLElement>('#problem-editorial');
+    const problemButton = switcher?.querySelector<HTMLButtonElement>('[aria-controls="problem-statement"]');
+    const editorialButton = switcher?.querySelector<HTMLButtonElement>('[aria-controls="problem-editorial"]');
+    if (!switcher || !problem || !editorial || !problemButton || !editorialButton) continue;
+
+    let revealed = false;
+    const updateLabel = () => {
+      const submitted = readProgress().attempts.some(({ problemId }) => problemId === statement.dataset.statement);
+      editorialButton.textContent = submitted || revealed ? 'Editorial' : 'Show editorial';
+    };
+    const select = (showEditorial: boolean) => {
+      revealed ||= showEditorial;
+      problem.hidden = showEditorial;
+      editorial.hidden = !showEditorial;
+      problemButton.setAttribute('aria-pressed', String(!showEditorial));
+      editorialButton.setAttribute('aria-pressed', String(showEditorial));
+      updateLabel();
+    };
+    problemButton.addEventListener('click', () => select(false));
+    editorialButton.addEventListener('click', () => select(true));
+    onProgressChange(updateLabel);
+    window.addEventListener('pageshow', updateLabel);
+    updateLabel();
+    switcher.hidden = false;
+    statement.classList.add('has-switch');
+  }
+</script>

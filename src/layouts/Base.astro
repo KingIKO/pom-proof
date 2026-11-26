@@ -5,9 +5,10 @@ import '../styles/tokens.css';
 interface Props {
   title: string;
   section?: 'practice' | 'questions' | 'tracks' | 'progress';
+  wide?: boolean;
 }
 
-const { title, section } = Astro.props;
+const { title, section, wide } = Astro.props;
 const nav = [
   { id: 'practice', label: 'Practice', href: url('/') },
   { id: 'questions', label: 'Questions', href: url('/questions/') },
@@ -24,9 +25,9 @@ const nav = [
   </head>
   <body>
     <a class="skip" href={url('#main')}>Skip to content</a>
-    <header>
+    <header class="site-header">
       <div class="wrap header-row">
-        <span class="brand">POM Proof</span>
+        <a class="brand" href={url('/')}>POM Proof</a>
         <nav aria-label="Main">
           <ul>
             {nav.map(({ id, label, href }) => (
@@ -40,7 +41,7 @@ const nav = [
         </nav>
       </div>
     </header>
-    <main id="main" class="wrap">
+    <main id="main" class:list={['wrap', { wide }]} tabindex="-1">
       <slot />
     </main>
   </body>
@@ -51,7 +52,8 @@ const nav = [
     inline-size: min(100% - 2rem, 58rem);
     margin-inline: auto;
   }
-  header { border-block-end: var(--rule); }
+  .wrap.wide { inline-size: min(100% - 2rem, 72rem); }
+  .site-header { border-block-end: var(--rule); }
   .header-row {
     display: flex;
     align-items: baseline;
@@ -59,7 +61,7 @@ const nav = [
     gap: .25rem 1.75rem;
     padding-block: .8rem;
   }
-  .brand { font-weight: var(--strong); }
+  .brand { font-weight: var(--strong); color: var(--ink); text-decoration: none; }
   nav ul {
     display: flex;
     flex-wrap: wrap;
@@ -68,7 +70,8 @@ const nav = [
     padding: 0;
     margin: 0;
   }
-  nav a { display: inline-block; padding-block: .2rem; }
+  nav a { display: inline-block; padding-block: .2rem; text-decoration: none; }
+  nav a:is(:hover, [aria-current]) { text-decoration-line: underline; }
   nav a[aria-current] { font-weight: var(--strong); text-decoration-thickness: 2px; }
   main { padding-block: 1.8rem 3rem; }
   .skip {
@@ -76,6 +79,11 @@ const nav = [
     inset: .4rem auto auto .4rem;
     padding: .4rem .7rem;
     background: var(--paper);
+    z-index: 1;
   }
   .skip:not(:focus) { clip-path: inset(50%); }
+  @media (max-width: 32rem) {
+    .header-row { display: grid; padding-block: .55rem; }
+    main { padding-block-start: 1.3rem; }
+  }
 </style>

@@ -4,6 +4,7 @@
   --ink: #22221f;
   --muted: #565650;
   --line: #c5c2b8;
+  --control-line: #8d897d;
   --surface: #f0eee6;
   --accent: #1b3a8a;
   --on-accent: #fff;
@@ -26,6 +27,7 @@
     --ink: #f0eee6;
     --muted: #bebbb0;
     --line: #646158;
+    --control-line: #777366;
     --surface: #272723;
     --accent: #a9bfff;
     --on-accent: #121c36;
@@ -54,6 +56,17 @@ a {
 }
 
 button, input, select, textarea { font: inherit; }
+
+button, input:not([type="radio"], [type="checkbox"], [type="file"]), select, textarea {
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius);
+  padding: .38rem .6rem;
+}
+button:not(:disabled), select { cursor: pointer; }
+button:not(:disabled):not(.primary):hover { background: var(--surface); }
+button:disabled { cursor: default; color: var(--muted); }
 
 .primary {
   background: var(--accent);
@@ -89,10 +102,13 @@ pre {
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: .55rem .4rem; text-align: start; border-block-end: var(--rule); }
 
-.result[data-status="pass"] { color: var(--pass); }
-.result[data-status="fail"] { color: var(--fail); }
-.result[data-status="warn"] { color: var(--warn); }
-.result:is([data-status="pass"], [data-status="fail"], [data-status="warn"]) {
-  animation: result-in var(--result-duration) ease-out;
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
-@keyframes result-in { from { opacity: 0; } to { opacity: 1; } }

@@ -1,7 +1,12 @@
 ---
 import Base from '../../layouts/Base.astro';
+import ProgressDashboard from '../../components/shell/ProgressDashboard';
+import { catalogProblem, orderedProblems } from '../../lib/catalog';
+import '../../styles/progress.css';
+
+const problems = (await orderedProblems()).map(catalogProblem);
 ---
 <Base title="Progress" section="progress">
   <h1>Progress</h1>
-  <p class="prose">Progress tracking is not available yet.</p>
+  <ProgressDashboard client:load problems={problems} />
 </Base>

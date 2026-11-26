@@ -1,42 +1,66 @@
 ---
-import { getCollection, getEntry, render, type CollectionEntry } from 'astro:content';
+import { getEntry, render } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
+import ProblemStatement from '../../../components/shell/ProblemStatement.astro';
 import Structured from '../../../engines/structured/index';
 import Mutation from '../../../engines/mutation/index';
 import Locator from '../../../engines/locator/index';
 import Sql from '../../../engines/sql/index';
 import Code from '../../../engines/code/index';
 import type { Problem } from '../../../lib/contracts';
-import { kindLabel, roleLabel } from '../../../lib/labels';
-import { url } from '../../../lib/url';
+import { catalogProblem, orderedProblems } from '../../../lib/catalog';
+import { difficultyLabel, kindLabel, roleLabel, topicLabel } from '../../../lib/labels';
+import { problemUrl, url } from '../../../lib/url';
+import '../../../styles/workspace.css';
 
 export async function getStaticPaths() {
-  return (await getCollection('problems')).map((entry) => ({
+  return (await orderedProblems()).map((entry, index, problems) => ({
     params: { kind: entry.data.kind, id: entry.id.split('/').at(-1) },
-    props: { entry },
+    props: {
+      entry,
+      previous: index > 0 ? catalogProblem(problems[index - 1]) : undefined,
+      next: index + 1 < problems.length ? catalogProblem(problems[index + 1]) : undefined,
+    },
   }));
 }
 
-const { entry } = Astro.props as { entry: CollectionEntry<'problems'> };
+const { entry, previous, next } = Astro.props;
 const problem: Problem = { ...entry.data, id: entry.id };
 const { Content } = await render(entry);
 const editorial = Astro.params.id ? await getEntry('editorials', Astro.params.id) : undefined;
+const Editorial = editorial ? (await render(editorial)).Content : undefined;
+const meta = [kindLabel[problem.kind], topicLabel(problem.topic), difficultyLabel[problem.difficulty], `${problem.minutes} min`];
 ---
-<Base title={problem.title} section="practice">
-  <article class="prose">
+<Base title={problem.title} section="practice" wide>
+  <header class="practice-heading">
+    <p class="back-link"><a href={url('/')}>Back to practice</a></p>
     <h1>{problem.title}</h1>
-    <p class="muted">
-      {kindLabel[problem.kind]} · {problem.difficulty} · {problem.minutes} min · {problem.roles.map((role) => roleLabel[role]).join(', ')}
+    <p class="muted practice-meta">
+      {meta.join(' · ')} <span>{problem.roles.map((role) => roleLabel[role]).join(', ')}</span>
     </p>
-    <Content />
-  </article>
-  <section aria-labelledby="workspace-heading" class="prose">
-    <h2 id="workspace-heading">Workspace</h2>
-    {problem.kind === 'test-design' ? <Mutation client:load problem={problem} />
-      : problem.kind === 'locator' ? <Locator client:load problem={problem} />
-      : problem.kind === 'sql' ? <Sql client:load problem={problem} />
-      : problem.kind === 'code' ? <Code client:load problem={problem} />
-      : <Structured client:load problem={problem} />}
-    {editorial && <p><a href={url(`/editorials/${editorial.id}/`)}>Read the solution</a></p>}
-  </section>
+  </header>
+  <div class="workspace-grid">
+    <ProblemStatement problemId={problem.id} editorialHref={editorial && url(`/editorials/${editorial.id}/`)}>
+      <Content />
+      <Fragment slot="editorial">{Editorial && <Editorial />}</Fragment>
+    </ProblemStatement>
+    <section aria-labelledby="workspace-heading" class="workspace">
+      <h2 id="workspace-heading">Workspace</h2>
+      {problem.kind === 'test-design' ? <Mutation client:load problem={problem} />
+        : problem.kind === 'locator' ? <Locator client:load problem={problem} />
+        : problem.kind === 'sql' ? <Sql client:load problem={problem} />
+        : problem.kind === 'code' ? <Code client:load problem={problem} />
+        : <Structured client:load problem={problem} />}
+    </section>
+  </div>
+  {(previous || next) && (
+    <nav class="practice-neighbors" aria-label="Adjacent problems">
+      {previous && (
+        <p class="previous"><span class="muted">Previous</span><a href={problemUrl(previous.id)} rel="prev">{previous.title}</a></p>
+      )}
+      {next && (
+        <p class="next"><span class="muted">Next</span><a href={problemUrl(next.id)} rel="next">{next.title}</a></p>
+      )}
+    </nav>
+  )}
 </Base>
