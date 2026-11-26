@@ -1,0 +1,208 @@
+import type { Question, Source } from '../types';
+
+const ISTQB: Source = { label: 'ISTQB CTFL Syllabus v4.0.1', url: 'https://istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/' };
+const TRACE: Source = { label: 'Playwright docs: Trace viewer', url: 'https://playwright.dev/docs/trace-viewer' };
+const topic = 'Bug reports and triage';
+
+const questions: Question[] = [
+  {
+    id: 'q-triage-001',
+    topic,
+    roles: ['manual', 'automation'],
+    level: 'Junior',
+    type: 'Concept',
+    question: 'What goes into a good bug report?',
+    answer:
+      'A good report lets someone else reproduce the problem without asking me anything. It has a short, specific title, like "Discount code ignored when cart has a subscription item". Then the environment and build, numbered steps with the exact data, the expected result and the actual result. I attach evidence such as screenshots, logs or a video, and note severity, how often it happens, and any workaround. I keep one problem per report, and I write neutrally about the behavior, never about the person who wrote the code. Finally, I search first to avoid duplicates.',
+    lookFor: [
+      'Specific, searchable title',
+      'Environment, steps, test data, expected and actual results',
+      'Evidence attached: screenshots, logs or recordings',
+      'Severity, frequency and workaround noted',
+      'One issue per report, neutral tone, duplicate check',
+    ],
+    mistakes: ['Vague titles like "Checkout broken"', 'Leaving out the expected result'],
+    followUps: ['How would you shorten a report that has grown to twenty steps?'],
+    sources: [ISTQB],
+  },
+  {
+    id: 'q-triage-002',
+    topic,
+    roles: ['manual', 'lead'],
+    level: 'Junior',
+    type: 'Concept',
+    question: 'What is the difference between severity and priority? Give an example where they differ.',
+    answer:
+      'Severity is the impact of the defect on the system or user. Priority is how urgently it should be fixed, which is a business decision. They often line up, but not always. A misspelled company name on the homepage has low severity, since nothing breaks, but high priority because it embarrasses the brand. A crash in a rarely used admin export for one internal user might be high severity but low priority if there is an easy workaround. Testers usually propose severity; the product owner or triage group sets priority.',
+    lookFor: [
+      'Severity is impact; priority is urgency of fixing',
+      'Gives a low severity, high priority example',
+      'Gives a high severity, low priority example',
+      'Knows who typically sets each',
+    ],
+    mistakes: ['Treating the two fields as the same thing', 'Saying testers decide priority alone'],
+    followUps: ['What would you do if a developer keeps lowering severity on your bugs?'],
+    sources: [ISTQB],
+  },
+  {
+    id: 'q-triage-003',
+    topic,
+    roles: ['manual', 'sdet'],
+    level: 'Mid',
+    type: 'Scenario',
+    question: 'A customer reports a bug you cannot reproduce. What do you do?',
+    answer:
+      'I start by collecting everything about their context: account type, browser and version, device, time of the issue, exact steps and any error text or screenshot. I check server logs and monitoring around that time using the user or request ID. Then I try to match their conditions, like their data, feature flags, locale or slow network. I look for timing and state factors such as caching or concurrent edits. If I still cannot reproduce it, I record what I tried, add logging if needed, and keep the ticket open for more reports instead of closing it as invalid.',
+    lookFor: [
+      'Gathers detailed context from the reporter',
+      'Uses logs, monitoring or request IDs',
+      'Matches environment, data, configuration and network conditions',
+      'Considers timing, state and concurrency',
+      'Documents attempts and adds instrumentation rather than closing',
+    ],
+    mistakes: ['Closing as "cannot reproduce" after one try', 'Only testing on their own machine'],
+    followUps: ['What would you ask support to collect next time to save this effort?'],
+    sources: [ISTQB],
+  },
+  {
+    id: 'q-triage-004',
+    topic,
+    roles: ['manual', 'automation'],
+    level: 'Mid',
+    type: 'Behavioral',
+    question: 'A developer closed your bug as "works as designed," but you think users will be hurt by it. How do you handle it?',
+    answer:
+      'First I would ask the developer to show me the requirement or decision behind it. If the behavior matches the agreed design, I would ask whether that design still serves the people using it. I would take concrete evidence to the product owner, such as how many users encounter it or a support ticket that shows where they got stuck. If the current behavior was intentional, I would suggest tracking a design change. I would record the decision and the evidence behind it on the ticket.',
+    lookFor: [
+      'Seeks to understand the design before pushing back',
+      'Recognizes a possible requirements defect',
+      'Escalates to the product owner with concrete user impact',
+      'Accepts the decision and records it',
+    ],
+    mistakes: ['Reopening the ticket repeatedly', 'Dropping the issue without raising user impact'],
+    followUps: ['How do you keep the relationship with that developer healthy afterward?'],
+    sources: [ISTQB],
+  },
+  {
+    id: 'q-triage-005',
+    topic,
+    roles: ['lead'],
+    level: 'Senior',
+    type: 'Scenario',
+    question: 'Release is in three days and there are forty untriaged bugs. How do you run triage?',
+    answer:
+      'I would get the product owner, a tech lead and a tester in one short session. Before the meeting I would merge duplicates and make sure each has severity, steps and affected area. In the session we go quickly through each: is it valid, what is the user impact, and does it block release? Every bug leaves with a decision, which means fix now, fix after release, or will not fix, plus an owner. I would timebox discussion per bug and flag clusters, since many bugs in one area may signal a deeper problem worth more testing.',
+    lookFor: [
+      'Brings the right decision makers together',
+      'Prepares by deduplicating and completing reports',
+      'Uses release impact to decide quickly',
+      'Every bug leaves with a decision and an owner',
+      'Looks for clusters that signal deeper risk',
+    ],
+    mistakes: ['Trying to fix all forty before release', 'Triaging alone without the product owner'],
+    followUps: ['How would you communicate the deferred bugs to stakeholders?'],
+    sources: [ISTQB],
+  },
+  {
+    id: 'q-triage-006',
+    topic,
+    roles: ['automation', 'sdet'],
+    level: 'Mid',
+    type: 'Tooling',
+    question: 'A UI test fails in CI about one run in ten. How do you triage it?',
+    answer:
+      'First I decide whether it is the product or the test. I collect several failing runs and compare their traces, screenshots and logs to look for a pattern. Common test causes are fixed sleeps, shared test data between parallel workers, order dependence and locators that match during animations. Product causes include race conditions or slow backend calls, which real users could hit too. I try to reproduce locally by running it in a loop or with throttling. Meanwhile I quarantine it with a linked ticket so the pipeline stays trusted, but I never just add retries and forget it.',
+    lookFor: [
+      'Separates test flakiness from a real intermittent product bug',
+      'Compares evidence across multiple failures',
+      'Names common causes such as fixed waits, shared data and order dependence',
+      'Reproduces with repetition or throttling',
+      'Quarantines with a tracked ticket instead of hiding failures with retries',
+    ],
+    mistakes: ['Adding retries as the permanent fix', 'Assuming every flaky test is a test problem'],
+    followUps: ['What would you put on a dashboard to track flakiness over time?'],
+    sources: [TRACE],
+  },
+  {
+    id: 'q-triage-007',
+    topic,
+    roles: ['manual', 'automation'],
+    level: 'Junior',
+    type: 'Concept',
+    question: 'Describe a typical defect lifecycle.',
+    answer:
+      'States vary by team, but a common flow looks like this. A defect is reported as new. In triage it is either rejected, for example as a duplicate or not a bug, or accepted and assigned with a priority. The developer works on it and marks it fixed. The tester then runs a confirmation test. If it passes, the defect is closed, and if it fails, it is reopened and goes back. Some defects get deferred to a later release. What matters most is that every state has a clear owner and that the history stays in the ticket.',
+    lookFor: [
+      'Describes reported, triaged, assigned, fixed, confirmed and closed states',
+      'Includes rejection or duplicate outcomes',
+      'Covers reopen when confirmation fails',
+      'Mentions deferral',
+      'Notes workflows vary and ownership must be clear',
+    ],
+    mistakes: ['Closing a bug as soon as the developer marks it fixed'],
+    followUps: ['Who should be allowed to close a defect, and why?'],
+    sources: [ISTQB],
+  },
+  {
+    id: 'q-triage-008',
+    topic,
+    roles: ['lead', 'sdet'],
+    level: 'Senior',
+    type: 'Concept',
+    question: 'How do you use defect data to improve the process, not just the product?',
+    answer:
+      'I look at patterns across many defects rather than single tickets. Which components produce the most bugs, since defects tend to cluster? At what stage were they introduced and at what stage were they found? If many escaped defects started as unclear requirements, I invest in refinement and acceptance criteria. If integration bugs dominate, we add contract or integration tests. For serious escapes I run a blameless root cause analysis and track the action items. I keep the metrics about the process, never about ranking individual developers, because that destroys honest reporting.',
+    lookFor: [
+      'Analyzes trends across defects, not single tickets',
+      'Uses clustering by component',
+      'Compares where defects were introduced versus found',
+      'Links patterns to specific process changes',
+      'Runs blameless root cause analysis and avoids individual blame metrics',
+    ],
+    mistakes: ['Using bug counts to rate developers or testers', 'Collecting metrics nobody acts on'],
+    followUps: ['Which single defect metric would you show leadership, and why?'],
+    sources: [ISTQB],
+  },
+  {
+    id: 'q-triage-009',
+    topic,
+    roles: ['lead', 'manual'],
+    level: 'Senior',
+    type: 'Behavioral',
+    question: 'Tell me about a time you found a serious bug right before a release. What did you do?',
+    answer:
+      '*Use a release decision you were part of. This billing example is fictional.* An hour before deployment, I found that refunds on discounted orders returned the full price. I confirmed it twice with fresh data and gave the release lead the steps, the orders at risk and the estimated cost. I recommended delaying unless we could disable refunds for affected orders and give support a way to handle them. The lead chose that option. After the fix I added a test for discounted refunds and checked that we could re-enable the normal path.',
+    lookFor: [
+      'Verifies the bug quickly before raising an alarm',
+      'Escalates immediately to decision makers',
+      'Quantifies impact in business terms',
+      'Presents options rather than demanding a decision',
+      'Follows up with a lasting fix such as a new test',
+    ],
+    mistakes: ['Blocking the release unilaterally', 'Staying quiet to avoid conflict'],
+    followUps: ['What would you have done if they released without any mitigation?'],
+    sources: [ISTQB],
+  },
+  {
+    id: 'q-triage-010',
+    topic,
+    roles: ['automation', 'sdet'],
+    level: 'Mid',
+    type: 'Tooling',
+    question: 'What evidence should an automated test failure produce so someone can triage it without rerunning it?',
+    answer:
+      'A failure should explain itself. At minimum: a clear assertion message showing expected and actual values, the test name and the data it used, the build and environment. For UI tests I capture a screenshot at failure and ideally a trace, which in Playwright records actions, network calls and DOM snapshots so I can step through what happened. For API tests I log the request and response, with secrets masked. A correlation or request ID lets the developer find matching server logs. Good evidence often turns a failure into a ready-made bug report.',
+    lookFor: [
+      'Descriptive assertion messages with expected and actual values',
+      'Test data, build and environment recorded',
+      'Screenshots and traces for UI tests',
+      'Request and response logs with secrets masked',
+      'Correlation IDs linking to backend logs',
+    ],
+    mistakes: ['Failures that only say "expected true but was false"', 'Logging tokens or passwords in CI output'],
+    followUps: ['How do you keep artifact storage costs under control in CI?'],
+    sources: [TRACE],
+  },
+];
+
+export default questions;

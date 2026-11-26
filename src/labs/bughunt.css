@@ -1,0 +1,135 @@
+.bug-hunt-toolbar {
+  flex-wrap: wrap;
+}
+
+.bug-hunt-scroll {
+  container-type: inline-size;
+}
+
+.bug-hunt-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: 14px;
+}
+
+.bug-app,
+.bug-report {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-card);
+  background: var(--bg-layer);
+}
+
+@container (min-width: 680px) {
+  .bug-hunt-layout {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  }
+}
+
+.bug-app p,
+.bug-report p {
+  margin: 6px 0 10px;
+}
+
+.bug-report-form,
+.bug-signup,
+.bug-cart-options {
+  display: grid;
+  gap: 10px;
+}
+
+.bug-signup {
+  margin-top: 12px;
+}
+
+.bug-report-form > .btn,
+.bug-signup > .btn {
+  justify-self: start;
+}
+
+.bug-report-pair,
+.bug-cart-coupon {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.bug-cart-coupon {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.bug-cart-options {
+  margin-top: 14px;
+}
+
+.bug-between,
+.bug-cart-quantity {
+  display: flex;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.bug-between {
+  justify-content: space-between;
+}
+
+.bug-cart-quantity {
+  flex-wrap: wrap;
+  align-items: end;
+  margin-top: 6px;
+}
+
+.bug-cart-quantity input {
+  width: 65px;
+  height: 28px;
+}
+
+.bug-cart-lines,
+.bug-report-history ol {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.bug-cart-lines > li,
+.bug-report-history ol > li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-2);
+}
+
+.bug-cart-totals {
+  margin: 14px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.bug-cart-totals dd {
+  margin: 0;
+}
+
+.bug-cart-totals > :last-child {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.bug-report-history {
+  margin-top: 18px;
+  overflow-wrap: anywhere;
+}
+
+.bug-report-history ol li .caption {
+  margin: 4px 0 0;
+}
+
+.bug-report-history ul {
+  padding-left: 18px;
+}
+
+.bug-signup-success code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,61 @@
+.ui-lab {
+  overflow-y: auto;
+}
+
+.ui-lab-toolbar {
+  flex-wrap: wrap;
+}
+
+.ui-lab-editor {
+  min-height: 110px;
+}
+
+.ui-lab-preview {
+  flex: 0 1 34%;
+  min-height: 244px;
+  border-top: 1px solid var(--border-2);
+}
+
+.ui-lab-preview .sandbox-frame {
+  min-height: 152px;
+}
+
+.ui-lab-results {
+  height: 26%;
+  min-height: 120px;
+}
+
+.ui-lab-results-title {
+  margin: 16px 0 8px;
+}
+
+.ui-lab .mutant-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.ui-lab .test-list .err {
+  overflow-wrap: anywhere;
+}
+
+.ui-lab-fixture {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  border: 0;
+  width: 640px;
+  height: 480px;
+}
+
+@media (max-width: 900px) {
+  .ui-lab-editor {
+    flex: 0 0 280px;
+  }
+
+  .ui-lab-preview {
+    flex: 0 0 280px;
+  }
+
+  .ui-lab-results {
+    height: 240px;
+  }
+}
