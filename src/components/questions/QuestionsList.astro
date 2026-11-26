@@ -1,0 +1,196 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { roleLabel } from '../../lib/labels';
+import { questionLevels, questionTopics, questionTypes, questionUrl } from './questions';
+
+interface Props {
+  questions: CollectionEntry<'questions'>[];
+}
+
+const { questions } = Astro.props;
+const filters = [
+  { name: 'topic', label: 'Topic', options: questionTopics, all: 'All topics' },
+  { name: 'role', label: 'Role', options: roleLabel, all: 'All roles' },
+  { name: 'level', label: 'Level', options: questionLevels, all: 'All levels' },
+  { name: 'type', label: 'Type', options: questionTypes, all: 'All types' },
+];
+---
+
+<form class="filters" data-question-filters hidden>
+  <div class="field search">
+    <label for="question-q">Search questions</label>
+    <input id="question-q" type="search" name="q" placeholder="Search titles and topics" />
+  </div>
+  {filters.map(({ name, label, options, all }) => (
+    <div class="field">
+      <label for={`question-${name}`}>{label}</label>
+      <select id={`question-${name}`} name={name}>
+        <option value="">{all}</option>
+        {Object.entries(options).map(([id, text]) => <option value={id}>{text}</option>)}
+      </select>
+    </div>
+  ))}
+</form>
+
+<div class="list-actions" id="review">
+  <p class="muted" role="status" data-question-count hidden></p>
+  <button type="button" class="primary" data-question-review hidden>Review due questions</button>
+</div>
+
+{questions.length ? (
+  <ul class="question-list" role="list" aria-label="Questions">
+    {questions.map(({ id, data }) => (
+      <li data-question-id={id} data-topic={data.topic} data-role={data.roles.join(' ')}
+        data-level={data.level} data-type={data.type}>
+        <a class="title" href={questionUrl(id)}>{data.title}</a>
+        <span class="muted" data-topic-label>{questionTopics[data.topic]}</span>
+        <span class="muted">{questionLevels[data.level]}</span>
+        <span class="review-state" data-review-state></span>
+      </li>
+    ))}
+  </ul>
+) : <p>No questions yet</p>}
+
+<script>
+  import { reviewSnapshot, dueIds } from '../../lib/review';
+  import { filterNames, filterParams, startSession, withParams } from './questions';
+
+  const form = document.querySelector<HTMLFormElement>('[data-question-filters]');
+  const count = document.querySelector<HTMLElement>('[data-question-count]');
+  const review = document.querySelector<HTMLButtonElement>('[data-question-review]');
+  if (form && count && review) {
+    const rows = Array.from(document.querySelectorAll<HTMLLIElement>('[data-question-id]')).map((row) => {
+      const link = row.querySelector<HTMLAnchorElement>('a');
+      const state = row.querySelector<HTMLElement>('[data-review-state]');
+      return {
+        row,
+        id: row.dataset.questionId ?? '',
+        link,
+        path: link?.pathname ?? '',
+        state,
+        text: `${link?.textContent} ${row.querySelector('[data-topic-label]')?.textContent}`.toLowerCase(),
+      };
+    });
+
+    const fields = filterNames.map((name) => ({ name, field: form.elements.namedItem(name) }));
+    const fromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      for (const { name, field } of fields) {
+        if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) {
+          field.value = params.get(name) ?? '';
+          if (field instanceof HTMLSelectElement && field.selectedIndex < 0) field.value = '';
+        }
+      }
+    };
+
+    let matchingIds: string[] = [];
+    let refreshTimer: number | undefined;
+    const render = (syncUrl = false) => {
+      const params = filterParams(new URLSearchParams(Array.from(new FormData(form), ([name, value]) =>
+        [name, String(value)])));
+      if (syncUrl) window.history.replaceState(null, '', withParams(window.location.pathname, params));
+      const query = (params.get('q') ?? '').toLowerCase().trim().split(/\s+/).filter(Boolean);
+      const entries = [...params].filter(([name]) => name !== 'q');
+      const cards = reviewSnapshot();
+      const now = Date.now();
+      let nextDue = Infinity;
+      matchingIds = [];
+
+      for (const { row, id, link, path, state, text } of rows) {
+        const matches = entries.every(([name, value]) => row.dataset[name]?.split(' ').includes(value)) &&
+          query.every((word) => text.includes(word));
+        row.hidden = !matches;
+        if (!matches) continue;
+        matchingIds.push(id);
+        if (link) link.href = withParams(path, params);
+        const card = cards[id];
+        const due = card ? Date.parse(card.due) : Infinity;
+        if (state) state.textContent = !card ? 'New' : due <= now ? 'Due' : `Box ${card.box}`;
+        if (due > now) nextDue = Math.min(nextDue, due);
+      }
+
+      if (rows.length) {
+        const total = matchingIds.length;
+        count.textContent = total === 0 ? 'No matching questions' : `${total} ${total === 1 ? 'question' : 'questions'}`;
+        count.hidden = false;
+      }
+      review.hidden = dueIds(matchingIds, new Date(now)).length === 0;
+      window.clearTimeout(refreshTimer);
+      if (Number.isFinite(nextDue)) {
+        refreshTimer = window.setTimeout(render, Math.min(nextDue - now, 2_147_483_647));
+      }
+    };
+
+    if (rows.length) form.hidden = false;
+    fromUrl();
+    render();
+    form.addEventListener('input', () => render(true));
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      render(true);
+    });
+    review.addEventListener('click', () => startSession(
+      dueIds(matchingIds), filterParams(new URLSearchParams(window.location.search)),
+    ));
+    window.addEventListener('popstate', () => { fromUrl(); render(); });
+    window.addEventListener('pageshow', () => { fromUrl(); render(); });
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'pom-proof:review' || event.key === null) render();
+    });
+  }
+</script>
+
+<style>
+  .filters {
+    display: grid;
+    grid-template-columns: minmax(12rem, 1.5fr) repeat(4, minmax(0, 1fr));
+    gap: .65rem;
+    margin-block: 1rem;
+  }
+  [hidden] { display: none !important; }
+  .field {
+    display: grid;
+    min-inline-size: 0;
+    gap: .2rem;
+  }
+  label {
+    color: var(--muted);
+    font-size: .9rem;
+  }
+  select, input { inline-size: 100%; }
+  .list-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: .5rem 1rem;
+    margin-block: 1rem .55rem;
+  }
+  .list-actions p { margin: 0; }
+  .question-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-block-start: var(--rule);
+  }
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 11rem 4rem 4rem;
+    gap: .2rem 1rem;
+    align-items: baseline;
+    padding: .55rem 0;
+    border-block-end: var(--rule);
+  }
+  li span { font-size: .9rem; }
+  .title { overflow-wrap: anywhere; }
+  @media (max-width: 50rem) {
+    .filters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .search { grid-column: 1 / -1; }
+  }
+  @media (max-width: 36rem) {
+    .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    li { display: flex; flex-wrap: wrap; gap: .15rem .7rem; }
+    .title { flex-basis: 100%; }
+    .review-state { margin-inline-start: auto; }
+  }
+</style>

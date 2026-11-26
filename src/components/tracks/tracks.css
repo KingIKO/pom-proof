@@ -1,0 +1,29 @@
+.track-back { margin-block: 0 .65rem; }
+.track-intro { margin: -.3rem 0 1.25rem; }
+.track-list, .track-items { list-style: none; margin: 0; padding: 0; }
+.track-list { border-block-start: var(--rule); }
+.track-list > li { border-block-end: var(--rule); padding-block: .85rem; }
+.track-list h2 { margin: 0 0 .35rem; }
+.track-list p { margin: 0; }
+.track-list .track-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .1rem 1rem;
+  margin-block-start: .35rem;
+  font-size: .875rem;
+  font-variant-numeric: tabular-nums;
+}
+.track-section { margin-block-start: 1.55rem; }
+.track-section h2 { margin-block: 0 .3rem; }
+.track-section p { margin-block: .3rem .65rem; }
+.track-items { border-block-start: var(--rule); }
+.track-items > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: .65rem;
+  border-block-end: var(--rule);
+  padding-block: .48rem;
+}
+.track-items a { justify-self: start; overflow-wrap: anywhere; }
+.track-status { font-size: .875rem; }

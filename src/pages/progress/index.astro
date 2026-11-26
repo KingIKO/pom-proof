@@ -1,12 +1,18 @@
 ---
+import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import ProgressDashboard from '../../components/shell/ProgressDashboard';
+import ReadinessOverview from '../../components/progress/ReadinessOverview';
 import { catalogProblem, orderedProblems } from '../../lib/catalog';
 import '../../styles/progress.css';
 
-const problems = (await orderedProblems()).map(catalogProblem);
+const [entries, questions] = await Promise.all([orderedProblems(), getCollection('questions')]);
+const problems = entries.map(catalogProblem);
+const questionIds = questions.map(({ id }) => id);
 ---
 <Base title="Progress" section="progress">
   <h1>Progress</h1>
+  <ReadinessOverview client:load problems={problems.map(({ id, kind, topic }) => ({ id, kind, topic }))} questionIds={questionIds} />
+  <h2>Saved progress</h2>
   <ProgressDashboard client:load problems={problems} />
 </Base>

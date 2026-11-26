@@ -1,0 +1,7 @@
+---
+const markdown = await Astro.slots.render('default');
+let sample = 0;
+const html = markdown.replace(/<pre>(?=<code[\s>])/g, () =>
+  `<pre tabindex="0" role="region" aria-label="Code sample ${++sample}">`);
+---
+<Fragment set:html={html} />

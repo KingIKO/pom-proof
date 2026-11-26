@@ -1,5 +1,6 @@
 ---
 import { getCollection, getEntry, render, type CollectionEntry } from 'astro:content';
+import CodeSamples from '../../components/shell/CodeSamples.astro';
 import Base from '../../layouts/Base.astro';
 import { url } from '../../lib/url';
 
@@ -19,6 +20,6 @@ const { Content } = await render(entry);
   <article class="prose">
     <p><a href={url(`/practice/${problem.id}/`)}>Back to exercise</a></p>
     <h1>{problem.data.title}: solution</h1>
-    <Content />
+    <CodeSamples><Content /></CodeSamples>
   </article>
 </Base>

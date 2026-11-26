@@ -3,7 +3,7 @@ import { z } from 'astro/zod';
 export const idSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 export const textSchema = z.string().trim().min(1);
 const source = z.string().refine((value) => value.trim().length > 0, 'Provide source text');
-export const roleSchema = z.enum(['manual-qa', 'automation', 'sdet']);
+export const roleSchema = z.enum(['manual-qa', 'automation', 'sdet', 'senior']);
 const exportName = z.string().regex(/^[A-Za-z_][A-Za-z_0-9]*$/);
 const language = z.enum(['js', 'ts', 'python']);
 
@@ -105,6 +105,7 @@ const problem = z.discriminatedUnion('kind', [
     exportName,
     allowInputMutation: z.boolean().optional(),
     starters: z.strictObject({ js: source, ts: source, python: source }),
+    solutions: z.strictObject({ js: source, ts: source, python: source }).optional(),
     vectors: z.array(z.strictObject({ name: idSchema, args: z.array(z.json()), expected: z.json() })).min(1),
     reference: codeAnswer,
     decoy: codeAnswer,

@@ -1,20 +1,23 @@
 import { useRef, useState } from 'preact/hooks';
 import CodeEditor from '../../components/editor/CodeEditor';
 import ResultPanel from '../../components/shell/ResultPanel';
-import type { Problem } from '../../lib/contracts';
+import type { Answer, Problem } from '../../lib/contracts';
 import { recordResult, useGradeHook } from '../../lib/workspace';
 import { runCode } from '../../runners/code-browser';
-import type { CodeLanguage } from '../../runners/code-evaluate';
+import { runPython } from '../../runners/python-browser';
+import { pythonName } from '../../runners/python-contract';
 import { checkCode, createCodeGrader } from './grade';
 import './workspace.css';
 
 const grade = createCodeGrader(runCode);
 type Mode = 'run' | 'submit';
+type Language = Answer<'code'>['value']['language'];
 
 export default function Code({ problem }: { problem: Problem<'code'> }) {
-  const [language, setLanguage] = useState<CodeLanguage>('js');
-  const [drafts, setDrafts] = useState({ js: problem.starters.js, ts: problem.starters.ts });
+  const [language, setLanguage] = useState<Language>('js');
+  const [drafts, setDrafts] = useState(problem.starters);
   const [busy, setBusy] = useState(false);
+  const [loadingPython, setLoadingPython] = useState(false);
   const pending = useRef(false);
   const [report, setReport] = useState<(Awaited<ReturnType<typeof checkCode>> & { mode: Mode }) | null>(null);
   const source = drafts[language];
@@ -26,7 +29,8 @@ export default function Code({ problem }: { problem: Problem<'code'> }) {
     setBusy(true);
     setReport(null);
     try {
-      const checked = await checkCode(problem, { kind: 'code', value: { language, source } }, runCode, mode);
+      const checked = await checkCode(problem, { kind: 'code', value: { language, source } }, runCode, mode,
+        (request) => runPython(request, setLoadingPython));
       setReport({ ...checked, mode });
       if (mode === 'submit') recordResult(problem.id, checked.result);
     } finally {
@@ -41,20 +45,24 @@ export default function Code({ problem }: { problem: Problem<'code'> }) {
 
   return (
     <div data-engine="code">
-      <p>Export <code>{problem.exportName}</code>. Run checks the visible inputs. Submit checks every input.</p>
+      <p>
+        {language === 'python' ? <>Define <code>{pythonName(problem.exportName)}</code>.</>
+          : <>Export <code>{problem.exportName}</code>.</>}
+        {' '}Run checks the visible inputs. Submit checks every input.
+      </p>
       <p>
         <label>
           Language{' '}
           <select disabled={busy} value={language} onChange={(event) => {
             const next = event.currentTarget.value;
-            if (next === 'js' || next === 'ts') {
+            if (next === 'js' || next === 'ts' || next === 'python') {
               setLanguage(next);
               setReport(null);
             }
           }}>
             <option value="js">JavaScript</option>
             <option value="ts">TypeScript</option>
-            <option value="python" disabled>Python arrives soon</option>
+            <option value="python">Python</option>
           </select>
         </label>
       </p>
@@ -65,7 +73,9 @@ export default function Code({ problem }: { problem: Problem<'code'> }) {
         <button type="button" onClick={() => void execute('run')} disabled={busy}>Run</button>
         <button class="primary" type="button" onClick={() => void execute('submit')} disabled={busy}>Submit</button>
       </div>
-      {busy && <p class="muted" role="status">Running…</p>}
+      {busy && <p class="muted" role="status">
+        {loadingPython ? 'Loading Python, about 6 MB, first run only' : 'Running…'}
+      </p>}
       {report?.mode === 'run' && result?.status === 'graded'
         ? <p role="status" class="result" data-status={result.score === 1 ? 'pass' : 'fail'}>
           {vectors.filter(({ passed }) => passed).length} of {vectors.length} visible checks passed
@@ -82,7 +92,7 @@ export default function Code({ problem }: { problem: Problem<'code'> }) {
                 <dt>Input</dt><dd><code>{JSON.stringify(problem.vectors[index].args)}</code></dd>
                 <dt>Expected</dt><dd><code>{JSON.stringify(problem.vectors[index].expected)}</code></dd>
                 <dt>Actual</dt><dd>
-                  {check.error !== undefined ? <span>{check.error}</span> : <code>{JSON.stringify(check.actual)}</code>}
+                  {check.error !== undefined ? <span class="code-error">{check.error}</span> : <code>{JSON.stringify(check.actual)}</code>}
                 </dd>
                 <dt>Logs</dt><dd>{check.logs.length ? <pre>{check.logs.join('\n')}</pre> : 'None'}</dd>
               </dl>

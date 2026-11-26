@@ -1,6 +1,101 @@
 title: SDET
 role: sdet
-problems:
-  - test-design/delivery-fee-mutants
-  - sql/latest-executed-run
-  - code/classify-test-retries
+summary: Practice writing test infrastructure, reasoning about service failures, and verifying release decisions with SQL and CI evidence.
+sections:
+  - title: "Week 1: Coding fundamentals for test data"
+    note: Practice arrays, sets, strings, and small functions before designing checks that combine several sources of data.
+    problems:
+      - code/classify-test-retries
+      - code/balanced-log-brackets
+      - code/missing-sequence-ids
+      - code/redact-log-card-field
+      - code/second-highest-duration
+      - code/first-failing-build
+      - code/first-latency-breach
+    questions:
+      - fundamentals/good-test-case
+      - fundamentals/test-pyramid
+      - fundamentals/early-testing-shift-left
+      - automation-strategy/explain-your-framework
+  - title: "Week 2: Browser fixtures and parallel isolation"
+    note: Keep state and test data independent when sessions run together, then prove which control a test acts on.
+    problems:
+      - locator/pick-available-service-slot
+      - locator/print-package-label
+      - code/detect-booking-overlap
+      - diagnosis/invite-email-collision
+      - diagnosis/notification-tests-share-account
+    questions:
+      - playwright/context-isolation-and-backend
+      - playwright/storage-state-authentication
+      - playwright/shard-a-suite
+      - flaky-tests/isolate-parallel-writes
+      - ci-git-docker/parallelize-across-ci-jobs
+  - title: "Week 3: SQL for audit trails and test reporting"
+    note: Compare counts, rankings, and latest rows, including ties and records that have no matching execution.
+    problems:
+      - sql/highest-salary-per-department
+      - sql/second-highest-salary
+      - sql/latest-executed-run
+      - sql/pass-rate-per-release
+      - sql/slowest-test-per-suite
+      - sql/customer-running-spend
+      - sql/consecutive-sign-in-failures
+      - sql/latest-audit-event-per-user
+      - sql/release-cases-without-execution
+    questions:
+      - test-design/reconcile-filtered-report-export
+      - api/pagination-coverage
+      - ci-git-docker/reports-and-failure-artifacts
+      - flaky-tests/measure-first-attempt-flake
+  - title: "Week 4: Service contracts and retries"
+    note: Follow state through missing or repeated responses, and check what a client can assume when a dependency fails.
+    problems:
+      - scenario/api-rate-limit-window
+      - code/compare-monitor-urls
+      - code/summarize-response-percentiles
+      - diagnosis/tax-quote-provider-timeout
+      - scenario/refund-after-timeout
+      - code/sliding-window-request-decisions
+    questions:
+      - api/http-methods-idempotency
+      - api/put-vs-patch
+      - api/http-conflict
+      - api/too-many-requests-vs-server-error
+      - api/idempotency-keys
+      - api/rate-limit-boundaries
+      - api/consumer-driven-contracts
+      - playwright/mock-a-failing-request
+      - test-design/test-payment-timeout
+  - title: "Week 5: Code and CI for test infrastructure"
+    note: Turn test configuration and results into inputs for the next CI step, then decide which checks need to finish first.
+    problems:
+      - code/flatten-config-keys
+      - code/build-test-matrix
+      - code/slowest-test-totals
+      - code/flaky-tests-by-commit
+      - code/changed-json-paths
+      - code/order-ci-checks
+      - code/smallest-regression-suite
+    questions:
+      - ci-git-docker/required-pull-request-tests
+      - ci-git-docker/smoke-and-regression-schedules
+      - ci-git-docker/parity-where-it-matters
+      - ci-git-docker/secrets-for-test-jobs
+      - leadership/balance-feedback-speed-and-coverage
+  - title: "Week 6: Release controls and recovery"
+    note: Decide what must pass before rollout, then explain how to tell whether a rollback restored the intended state.
+    problems:
+      - locator/rerun-production-build
+      - locator/reserve-live-training-slot
+      - locator/resume-scheduled-regional-job
+      - scenario/role-change-permissions
+      - scenario/feature-flag-release-strategy
+      - scenario/data-migration-ci-gates
+      - bug-report/migration-swaps-settlement-links
+    questions:
+      - test-design/verify-role-revocation
+      - leadership/set-release-gates
+      - agile/release-go-no-go
+      - api/debug-http-500
+      - api/mock-vs-real-dependencies

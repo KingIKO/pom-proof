@@ -6,14 +6,33 @@
 .progress-section { margin-block-start: 1.5rem; }
 .progress-section h2 { margin-block: 0 .35rem; }
 .progress-total { margin: 0 0 .65rem; color: var(--muted); }
+.review-overview {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .15rem .85rem;
+}
+.review-overview :is(h2, p) { margin: 0; }
+.weak-topics { padding: 0; list-style: none; margin-block: .55rem; }
+.weak-topics li {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .1rem .65rem;
+  padding-block: .2rem;
+}
+.unattempted-details summary { width: fit-content; padding-block: .25rem; color: var(--accent); cursor: pointer; }
+.unattempted-topics { columns: 3 11rem; column-gap: 1.25rem; }
+.unattempted-topics li { break-inside: avoid; }
 
 .progress-section table { font-size: .9375rem; }
 .progress-section thead { background: var(--surface); border-block-start: var(--rule); }
-.solved-table :is(th, td):not(:first-child), .attempts-table :is(th, td):nth-child(2) {
+.solved-table :is(th, td):not(:first-child), .attempts-table :is(th, td):nth-child(2),
+.readiness-table :is(th, td):last-child {
   text-align: end;
   font-variant-numeric: tabular-nums;
 }
-.solved-table tbody th { font-weight: var(--regular); }
+:is(.solved-table, .readiness-table) tbody th { font-weight: var(--regular); }
 .solved-table tfoot td { font-weight: var(--strong); }
 .attempts-table tbody td { overflow-wrap: anywhere; }
 .attempts-table :is(th, td):last-child { width: 30%; padding-inline-start: 1rem; }
@@ -34,4 +53,5 @@
   .progress-section table { font-size: .875rem; }
   .progress-section :is(th, td) { padding-inline: .25rem; }
   .attempts-table :is(th, td):last-child { padding-inline-start: .5rem; }
+  .unattempted-topics { columns: 2; }
 }

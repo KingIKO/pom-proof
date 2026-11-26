@@ -153,8 +153,7 @@ describe('code grader', () => {
   describe('invalid answers', () => {
     it.each([
       { name: 'empty source', value: { language: 'js', source: '   ' }, message: 'Enter a solution' },
-      { name: 'Python before it ships', value: { language: 'python', source: 'def summarize(xs): pass' }, message: 'Python arrives soon' },
-      { name: 'an unknown language', value: { language: 'rust', source: 'fn main() {}' }, message: 'Choose JavaScript or TypeScript' },
+      { name: 'an unknown language', value: { language: 'rust', source: 'fn main() {}' }, message: 'Choose JavaScript, TypeScript, or Python.' },
       { name: 'a missing export', value: { language: 'js', source: 'export function other() {}' }, message: 'Export a function named summarize' },
       { name: 'a syntax error', value: { language: 'js', source: 'export function summarize( {' }, message: '' },
       { name: 'an import', value: { language: 'js', source: 'import fs from "fs"; export function summarize() {}' }, message: 'Imports are unavailable' },
@@ -167,6 +166,46 @@ describe('code grader', () => {
       const stopped = createCodeGrader(async () => ({ error: 'Stopped after 2 seconds. Look for a loop that never ends.' }));
       expect(await stopped(problem, { kind: 'code', value: problem.reference }))
         .toEqual({ kind: 'code', status: 'invalid-answer', message: 'Stopped after 2 seconds. Look for a loop that never ends.' });
+    });
+  });
+
+  describe('Python answers', () => {
+    const python = { language: 'python', source: 'def summarize(xs):\n    return {"total": sum(xs), "items": list(xs)}\n' } as const;
+    const pass = (request: { vectors: Array<{ visible: boolean }> }) =>
+      ({ checks: request.vectors.map(({ visible }) => (visible ? { visible, passed: true, logs: [], actual: null } : { visible, passed: false })) });
+
+    it('go to the Python runner with every vector on Submit, never to the JS runner', async () => {
+      const js = vi.fn(evaluateCode);
+      const runPython = vi.fn(async (request: Parameters<typeof pass>[0]) => pass(request));
+      const result = await createCodeGrader(js, runPython)(problem, { kind: 'code', value: python });
+      expect(js).not.toHaveBeenCalled();
+      expect(runPython).toHaveBeenCalledOnce();
+      const request = runPython.mock.calls[0][0] as Record<string, unknown>;
+      expect(request).toMatchObject({ source: python.source, exportName: 'summarize' });
+      expect(request).not.toHaveProperty('language');
+      expect((request.vectors as Array<{ visible: boolean }>).map(({ visible }) => visible)).toEqual([true, true, true, false, false]);
+      // The fake fails both hidden vectors, so the grade comes from the runner's checks: 3 of 5.
+      expect(result).toMatchObject({ kind: 'code', status: 'graded', score: 3 / 5 });
+    });
+
+    it('run only the visible vectors in run mode', async () => {
+      const runPython = vi.fn(async (request: Parameters<typeof pass>[0]) => pass(request));
+      const { result } = await checkCode(problem, { kind: 'code', value: python }, evaluateCode, 'run', runPython);
+      expect(runPython.mock.calls[0][0].vectors).toHaveLength(3);
+      expect(result).toMatchObject({ status: 'graded', score: 1 });
+    });
+
+    it('report a Python runner error such as the timeout as invalid, not as a score', async () => {
+      const stopped = createCodeGrader(evaluateCode, async () => ({ error: 'Stopped after 2 seconds. Look for a loop that never ends.' }));
+      expect(await stopped(problem, { kind: 'code', value: python }))
+        .toEqual({ kind: 'code', status: 'invalid-answer', message: 'Stopped after 2 seconds. Look for a loop that never ends.' });
+    });
+
+    it('reject empty Python source before running it', async () => {
+      const runPython = vi.fn(async (request: Parameters<typeof pass>[0]) => pass(request));
+      const result = await createCodeGrader(evaluateCode, runPython)(problem, { kind: 'code', value: { language: 'python', source: '  ' } });
+      expect(result).toMatchObject({ status: 'invalid-answer', message: expect.stringContaining('Enter a solution') });
+      expect(runPython).not.toHaveBeenCalled();
     });
   });
 

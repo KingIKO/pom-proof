@@ -1,0 +1,88 @@
+title: Senior and lead QA
+role: senior
+summary: Practice setting coverage and release criteria, reviewing tests, and making quality decisions that involve multiple teams.
+sections:
+  - title: "Week 1: Strategy, scope, and exit criteria"
+    note: Start with the user impact and available evidence, then decide what would change the release recommendation.
+    problems:
+      - bug-report/partner-name-launch-header
+      - bug-report/benefits-form-focus-trap
+      - diagnosis/review-export-status-only
+      - scenario/accessible-form-deadline
+    questions:
+      - fundamentals/test-plan-vs-strategy
+      - fundamentals/absence-of-defects-fallacy
+      - fundamentals/risk-based-testing
+      - fundamentals/entry-exit-criteria
+      - agile/three-amigos-waitlist
+      - leadership/test-strategy-for-new-product
+  - title: "Week 2: Review design and coverage tradeoffs"
+    note: Ask what evidence a test produces, what it duplicates, and which rules or combinations it misses.
+    problems:
+      - diagnosis/review-duplicated-draft-setup
+      - diagnosis/review-payment-provider-ui
+      - test-design/claim-attachment-policy
+      - test-design/loan-precheck-rules
+      - code/smallest-regression-suite
+    questions:
+      - test-design/pairwise-alert-settings
+      - test-design/testing-without-requirements
+      - test-design/decision-table-pickup-eligibility
+      - fundamentals/testing-depends-on-context
+      - leadership/balance-feedback-speed-and-coverage
+  - title: "Week 3: Recurring failures and incident evidence"
+    note: Separate the first symptom from the cause, agree who owns the fix, and define how to measure whether it worked.
+    problems:
+      - diagnosis/review-shared-saved-search
+      - diagnosis/notification-tests-share-account
+      - diagnosis/export-sessions-pile-up
+      - bug-report/offline-draft-disappears
+    questions:
+      - bug-reports/investigate-an-escaped-defect
+      - bug-reports/measure-triage-improvement
+      - flaky-tests/quarantine-with-an-owner
+      - flaky-tests/measure-first-attempt-flake
+      - agile/retrospective-shared-test-data
+  - title: "Week 4: Risk across service and client boundaries"
+    note: Reason about customers who see an old state, retry a completed action, or move between time zones.
+    problems:
+      - diagnosis/review-swallowed-permission-failure
+      - scenario/role-change-permissions
+      - scenario/booking-time-zone-change
+      - bug-report/fall-back-calendar-invite
+      - scenario/mobile-offline-sync
+      - scenario/refund-after-timeout
+    questions:
+      - bug-reports/report-a-cross-service-defect
+      - test-design/verify-role-revocation
+      - api/idempotency-keys
+      - api/versioning-backward-compatibility
+      - api/token-expiry
+      - api/mock-vs-real-dependencies
+  - title: "Week 5: Release gates and rollback evidence"
+    note: Make a recommendation with incomplete evidence, then explain how to detect and respond to a failed rollout.
+    problems:
+      - scenario/feature-flag-release-strategy
+      - scenario/data-migration-ci-gates
+      - bug-report/migration-swaps-settlement-links
+      - code/order-ci-checks
+    questions:
+      - leadership/set-release-gates
+      - agile/release-go-no-go
+      - test-design/prioritize-testing-before-release
+      - behavioral/push-back-on-a-release
+      - ci-git-docker/parity-where-it-matters
+  - title: "Week 6: Lead the response and improve the system"
+    note: Use the rounds to practice assigning ownership, explaining tradeoffs to partners, and choosing what to measure after the fix.
+    problems:
+      - diagnosis/tax-quote-provider-timeout
+      - test-design/monthly-renewal-date
+      - test-design/sign-in-attempt-state
+      - code/changed-json-paths
+    questions:
+      - leadership/choose-actionable-quality-metrics
+      - leadership/grow-a-qa-team
+      - leadership/introduce-automation-to-manual-team
+      - behavioral/disagree-with-product
+      - behavioral/own-a-quality-metric
+      - behavioral/production-defect-you-missed

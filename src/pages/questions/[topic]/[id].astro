@@ -1,0 +1,35 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import QuestionAnswer from '../../../components/questions/QuestionAnswer.astro';
+import { questionLevels, questionListUrl, questionTopics, questionTypes } from '../../../components/questions/questions';
+import Base from '../../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  return (await getCollection('questions')).map((entry) => {
+    const [topic, id] = entry.id.split('/');
+    return { params: { topic, id }, props: { entry } };
+  });
+}
+
+interface Props {
+  entry: CollectionEntry<'questions'>;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { title, topic, level, type } = entry.data;
+---
+
+<Base title={title} section="questions">
+  <article class="prose">
+    <p class="back"><a href={questionListUrl} data-questions-back>Back to questions</a></p>
+    <h1>{title}</h1>
+    <p class="muted metadata">{questionTopics[topic]} · {questionLevels[level]} · {questionTypes[type]}</p>
+    <QuestionAnswer id={entry.id} answer={entry.data}><Content /></QuestionAnswer>
+  </article>
+</Base>
+
+<style>
+  .back { font-size: .9rem; margin: 0 0 1rem; }
+  .metadata { font-size: .9rem; margin-block: 0 1rem; }
+</style>

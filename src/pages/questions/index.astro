@@ -1,33 +1,12 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
+import QuestionsList from '../../components/questions/QuestionsList.astro';
 import Base from '../../layouts/Base.astro';
 
-const questions = await Promise.all((await getCollection('questions')).map(async (entry) => ({
-  data: entry.data,
-  Content: (await render(entry)).Content,
-})));
+const questions = (await getCollection('questions')).sort((a, b) =>
+  a.data.title.localeCompare(b.data.title, 'en') || a.id.localeCompare(b.id, 'en'));
 ---
 <Base title="Questions" section="questions">
   <h1>Questions</h1>
-  {questions.length === 0 && <p>No questions yet</p>}
-  {questions.map(({ data, Content }) => (
-    <article class="prose">
-      <h2>{data.title}</h2>
-      <Content />
-      <details>
-        <summary>Read the model answer</summary>
-        <p>{data.modelAnswer}</p>
-        {[
-          { title: 'What interviewers look for', items: data.looksFor },
-          { title: 'Common mistakes', items: data.mistakes },
-          { title: 'Follow-up questions', items: data.followUps },
-        ].map(({ title, items }) => (
-          <>
-            <h3>{title}</h3>
-            <ul>{items.map((item) => <li>{item}</li>)}</ul>
-          </>
-        ))}
-      </details>
-    </article>
-  ))}
+  <QuestionsList questions={questions} />
 </Base>

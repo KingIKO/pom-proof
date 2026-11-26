@@ -4,6 +4,7 @@ import { progressStorageKey, type Kind, type ProgressAttempt } from '../../lib/c
 import { difficultyLabel, kindLabel } from '../../lib/labels';
 import { bestScores, createProgressStore, notifyProgressChange, onProgressChange, readProgress } from '../../lib/progress';
 import { problemUrl } from '../../lib/url';
+import { reviewStorageKey } from '../progress/useStudySnapshot';
 
 const kinds = Object.keys(kindLabel) as Kind[];
 const difficulties = Object.keys(difficultyLabel) as CatalogProblem['difficulty'][];
@@ -70,6 +71,7 @@ export default function ProgressDashboard({ problems }: { problems: CatalogProbl
     resetDialog.current?.close();
     try {
       window.localStorage.removeItem(progressStorageKey);
+      window.localStorage.removeItem(reviewStorageKey);
       notifyProgressChange();
       setMessage('Progress reset.');
     } catch {
@@ -97,11 +99,11 @@ export default function ProgressDashboard({ problems }: { problems: CatalogProbl
           }} />
         <button type="button" disabled={storedAttempts === null} onClick={() => resetDialog.current?.showModal()}>Reset</button>
       </div>
-      <p class="muted progress-note">Progress is stored in this browser. Import replaces it.</p>
+      <p class="muted progress-note">Progress is stored in this browser. Import replaces attempts and any question ratings included in the file.</p>
       <p class="progress-message" role="status">{message}</p>
       <dialog ref={resetDialog} class="reset-dialog" aria-labelledby="reset-title" aria-describedby="reset-description">
         <h2 id="reset-title">Reset progress?</h2>
-        <p id="reset-description">This deletes all attempts in this browser. Exported files are kept.</p>
+        <p id="reset-description">This deletes all attempts and question ratings in this browser. Exported files are kept.</p>
         <div class="progress-actions">
           <button type="button" autoFocus onClick={() => resetDialog.current?.close()}>Keep progress</button>
           <button type="button" onClick={resetProgress}>Reset progress</button>

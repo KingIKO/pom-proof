@@ -1,4 +1,6 @@
 ---
+import CodeSamples from './CodeSamples.astro';
+
 interface Props {
   problemId: string;
   editorialHref?: string;
@@ -15,13 +17,13 @@ const { problemId, editorialHref } = Astro.props;
   )}
   <article id="problem-statement" class="prose">
     <h2 class:list={editorialHref && 'statement-heading'}>Problem</h2>
-    <slot />
+    <CodeSamples><slot /></CodeSamples>
   </article>
   {editorialHref && (
     <>
       <article id="problem-editorial" class="prose" hidden>
         <h2 class="visually-hidden">Editorial</h2>
-        <slot name="editorial" />
+        <CodeSamples><slot name="editorial" /></CodeSamples>
       </article>
       <noscript><p><a href={editorialHref}>Show editorial</a></p></noscript>
     </>

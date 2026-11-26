@@ -1,5 +1,111 @@
 title: Manual QA
 role: manual-qa
-problems:
-  - bug-report/refund-duplicate-receipts
-  - scenario/last-pickup-slot
+summary: Practice designing tests from requirements, checking the data behind the screen, and explaining which risks matter at release.
+sections:
+  - title: "Week 1: Test cases and reproducible bug reports"
+    note: Write expected and actual behavior so someone else can run the check and verify the fix.
+    problems:
+      - scenario/login-lockout
+      - bug-report/refund-duplicate-receipts
+      - bug-report/search-count-mismatches-filter
+      - bug-report/upload-cancel-stale-status
+    questions:
+      - fundamentals/good-test-case
+      - fundamentals/verification-validation
+      - fundamentals/testing-shows-defects
+      - bug-reports/write-a-good-bug-report
+      - bug-reports/severity-vs-priority
+      - bug-reports/defect-lifecycle-and-retest
+      - agile/definition-of-done-vs-acceptance
+  - title: "Week 2: Boundaries and decision tables"
+    note: Use table mode to show what happens just below, at, and above a limit, then cover combinations of rules.
+    problems:
+      - test-design/booking-ticket-limits
+      - test-design/cart-discount-codes
+      - scenario/checkout-discount-totals
+      - test-design/delivery-fee-mutants
+      - test-design/shipping-service-matrix
+      - test-design/line-discount-rounding
+      - bug-report/checkout-rounding-mobile-quote
+    questions:
+      - test-design/boundary-values-room-booking
+      - test-design/equivalence-partitions-pickup-alerts
+      - test-design/decision-table-pickup-eligibility
+      - fundamentals/exhaustive-testing
+      - fundamentals/test-types
+      - fundamentals/static-testing
+      - agile/bdd-discount-example
+  - title: "Week 3: SQL for checking records"
+    note: Match each query to the expected records, then check missing rows and counts before drawing a conclusion.
+    problems:
+      - sql/open-critical-defects
+      - sql/march-paid-orders
+      - sql/order-value-buckets
+      - sql/department-salary-coverage
+      - sql/employee-manager-directory
+      - sql/departments-without-employees
+      - sql/orphan-order-lines
+      - sql/order-line-price-mismatches
+    questions:
+      - api/assertions-beyond-status
+      - api/negative-api-tests
+      - api/pagination-coverage
+      - test-design/reconcile-filtered-report-export
+  - title: "Week 4: State changes and exploratory follow-up"
+    note: Follow the state before and after each action, including when a response arrives late or a user tries again.
+    problems:
+      - test-design/password-length-policy
+      - test-design/signup-username-rules
+      - scenario/password-reset-links
+      - test-design/order-status-transitions
+      - scenario/file-upload-visibility
+      - scenario/autocomplete-response-order
+      - scenario/notification-email-retry
+      - bug-report/shipment-email-delayed
+    questions:
+      - test-design/state-transitions-listing-review
+      - test-design/test-login
+      - test-design/test-file-upload
+      - test-design/test-search
+      - test-design/error-guessing-profile-settings
+      - fundamentals/exploratory-testing
+      - bug-reports/report-an-intermittent-bug
+  - title: "Week 5: Data discrepancies and triage"
+    note: Reconcile the evidence from different sources and write a report that makes the discrepancy reproducible.
+    problems:
+      - sql/duplicate-audit-events
+      - sql/duplicate-user-emails
+      - sql/users-with-two-account-changes
+      - sql/revenue-per-category
+      - sql/average-defect-close-time
+      - scenario/report-export-snapshot
+      - bug-report/report-export-omits-second-page
+      - bug-report/invoice-pdf-clips-final-line
+      - bug-report/benefits-form-focus-trap
+    questions:
+      - bug-reports/clarify-expected-behavior
+      - bug-reports/handle-works-on-my-machine
+      - behavioral/disagree-on-a-bug
+      - agile/regression-around-shared-search
+      - api/undocumented-api
+      - fundamentals/defect-clustering
+  - title: "Week 6: High-risk coverage and release decisions"
+    note: Explain what could harm users, what evidence still matters, and which risks would remain at release.
+    problems:
+      - scenario/last-pickup-slot
+      - test-design/claim-attachment-policy
+      - test-design/loan-precheck-rules
+      - test-design/sign-in-attempt-state
+      - test-design/monthly-renewal-date
+      - scenario/accessible-form-deadline
+      - scenario/mobile-offline-sync
+      - bug-report/offline-draft-disappears
+      - sql/release-cases-without-execution
+    questions:
+      - bug-reports/prioritize-release-triage
+      - test-design/prioritize-testing-before-release
+      - test-design/pairwise-alert-settings
+      - test-design/testing-without-requirements
+      - agile/testing-a-late-story
+      - behavioral/late-requirement-change
+      - behavioral/triage-with-limited-time
