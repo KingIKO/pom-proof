@@ -16,6 +16,7 @@ type Violation = { rule: Rule; where: string; value: string };
 function pageSamples() {
   const pages = join(root, 'src', 'pages');
   const editorials = readdirSync(join(root, 'content', 'editorials')).filter((file) => file.endsWith('.md')).sort();
+  const tracks = readdirSync(join(root, 'content', 'tracks')).filter((file) => /\.ya?ml$/.test(file)).sort();
   const routes = readdirSync(pages, { recursive: true, encoding: 'utf8' })
     .filter((file) => /\.(astro|md|mdx|html)$/.test(file))
     .map((file) => file.split(sep).join('/').replace(/\.\w+$/, '').replace(/(^|\/)index$/, ''));
@@ -26,6 +27,9 @@ function pageSamples() {
     }
     if (route === 'practice/[kind]/[id]') return { route, urls: onePerKind().map(({ path }) => path), status: 200 };
     if (route === 'editorials/[id]') return { route, urls: editorials.slice(0, 1).map((file) => `editorials/${file.slice(0, -3)}/`), status: 200 };
+    // The question 2E built the page against; it has every answer section, sources included.
+    if (route === 'questions/[topic]/[id]') return { route, urls: ['questions/playwright/independent-checkout-contexts/'], status: 200 };
+    if (route === 'tracks/[role]') return { route, urls: tracks.slice(0, 1).map((file) => `tracks/${file.replace(/\.ya?ml$/, '')}/`), status: 200 };
     return { route, urls: [], status: 200 };
   });
 }
@@ -104,6 +108,55 @@ function scan(page: Page): Promise<Violation[]> {
 }
 
 /**
+ * The focused element, followed into a same-origin frame (the locator fixture): its label, whether
+ * it or a wrapper shows a ring, and banned styles on it and its ancestors. Null when nothing has focus.
+ */
+function readFocusState(): { label: string; key: string; ring: boolean; problems: Violation[] } | null {
+  let active = document.activeElement;
+  while (active?.tagName === 'IFRAME' && (active as HTMLIFrameElement).contentDocument?.activeElement) {
+    const inner = (active as HTMLIFrameElement).contentDocument!.activeElement!;
+    if (inner === inner.ownerDocument.body) break;
+    active = inner;
+  }
+  if (!active || active === document.body) return null;
+  const label = (element: Element) =>
+    `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''} "${(element.textContent ?? '').trim().slice(0, 30)}"`;
+  const shadows = (value: string) => value.split(/,(?![^(]*\))/);
+  const isRing = (value: string) => shadows(value).every((shadow) => {
+    const [x = 0, y = 0, blur = 0, spread = 0] = shadow
+      .replace(/[a-z-]+\([^)]*\)/gi, '')
+      .replace(/inset|#[0-9a-f]+|[a-z]+(?=\s|$)/gi, '')
+      .trim()
+      .split(/\s+/)
+      .map(parseFloat);
+    return x === 0 && y === 0 && blur === 0 && spread > 0;
+  });
+  const up = (element: Element) => element.parentElement ?? (element.ownerDocument.defaultView!.frameElement as Element | null);
+  let ring = false;
+  for (let element: Element | null = active; element && element !== document.body && !ring; element = up(element)) {
+    const style = element.ownerDocument.defaultView!.getComputedStyle(element);
+    ring = (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0) || style.boxShadow !== 'none';
+  }
+  const problems: Violation[] = [];
+  for (let element: Element | null = active; element; element = up(element)) {
+    const style = element.ownerDocument.defaultView!.getComputedStyle(element);
+    const where = `${label(element)} while ${label(active)} has focus`;
+    // A natively drawn radio is round by the browser's own stylesheet, not by site styling.
+    const nativeRadio = element.matches('input[type="radio"]') && style.appearance !== 'none';
+    if (style.boxShadow !== 'none' && !isRing(style.boxShadow)) problems.push({ rule: 'box-shadow', where, value: style.boxShadow });
+    if (style.backgroundImage.includes('gradient')) problems.push({ rule: 'gradient', where, value: style.backgroundImage });
+    if (style.backdropFilter !== 'none') problems.push({ rule: 'backdrop-filter', where, value: style.backdropFilter });
+    for (const corner of ['border-top-left-radius', 'border-bottom-right-radius']) {
+      const value = style.getPropertyValue(corner);
+      if (!nativeRadio && value.split(/\s+/).some((part) => (part.endsWith('%') ? parseFloat(part) > 0 : parseFloat(part) > 4))) {
+        problems.push({ rule: 'border-radius', where, value: `${corner}: ${value}` });
+      }
+    }
+  }
+  return { label: `${active.tagName.toLowerCase()} "${(active.textContent ?? '').trim().slice(0, 30)}"`, key: label(active) + (active.getAttribute('href') ?? ''), ring, problems };
+}
+
+/**
  * Tabs through every focusable control. The focused element and its ancestors may carry a
  * focus ring (a zero-offset, zero-blur box-shadow spread), and nothing else from the banned list.
  */
@@ -117,74 +170,15 @@ async function scanFocusStates(page: Page): Promise<Violation[]> {
   let first: string | null = null;
   for (let step = 0; step <= limit; step += 1) {
     await page.keyboard.press('Tab');
-    // Read only once the focus style has applied (CodeMirror adds .cm-focused a moment after focus).
-    // Focus inside a same-origin frame (the locator fixture) is followed into the frame.
-    const label = await page.evaluate(() => {
-      let active = document.activeElement;
-      while (active?.tagName === 'IFRAME' && (active as HTMLIFrameElement).contentDocument?.activeElement) {
-        const inner = (active as HTMLIFrameElement).contentDocument!.activeElement!;
-        if (inner === inner.ownerDocument.body) break;
-        active = inner;
-      }
-      return active && active !== document.body ? `${active.tagName.toLowerCase()} "${(active.textContent ?? '').trim().slice(0, 30)}"` : null;
-    });
-    if (label === null) break;
-    await expect.poll(() => page.evaluate(() => {
-      let element: Element | null = document.activeElement;
-      while (element?.tagName === 'IFRAME' && (element as HTMLIFrameElement).contentDocument?.activeElement) {
-        const inner = (element as HTMLIFrameElement).contentDocument!.activeElement!;
-        if (inner === inner.ownerDocument.body) break;
-        element = inner;
-      }
-      while (element && element !== document.body) {
-        const style = element.ownerDocument.defaultView!.getComputedStyle(element);
-        if ((style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0) || style.boxShadow !== 'none') return true;
-        element = element.parentElement ?? (element.ownerDocument.defaultView!.frameElement as Element | null);
-      }
-      return false;
-    }), { message: `${label} has focus without a visible focus ring` }).toBe(true);
-    const state = await page.evaluate(() => {
-      let active = document.activeElement;
-      while (active?.tagName === 'IFRAME' && (active as HTMLIFrameElement).contentDocument?.activeElement) {
-        const inner = (active as HTMLIFrameElement).contentDocument!.activeElement!;
-        if (inner === inner.ownerDocument.body) break;
-        active = inner;
-      }
-      if (!active || active === document.body) return null;
-      const label = (element: Element) =>
-        `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''} "${(element.textContent ?? '').trim().slice(0, 30)}"`;
-      const shadows = (value: string) => value.split(/,(?![^(]*\))/);
-      const isRing = (value: string) => shadows(value).every((shadow) => {
-        const [x = 0, y = 0, blur = 0, spread = 0] = shadow
-          .replace(/[a-z-]+\([^)]*\)/gi, '')
-          .replace(/inset|#[0-9a-f]+|[a-z]+(?=\s|$)/gi, '')
-          .trim()
-          .split(/\s+/)
-          .map(parseFloat);
-        return x === 0 && y === 0 && blur === 0 && spread > 0;
-      });
-      const problems: Violation[] = [];
-      for (
-        let element: Element | null = active;
-        element;
-        element = element.parentElement ?? (element.ownerDocument.defaultView!.frameElement as Element | null)
-      ) {
-        const style = element.ownerDocument.defaultView!.getComputedStyle(element);
-        const where = `${label(element)} while ${label(active)} has focus`;
-        // A natively drawn radio is round by the browser's own stylesheet, not by site styling.
-        const nativeRadio = element.matches('input[type="radio"]') && style.appearance !== 'none';
-        if (style.boxShadow !== 'none' && !isRing(style.boxShadow)) problems.push({ rule: 'box-shadow', where, value: style.boxShadow });
-        if (style.backgroundImage.includes('gradient')) problems.push({ rule: 'gradient', where, value: style.backgroundImage });
-        if (style.backdropFilter !== 'none') problems.push({ rule: 'backdrop-filter', where, value: style.backdropFilter });
-        for (const corner of ['border-top-left-radius', 'border-bottom-right-radius']) {
-          const value = style.getPropertyValue(corner);
-          if (!nativeRadio && value.split(/\s+/).some((part) => (part.endsWith('%') ? parseFloat(part) > 0 : parseFloat(part) > 4))) {
-            problems.push({ rule: 'border-radius', where, value: `${corner}: ${value}` });
-          }
-        }
-      }
-      return { key: label(active) + (active.getAttribute('href') ?? ''), problems };
-    });
+    // One read per step; when the ring is not there yet, poll until it is (CodeMirror adds
+    // .cm-focused a moment after focus) and keep the state read once it shows.
+    let state = await page.evaluate(readFocusState);
+    if (state === null) break;
+    if (!state.ring) {
+      const label = state.label;
+      await expect.poll(async () => (state = await page.evaluate(readFocusState))?.ring ?? false,
+        { message: `${label} has focus without a visible focus ring` }).toBe(true);
+    }
     if (state === null || state.key === first) break;
     first ??= state.key;
     found.push(...state.problems);
@@ -236,7 +230,7 @@ for (const scheme of ['light', 'dark'] as const) {
       await openWorkspace(page, problem!);
       await submitStructured(page, problem!, 'decoy');
       expect(await scan(page), 'fail').toEqual([]);
-      await page.getByRole('button', { name: 'Try again' }).click();
+      await page.getByRole('region', { name: 'Workspace' }).getByRole('button', { name: 'Try again', exact: true }).click();
       await submitStructured(page, problem!, 'reference');
       expect(await scan(page), 'pass').toEqual([]);
     });
@@ -248,7 +242,7 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(scenario?.data.items.some(({ type }) => type === 'single-choice'), 'the scenario sample has a single-choice item').toBe(true);
     await page.emulateMedia({ colorScheme: scheme });
     await openWorkspace(page, scenario!);
-    await page.getByRole('button', { name: 'Submit' }).click();
+    await page.getByRole('region', { name: 'Workspace' }).getByRole('button', { name: 'Submit', exact: true }).click();
     await expect(resultPanel(page, 'Not graded')).toBeVisible();
     expect(await scan(page)).toEqual([]);
   });
@@ -283,12 +277,20 @@ test.describe('the guard catches planted slop', () => {
   }
 
   test('a soft focus shadow is reported and a focus ring is allowed', async ({ page }) => {
-    await settle(page, '', 200);
+    // A short page with links: this walks every focus stop three times, and the practice list grows with content.
+    await settle(page, 'tracks/', 200);
     const before = (await scanFocusStates(page)).filter(({ rule }) => rule === 'box-shadow').length;
     const ring = await page.addStyleTag({ content: 'a:focus-visible { box-shadow: 0 0 0 2px rgb(27 58 138); }' });
     expect((await scanFocusStates(page)).filter(({ rule }) => rule === 'box-shadow')).toHaveLength(before);
     await ring.evaluate((node) => (node as Element).remove());
     await page.addStyleTag({ content: 'a:focus-visible { box-shadow: 0 4px 12px rgb(0 0 0 / 30%); }' });
     expect((await scanFocusStates(page)).filter(({ rule }) => rule === 'box-shadow').length).toBeGreaterThan(before);
+  });
+
+  test('a control that takes focus without a ring is reported', async ({ page }) => {
+    await settle(page, 'tracks/', 200);
+    expect(await scanFocusStates(page), 'the page passes before the plant').toEqual([]);
+    await page.addStyleTag({ content: 'a:focus, a:focus-visible { outline: none !important; box-shadow: none !important; }' });
+    await expect(scanFocusStates(page)).rejects.toThrow(/has focus without a visible focus ring/);
   });
 });

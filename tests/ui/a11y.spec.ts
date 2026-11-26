@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { onePerKind } from '../support/problems';
+import { discoverProblems, kinds, onePerKind } from '../support/problems';
 import { openWorkspace, resultPanel, submitStructured } from '../support/workspace';
 
 const workspaces = onePerKind();
@@ -8,6 +8,10 @@ const pages = [
   { name: 'practice list', url: '' },
   ...workspaces.map((problem) => ({ name: `${problem.kind} workspace`, url: problem.path })),
   { name: 'progress', url: 'progress/' },
+  { name: 'questions list', url: 'questions/' },
+  { name: 'question page', url: 'questions/playwright/independent-checkout-contexts/' },
+  { name: 'tracks list', url: 'tracks/' },
+  { name: 'track page', url: 'tracks/automation/' },
 ];
 
 async function open(page: Page, url: string) {
@@ -51,14 +55,22 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(problem.data.items.some(({ type }) => type === 'single-choice'), 'the scenario sample has a single-choice item').toBe(true);
     await page.emulateMedia({ colorScheme: scheme });
     await openWorkspace(page, problem);
-    await page.getByRole('button', { name: 'Submit' }).click();
+    await page.getByRole('region', { name: 'Workspace' }).getByRole('button', { name: 'Submit', exact: true }).click();
     await expect(resultPanel(page, 'Not graded')).toBeVisible();
     await expectNoSeriousViolations(page, testInfo, 'not graded');
     await submitStructured(page, problem, 'decoy');
     await expectNoSeriousViolations(page, testInfo, 'fail');
-    await page.getByRole('button', { name: 'Try again' }).click();
+    await page.getByRole('region', { name: 'Workspace' }).getByRole('button', { name: 'Try again', exact: true }).click();
     await submitStructured(page, problem, 'reference');
     await expectNoSeriousViolations(page, testInfo, 'pass');
+  });
+
+  test(`${scheme}: a revealed question answer has no serious or critical axe violations`, async ({ page }, testInfo) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await open(page, 'questions/playwright/independent-checkout-contexts/');
+    await page.getByText('Show answer').click();
+    await expect(page.getByRole('group', { name: 'Rate your answer' })).toBeVisible();
+    await expectNoSeriousViolations(page, testInfo, 'revealed answer');
   });
 
   test(`${scheme}: code run results have no serious or critical axe violations`, async ({ page }, testInfo) => {
@@ -147,5 +159,28 @@ for (const problem of workspaces) {
     }
     expect(reached, 'Tab never reached the primary control').toBe(true);
     await expect(target).toBeFocused();
+  });
+}
+
+// Content decides whether a code block or the editor overflows, so this one rule runs on every
+// problem page rather than one per kind. Six pages per test keeps each test under the 10 s budget and spreads them over the workers.
+const allProblems = discoverProblems();
+const size = 6;
+const batches = kinds.flatMap((kind) => {
+  const list = allProblems.filter((problem) => problem.kind === kind);
+  return Array.from({ length: Math.max(1, Math.ceil(list.length / size)) }, (_, index) => ({ kind, index, list: list.slice(index * size, index * size + size) }));
+});
+
+for (const { kind, index, list } of batches) {
+  test(`scrollable regions are keyboard reachable on every ${kind} problem page (batch ${index + 1})`, async ({ page }) => {
+    expect(list.length, `${kind} problems in this batch`).toBeGreaterThan(0);
+    const found: string[] = [];
+    for (const problem of list) {
+      await open(page, problem.path);
+      const { violations, passes, inapplicable } = await new AxeBuilder({ page }).withRules(['scrollable-region-focusable']).analyze();
+      expect([...violations, ...passes, ...inapplicable].map(({ id }) => id), `${problem.id}: axe ran the rule`).toContain('scrollable-region-focusable');
+      found.push(...violations.flatMap(({ nodes }) => nodes.map(({ target }) => `${problem.id}: ${target.join(' ')}`)));
+    }
+    expect(found, 'scrollable regions with no keyboard access').toEqual([]);
   });
 }

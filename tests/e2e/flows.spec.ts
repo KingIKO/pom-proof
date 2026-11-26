@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { progressStorageKey } from '../../src/lib/contracts';
 import { discoverProblems, root, type DiscoveredProblem } from '../support/problems';
-import { openWorkspace, resultPanel, submitStructured } from '../support/workspace';
+import { openWorkspace, replaceEditor, resultPanel, submitStructured } from '../support/workspace';
 
 const problems = discoverProblems();
 const find = <K extends DiscoveredProblem['kind']>(kind: K) => {
@@ -21,13 +21,6 @@ const result = resultPanel;
 async function solveBugReport(page: Page) {
   await openWorkspace(page, bugReport);
   await submitStructured(page, bugReport, 'reference');
-}
-
-async function replaceEditor(editor: Locator, source: string) {
-  await editor.click();
-  await editor.press('ControlOrMeta+a');
-  await editor.page().keyboard.insertText(source);
-  await expect(editor).toContainText(source.split('\n')[0]);
 }
 
 test('list filters are reflected in the URL and survive a reload', async ({ page }) => {

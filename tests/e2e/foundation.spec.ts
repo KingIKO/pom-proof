@@ -3,11 +3,20 @@ import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { discoverProblems, root } from '../support/problems';
+import { discoverQuestions } from '../support/questions';
 
 const prefix = '/pom-proof/';
 const problems = discoverProblems();
+const questions = discoverQuestions();
 const editorials = readdirSync(join(root, 'content', 'editorials')).filter((file) => file.endsWith('.md')).map((file) => file.slice(0, -3));
-const pages = ['', 'questions/', 'tracks/', 'progress/', ...problems.map(({ path }) => path), ...editorials.map((id) => `editorials/${id}/`)];
+const tracks = readdirSync(join(root, 'content', 'tracks')).filter((file) => /\.ya?ml$/.test(file)).map((file) => file.replace(/\.ya?ml$/, ''));
+const pages = [
+  '', 'questions/', 'tracks/', 'progress/',
+  ...problems.map(({ path }) => path),
+  ...editorials.map((id) => `editorials/${id}/`),
+  ...questions.map(({ path }) => path),
+  ...tracks.map((role) => `tracks/${role}/`),
+];
 
 /** Records every request, failure and page error so a page can prove it loaded only from below the base. */
 function observeRequests(page: Page) {
@@ -38,6 +47,11 @@ function observeRequests(page: Page) {
 test('every problem has a page and an editorial', () => {
   expect(problems.length).toBeGreaterThan(0);
   expect(editorials.sort()).toEqual(problems.map(({ slug }) => slug).sort());
+});
+
+test('there are question and track pages to load', () => {
+  expect(questions.length, 'no question files').toBeGreaterThan(0);
+  expect(tracks.sort(), 'one track per role').toEqual(['automation', 'manual-qa', 'sdet', 'senior']);
 });
 
 for (const url of pages) {
@@ -88,9 +102,14 @@ test('mobile dark theme navigation, question disclosure, and access checks', asy
   await expect(page).toHaveURL(`${prefix}#main`);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  const question = questions.find(({ id }) => id === 'playwright/independent-checkout-contexts');
+  expect(question, 'the sample question').toBeDefined();
+  const oneLine = String(question!.frontmatter.oneLine);
   await page.getByRole('link', { name: 'Questions' }).click();
-  await page.getByText('Read the model answer').click();
-  await expect(page.getByText('Use separate contexts', { exact: false })).toBeVisible();
+  await page.getByRole('link', { name: String(question!.frontmatter.title), exact: true }).click();
+  await expect(page.getByText(oneLine)).toBeHidden();
+  await page.getByText('Show answer').click();
+  await expect(page.getByText(oneLine)).toBeVisible();
   await page.getByRole('link', { name: 'Tracks' }).click();
   await expect(page.getByRole('heading', { name: 'QA automation' })).toBeVisible();
   await page.getByRole('link', { name: 'Progress' }).click();

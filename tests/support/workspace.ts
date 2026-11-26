@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import type { DiscoveredProblem } from './problems';
 
 type StructuredData = Extract<DiscoveredProblem['data'], { kind: 'scenario' | 'diagnosis' | 'bug-report' }>;
@@ -9,6 +9,14 @@ export async function openWorkspace(page: Page, problem: DiscoveredProblem) {
   await expect(page.getByRole('heading', { level: 1, name: problem.data.title })).toBeVisible();
   // Astro removes the ssr attribute once an island hydrates.
   await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+}
+
+/** Replaces the whole CodeMirror document with `source`, typed as one input so nothing is auto-indented. */
+export async function replaceEditor(editor: Locator, source: string) {
+  await editor.click();
+  await editor.press('ControlOrMeta+a');
+  await editor.page().keyboard.insertText(source);
+  await expect(editor).toContainText(source.split('\n')[0]);
 }
 
 /** The result panel once it shows a mark: Pass, Fail or Not graded. */
@@ -52,6 +60,7 @@ export async function answerStructured(page: Page, data: StructuredData, value: 
 
 export async function submitStructured(page: Page, problem: DiscoveredProblem & { data: StructuredData }, which: 'reference' | 'decoy') {
   await answerStructured(page, problem.data, problem.data[which]);
-  await page.getByRole('button', { name: 'Submit' }).click();
+  // Exact and inside the workspace: answer options may contain the word, as in "Move up: Activate Submit ...".
+  await page.getByRole('region', { name: 'Workspace' }).getByRole('button', { name: 'Submit', exact: true }).click();
   await expect(resultPanel(page, which === 'reference' ? 'Pass' : 'Fail')).toBeVisible();
 }
