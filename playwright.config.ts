@@ -5,7 +5,11 @@ import { defineConfig, devices } from '@playwright/test';
 // 8 workers; each test under 10 s except the Python ones, which may load Pyodide twice (about 10 s
 // measured 2026-11-26 on a fully loaded machine). Unit tests stay under 1 s each.
 const port = 4405;
-const baseURL = `http://localhost:${port}/pom-proof/`;
+// BASE_URL points the run at an already running site, such as the live one
+// (BASE_URL=https://kingiko.github.io/pom-proof/ npx playwright test tests/e2e/smoke.spec.ts); then no
+// local server is built or started.
+const external = process.env.BASE_URL?.trim();
+const baseURL = external ? external.replace(/\/?$/, '/') : `http://localhost:${port}/pom-proof/`;
 const ci = Boolean(process.env.CI);
 
 export default defineConfig({
@@ -23,7 +27,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
+  webServer: external ? undefined : {
     // --ignore-lock: Astro 7 refuses a second preview in one project (other parts preview their own
     // builds here) and, when it detects an agent, moves preview to the background, where Playwright
     // would lose the process. The flag keeps this server in the foreground beside the others.
