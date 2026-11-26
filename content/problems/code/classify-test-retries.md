@@ -18,7 +18,7 @@ starters:
       return 'not-run';
     }
   python: |
-    def classifyRun(attempts):
+    def classify_run(attempts):
         return "not-run"
 vectors:
   - { name: empty, args: [[]], expected: not-run }
@@ -37,6 +37,34 @@ reference:
       if (last === 'failed') return 'failed';
       return executed.includes('failed') ? 'flaky' : 'passed';
     }
+solutions:
+  js: |
+    export function classifyRun(attempts) {
+      const executed = attempts.filter((outcome) => outcome !== 'skipped');
+      const last = executed.at(-1);
+      if (last === undefined) return 'not-run';
+      if (last === 'failed') return 'failed';
+      return executed.includes('failed') ? 'flaky' : 'passed';
+    }
+  ts: |
+    type Outcome = 'passed' | 'failed' | 'skipped';
+    type Result = 'not-run' | 'passed' | 'flaky' | 'failed';
+
+    export function classifyRun(attempts: Outcome[]): Result {
+      const executed = attempts.filter((outcome) => outcome !== 'skipped');
+      const last = executed.at(-1);
+      if (last === undefined) return 'not-run';
+      if (last === 'failed') return 'failed';
+      return executed.includes('failed') ? 'flaky' : 'passed';
+    }
+  python: |
+    def classify_run(attempts):
+        executed = [outcome for outcome in attempts if outcome != "skipped"]
+        if not executed:
+            return "not-run"
+        if executed[-1] == "failed":
+            return "failed"
+        return "flaky" if "failed" in executed else "passed"
 decoy:
   language: js
   source: |

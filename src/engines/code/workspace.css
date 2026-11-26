@@ -8,5 +8,6 @@
 .code-checks dd { margin-inline-start: 0; }
 .code-checks dd + dt { margin-block-start: .35rem; }
 .code-checks pre { margin-block: .25rem 0; }
+.code-error, [data-engine='code'] .result[data-status='warn'] .result-content p { white-space: pre-wrap; }
 .check-mark[data-status='pass'] { color: var(--pass); }
 .check-mark[data-status='fail'] { color: var(--fail); }
