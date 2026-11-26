@@ -14,6 +14,7 @@ export const roleLabel = {
   'manual-qa': 'Manual QA',
   automation: 'QA automation',
   sdet: 'SDET',
+  senior: 'Senior and lead QA',
 } satisfies Record<Role, string>;
 
 export const difficultyLabel = {
