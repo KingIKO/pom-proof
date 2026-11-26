@@ -88,6 +88,7 @@ export default function CodeEditor(props: Props) {
 
   const contentAttributes = (label: string, run: boolean) => EditorView.contentAttributes.of({
     'aria-label': label,
+    tabindex: '0',
     ...(run ? { 'aria-keyshortcuts': 'Control+Enter Meta+Enter' } : {}),
   });
 
