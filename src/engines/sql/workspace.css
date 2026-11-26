@@ -1,0 +1,16 @@
+.sql-schema {
+  margin-block: .75rem;
+}
+
+.sql-schema > div { margin-block: .35rem; }
+.sql-schema dd { margin-inline-start: 0; }
+.sql-table { overflow-x: auto; }
+.sql-table caption {
+  color: var(--muted);
+  text-align: start;
+}
+
+.sql-table td, .sql-table th { min-inline-size: 3rem; }
+.sql-datasets { padding-inline-start: 1.5rem; }
+.sql-datasets [data-status='pass'] { color: var(--pass); }
+.sql-datasets [data-status='fail'] { color: var(--fail); }
