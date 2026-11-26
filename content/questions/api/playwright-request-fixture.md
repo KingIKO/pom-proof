@@ -1,0 +1,26 @@
+---
+title: "How would you write a Playwright API test without opening a browser page?"
+topic: api
+roles: [automation, sdet]
+level: mid
+type: tooling
+oneLine: "Use Playwright Test's built-in request fixture with an isolated test identity, then assert the response and read back the result."
+looksFor:
+  - "Uses the request fixture rather than a UI navigation."
+  - "Keeps environment and credentials out of the test body."
+  - "Uses an exact status and meaningful data assertions."
+  - "Uses independent data or reliable cleanup."
+trap: "Checking response.ok() alone on an endpoint that promises a particular resource and status."
+followUps:
+  - question: "When might you use page.request instead?"
+    answer: "When I want the request to share cookies with that page's browser context, such as reading back a change made with that session."
+sources:
+  - label: "Playwright, API testing"
+    url: https://playwright.dev/docs/api-testing
+---
+
+I'd take `request` from the test function's fixtures. It sends requests directly and uses Playwright Test configuration such as `baseURL`. I'd provide credentials from the test environment and keep the payload beside the assertions. For a write I'd check the exact status from our contract and verify the resulting resource using a separate read.
+
+### Example
+
+In a test with a dedicated account I'd call `request.post('/labels', { data: { name } })` with a unique `name`. I'd check `response.status()` is `201`, read the ID from `await response.json()`, and use `request.get` to check the saved name. I'd clean up that ID or reset the dedicated account after the run.
