@@ -4,8 +4,11 @@ kind: test-design
 topic: boundary-testing
 difficulty: medium
 minutes: 10
-roles: [automation, sdet]
+roles: [manual-qa, automation, sdet]
 exportName: quoteFee
+params:
+  - { name: subtotalCents, type: number, label: Subtotal (cents) }
+  - { name: zone, type: enum, label: Zone, values: [local, remote] }
 implementation: |
   export function quoteFee(subtotalCents, zone) {
     if (zone === 'remote') return 900;
@@ -41,6 +44,11 @@ reference:
         if (actual !== expected) throw new Error(`${zone} ${subtotal}: expected ${expected}, got ${actual}`);
       }
     }
+rowsReference:
+  rows:
+    - { args: [4999, local], expected: 450 }
+    - { args: [5000, local], expected: 0 }
+    - { args: [5000, remote], expected: 900 }
 decoy:
   source: |
     export function test(quoteFee) {
@@ -52,4 +60,4 @@ decoy:
 
 The delivery quote module accepts a subtotal in integer cents and a zone. A `local` order costs 450 cents to deliver below 5,000 cents and is free from 5,000 cents. Every `remote` order costs 900 cents to deliver.
 
-Write a JavaScript `export function test(quoteFee)` that throws an error on a failed assertion. It should pass against the real function and reject each faulty version. These checks sit below the Playwright checkout test so a pricing mistake can be found without opening a browser.
+Fill the table with inputs and expected fees, or write a JavaScript `export function test(quoteFee)` that throws on a failed assertion. Your checks must pass against the real function and catch each faulty version.
