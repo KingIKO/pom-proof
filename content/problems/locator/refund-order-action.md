@@ -1,6 +1,7 @@
 ---
 title: Locate the right refund button
 kind: locator
+syntax: playwright
 topic: playwright
 difficulty: easy
 minutes: 6
@@ -41,7 +42,7 @@ variants:
 reference:
   by: expression
   source: "page.getByRole('button', { name: 'Refund order PP104', exact: true })"
-decoy: { by: css, selector: '.actions > button:nth-child(2)' }
+decoy: { by: expression, source: "page.locator('.actions > button:nth-child(2)')" }
 ---
 
 The support console lists orders `PP104` and `PP105`. Each row has a button whose visible text is `Refund`. The button for `PP104` has the accessible name `Refund order PP104`. A layout revision moves actions and may reorder the rows.

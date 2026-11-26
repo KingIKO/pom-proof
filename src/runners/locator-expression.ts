@@ -2,15 +2,25 @@ import {
   getByLabelSelector, getByPlaceholderSelector, getByRoleSelector, getByTestIdSelector,
   getByTextSelector, Ivya,
 } from 'ivya';
-import type { Answer } from '../lib/contracts';
+import type { Answer, Problem } from '../lib/contracts';
 
 type Selector = { engine: 'css' | 'xpath' | 'ivya'; selector: string; warnings: string[] };
+type LocatorValue = Answer<'locator'>['value'];
+type LocatorSyntax = NonNullable<Problem<'locator'>['syntax']>;
 type Value = string | number | boolean;
 const testIdAttribute = 'data-testid';
 const ivya = Ivya.create({ browser: 'chromium', testIdAttribute });
 const positionWarning = 'This locator depends on position.';
 const absoluteWarning = 'An absolute XPath depends on the full layout.';
 const classWarning = 'A generated class name may change between builds.';
+const selectorPrefix = /^(css|xpath)=/;
+const playwrightExpression = /^page\s*\.\s*(?:[$\w]+\s*\(|$)/;
+
+export const locatorSyntaxLabel = {
+  css: 'a CSS locator',
+  xpath: 'an XPath locator',
+  playwright: 'a Playwright-style locator',
+} satisfies Record<LocatorSyntax, string>;
 
 function unquote(literal: string) {
   const escapes: Record<string, string> = { n: '\n', r: '\r', t: '\t', b: '\b', f: '\f', v: '\v', '0': '\0' };
@@ -133,21 +143,36 @@ function selectorWarnings(engine: 'css' | 'xpath', selector: string) {
   return warnings;
 }
 
+function plainSyntax(source: string): 'css' | 'xpath' {
+  const prefix = selectorPrefix.exec(source);
+  return prefix?.[1] === 'xpath' || (!prefix && /^(?:\(*\s*\/|\.\.?\/|[a-z-]+::)/i.test(source)) ? 'xpath' : 'css';
+}
+
 function plainSelector(source: string, engine?: 'css' | 'xpath'): Selector {
   const trimmed = source.trim();
-  const prefix = /^(css|xpath)=/.exec(trimmed);
+  const prefix = selectorPrefix.exec(trimmed);
   const selector = prefix && (!engine || prefix[1] === engine) ? trimmed.slice(prefix[0].length).trim() : trimmed;
-  const format = engine ?? (prefix?.[1] === 'xpath' || (!prefix && /^(?:\(*\s*\/|\.\.?\/|[a-z-]+::)/i.test(trimmed)) ? 'xpath' : 'css');
+  const format = engine ?? plainSyntax(trimmed);
   if (!selector) throw new Error('Enter a locator');
   return { engine: format, selector, warnings: selectorWarnings(format, selector) };
 }
 
-export function compileLocator(value: Answer<'locator'>['value']): Selector {
+function locatorSyntax(value: LocatorValue): LocatorSyntax {
+  if (value.by === 'css' || value.by === 'xpath') return value.by;
+  if (value.by !== 'expression') return 'playwright';
+  const source = value.source.trim();
+  if (!source) throw new Error('Enter a locator');
+  return playwrightExpression.test(source) ? 'playwright' : plainSyntax(source);
+}
+
+export function compileLocator(value: LocatorValue, requiredSyntax?: LocatorSyntax): Selector {
+  const syntax = locatorSyntax(value);
+  if (requiredSyntax && syntax !== requiredSyntax) {
+    throw new Error(`This problem asks for ${locatorSyntaxLabel[requiredSyntax]}.`);
+  }
   switch (value.by) {
     case 'expression':
-      return /^page\s*\.\s*(?:[$\w]+\s*\(|$)/.test(value.source.trim())
-        ? expression(value.source.trim())
-        : plainSelector(value.source);
+      return syntax === 'playwright' ? expression(value.source.trim()) : plainSelector(value.source, syntax);
     case 'css':
     case 'xpath':
       return plainSelector(value.selector, value.by);

@@ -1,6 +1,7 @@
 ---
 title: Find the cancel action for a pending receipt delivery
 kind: locator
+syntax: playwright
 topic: playwright
 difficulty: hard
 minutes: 8

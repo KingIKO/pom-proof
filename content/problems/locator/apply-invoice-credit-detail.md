@@ -1,6 +1,7 @@
 ---
 title: Find the apply action in an invoice credit detail row
 kind: locator
+syntax: xpath
 topic: playwright
 difficulty: hard
 minutes: 9

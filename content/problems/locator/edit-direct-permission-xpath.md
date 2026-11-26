@@ -1,6 +1,7 @@
 ---
 title: Find the edit action for a direct permission
 kind: locator
+syntax: xpath
 topic: playwright
 difficulty: hard
 minutes: 9

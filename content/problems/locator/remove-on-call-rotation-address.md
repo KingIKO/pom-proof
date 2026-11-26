@@ -1,6 +1,7 @@
 ---
 title: Find the address removal action for the on-call rotation
 kind: locator
+syntax: playwright
 topic: playwright
 difficulty: hard
 minutes: 8

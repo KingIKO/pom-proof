@@ -84,6 +84,7 @@ const problem = z.discriminatedUnion('kind', [
   z.strictObject({
     ...common,
     kind: z.literal('locator'),
+    syntax: z.enum(['css', 'xpath', 'playwright']).optional(),
     fixture: source,
     target: textSchema,
     variants: z.array(z.strictObject({ name: idSchema, fixture: source })).min(1),

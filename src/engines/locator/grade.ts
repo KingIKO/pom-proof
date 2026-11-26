@@ -4,7 +4,7 @@ import { inFixture } from './fixtures';
 
 export const grade: Grader<'locator'> = async (problem, { value }) => {
   try {
-    const selector = compileLocator(value);
+    const selector = compileLocator(value, problem.syntax);
     const fixtures = await Promise.all([{ name: 'original', fixture: problem.fixture }, ...problem.variants].map(
       ({ name, fixture }) => inFixture(fixture, (doc) => {
         const actual = new Set(resolveLocator(doc, selector));

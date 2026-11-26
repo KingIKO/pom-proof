@@ -1,6 +1,7 @@
 ---
 title: Find the close button in the open export dialog
 kind: locator
+syntax: css
 topic: playwright
 difficulty: medium
 minutes: 6

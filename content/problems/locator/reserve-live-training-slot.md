@@ -1,6 +1,7 @@
 ---
 title: Find the live reservation action for a training slot
 kind: locator
+syntax: xpath
 topic: playwright
 difficulty: hard
 minutes: 9

@@ -1,6 +1,7 @@
 ---
 title: Find the available service slot input
 kind: locator
+syntax: css
 topic: playwright
 difficulty: medium
 minutes: 6
