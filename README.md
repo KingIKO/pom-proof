@@ -1,6 +1,18 @@
 # POM Proof
 
-Free interview practice for QA, test automation, and SDET roles. The site is static and the practice catalog is its home page.
+POM Proof is a free, static [interview practice site](https://kingiko.github.io/pom-proof/) for QA, test automation, and SDET roles. It has graded exercises, interview questions with model answers, and study tracks by role.
+
+## How practice is graded
+
+| Kind | What the grader checks |
+| --- | --- |
+| Scenario, diagnosis, and bug report | The selections or order for each item against the published answer key. These exercises do not grade free text. |
+| Test design | Whether the submitted test function or test rows pass on the original implementation and catch its faulty versions. |
+| Locator | Whether the locator matches exactly the target elements in the original fixture and its variants. Some problems require CSS, XPath, or a Playwright-style locator. |
+| SQL | Whether the query returns the expected results on the visible and hidden SQLite datasets. |
+| Code | Whether a JavaScript, TypeScript, or Python function returns the expected result for each input. |
+
+Grading runs in the browser. Answer keys and test inputs ship with the site, so results are for practice. Progress is stored in the browser. The first Python run downloads Pyodide. Locator practice uses Playwright-first examples, with Selenium covered in examples and reading. The site does not run Selenium or support Java submissions.
 
 ## Run locally
 
@@ -8,25 +20,23 @@ Use Node 24.
 
 ```sh
 npm ci
+npm run dev
+```
+
+Open `http://localhost:4321/pom-proof/` to browse locally. To check the site, run:
+
+```sh
 npx playwright install chromium
 npm run verify
 ```
 
-`verify` checks types, builds the site, runs unit tests, and runs Chromium against Astro preview. Playwright starts and stops preview on port 4327. To browse a build, run `npm run preview` and open `http://localhost:4321/pom-proof/`. The two runtime probes are at `/pom-proof/spike/`.
+`verify` checks types, builds the site, runs unit tests, and runs Chromium against the built site.
 
-To exercise build-time reference validation, temporarily replace `scenario/last-pickup-slot` with `scenario/missing-slot` in `content/tracks/manual-qa.yaml`. `npm run build` exits with `Track "manual-qa" references missing problem "scenario/missing-slot"`. Restore the original ID and rerun the build.
+## Add a problem
 
-## Author content
+1. Create `content/problems/<kind>/<id>.md`. Use an existing exercise of the same kind as a template. Give the problem a full-credit `reference` answer and a plausible weaker `decoy`. Use lowercase letters, digits, and hyphens for the ID, and keep it unique across kinds. If a locator prompt requires a format, set `syntax` to `css`, `xpath`, or `playwright` and write both answers in that format.
+2. Create `content/editorials/<id>.md` with `problem: <kind>/<id>` in its frontmatter. Explain why the reference works, where the decoy fails, and what an interviewer looks for. Link to primary sources when explaining a tool or standard.
 
-- Problem IDs are `<kind>/<id>`. IDs use lowercase letters, digits, and hyphens. Keep the final segment unique across kinds so it can name the matching editorial.
-- Editorials use `problem: <kind>/<id>`. Tracks use those same problem IDs in their ordered `problems` list.
-- A problem’s `reference` and `decoy` use the same value shape as an engine answer. `window.__pomproof.grade({ kind, value })` is available after the workspace hydrates. A non-graded result has no score.
-- Use `src/lib/url.ts` for internal page links. Vite emits worker and WASM URLs under the configured base.
+Run `npm run verify`. The solvable gate checks every problem in Chromium. A reference must score 1, a decoy must be graded and score below 1, and every listed alternate solution must score 1.
 
-## Runtime and deployment limits
-
-The five workspace engines report `Not built yet`. The progress store has a type contract only. The probes run fixed inputs; there is no evaluator for learner code, SQL, or locator submissions.
-
-For engine work, run JS/TS in a dedicated module worker with `JS_WORKER_TIMEOUT_MS`, and load Python in a separate worker from the jsDelivr pin in `src/lib/run-worker.ts`. Render locator fixtures in an `iframe` with `sandbox="allow-same-origin"` and `srcdoc`; never grant `allow-scripts`. A worker timeout limits execution time but does not remove same-origin or network capabilities. Verify those boundaries before running submissions. The site does not require cross-origin isolation.
-
-The workflow uploads the `dist` directory created by `verify`. In the repository’s Pages settings, the source must be GitHub Actions. After deployment, open `https://kingiko.github.io/pom-proof/spike/` and confirm it shows `2` and `1`.
+The project research is in [docs/RESEARCH.md](docs/RESEARCH.md).

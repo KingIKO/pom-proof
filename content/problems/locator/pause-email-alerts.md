@@ -1,6 +1,7 @@
 ---
 title: Find the pause action for email alerts
 kind: locator
+syntax: css
 topic: playwright
 difficulty: easy
 minutes: 5

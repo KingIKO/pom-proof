@@ -1,6 +1,7 @@
 ---
 title: Find the invoice PDF download
 kind: locator
+syntax: css
 topic: playwright
 difficulty: easy
 minutes: 5

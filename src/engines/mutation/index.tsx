@@ -1,5 +1,5 @@
-import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-import CodeEditor from '../../components/editor/CodeEditor';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import type CodeEditor from '../../components/editor/CodeEditor';
 import ResultPanel from '../../components/shell/ResultPanel';
 import type { Answer, GradeResult, Json, Problem } from '../../lib/contracts';
 import { recordResult, useGradeHook } from '../../lib/workspace';
@@ -65,12 +65,23 @@ export default function Mutation({ problem }: { problem: Problem<'test-design'> 
   const [mode, setMode] = useState<Mode>(params ? 'table' : 'code');
   const [rows, setRows] = useState<Row[]>(() => [blank(0, params?.length ?? 0)]);
   const [source, setSource] = useState(`export function test(${problem.exportName}) {\n  \n}`);
+  const [editor, setEditor] = useState<typeof CodeEditor | 'unavailable'>();
   const [result, setResult] = useState<GradeResult<'test-design'> | null>(null);
   const [busy, setBusy] = useState(false);
   const nextId = useRef(1);
   const focusRow = useRef<number | 'add' | null>(null);
   const rowsPanel = useRef<HTMLDivElement>(null);
   useGradeHook(problem, grade);
+
+  useEffect(() => {
+    if (mode !== 'code' || editor) return;
+    let active = true;
+    void import('../../components/editor/CodeEditor').then(
+      ({ default: Editor }) => { if (active) setEditor(() => Editor); },
+      () => { if (active) setEditor('unavailable'); },
+    );
+    return () => { active = false; };
+  }, [mode, editor]);
 
   useLayoutEffect(() => {
     if (focusRow.current === null) return;
@@ -95,7 +106,7 @@ export default function Mutation({ problem }: { problem: Problem<'test-design'> 
   }
 
   async function submit() {
-    if (busy) return;
+    if (busy || (mode === 'code' && typeof editor !== 'function')) return;
     let value: MutationValue;
     try {
       value = mode === 'table' && params ? readRows(rows, params) : { source };
@@ -113,6 +124,7 @@ export default function Mutation({ problem }: { problem: Problem<'test-design'> 
     }
   }
 
+  const Editor = typeof editor === 'function' ? editor : undefined;
   return <div class="mutation-workspace">
     <form noValidate onSubmit={(event) => { event.preventDefault(); void submit(); }}>
       {params && <fieldset class="mutation-modes">
@@ -146,11 +158,11 @@ export default function Mutation({ problem }: { problem: Problem<'test-design'> 
           </table>
         </div>
         <button type="button" data-add-row onClick={addRow}>Add row</button>
-      </div> : <>
+      </div> : Editor ? <>
         <p class="muted">Throw an error when an assertion fails.</p>
-        <CodeEditor label="Test function" language="js" value={source} onChange={setSource} onRun={() => void submit()} />
-      </>}
-      <button class="primary" type="submit" disabled={busy}>{busy ? 'Checking…' : 'Submit'}</button>
+        <Editor label="Test function" language="js" value={source} onChange={setSource} onRun={() => void submit()} />
+      </> : <p class="muted" role="status">{editor === 'unavailable' ? 'Unable to load the editor; reload the page.' : 'Loading editor…'}</p>}
+      <button class="primary" type="submit" disabled={busy || (mode === 'code' && !Editor)}>{busy ? 'Checking…' : 'Submit'}</button>
     </form>
     <ResultPanel result={result} busy={busy} misses={resultMisses(result)} />
     {result?.status === 'graded' && result.details.validOnReference && <ul aria-label="Faulty versions">

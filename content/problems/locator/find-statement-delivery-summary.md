@@ -1,6 +1,7 @@
 ---
 title: Find the paper statement delivery summary
 kind: locator
+syntax: xpath
 topic: playwright
 difficulty: medium
 minutes: 7

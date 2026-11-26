@@ -12,11 +12,12 @@ const pages = [
   { name: 'question page', url: 'questions/playwright/independent-checkout-contexts/' },
   { name: 'tracks list', url: 'tracks/' },
   { name: 'track page', url: 'tracks/automation/' },
+  { name: '404 page', url: 'this-page-does-not-exist/', status: 404 },
 ];
 
-async function open(page: Page, url: string) {
+async function open(page: Page, url: string, status = 200) {
   const response = await page.goto(url);
-  expect(response?.status(), `${url} status`).toBe(200);
+  expect(response?.status(), `${url} status`).toBe(status);
   await expect(page.locator('main')).toBeVisible();
   // Astro removes the ssr attribute once an island hydrates.
   await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
@@ -41,10 +42,10 @@ async function expectNoSeriousViolations(page: Page, testInfo: TestInfo, state: 
 }
 
 for (const scheme of ['light', 'dark'] as const) {
-  for (const { name, url } of pages) {
+  for (const { name, url, status } of pages) {
     test(`${scheme}: ${name} has no serious or critical axe violations`, async ({ page }, testInfo) => {
       await page.emulateMedia({ colorScheme: scheme });
-      await open(page, url);
+      await open(page, url, status);
       await expectNoSeriousViolations(page, testInfo, name);
     });
   }

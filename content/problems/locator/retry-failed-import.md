@@ -1,6 +1,7 @@
 ---
 title: Find the failed import retry button
 kind: locator
+syntax: xpath
 topic: playwright
 difficulty: easy
 minutes: 5

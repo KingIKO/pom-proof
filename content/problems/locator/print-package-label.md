@@ -1,6 +1,7 @@
 ---
 title: Find the print action for a package label
 kind: locator
+syntax: css
 topic: playwright
 difficulty: medium
 minutes: 6

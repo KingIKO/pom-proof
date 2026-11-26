@@ -43,4 +43,5 @@
 @media (max-width: 32rem) {
   .practice-meta span { flex-basis: 100%; border: 0; padding-inline: 0; }
   .statement .prose :is(th, td) { padding: .4rem .3rem; }
+  .workspace :where(button, select, input:not([type='radio'], [type='checkbox'])) { min-block-size: 2.75rem; }
 }

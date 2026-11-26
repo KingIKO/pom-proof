@@ -1,6 +1,7 @@
 ---
 title: Find the enabled resume action for a regional job
 kind: locator
+syntax: css
 topic: playwright
 difficulty: hard
 minutes: 8

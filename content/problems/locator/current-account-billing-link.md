@@ -1,6 +1,7 @@
 ---
 title: Find the current billing link in account settings
 kind: locator
+syntax: css
 topic: playwright
 difficulty: hard
 minutes: 8

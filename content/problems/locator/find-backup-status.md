@@ -1,6 +1,7 @@
 ---
 title: Find a waiting backup status
 kind: locator
+syntax: xpath
 topic: playwright
 difficulty: easy
 minutes: 5

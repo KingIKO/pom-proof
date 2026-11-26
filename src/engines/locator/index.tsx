@@ -2,26 +2,28 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import ResultPanel from '../../components/shell/ResultPanel';
 import type { GradeResult, Problem } from '../../lib/contracts';
 import { recordResult, useGradeHook } from '../../lib/workspace';
-import { compileLocator, resolveLocator } from '../../runners/locator-expression';
+import { compileLocator, locatorSyntaxLabel, resolveLocator } from '../../runners/locator-expression';
 import { fixtureHtml, fixtureSrcDoc } from './fixtures';
 import { grade } from './grade';
 import './locator.css';
 
-function Fixture({ fixture, title, source, live }: { fixture: string; title: string; source: string; live?: boolean }) {
+function Fixture({ fixture, title, source, syntax, live }: {
+  fixture: string; title: string; source: string; syntax?: Problem<'locator'>['syntax']; live?: boolean;
+}) {
   const frame = useRef<HTMLIFrameElement>(null);
   const [loaded, setLoaded] = useState<Document>();
   const [preview, setPreview] = useState('');
   const html = useMemo(() => loaded ? fixtureHtml(loaded) : null, [loaded]);
   function readFrame() {
     const doc = frame.current?.contentDocument;
-    setLoaded(doc?.URL === 'about:srcdoc' ? doc : undefined);
+    if (doc?.URL === 'about:srcdoc' && doc.body && doc.readyState === 'complete') setLoaded(doc);
   }
   useEffect(readFrame, []);
   useEffect(() => {
     if (!loaded || !source.trim()) { setPreview(''); return; }
     const highlights: Animation[] = [];
     try {
-      const elements = resolveLocator(loaded, compileLocator({ by: 'expression', source }));
+      const elements = resolveLocator(loaded, compileLocator({ by: 'expression', source }, syntax));
       setPreview(`${elements.length} ${elements.length === 1 ? 'match' : 'matches'}`);
       const color = getComputedStyle(frame.current!).getPropertyValue('--accent');
       for (const element of elements) {
@@ -33,7 +35,7 @@ function Fixture({ fixture, title, source, live }: { fixture: string; title: str
       setPreview(error instanceof Error ? error.message : 'Unable to read the locator');
     }
     return () => highlights.forEach((highlight) => highlight.cancel());
-  }, [loaded, source]);
+  }, [loaded, source, syntax]);
 
   return <section aria-label={title}>
     <iframe
@@ -84,18 +86,21 @@ export default function Locator({ problem }: { problem: Problem<'locator'> }) {
       <input id="locator-expression" type="text" value={source}
         aria-describedby="locator-formats" spellcheck={false} autoComplete="off" autoCapitalize="off"
         onInput={(event) => setSource(event.currentTarget.value)} />
-      <p class="muted" id="locator-formats">Use CSS, XPath, or a Playwright-style locator such as <code>page.getByRole('button')</code>.</p>
+      <p class="muted" id="locator-formats">{problem.syntax
+        ? <>Use {locatorSyntaxLabel[problem.syntax]}{problem.syntax === 'xpath' && <>, such as <code>xpath=//button</code></>}.</>
+        : <>Use CSS, XPath, or a Playwright-style locator such as <code>page.getByRole('button')</code>.</>}
+      </p>
       <button class="primary" type="submit" disabled={busy}>{busy ? 'Checking…' : 'Submit'}</button>
     </form>
     <h3>Original fixture</h3>
-    <Fixture title="Original fixture" fixture={problem.fixture} source={source} live />
+    <Fixture title="Original fixture" fixture={problem.fixture} source={source} syntax={problem.syntax} live />
     <ResultPanel result={result} busy={busy} misses={misses} />
     {details?.warnings.map((warning) => <p class="locator-warning" key={warning}>Warning: {warning}</p>)}
     {submitted !== undefined && <section aria-labelledby="locator-variants">
       <h3 id="locator-variants">Fixture variants</h3>
       {problem.variants.map(({ name, fixture }) => <div class="locator-variant" key={name}>
         <p>{name}</p>
-        <Fixture title={name} fixture={fixture} source={submitted} />
+        <Fixture title={name} fixture={fixture} source={submitted} syntax={problem.syntax} />
       </div>)}
     </section>}
   </div>;

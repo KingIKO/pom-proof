@@ -1,6 +1,7 @@
 ---
 title: Find the billing email field
 kind: locator
+syntax: playwright
 topic: playwright
 difficulty: easy
 minutes: 4
@@ -46,7 +47,7 @@ variants:
 reference:
   by: expression
   source: "page.getByLabel('Billing email', { exact: true })"
-decoy: { by: css, selector: '#contact-891' }
+decoy: { by: expression, source: "page.locator('#contact-891')" }
 ---
 
 Payment settings keep the billing address for receipts separate from the account email. Find the input labeled `Billing email` with a Playwright-style locator. The IDs may change together with the labels' `for` values.

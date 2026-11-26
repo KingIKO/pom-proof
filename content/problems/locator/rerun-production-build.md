@@ -1,6 +1,7 @@
 ---
 title: Find the rerun action for a production build
 kind: locator
+syntax: playwright
 topic: playwright
 difficulty: hard
 minutes: 8

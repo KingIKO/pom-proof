@@ -1,6 +1,7 @@
 ---
 title: Find the edit action for a saved address
 kind: locator
+syntax: xpath
 topic: playwright
 difficulty: medium
 minutes: 7
