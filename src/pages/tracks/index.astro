@@ -1,25 +1,16 @@
 ---
-import { getCollection } from 'astro:content';
+import { TracksList } from '../../components/tracks/TrackViews';
 import Base from '../../layouts/Base.astro';
-import { resolveTrack } from '../../lib/catalog';
-import { url } from '../../lib/url';
+import { orderedTracks } from '../../lib/catalog';
 
-const problems = new Map((await getCollection('problems')).map((entry) => [entry.id, entry]));
-const tracks = (await getCollection('tracks'))
-  .sort((a, b) => a.data.title.localeCompare(b.data.title))
-  .map((track) => ({ title: track.data.title, problems: resolveTrack(track, problems) }));
+const tracks = (await orderedTracks()).map(({ id, title, summary, sections }) => ({
+  id, title, summary,
+  problemIds: sections.flatMap(({ problems }) => problems.map((item) => item.id)),
+  questionIds: sections.flatMap(({ questions }) => questions.map((item) => item.id)),
+}));
 ---
 <Base title="Tracks" section="tracks">
   <h1>Tracks</h1>
-  <p class="prose">Practice in the order listed for each role.</p>
-  {tracks.map((track) => (
-    <section class="prose">
-      <h2>{track.title}</h2>
-      <ol>
-        {track.problems.map((problem) => (
-          <li><a href={url(`/practice/${problem.id}/`)}>{problem.data.title}</a></li>
-        ))}
-      </ol>
-    </section>
-  ))}
+  <p class="prose muted track-intro">Choose a role and work through its rounds in order.</p>
+  <TracksList client:load tracks={tracks} />
 </Base>

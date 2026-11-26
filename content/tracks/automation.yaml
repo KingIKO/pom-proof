@@ -1,6 +1,122 @@
 title: QA automation
 role: automation
-problems:
-  - locator/refund-order-action
-  - diagnosis/late-shipping-route
-  - test-design/delivery-fee-mutants
+summary: Practice choosing what to automate, finding the right elements, and maintaining browser tests that give useful failure evidence.
+sections:
+  - title: "Week 1: Choose checks and write small helpers"
+    note: Pick the lowest test layer that can catch the bug, then write small helpers with clear inputs and outputs.
+    problems:
+      - code/count-result-lines
+      - code/failed-test-names
+      - code/dedupe-case-ids
+      - code/password-rejection-reasons
+      - code/classify-test-retries
+      - test-design/password-length-policy
+      - test-design/delivery-fee-mutants
+    questions:
+      - automation-strategy/choose-first-automation
+      - fundamentals/test-levels
+      - fundamentals/test-pyramid
+      - fundamentals/smoke-sanity-regression
+      - agile/qa-throughout-the-sprint
+  - title: "Week 2: Accessible locators and assertions"
+    note: Find controls by their accessible role, name, or label and assert the state that matters.
+    problems:
+      - locator/billing-email-field
+      - locator/booking-text-reminders
+      - locator/search-pickup-locations
+      - locator/use-recovery-code-link
+      - locator/close-receipt-preview
+      - locator/refund-order-action
+      - locator/download-invoice-pdf
+      - locator/export-ledger-csv
+      - locator/find-backup-status
+      - locator/pause-email-alerts
+      - locator/retry-failed-import
+      - diagnosis/two-save-buttons
+    questions:
+      - locators-waits/choose-css-xpath-or-role
+      - locators-waits/playwright-click-actionability
+      - playwright/web-first-assertions
+      - selenium/manage-browser-drivers
+  - title: "Week 3: Scope locators and diagnose timing"
+    note: Find the right row, panel, or dialog before locating its control, then wait for the application state that proves the action worked.
+    problems:
+      - diagnosis/review-positional-refund-locators
+      - diagnosis/review-sleep-before-upload-status
+      - diagnosis/receipt-recalculates-after-hard-wait
+      - locator/approve-timesheet-test-id
+      - locator/close-current-export-panel
+      - locator/confirm-booking-cancellation
+      - locator/delete-saved-search-card
+      - locator/delivery-region-field
+      - locator/edit-team-member-row
+      - locator/open-live-branch-calendar
+      - diagnosis/banner-blocks-booking
+      - diagnosis/stale-seat-after-refresh
+    questions:
+      - locators-waits/selenium-stale-after-render
+      - locators-waits/selenium-wait-mixing
+      - playwright/read-a-trace
+      - flaky-tests/first-flake-investigation
+  - title: "Week 4: Fixtures, test data, and service checks"
+    note: Give each test its own data and prove what the application stored, returned, or retried.
+    problems:
+      - code/duplicate-test-emails
+      - code/verify-status-transitions
+      - code/parse-fixture-csv-line
+      - code/equal-json-responses
+      - code/compare-monitor-urls
+      - test-design/order-status-transitions
+      - diagnosis/late-shipping-route
+      - diagnosis/invite-email-collision
+      - diagnosis/shipment-order-not-guaranteed
+      - scenario/api-rate-limit-window
+    questions:
+      - automation-strategy/seed-ui-tests-through-api
+      - automation-strategy/fixtures-versus-page-objects
+      - api/playwright-request-fixture
+      - api/response-schema-testing
+      - api/rest-assured-response-checks
+      - api/authentication-vs-forbidden-vs-not-found
+      - api/bad-request-vs-unprocessable
+      - playwright/independent-checkout-contexts
+  - title: "Week 5: Review test code and debug CI failures"
+    note: Reproduce a CI failure with its run evidence, then isolate the cause before changing retries or timeouts.
+    problems:
+      - diagnosis/reports-wrong-base-url
+      - diagnosis/review-password-in-login-test
+      - diagnosis/renewal-crosses-midnight
+      - code/count-failure-words
+      - code/compare-release-versions
+      - code/capped-retry-delays
+      - code/latest-attempts-per-shard
+      - sql/release-test-retry-budget
+      - sql/flaky-tests-per-release
+    questions:
+      - ci-git-docker/reports-and-failure-artifacts
+      - ci-git-docker/docker-for-repeatable-tests
+      - ci-git-docker/git-merge-or-rebase
+      - ci-git-docker/resolve-test-file-conflict
+      - flaky-tests/retries-as-evidence
+      - behavioral/learn-a-tool-under-deadline
+      - selenium/grid-4-when-and-why
+  - title: "Week 6: Resilient selectors and flaky suites"
+    note: Keep checks working when a new row or dialog appears, then explain which failures a suite should block.
+    problems:
+      - locator/find-statement-delivery-summary
+      - locator/edit-saved-address-xpath
+      - locator/apply-invoice-credit-detail
+      - locator/cancel-pending-receipt-delivery
+      - locator/current-account-billing-link
+      - locator/edit-direct-permission-xpath
+      - locator/remove-on-call-rotation-address
+      - diagnosis/review-shared-saved-search
+    questions:
+      - locators-waits/frames-and-shadow-roots
+      - automation-strategy/page-objects-without-ceremony
+      - automation-strategy/choose-browser-automation-tool
+      - flaky-tests/quarantine-with-an-owner
+      - ci-git-docker/flakes-that-block-merges
+      - behavioral/improve-a-flaky-suite
+      - selenium/when-bidi-is-useful
+      - fundamentals/tests-wear-out

@@ -3,6 +3,7 @@ import type { Problem } from './contracts';
 import { idSchema } from './problem-schema';
 
 type ProblemEntry = CollectionEntry<'problems'>;
+type QuestionEntry = CollectionEntry<'questions'>;
 export type TrackEntry = CollectionEntry<'tracks'>;
 export type CatalogProblem = Pick<Problem, 'id' | 'title' | 'kind' | 'topic' | 'difficulty' | 'minutes' | 'roles'>;
 
@@ -28,15 +29,51 @@ function requireBody(entry: { id: string; body?: string }, collection: string) {
   if (!entry.body?.trim()) throw new Error(`${collection}/${entry.id} needs a Markdown body`);
 }
 
-export function resolveTrack(track: TrackEntry, problems: ReadonlyMap<string, ProblemEntry>) {
-  const seen = new Set<string>();
-  return track.data.problems.map(({ id }) => {
-    const problem = problems.get(id);
-    if (!problem) throw new Error(`Track "${track.id}" references missing problem "${id}"`);
-    if (seen.has(id)) throw new Error(`Track "${track.id}" repeats problem "${id}"`);
+export function resolveTrack(
+  track: TrackEntry,
+  problems: ReadonlyMap<string, ProblemEntry>,
+  questions: ReadonlyMap<string, QuestionEntry>,
+) {
+  if (track.id !== track.data.role) throw new Error(`Track "${track.id}" must match role "${track.data.role}"`);
+  const seenProblems = new Set<string>();
+  const seenQuestions = new Set<string>();
+
+  function resolve<T>(entries: ReadonlyMap<string, T>, seen: Set<string>, kind: string, id: string, section: string) {
+    const entry = entries.get(id);
+    const location = `Track "${track.id}", section "${section}"`;
+    if (!entry) throw new Error(`${location} references missing ${kind} "${id}"`);
+    if (seen.has(id)) throw new Error(`${location} repeats ${kind} "${id}"`);
     seen.add(id);
-    return problem;
-  });
+    return entry;
+  }
+
+  return track.data.sections.map((section) => ({
+    title: section.title,
+    note: section.note,
+    problems: section.problems.map(({ id }) => resolve(problems, seenProblems, 'problem', id, section.title)),
+    questions: section.questions.map(({ id }) => resolve(questions, seenQuestions, 'question', id, section.title)),
+  }));
+}
+
+export async function orderedTracks() {
+  const [problems, questions, tracks] = await Promise.all([
+    getCollection('problems'), getCollection('questions'), getCollection('tracks'),
+  ]);
+  const problemById = new Map(problems.map((problem) => [problem.id, problem]));
+  const questionById = new Map(questions.map((question) => [question.id, question]));
+  const order = ['manual-qa', 'automation', 'sdet', 'senior'];
+
+  return tracks.sort((a, b) => order.indexOf(a.data.role) - order.indexOf(b.data.role)).map((track) => ({
+    id: track.id,
+    title: track.data.title,
+    role: track.data.role,
+    summary: track.data.summary,
+    sections: resolveTrack(track, problemById, questionById).map((section) => ({
+      ...section,
+      problems: section.problems.map(({ id, data }) => ({ id, title: data.title })),
+      questions: section.questions.map(({ id, data }) => ({ id, title: data.title })),
+    })),
+  }));
 }
 
 export async function validatedCatalog() {
@@ -47,6 +84,7 @@ export async function validatedCatalog() {
     getCollection('tracks'),
   ]);
   const problemById = new Map(problems.map((problem) => [problem.id, problem]));
+  const questionById = new Map(questions.map((question) => [question.id, question]));
   const idToSlug = new Map<string, string>();
   const knownSlugs = new Set<string>();
 
@@ -72,8 +110,7 @@ export async function validatedCatalog() {
   }
 
   for (const track of tracks) {
-    if (track.id !== track.data.role) throw new Error(`Track "${track.id}" must match role "${track.data.role}"`);
-    resolveTrack(track, problemById);
+    resolveTrack(track, problemById, questionById);
   }
 
   return problems;
