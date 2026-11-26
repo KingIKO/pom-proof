@@ -20,7 +20,7 @@ const structuredItem = z.discriminatedUnion('type', [
     budget: z.number().int().positive(),
     choices: z.array(option.extend({ cost: z.number().int().positive() })).min(2),
   }),
-  z.strictObject({ ...item, type: z.literal('line-marking'), lines: choices }),
+  z.strictObject({ ...item, type: z.literal('line-marking'), lines: z.array(option.extend({ text: source })).min(2) }),
 ]);
 
 const structuredAnswer = z.record(idSchema, z.union([idSchema, z.array(idSchema)]));
@@ -30,8 +30,25 @@ const locatorAnswer = z.discriminatedUnion('by', [
   z.strictObject({ by: z.literal('label'), text: textSchema, exact: z.boolean() }),
   z.strictObject({ by: z.literal('test-id'), testId: textSchema }),
   z.strictObject({ by: z.literal('css'), selector: textSchema }),
+  z.strictObject({ by: z.literal('xpath'), selector: textSchema }),
+  z.strictObject({ by: z.literal('expression'), source }),
 ]);
 const sourceAnswer = z.strictObject({ source });
+const param = { name: exportName, label: textSchema };
+const mutationParam = z.discriminatedUnion('type', [
+  z.strictObject({ ...param, type: z.literal('number') }),
+  z.strictObject({ ...param, type: z.literal('string') }),
+  z.strictObject({ ...param, type: z.literal('boolean') }),
+  z.strictObject({
+    ...param,
+    type: z.literal('enum'),
+    values: z.array(textSchema).min(1).refine((values) => new Set(values).size === values.length, 'List distinct values'),
+  }),
+]);
+const rowsAnswer = z.strictObject({
+  rows: z.array(z.strictObject({ args: z.array(z.json()), expected: z.json() })).min(1),
+});
+const mutationAnswer = z.union([sourceAnswer, rowsAnswer]);
 const sqlAnswer = z.strictObject({ query: source });
 const codeAnswer = sourceAnswer.extend({ language });
 
@@ -59,8 +76,10 @@ const problem = z.discriminatedUnion('kind', [
     exportName,
     implementation: source,
     mutants: z.array(z.strictObject({ name: idSchema, implementation: source, teaches: textSchema })).min(1),
-    reference: sourceAnswer,
-    decoy: sourceAnswer,
+    params: z.array(mutationParam).optional(),
+    reference: mutationAnswer,
+    rowsReference: rowsAnswer.optional(),
+    decoy: mutationAnswer,
   }),
   z.strictObject({
     ...common,
@@ -84,6 +103,7 @@ const problem = z.discriminatedUnion('kind', [
     ...common,
     kind: z.literal('code'),
     exportName,
+    allowInputMutation: z.boolean().optional(),
     starters: z.strictObject({ js: source, ts: source, python: source }),
     vectors: z.array(z.strictObject({ name: idSchema, args: z.array(z.json()), expected: z.json() })).min(1),
     reference: codeAnswer,
@@ -146,8 +166,29 @@ export const problemSchema = problem.superRefine((data, ctx) => {
       }
   }
 
-  if (data.kind === 'test-design' && !unique(data.mutants.map(({ name }) => name))) {
-    issue(['mutants'], 'Mutant names must be unique');
+  if (data.kind === 'test-design') {
+    const { params, rowsReference } = data;
+    if (!unique(data.mutants.map(({ name }) => name))) issue(['mutants'], 'Mutant names must be unique');
+    if (params && !unique(params.map(({ name }) => name))) issue(['params'], 'Parameter names must be unique');
+    if (rowsReference && 'rows' in data.reference) issue(['rowsReference'], 'Use only one table reference');
+    for (const key of ['reference', 'rowsReference', 'decoy'] as const) {
+      const answer = data[key];
+      if (!answer || !('rows' in answer)) continue;
+      if (!params) {
+        issue([key], 'Provide params for table answers');
+        continue;
+      }
+      answer.rows.forEach(({ args }, index) => {
+        if (args.length !== params.length) issue([key, 'rows', index, 'args'], 'Provide one argument per parameter');
+        params.forEach((parameter, column) => {
+          const value = args[column];
+          const matches = parameter.type === 'enum'
+            ? typeof value === 'string' && parameter.values.includes(value)
+            : typeof value === parameter.type;
+          if (!matches) issue([key, 'rows', index, 'args', column], `Expected a ${parameter.type} value`);
+        });
+      });
+    }
   }
   if (data.kind === 'locator' && !unique(data.variants.map(({ name }) => name))) {
     issue(['variants'], 'Variant names must be unique');
@@ -162,3 +203,4 @@ export const problemSchema = problem.superRefine((data, ctx) => {
 
 export type ProblemData = z.infer<typeof problemSchema>;
 export type Role = z.infer<typeof roleSchema>;
+export type Json = z.infer<ReturnType<typeof z.json>>;

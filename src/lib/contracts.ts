@@ -1,6 +1,6 @@
-import type { ProblemData, Role } from './problem-schema';
+import type { Json, ProblemData, Role } from './problem-schema';
 
-export type { Role };
+export type { Json, Role };
 export type Kind = ProblemData['kind'];
 export type StructuredKind = 'scenario' | 'diagnosis' | 'bug-report';
 export type Problem<K extends Kind = Kind> = {
@@ -17,8 +17,13 @@ type Details = {
   scenario: StructuredDetails;
   diagnosis: StructuredDetails;
   'bug-report': StructuredDetails;
-  'test-design': { validOnReference: boolean; mutants: Array<{ name: string; killed: boolean }> };
-  locator: { fixtures: Array<{ name: string; matches: number; matchedTarget: boolean }> };
+  'test-design': {
+    validOnReference: boolean;
+    failedRows: Array<{ row: number; message: string }>;
+    referenceFailure?: string;
+    mutants: Array<{ name: string; killed: boolean; teaches?: string }>;
+  };
+  locator: { fixtures: Array<{ name: string; matches: number; matchedTarget: boolean }>; warnings: string[] };
   sql: { datasets: Array<{ name: 'seed' | 'altered-seed'; passed: boolean }> };
   code: { vectors: Array<{ name: string; passed: boolean }> };
 };

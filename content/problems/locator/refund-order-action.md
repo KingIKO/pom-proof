@@ -38,7 +38,9 @@ variants:
           <button data-fixture-target="refund" aria-label="Refund order PP104">Refund</button>
         </footer>
       </section>
-reference: { by: role, role: button, name: Refund order PP104, exact: true }
+reference:
+  by: expression
+  source: "page.getByRole('button', { name: 'Refund order PP104', exact: true })"
 decoy: { by: css, selector: '.actions > button:nth-child(2)' }
 ---
 

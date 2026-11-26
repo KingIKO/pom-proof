@@ -1,8 +1,20 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import type { Problem } from './contracts';
 import { idSchema } from './problem-schema';
 
 type ProblemEntry = CollectionEntry<'problems'>;
 export type TrackEntry = CollectionEntry<'tracks'>;
+export type CatalogProblem = Pick<Problem, 'id' | 'title' | 'kind' | 'topic' | 'difficulty' | 'minutes' | 'roles'>;
+
+export async function orderedProblems() {
+  return (await validatedCatalog()).sort((a, b) =>
+    a.data.title.localeCompare(b.data.title, 'en') || a.id.localeCompare(b.id, 'en'));
+}
+
+export function catalogProblem({ id, data }: ProblemEntry): CatalogProblem {
+  const { title, kind, topic, difficulty, minutes, roles } = data;
+  return { id, title, kind, topic, difficulty, minutes, roles };
+}
 
 function requireNestedId(id: string, folder: string, collection: string) {
   const [actualFolder, slug, ...extra] = id.split('/');

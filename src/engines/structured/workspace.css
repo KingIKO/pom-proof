@@ -1,0 +1,90 @@
+.structured-workspace fieldset {
+  min-inline-size: 0;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  border: 0;
+}
+
+.structured-workspace legend,
+.structured-scratch label {
+  padding: 0;
+  font-weight: var(--strong);
+}
+
+.structured-scratch { margin-block-end: 1.25rem; }
+.structured-scratch p { margin-block: 0 .35rem; }
+.structured-scratch textarea {
+  display: block;
+  inline-size: 100%;
+  padding: .45rem .6rem;
+  resize: vertical;
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--rule);
+  border-radius: var(--radius);
+}
+
+.structured-options, .structured-code {
+  margin: .45rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.structured-options label {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  padding-block: .2rem;
+}
+.structured-options input {
+  margin: 0;
+  accent-color: var(--ink);
+}
+.structured-budget { margin-block: .35rem 0; }
+
+.structured-order {
+  margin: .45rem 0 0;
+  padding-inline-start: 1.65rem;
+}
+.structured-order li { padding-block: .3rem; }
+.structured-moves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-block-start: .2rem;
+}
+
+.structured-workspace button:not(.primary) {
+  padding: .28rem .55rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--rule);
+  border-radius: var(--radius);
+}
+.structured-workspace button:disabled { opacity: .6; }
+
+.structured-code {
+  padding: .35rem;
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--radius);
+}
+.structured-code li + li { margin-block-start: .2rem; }
+.structured-workspace .structured-code button {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr);
+  gap: .4rem;
+  inline-size: 100%;
+  background: var(--surface);
+  border-color: transparent;
+  font-family: var(--font-code);
+  text-align: start;
+}
+.structured-code code, .structured-key code { white-space: pre-wrap; }
+.structured-workspace .structured-code button[aria-pressed="true"] {
+  background: var(--paper);
+  border-color: var(--ink);
+}
+.structured-code button:disabled { opacity: 1; }
+.structured-key { margin-block-start: .5rem; }
+.structured-key :is(ol, ul) { margin-block: .15rem 0; }

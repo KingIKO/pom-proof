@@ -1,0 +1,15 @@
+.result {
+  border-block-start: var(--rule);
+  margin-block: 1rem;
+  padding-block-start: .65rem;
+  overflow-wrap: anywhere;
+}
+
+.result[data-status="pass"] strong { color: var(--pass); }
+.result[data-status="fail"] strong { color: var(--fail); }
+.result[data-status="warn"] strong { color: var(--warn); }
+.result .result-content { animation: result-in var(--result-duration) ease-out; }
+.result p { margin-block: 0 .35rem; }
+.result ul { margin-block: .35rem 0; padding-inline-start: 1.25rem; }
+
+@keyframes result-in { from { opacity: 0; } to { opacity: 1; } }

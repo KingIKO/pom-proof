@@ -1,0 +1,37 @@
+.progress-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+.progress-note, .progress-message { font-size: .875rem; }
+.progress-note { margin: .6rem 0 0; }
+.progress-message { margin: 0; }
+.progress-message:not(:empty) { margin-block-start: .35rem; }
+.progress-section { margin-block-start: 1.5rem; }
+.progress-section h2 { margin-block: 0 .35rem; }
+.progress-total { margin: 0 0 .65rem; color: var(--muted); }
+
+.progress-section table { font-size: .9375rem; }
+.progress-section thead { background: var(--surface); border-block-start: var(--rule); }
+.solved-table :is(th, td):not(:first-child), .attempts-table :is(th, td):nth-child(2) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.solved-table tbody th { font-weight: var(--regular); }
+.solved-table tfoot td { font-weight: var(--strong); }
+.attempts-table tbody td { overflow-wrap: anywhere; }
+.attempts-table :is(th, td):last-child { width: 30%; padding-inline-start: 1rem; }
+
+.reset-dialog {
+  inline-size: min(calc(100% - 2rem), 27rem);
+  padding: 1.25rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: var(--rule);
+  border-radius: var(--radius);
+}
+.reset-dialog::backdrop { background: rgb(0 0 0 / 45%); }
+.reset-dialog h2 { margin-block: 0 .45rem; }
+.reset-dialog .progress-actions { margin-block-start: .9rem; }
+
+@media (max-width: 32rem) {
+  .progress-section table { font-size: .875rem; }
+  .progress-section :is(th, td) { padding-inline: .25rem; }
+  .attempts-table :is(th, td):last-child { padding-inline-start: .5rem; }
+}

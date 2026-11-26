@@ -1,0 +1,24 @@
+.mutation-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem 1rem;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.mutation-modes legend { padding: 0; font-weight: var(--strong); }
+.mutation-modes input { accent-color: var(--accent); }
+.mutation-table-scroll { overflow-x: auto; padding: 0 .25rem .25rem; }
+
+.mutation-workspace :is(input:not([type="radio"]), select, button:not(.primary)) {
+  padding: .35rem .45rem;
+  border: var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.mutation-table-scroll :is(input, select) { inline-size: 100%; min-inline-size: 5.5rem; }
+.mutation-workspace button { margin-block-start: .65rem; }
+.mutation-table-scroll button { margin: 0; }
