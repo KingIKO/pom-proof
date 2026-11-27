@@ -1,31 +1,34 @@
 ---
-title: "How does a test plan differ from a test strategy?"
+title: "What belongs in a test strategy, and what belongs in a test plan?"
 topic: fundamentals
 roles: [manual-qa, automation, senior]
 level: junior
 type: concept
-oneLine: "A strategy gives the testing approach; a plan applies it to a specific scope with people, timing, and evidence."
+oneLine: "In a strategy, I say how I test and why. In a plan for specific work, I name who runs the tests, when, and what evidence we need."
 looksFor:
-  - "Explains reusable testing decisions."
-  - "Names what changes with a release or project."
-  - "Connects the two with one feature."
-  - "Does not require two separate documents."
-trap: "Calling a list of test cases a complete plan when it omits environment, ownership, and completion criteria."
+  - "Describe decisions the team can reuse for other work."
+  - "Name what changes for each release or project."
+  - "Use one feature to show how the strategy informs the plan."
+  - "Explain that the team can keep both in one document."
+trap: "Treating a list of tests as a complete plan without saying where to run them, who runs them, or when the run is done."
 followUps:
-  - question: "What changes first if the release date moves up?"
-    answer: "I'd update the plan with revised timing and scope, then flag any risks we can no longer cover under the existing approach."
-  - question: What would you look for before asking someone to use the plan on release day?
+  - question: "If the release date moves earlier, what would you change first?"
+    answer: "I'd update the plan to say when and what we can test. I'd also flag any risks we can no longer cover with our current approach."
+  - question: "What would you check in the plan before handing it to someone on release day?"
     answer: >-
-      I'd expect objectives, scope, assumptions, owners, dates, environments and test data. It should
-      also say when checks can start or finish and where to report results. For an excluded case,
-      I'd look for what could still fail and who is prepared to accept that risk.
+      I'd check that it says what we'll test, what we want to learn, and what we assume.
+      I'd look for who does the work, when they do it, where tests run, and what data to use.
+      I'd check when we can start or stop testing and where to report results.
+      If the plan leaves a case out, I'd look for what might fail and who is willing to accept that risk.
 sources:
   - label: "ISTQB CTFL v4.0.1, section 5.1.1"
     url: https://www.istqb.org/certifications/certified-tester-foundation-level
 ---
 
-I use strategy to mean how we intend to test and why. It can cover things like which checks belong at service level and when we need a real dependency. A plan says what that means for the work in front of us: which risks we will cover, who prepares the data, when we can run the tests, and how we decide we've done enough. On a small team I'd be happy to capture both in one place.
+I use a test strategy to say how we'll test and why. It can say which checks I run against one service on its own. It can also say when I need the real service that a feature depends on.
+
+I use a test plan to apply that approach to this release or project. I name the risks we'll test and who will prepare the data. I write down when we can run the tests and how we'll decide whether we've tested enough. On a small team, I'd be happy to write both in one place.
 
 ### Example
 
-A team strategy might call for one real sandbox check whenever a payment provider contract changes. The plan for this week's refund release would name the provider environment, the amount and currency cases, the person responsible, and the point at which a failed reconciliation blocks the release.
+If the payment provider changes how its service works with ours, I might require one check in its sandbox, a real test environment. For this week's refund release, I'd name the environment and the person who will run the check. I'd list the amounts and currencies to test. I'd say when a failed reconciliation, or check that the payment records match, would block the release.

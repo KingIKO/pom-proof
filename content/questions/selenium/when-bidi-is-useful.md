@@ -4,16 +4,16 @@ topic: selenium
 roles: [automation, sdet, senior]
 level: senior
 type: tooling
-oneLine: BiDi lets a test subscribe to browser events such as console messages where its browser and binding support them.
+oneLine: If the browser and Selenium library support the events I need, I'd use BiDi to receive them. Console messages are one example.
 looksFor:
-  - Classic WebDriver request and response versus event subscriptions
-  - A narrow reason to observe an event
-  - A browser and binding compatibility check
-  - A distinction between diagnostics and user-facing behavior
-trap: Promising the same BiDi feature set across browsers or replacing outcome assertions with low-level events.
+  - Explain how listening for events differs from sending a command and waiting for a reply.
+  - Give a specific reason to listen for an event.
+  - Check that the browser and Selenium language library support the event.
+  - Use events to investigate failures and keep checks for what the user sees.
+trap: Assuming all browsers support the same BiDi features or checking events instead of what the user sees.
 followUps:
   - question: Would you migrate all existing tests to BiDi?
-    answer: I'd add an event subscription where it solves a specific observation problem and leave ordinary WebDriver interactions in place.
+    answer: I'd add an event listener only where I need to observe something specific. I'd keep ordinary WebDriver actions in place.
 sources:
   - label: Selenium WebDriver BiDi
     url: https://www.selenium.dev/documentation/webdriver/bidi/
@@ -60,12 +60,12 @@ examples:
           }
 ---
 
-Classic WebDriver interactions follow a request and response pattern. WebDriver BiDi adds bidirectional communication so my test can subscribe to things the browser reports, such as console events. The session has to request BiDi support. I attach the listener before opening the report page so I can keep the events if it fails to render.
+With classic WebDriver, I send a request and wait for a reply. WebDriver BiDi lets messages go both ways. My test can subscribe to events, such as console messages the browser sends as they happen. I'd request BiDi support when I start the session. Before opening the report page, I'd attach a listener to collect events even if the page fails to load.
 
-I'd check the browser versions and the Selenium language binding before building a required check around a particular event. Support for one event doesn't establish support for every other command or event. I use Selenium's standard interactions for most tests and add BiDi when the information is useful and the support is verified.
+Before I require a specific event, I'd check support in the browser versions and the binding, the Selenium library for my language. If one event works, that doesn't tell me whether other events or commands work. I'd keep standard Selenium actions for most tests. I'd add BiDi where I know it's supported and the information helps.
 
 ### Example
 
-For a report preview that sometimes renders blank, I'd capture browser error events where supported and still assert that the preview shows the expected report heading. The events explain a failure; the heading is the customer outcome.
+If a report preview sometimes appears blank, I'd collect browser errors where the browser supports them. I'd still check that the preview shows the expected heading. I use the errors to explain a failure and the heading to check what the customer sees.
 
-The local fixture simulates a missing optional image. It logs `Preview image unavailable` and still shows the heading `Report R42`. The listener is attached before navigation so the event can be observed.
+I'd use a local test page with an optional image missing. I'd attach the listener before opening the page so I can catch `Preview image unavailable`. I'd still expect to see the heading `Report R42`.

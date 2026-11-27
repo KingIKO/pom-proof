@@ -4,18 +4,19 @@ topic: performance
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Pick the traffic pattern that answers the question you have about the ticket service.
+oneLine: I'd pick a traffic pattern based on what I need to learn about the ticket service.
 looksFor:
-  - Uses a small smoke run to validate the setup before making performance claims.
-  - Separates above-average demand in a stress test from a search for the limit in a breakpoint test.
-  - Matches a sudden ticket announcement to a spike test and checks recovery.
-  - Uses elapsed time and resource trends to explain why a soak test catches a different problem.
-trap: Calling a brief burst a soak test because it sends many requests.
+  - Run a small smoke test to check the setup before drawing conclusions about speed.
+  - Explain how a stress test at high demand differs from a breakpoint test that finds the limit.
+  - Use a spike test to mimic a sudden rush and check whether the service recovers.
+  - Explain how a soak test uses several hours of steady traffic to spot worsening speed or resource use.
+trap: Calling a brief rush a soak test just because it sends many requests.
 followUps:
-  - question: Would a clean announcement spike tell you how large the next sale can be?
+  - question: Would a passing announcement spike test tell you how big the next sale can be?
     answer: >-
-      It would tell me about that particular burst. I'd use a separate breakpoint run in a
-      disposable environment to see where the service stops meeting its targets as demand rises.
+      I'd know how it handled that specific rush.
+      I'd raise demand in a separate breakpoint test to see when the site misses its targets.
+      I'd use a test environment I can throw away afterward.
 sources:
   - label: Grafana k6, load test types
     url: https://grafana.com/docs/k6/latest/testing-guides/test-types/
@@ -63,18 +64,12 @@ examples:
           }
 ---
 
-For opening day I'd want to know whether the ticket page recovers after a sudden rush. That's a
-spike test. Before interpreting it, I'd run a small smoke test to make sure the script works, then
-use an average-load test to establish response time and errors at expected demand.
+For opening day, I'd run a spike test to see whether the page recovers after a sudden rush. Before I use its results, I'd run a small smoke test to make sure the script works. I'd also run an average-load test to measure response times and errors at expected demand.
 
-If the team asks how the service handles a busy afternoon above expected average load, I'd run a
-stress test at that level. If they ask how far the system can go before it misses its targets, I'd
-run a breakpoint test. A soak test answers a question about time: after hours at steady load, is
-memory still climbing or are requests getting slower?
+If the team asks about a busy afternoon with more traffic than average, I'd run a stress test at that load. If they need to know the limit, I'd run a breakpoint test that raises demand until the service misses its targets. In a soak test, I'd hold the load steady for hours. I'd check whether memory use keeps rising or requests get slower.
 
 ### Example
 
-The local museum API serves ticket availability at `/api/tickets/availability`. The k6 script raises
-concurrency from two virtual users to twelve, then drops it back to two. I expect HTTP 200 replies
-and want latency back near its starting level during the final stage. The burst represents visitors
-following a ticket sale announcement at the same time.
+I'd use k6 to test the local museum API at `/api/tickets/availability`, the address that serves ticket availability. I'd raise the number of visitors using the site at once from two virtual users to twelve. Then I'd drop it back to two. The rush represents people following the same sale announcement.
+
+I'd expect HTTP 200 replies, meaning the requests succeeded. I'd check that response times return near their starting level once only two users remain.

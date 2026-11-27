@@ -1,19 +1,19 @@
 ---
-title: The invoicing image scan reports an old finding and a new one. Which should stop promotion?
+title: The invoicing image scan finds an old issue and a new one. Which should stop promotion?
 topic: security
 roles: [sdet, senior]
 level: senior
 type: tooling
-oneLine: Decide from the policy and evidence for the candidate image, and keep prior exceptions visible on their own terms.
+oneLine: I'd apply the release rules to the results for this image. I'd keep past exceptions visible with their own conditions.
 looksFor:
-  - Explains why an exception for an older library does not cover a different finding.
-  - Links findings and missing results to the exact candidate under review.
-  - Distinguishes what can be learned from the live test service and the built image.
-  - Keeps checks for secrets and source defects close to the change that introduced them.
-trap: Ignoring historical findings permanently because the first scan produced too many alerts.
+  - Explain why an exception for an older library doesn't cover a new issue.
+  - Tie each finding or missing result to the exact image under review.
+  - Say what a running test service can show that scanning the image can't, and vice versa.
+  - Check source changes for secrets and defects before they reach a build.
+trap: Ignoring old issues forever because the first scan reported too many.
 followUps:
-  - question: How would you handle a temporary exception for a severe finding?
-    answer: I'd record the finding, reasoning, approver, owner, and expiry. I'd keep it visible and reevaluate it if the affected component or its exposure changes.
+  - question: What would you record if a serious issue gets a temporary exception?
+    answer: I'd write down the finding and the reason for the exception. I'd record who approved it, who owns it, and when it expires. I'd keep it visible and review it again if the affected component changes or becomes exposed in a different way.
 sources:
   - label: OWASP DevSecOps guideline
     url: https://owasp.org/projects/devsecops-guideline
@@ -49,16 +49,14 @@ examples:
                     fail-on-severity: high
 ---
 
-I'd check which image was scanned and compare the findings with the release policy. If the old
-one has a current, specific exception, it keeps its owner and due date. The new finding needs
-its own decision. If it meets the agreed blocking severity, I'd hold promotion. A missing scan
-result leaves me without evidence about the image.
+I'd check which image, the packaged copy of the service, the scan covered. I'd compare its findings with the release rules. If the old finding has a current exception specific to that issue, I'd keep its owner and due date. I'd make a separate decision about the new finding.
 
-An image result can identify packages in the shipped artifact, while a controlled scan of the
-deployed test service can check how it responds. I need both when the release policy calls for
-them. I'd use secret checks and static analysis on source changes so the author can catch those
-problems before they become part of a build.
+If the new issue meets the agreed severity limit, I'd stop promotion, which means moving the image to the next stage.
+
+If a scan result is missing, I don't have that evidence about the image.
+
+An image scan can identify the packages we ship. A controlled scan of the running test service can check how it responds. If the release rules call for both, I'd require both. On source changes, I'd check for secrets and run static analysis, which looks for defects without running the code. That gives the author a chance to fix problems before the build.
 
 ### Example
 
-On a repo with GitHub dependency review enabled, a pull request adding a dependency with a known high-severity advisory should fail this job. An unchanged finding isn't newly introduced by that pull request and stays in the separate backlog.
+I'd use a repository with GitHub dependency review enabled. It checks the dependencies, or packages, that a pull request proposes adding. If a pull request adds a dependency with a known high-severity advisory, I'd expect this job to fail. An advisory is a notice about a security issue. I'd leave an unchanged finding on the separate list of existing issues because the pull request didn't introduce it.

@@ -1,19 +1,19 @@
 ---
-title: "Postman says Staging is selected, but health reports Local. Where would you look?"
+title: "Postman shows Staging, but the health check says Local. How would you find what answered?"
 topic: api
 roles: [manual-qa, automation]
 level: junior
 type: tooling
-oneLine: "Compare the resolved host with the selected environment and use the health response to tell which deployment answered."
+oneLine: "I'd compare the URL Postman used with the selected environment. I'd use the health reply to see which deployment answered."
 looksFor:
-  - "Checks the deployment marker before trusting a successful health status."
-  - "Traces the winning base URL through the scopes Postman uses."
-  - "Keeps the host out of saved request text so an environment change retargets the collection."
-  - "Separates a shared API version from deployment-specific settings and secrets."
-trap: "Trusting the environment picker when an iteration data field silently overrides the host."
+  - "Check the deployment name in the reply before trusting a passing health status."
+  - "Trace which Postman variable supplied the final base URL."
+  - "Leave the host out of the saved request so switching environments changes the target."
+  - "Keep the shared API version separate from deployment settings and secrets."
+trap: "Trusting the environment picker when a data row can override the host."
 followUps:
-  - question: "The resolved URL matches Staging but the body still says Local. What's your next check?"
-    answer: "I'd check which service answered that host and whether the deployment marker is configured correctly. Reordering Postman variables won't fix a host that points to the wrong service."
+  - question: "The URL matches Staging, but the body still says Local. What would you check next?"
+    answer: "I'd check which service answered at that host and how it sets its deployment name. Changing the order of Postman variables won't fix a host that points to the wrong service."
 sources:
   - label: Postman variable scopes and secret storage
     url: https://learning.postman.com/docs/use/send-requests/variables/variables/
@@ -38,10 +38,10 @@ examples:
           });
 ---
 
-I'd compare `pm.variables.get("baseUrl")` with the value on the selected environment. If they differ, I'd look for a local value first, then the iteration data. Those beat the environment. Collection and global values are fallbacks, with collection taking precedence over global.
+I'd compare `pm.variables.get("baseUrl")` with the value in the selected environment. If they differ, I'd look first for a variable local to the run, then for one in the data row. Both take priority over the environment. If none of these supplies a value, Postman tries the collection before the global value.
 
-I'd define `baseUrl` in both environments and share the API version through the collection. With `{{baseUrl}}` in the request, I can switch targets without editing it. I keep the token in a supported vault or inject it at run time. It stays out of the shared export.
+I'd set `baseUrl`, the starting address for requests, in both environments. I'd share the API version through the collection, the saved group of requests. With `{{baseUrl}}` in the request, I can switch targets without editing it. I'd keep the token in a supported vault or pass it in when the run starts. I'd keep it out of the shared export.
 
 ### Example
 
-Both environments define `baseUrl` and `deployment`. Send `GET {{baseUrl}}/health` in each. Its script checks the resolved URL and expects the returned deployment to be `local` or `staging` as selected.
+I'd define `baseUrl` and `deployment` in both environments. I'd send `GET {{baseUrl}}/health` in each. I'd check the address Postman used and expect the reply to say `local` or `staging`, depending on which environment I picked.

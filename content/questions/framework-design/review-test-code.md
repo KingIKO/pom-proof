@@ -1,25 +1,27 @@
 ---
-title: Two orders are on screen and the cancellation test goes green. What would you require before approving it?
+title: "Two orders appear and the cancellation test passes. What would you check before approving it?"
 topic: framework-design
 roles: [automation, sdet, senior]
 level: senior
 type: concept
-oneLine: Make the test prove that it cancelled the order it created, using an ID the reviewer can follow through the run.
+oneLine: "I want the test to show it canceled the order it created. I follow that order ID through the whole test."
 looksFor:
-  - Scopes the Cancel action to the seeded order and waits for that order's confirmation.
-  - Checks that cancelling a different order would turn the case red with a useful message.
-  - Gives the spec control of its own order from creation through cleanup.
-  - Keeps separate cancellation rules in a service test when the browser adds no evidence.
-trap: Improving helper names while leaving an assertion that passes even when cancellation fails.
+  - "Use Cancel on the test's own order and wait for that order's confirmation."
+  - "Show that canceling a different order makes the test fail with a useful message."
+  - "Let the test control its order from creation to cleanup."
+  - "Test detailed cancellation rules at the service if the browser adds no evidence."
+trap: "Improving helper names while leaving a check that passes even when cancellation fails."
 followUps:
-  - question: The new test clicks the first Cancel button and checks a generic toast. What's the first review comment you'd leave?
-    answer: I'd ask the author to scope Cancel to the ID the test created and include that ID in the confirmation check. I'd offer to pair on that change and leave helper naming for a separate pass.
+  - question: "The test clicks the first Cancel button and checks a generic toast. What would you ask the author to change first?"
+    answer: "I'd ask them to find the Cancel button for the order ID they created. I'd ask them to check that same ID in confirmation. I'd offer to make the change together and leave helper names for another review."
 ---
 
-I'd follow the order ID from setup to cleanup. If the test seeds A104 but uses the first Cancel button it finds, another order could be cancelled without turning the test red. I'd ask for a control scoped to A104 and a wait for the confirmation tied to that ID. I'd keep the detailed cancellation rules at the service layer if the extra browser steps don't help prove them.
+I'd follow the order ID from setup to cleanup. Suppose the test creates A104 but clicks the first Cancel button it finds. It could cancel another order and still pass. I'd ask the author to find the button for A104 and wait for that order's confirmation. If the browser adds no evidence for detailed rules, I'd check those rules by calling the service directly.
 
-I'd ask the author to try the same test with a different order selected. The test should fail and tell me which order it expected and which one the screen reported. In the application review I'd focus on whether the cancellation code changes the right record. In this review I want proof that the test notices if it doesn't.
+I'd also check what the toast proves. A toast is a brief message on the screen. I'd ask the author to run the test with a different order selected. I'd expect the test to fail and show the ID it expected and the one it saw.
+
+If I were reviewing the app code, I'd ask whether it changes the right record. When I review the test, I want proof that it catches a wrong record.
 
 ### Example
 
-I'd ask for an order created by this test, an exact order identifier in the cancellation confirmation, and a reload check if we promise persistence. I'd leave broad business-rule coverage to service tests.
+I'd require the test to create its own order and check the exact ID in the cancellation message. If the product promises to save the cancellation, I'd reload and check it remains canceled. I'd cover broader business rules in service tests.

@@ -1,19 +1,19 @@
 ---
-title: How would you keep a delivery test builder and its request types in sync?
+title: How would you keep the code that builds delivery test data up to date when the request types change?
 topic: javascript-typescript
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Derive fixture overrides, payloads, and settings from shared types with TypeScript utility types.
+oneLine: I use TypeScript utility types to build fixture overrides, payloads, and settings from shared types.
 looksFor:
-  - Uses Partial for builder overrides.
-  - Uses Pick for an explicit field list and Omit to remove known fields.
-  - Uses Required where all settings must be supplied.
-  - Uses Record to make an expectation table cover its key union.
-trap: Assuming Partial makes nested fields optional or fills missing fixture values at runtime.
+  - Use `Partial` for builder overrides.
+  - Use `Pick` for an explicit list of fields and `Omit` to remove known fields.
+  - Use `Required` where every setting must be supplied.
+  - Use `Record` so that an expectation table must cover every key in its union.
+trap: Assuming `Partial` makes nested fields optional or fills missing fixture values at runtime.
 followUps:
-  - question: Would you choose Pick or Omit for a public request body?
-    answer: I'd use Pick when the allowed fields matter, because a new internal field won't automatically become part of the request type.
+  - question: Would you choose `Pick` or `Omit` for a public request body?
+    answer: When the allowed fields matter, I'd use `Pick`. With `Pick`, a new internal field won't automatically become part of the request type.
 sources:
   - label: TypeScript utility types
     url: https://www.typescriptlang.org/docs/handbook/utility-types.html
@@ -44,16 +44,14 @@ examples:
           }
 ---
 
-I'd derive the request fields from the delivery type with `Pick`. That makes the allowed fields
-visible. `Omit` works for a fixture that wants everything except the server-generated ID, but
-I'd be careful about letting future fields flow into a public request automatically.
+Utility types are built-in TypeScript types that make a new type from an existing one. I'd build the request fields from the delivery type with `Pick`. That makes the allowed fields visible.
 
-`Partial` lets a builder take an override for just the field the test cares about. The builder
-still supplies defaults at runtime. I can use `Required` when a settings object must supply
-every top-level property, and `Record` when a fee table needs an entry for every service.
+`Omit` works for a fixture that wants everything except the server-generated ID. For a public request, I'd be careful with it. It could let future fields flow into that request automatically.
+
+`Partial` lets a builder take an override for just the field the test cares about. A builder is a function that makes a full fixture from default values. The builder still supplies those defaults at runtime.
+
+I can use `Required` when a settings object must supply every top-level property. I can use `Record` when a fee table needs an entry for every service.
 
 ### Example
 
-The builder sets a default postcode and takes an overnight service override. The test picks
-the overnight fee from a table that must also contain the ground fee. If a service is added,
-the compiler requires a corresponding table entry.
+The builder sets a default postcode and takes an override for the overnight service. The test reads the overnight fee from a fee table. That table must also contain the ground fee. If a service is added, the compiler requires a matching table entry.

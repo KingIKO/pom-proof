@@ -1,19 +1,19 @@
 ---
-title: The sample export should contain four units of P218. What does the download test need to prove?
+title: The sample export should show four units of P218. What would you check in the download test?
 topic: playwright
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Register the download wait before the click, save to a unique test path, and check the file against seeded data.
+oneLine: Before I click Export, I'd start waiting for the download. I'd save it where only this test writes and check it against known test data.
 looksFor:
-  - Attaches the event wait before the triggering action.
-  - Saves to a path owned by the test.
-  - Checks the suggested name and actual data.
-  - Uses the download event rather than driving a desktop dialog.
-trap: Automating the desktop save dialog or checking only that some file exists.
+  - Start waiting for the download before the action that triggers it.
+  - Save the file where only this test writes.
+  - Check the name the browser suggests and the data in the file.
+  - Use the browser's download signal instead of opening the system's save window.
+trap: Driving the system's save window or checking only whether a file exists.
 followUps:
-  - question: How would you test a filtered export that has no matching records?
-    answer: I'd check the product contract first. If it promises a CSV with only a header, I'd check the column names and assert zero data rows.
+  - question: What would you check if no records match the export filter?
+    answer: I'd check what the product promises. If it promises a CSV file with just a header, I'd check the column names and expect zero data rows.
 sources:
   - label: Playwright download events and saved files
     url: https://playwright.dev/docs/downloads
@@ -68,10 +68,10 @@ examples:
                   assert list(csv.DictReader(file)) == [{"sku": "P218", "quantity": "4"}]
 ---
 
-I'd start waiting for the download event before clicking Export. That catches a file that arrives immediately. Once I have the download object, I'd check the suggested filename and save it to a test-owned path. I can read it there without opening an operating system dialog, and I won't collide with another test's output.
+Before I click Export, I'd listen for the download event, the signal the browser sends when a download starts. That lets me catch a download that starts right away. Playwright gives me a download object I can use to check the suggested name and save the file. I'd save it to a path only this test uses so another test can't overwrite it. I can then read it without opening the system's save window.
 
-I'd check the header and rows against data I seeded, including a record that should be excluded when the export is filtered. For more complex CSV data I'd use a parser to handle quoted fields.
+I'd check the header and data rows against the records I set up. If the export uses a filter, I'd include a record that should stay out of the file. If the CSV, or comma-separated file, has quoted fields, I'd use a parser that reads them correctly.
 
 ### Example
 
-The local sample inventory contains one SKU, `P218`, with four units. Export should suggest `inventory.csv` and produce a header plus exactly that row. The sample fields contain no commas or line breaks.
+I'd use a local inventory with four units of one SKU, the product code `P218`. I'd expect Export to suggest `inventory.csv`. I'd check for a header and exactly one data row with that item. The sample fields contain no commas or line breaks.

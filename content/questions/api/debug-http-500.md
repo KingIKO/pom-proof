@@ -1,26 +1,28 @@
 ---
-title: "How would you investigate a new HTTP 500 on a write endpoint?"
+title: "A request that writes data starts returning HTTP 500. How would you find out why?"
 topic: api
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: "Correlate the failed request with server evidence, find the failing operation, and check whether anything committed before retrying."
+oneLine: "I'd use the failed request to find the error in the server. Before trying again, I'd check whether it already saved anything."
 looksFor:
-  - "Captures timestamp, build, and request or trace ID."
-  - "Uses logs or traces to find the failing component."
-  - "Uses sanitized fixtures and narrows one variable at a time."
-  - "Checks side effects before deciding how to retry."
-trap: "Assuming a 500 means the write rolled back and resubmitting repeatedly."
+  - "Record the time, build, and request or trace ID."
+  - "Use logs or traces to find which component failed."
+  - "Remove sensitive data from test inputs and change only one thing at a time."
+  - "Check what the request already did before choosing whether or how to retry."
+trap: "Assuming a 500 means nothing was saved and sending the same request again and again."
 followUps:
-  - question: "What if you can see only the client response?"
-    answer: "I'd attach the sanitized request shape, timestamp, environment, and correlation ID, then ask the service owner to trace it."
+  - question: "What if you only have the reply the client received?"
+    answer: "I'd include the request structure with sensitive values removed, the time, the environment, and the ID that links the request to logs. I'd ask the service owner to trace it."
 sources:
   - label: "MDN, 500 Internal Server Error"
     url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/500
 ---
 
-I'd capture the time, build, request ID, and what the caller was trying to do. I'd trace that request from the edge into the service and its dependencies to see where it failed. I'd check whether the write had already committed. Once I have a likely cause, I'd recreate the smallest relevant case using test data and turn it into a regression check with an assertion on the missing or improper outcome.
+I'd record the time, build, request ID, and what the caller tried to do. I'd follow the ID from where the request entered the system through the service and anything it called. I'd look for the failing operation in the logs or trace, a record of the request's path. I'd check whether the write was committed, meaning the change was saved. Once I have a likely cause, I'd reproduce it with the smallest relevant test case.
+
+I'd turn that case into a regression test, a check that fails if the problem comes back. I'd check the specific result that was wrong or missing.
 
 ### Example
 
-If request tracing showed an export job was saved before the acknowledgement failed to serialize, I'd verify the existing job using the operation ID. For the fix I'd check the acknowledgement and the job count. The case should fail if the response errors again or if repeating a supported request leaves two jobs.
+If the trace shows the service saved an export job before it failed to format the reply, I'd look up the job by operation ID. I'd check the reply and the job count after the fix. If the reply fails again or a supported retry leaves two jobs, the test should fail.

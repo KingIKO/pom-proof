@@ -5,7 +5,7 @@ import { contentUnits, enforcedFindings, normalizeProse, rules, scanProse, sente
 import { root } from '../support/problems';
 import { listFiles } from '../support/prose';
 
-const enforced: string[] = ['content/problems/', 'content/editorials/'];
+const enforced: string[] = ['content/problems/', 'content/editorials/', 'content/questions/'];
 const contentTypes = [
   ['problems', 'content/problems', /\.md$/],
   ['editorials', 'content/editorials', /\.md$/],

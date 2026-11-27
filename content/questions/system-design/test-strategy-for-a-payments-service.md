@@ -1,19 +1,19 @@
 ---
-title: The repair ledger shows one deposit after a timeout. What evidence would rule out a second charge?
+title: The repair ledger shows one deposit after a timeout. How would you check that the customer wasn't charged twice?
 topic: system-design
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: Match the ledger entry to the provider's record, then prove the retry cannot create a second charge for the same intent.
+oneLine: I'd match the ledger entry to the payment provider's record. I'd check that a retry can't charge the customer again for the same payment.
 looksFor:
-  - Looks for charges at the provider as well as entries in the ledger.
-  - Keeps an uncertain timeout distinct from a definite failure.
-  - Separates amount and currency checks from the integration and lost-reply tests.
-  - Checks live reconciliation without issuing test charges.
-trap: Marking an uncertain payment failed and starting a new charge with a new key.
+  - Compare charges at the provider with entries in the service's own payment records.
+  - Treat a timeout as an unknown result unless you know the payment failed.
+  - Check amounts and currencies separately from how the services work together and handle lost replies.
+  - Compare live records without creating test charges.
+trap: Marking a payment as failed when its outcome is unknown and starting another charge with a new key.
 followUps:
-  - question: What if all the internal payments show success but the provider totals disagree?
-    answer: I'd match provider records to ledger entries by reference, currency, and gross amount, then account for refunds and fees separately and flag unmatched records for review.
+  - question: Your records show every payment succeeded, but the provider totals differ. What would you check?
+    answer: I'd match records by payment reference, currency, and amount before deductions. I'd account for refunds and fees separately. I'd flag any record I couldn't match.
 sources:
   - label: Stripe idempotent requests
     url: https://docs.stripe.com/api/idempotent_requests
@@ -25,19 +25,12 @@ sources:
     url: https://docs.stripe.com/reports/balance
 ---
 
-I'd compare the provider records with the ledger. One internal entry doesn't tell me how
-many times the provider moved money. I'd test how a lost reply leaves the deposit pending,
-then confirm that any retry follows the provider's idempotency rules. Authorization, capture,
-and refund should each leave the expected amount and state.
+I'd compare the provider's records with the ledger, the service's own record of payments. One ledger entry doesn't tell me how many times the provider moved money. I'd test that a lost reply leaves the deposit pending. I'd check that retries follow the provider's idempotency rules, which tell me how to repeat a request without repeating its effect.
 
-I'd test rounding and currency units locally with explicit inputs. A stub can accept a
-request and drop the reply at the exact point I need. The provider sandbox tells me whether
-the real integration accepts the request format and behaves as documented. For production,
-I'd reconcile read-only and never create a live charge just to check the release.
+I'd check the amount and status after each payment step. Authorization approves the payment, and capture collects it. A refund returns money to the customer.
+
+I'd test rounding and currency units locally with known inputs. I'd use a stub, a stand-in for the provider, that accepts the request and drops the reply at the point I choose. I'd use the provider's sandbox, its test environment, to check that the real service accepts the request format and behaves as documented. In production, I'd reconcile by comparing records without changing them. I'd never create a live charge just to check a release.
 
 ### Example
 
-The provider accepts a $64.39 repair deposit, but the stub simulates a lost reply. The service
-should record a pending outcome and retry the same logical request with the original
-idempotency key where the provider contract permits. I'd expect one captured deposit and
-one internal ledger entry for 6,439 cents with the same provider reference.
+I'd have the stub accept a $64.39 repair deposit without replying. I'd expect the service to record the deposit as pending. If the provider allows a retry, I'd expect the same logical request with the original idempotency key, which identifies requests for the same payment. I'd expect one captured deposit and one entry for 6,439 cents with the same provider reference.

@@ -4,33 +4,35 @@ topic: fundamentals
 roles: [manual-qa, automation, senior]
 level: mid
 type: scenario
-oneLine: "Start with a risk and a charter, adjust the tests as you learn, and leave evidence someone else can act on."
+oneLine: "I start with a charter, a short plan for the risk I want to explore. I adapt my tests and leave notes others can use."
 looksFor:
-  - "Defines a scope and a question for the session."
-  - "Adapts next steps to findings."
-  - "Records data, observations, and unanswered questions."
-  - "Follows up on reproducible or high-impact discoveries."
-trap: "Opening the application and clicking around with no record of what was tried."
+  - "Name what you'll test and what question you want to answer."
+  - "Use what you see to choose the next test."
+  - "Write down what data you used, what you saw, and what you still need to find out."
+  - "Follow up on findings you can repeat or that could cause serious harm."
+trap: "Trying things in the app without writing down what you tried."
 followUps:
-  - question: "What belongs in the debrief?"
-    answer: "The charter, parts exercised, a useful set of observations, and a decision on which issues or gaps deserve another pass."
-  - question: How would the next tester know where to pick up after your session?
+  - question: "What would you share in the debrief, the discussion after the session?"
+    answer: "I'd share the charter, what I tested, and what I learned. I'd help decide which problems or gaps need more testing."
+  - question: "What would you leave for the tester who runs the next session?"
     answer: >-
-      With session-based test management, I'd link the charter and time box to a report of the
-      data I used, what I exercised and what remains. In the debrief we'd choose which risk
-      merits the next session.
-  - question: The reopened draft has the right text, but the first tab still says "Saving." What would you try next?
+      I'd use session-based test management, which organizes work into sessions with a set length.
+      I'd link the charter and the time limit to my report. I'd record my data, what I tried, and what I still need to test.
+      In the debrief, I'd help pick the next risk to check.
+  - question: If the reopened draft has the right text but the first tab still says "Saving," what would you do next?
     answer: >-
-      I'd add a distinct sentence in the first tab after reconnecting and open a fresh copy of the
-      draft. If the new sentence arrives, I'd investigate the stale status. If it doesn't, I'd
-      record both edits and which one the service kept.
+      After reconnecting, I'd add a sentence I can recognize in the first tab. Then I'd open a fresh copy of the draft.
+      If the sentence shows up, I'd find out why the status didn't update.
+      If it doesn't, I'd record both edits and note which one the service kept.
 sources:
   - label: "ISTQB CTFL v4.0.1, section 4.4.2"
     url: https://www.istqb.org/certifications/certified-tester-foundation-level
 ---
 
-I write a short charter that names the risk and the part of the product I want to learn about. I set aside enough time to follow what I find. During the session I record the starting data and what happened, particularly when an observation changes what I try next. At the end I sort repeatable defects from questions and note what I didn't get to.
+In exploratory testing, I choose what to try next based on what I see. I write a charter, a short plan that names the risk and the part of the product I want to learn about. I set aside enough time to follow up on what I find.
+
+During the session, I note my starting data and what happened. I pay particular attention to anything that changes what I try next. After the session, I separate bugs I can repeat from open questions. I also write down what I didn't get to.
 
 ### Example
 
-For a draft editor, I'd explore how edits survive a brief disconnect. If a tab recovers the text but the status label stays on “Saving,” I'd reload and open the draft in a second tab to check which version the service actually retained. That result tells me whether to file a display problem or a data loss issue.
+For a draft editor, I'd check whether edits survive a brief disconnect. If the text comes back but the tab still says "Saving," I'd reload the page. Then I'd open the draft in a second tab to check which version the service kept. I'd use that result to report a display problem or lost data.

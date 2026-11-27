@@ -4,19 +4,19 @@ topic: test-design
 roles: [manual-qa, automation]
 level: mid
 type: scenario
-oneLine: Use the support promise and booking traffic to decide which device differences need release evidence.
+oneLine: I'd use our support commitments and booking traffic to decide which browser and device differences to test before release.
 looksFor:
-  - Uses browser and device pairings from journey analytics.
-  - Preserves explicit support commitments.
-  - Uses the busiest booking journey for a full rehearsal and selects targeted checks for other pairings.
-  - Names what would still be checked on a low-share supported browser.
-trap: Picking the browsers on the team's laptops and calling that representative coverage.
+  - Use booking data to see which browsers and devices customers use together.
+  - Keep testing the combinations the team has promised to support.
+  - Test the whole booking on the busiest combination and choose focused checks for the others.
+  - Say what you'd still check on a supported browser that few customers use.
+trap: Testing only the browsers on the team's laptops and assuming they represent customers.
 followUps:
-  - question: On iPhone, a guest can pick Friday for both arrival and departure. Where else would you try that?
+  - question: An iPhone guest can choose Friday for both arrival and departure. Where else would you test those dates?
     answer: >-
-      I'd try the same dates on another supported touch device and a desktop browser. I'd check
-      which lets me pick the invalid dates and which lets me submit them. That separates a picker
-      difference from a booking validation gap.
+      I'd try those dates on another supported touch device and a desktop browser.
+      I'd check which lets me choose the dates and which lets me submit them.
+      That tells me whether the date control or the booking checks let the bad dates through.
 sources:
   - label: MDN, audience and target platforms
     url: https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Testing/Introduction
@@ -24,17 +24,10 @@ sources:
     url: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/date
 ---
 
-I'd start with the controls we're changing. The native date picker can look different across
-systems, so I'd check that the same stay can be selected with different engines and on a touch
-screen. On narrow layouts I'd make sure the price and submit action remain reachable.
+I'd start with the controls we're changing. The native date picker is the date control the browser provides, so it can look different across systems. I'd check that I can choose the same stay across browser engines, the parts that draw pages and run their code. I'd try a touch screen too. On narrow screens, I'd check that I can still see the price and reach the submit button.
 
-Booking traffic tells me where to rehearse the whole journey, including payment recovery. I'd
-count visitors who don't reach confirmation too. For each supported pairing I still want evidence
-that someone can make a booking, even on a browser with few visits. I can add targeted checks
-for a customer commitment or a difference that analysis misses.
+I'd use booking traffic to decide where to test the whole booking, including recovery after a failed payment. I'd count visitors who never reach confirmation too. I'd check that I can book on every supported browser and device pairing, even if few visitors use it. I'd add focused checks for a customer commitment or a difference the traffic data doesn't show.
 
 ### Example
 
-If mobile Safari dominates, I'd test valid dates, changed dates and recovery from a failed payment
-on a real iPhone. I'd target the native picker and date limits on other engines and check that a
-customer on a low-share supported browser can still finish a booking.
+If mobile Safari dominates booking traffic, I'd test valid dates and date changes on a real iPhone. I'd also check that a guest can recover from a failed payment. On other engines, I'd focus on the native picker and date limits. I'd check that a guest on a supported browser with few users can still finish booking.

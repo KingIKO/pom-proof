@@ -1,19 +1,19 @@
 ---
-title: Would you fetch or pull before investigating a sign-in failure on main?
+title: "Before checking a sign-in bug on `main`, would you fetch or pull?"
 topic: ci-git-docker
 roles: [manual-qa, automation, sdet]
 level: junior
 type: tooling
-oneLine: Fetch to inspect the remote changes first, then pull with an explicit integration choice when ready to update the branch.
+oneLine: "I fetch to see what changed on the remote. If I'm ready to update my branch, I pull and choose how to bring those changes in."
 looksFor:
-  - Says what happens to the remote-tracking branch.
-  - Distinguishes downloading from integrating changes.
-  - Explains the effect of a fast-forward-only pull.
-  - Checks the current branch and working tree before updating.
-trap: Pulling onto a branch with unrelated local work before checking what will be integrated.
+  - "Explain which local record Git updates when you fetch from the remote."
+  - "Explain the difference between downloading commits and bringing them into your branch."
+  - "Say when fast-forward-only pull moves the branch and when it refuses."
+  - "Check your active branch and local files before updating."
+trap: "Pulling onto a branch with unrelated local work before checking what Git would bring in."
 followUps:
-  - question: What if a fast-forward-only pull refuses to proceed?
-    answer: I'd compare the local and incoming commits to see where they diverged, then choose merge or rebase according to how the branch is shared.
+  - question: "What if a fast-forward-only pull refuses to update the branch?"
+    answer: "I'd compare my commits with the incoming ones to find where the histories split. I'd choose a merge or rebase based on who already uses the branch."
 sources:
   - label: Git fetch and remote-tracking branches
     url: https://git-scm.com/docs/git-fetch
@@ -35,10 +35,10 @@ examples:
           git pull --ff-only origin main
 ---
 
-I'd fetch first if I want to see what changed or if I'm unsure about the state of my working tree. Fetch normally updates remote-tracking references such as `origin/main`. It doesn't integrate those commits into my checked-out branch. Pull fetches and then integrates, for example with a merge or a rebase.
+If I want to inspect incoming commits or I'm unsure about my local files, I'd fetch first. Fetch normally updates remote-tracking references such as `origin/main`. That's my local record of where the remote branch points. Fetch leaves my active branch in place.
 
-If I'm on a clean local `main` and only want to catch up, I'd choose fast-forward only. Git can move `main` forward if the histories haven't diverged. If they have, I'd rather see the refusal and decide how to handle my local commits.
+Pull fetches and then brings those commits into the active branch. It can merge, which joins histories, or rebase, which replays my changes on a new starting commit. If my local `main` has no uncommitted changes and I only want to catch up, I'd use fast-forward only. That moves `main` forward if the histories haven't split. If they have, I'd let it refuse and decide what to do with my commits.
 
 ### Example
 
-The team just changed sign-in and my clean local `main` is behind. I fetch and look at the incoming commits first. If `main` can fast-forward, the last command catches it up; otherwise it leaves me to choose the integration.
+After the team changes sign-in, my clean local `main` is behind. I fetch and inspect the incoming commits. If `main` can move forward without changing either history, I pull with fast-forward only. If Git refuses, I decide how to combine the changes.

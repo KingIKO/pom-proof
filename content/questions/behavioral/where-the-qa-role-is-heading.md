@@ -1,19 +1,19 @@
 ---
-title: The returns release pass dropped from four hours to 90 minutes. What did you test with the time you got back?
+title: "Returns testing dropped from four hours to 90 minutes. What did you test with the time you saved?"
 topic: behavioral
 roles: [manual-qa, automation, sdet, senior]
 level: mid
 type: behavioral
-oneLine: Use the time saved to investigate refunds that succeeded without a confirmation.
+oneLine: "I used the time to test refunds that went through without a confirmation."
 looksFor:
-  - Explains why a lost refund confirmation was worth investigating.
-  - Connects the time saved to a check the team would otherwise have missed.
-  - Measures AI-drafted assertions against a known wrong refund amount.
-  - Names the next failure the candidate is learning to simulate.
-trap: Counting the drafts accepted without checking whether they detect a wrong refund amount.
+  - "Explain why a missing refund confirmation mattered to shoppers and support."
+  - "Show which check the team would have missed without the time it saved."
+  - "Report how tests drafted by AI handled a known wrong refund amount."
+  - "Name the next failure you're learning to produce on purpose."
+trap: "Counting the drafts you kept without checking if they catch a wrong refund amount."
 followUps:
-  - question: The draft checks the refund status but still passes with the wrong amount. What would you change?
-    answer: I'd assert the amount on the refund record, then rerun against the same wrong amount to make sure the check fails.
+  - question: "If a draft checks refund status but passes with the wrong amount, what would you change?"
+    answer: "I'd add a check for the amount on the refund record. I'd run it again with the same wrong amount and make sure it fails."
 sources:
   - label: ISTQB CTFL v4.0.1, section 6.2, benefits and risks of automation
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
@@ -21,16 +21,10 @@ sources:
     url: https://docs.github.com/en/copilot/responsible-use/inline-suggestions
 ---
 
-Support wanted to know what to tell a shopper whose refund went through without a confirmation.
-I was still spending four hours every release repeating stable checks. I paired with a developer
-to move those into the pipeline, which left a 90-minute release pass. Before the next returns
-change, I worked through that support case and added a check for the missing confirmation.
+Support wanted to know what to tell a shopper whose refund went through without a confirmation. I was still spending four hours per release repeating reliable checks. I worked with a developer to make those checks run automatically in the release pipeline, the steps that test and prepare a release. That left a 90-minute release check. I explored the support case and added a check for the missing confirmation before the next returns change.
 
-That's where I see more of my QA work going. I can have a tool draft a test, but I still decide
-which outcome matters and prove the test detects a wrong one. Right now I'm learning to simulate
-a payment timeout so I can test what the shopper and support see when the result is uncertain.
+I expect to spend more of my time as a tester on work like that. I can ask a tool to draft a test. I still decide what result matters and prove the test catches a wrong one. I'm learning to simulate a payment timeout so I can see what the shopper and support see when the payment result is uncertain.
 
 ### Example
 
-In one trial I reviewed six drafts. Two passed after I deliberately supplied the wrong
-refund amount, so I rewrote their assertions before using them in the release suite.
+I reviewed six drafts in one trial. Two passed when I supplied the wrong refund amount on purpose. I rewrote their assertions, the checks for expected results, before using them in the release tests.

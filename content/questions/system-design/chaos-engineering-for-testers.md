@@ -1,19 +1,19 @@
 ---
-title: The catalog can hide recommendations during an outage. What would let you try that failure in staging?
+title: How would you test in staging that the catalog still works when recommendations go down?
 topic: system-design
 roles: [sdet, senior]
 level: senior
 type: concept
-oneLine: Limit the outage to a synthetic cohort and check that its product list still loads on time.
+oneLine: I'd limit the outage to test sessions. I'd check that those sessions can still load the product list on time.
 looksFor:
-  - Defines what a usable product list looks like when recommendations are absent.
-  - Compares the affected sessions with a cohort that still gets recommendations.
-  - Stops on harm to browsing or checkout and confirms the panel returns afterward.
-  - Requires production approval, isolation, and an on-call owner before widening scope.
-trap: Turning off several dependencies at once without deciding what failure or recovery looks like.
+  - Describe what people should still be able to see and do without recommendations.
+  - Compare affected sessions with a group that still gets recommendations.
+  - Stop if browsing or checkout suffers and check that recommendations return afterward.
+  - Before trying this in production, get approval, contain the test, and name an on-call owner.
+trap: Turning off several services at once without deciding what's supposed to fail or how you'll know it recovered.
 followUps:
-  - question: The catalog stays up but checkout slowdowns appear in the experiment group. Did it pass?
-    answer: I'd stop if the agreed checkout guardrail trips. The fallback may work for catalog pages, but I'd investigate the checkout impact before expanding the experiment.
+  - question: The catalog keeps working, but checkout slows down for the test group. Would you call that a pass?
+    answer: If checkout crosses the agreed limit, I'd stop. The catalog may still work without recommendations. Before testing more sessions, I'd investigate what happened to checkout.
 sources:
   - label: Principles of Chaos Engineering on hypotheses and scope
     url: https://principlesofchaos.org/
@@ -21,18 +21,12 @@ sources:
     url: https://docs.aws.amazon.com/fis/latest/userguide/stop-conditions.html
 ---
 
-I'd start in staging. My hypothesis is that people can still browse the catalog when the
-recommendations service is unavailable. I'd agree on the expected fallback and acceptable
-browse latency, then compare those outcomes between a test group and an unchanged group.
-I'd keep the simulated failure confined to synthetic sessions and verify that recommendations
-return when the dependency recovers.
+I'd start in staging, a test environment that resembles production. I'd test whether people can still browse when the recommendations service is unavailable. I'd agree on the fallback, what the catalog does without recommendations, and how fast browsing must be. I'd compare a cohort affected by the test with an unchanged group. A cohort is a group of sessions.
 
-I'd consider a production experiment only after the staging run proves we can contain and
-reverse the change. I'd want explicit approval, a target we can isolate, an on-call owner who
-can abort, and working telemetry tied to an automatic stop condition.
+I'd limit the simulated failure to sessions created for the test. When the recommendations service recovers, I'd check that the panel returns.
+
+I'd consider a production experiment only after staging shows I can limit and reverse the change. I'd get explicit approval and pick a group I can isolate. I'd name an on-call owner who can stop the test. I'd check that working measurements can also stop it automatically when it crosses a limit.
 
 ### Example
 
-For one staging cohort, a test dependency returns unavailable. The product list should still
-load within its target and hide the recommendations panel. If browse latency crosses the
-agreed limit, the experiment stops and I check that both browsing and recommendations recover.
+I'd have a test service reply that it's unavailable for one group in staging. I'd expect the list to load within its time limit and hide the recommendations panel. If browsing gets slower than we agreed to allow, I'd stop the test. I'd check that browsing and recommendations both recover.

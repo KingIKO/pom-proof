@@ -1,19 +1,19 @@
 ---
-title: Chrome sessions wait while the Grid seems idle. Which Kubernetes change would help?
+title: "Chrome sessions wait even when Selenium Grid looks idle. What would you change in Kubernetes?"
 topic: containers
 roles: [sdet]
 level: senior
 type: tooling
-oneLine: Check whether Chrome requests are waiting for a matching slot, then add capacity where the queue actually builds.
+oneLine: "I check whether Chrome needs a matching browser slot. I add capacity where requests are actually waiting."
 looksFor:
-  - Counts slots that can take the requested browser instead of counting idle Pods.
-  - Uses queue wait, node registration time, and the scheduler to explain slow starts.
-  - Distinguishes the queued request timeout from the idle session timeout.
-  - Tests how much CPU, memory, and shared memory a real session uses.
-trap: Scaling from CPU alone, leaving new session requests waiting when there are no spare browser slots.
+  - "Count slots for the requested browser rather than idle Pods."
+  - "Use queue wait, scheduling, and time to register a node to explain slow starts."
+  - "Tell the time limit for a waiting request apart from the time limit for an unused session."
+  - "Measure CPU, memory, and shared memory for a real session."
+trap: "Adding capacity based on CPU alone and leaving requests waiting when there are no spare browser slots."
 followUps:
-  - question: What would you check if the queue grows but browsers never start?
-    answer: "I'd check the scaler and whether Chrome Jobs are created. Pending Pods point me toward scheduling or image pulls. Running Pods with no registered slots point me toward Grid registration or the capabilities requested by the clients."
+  - question: "If the queue grows but browsers don't start, what would you check?"
+    answer: "I'd check the scaler and look for Chrome Jobs. If Pods are pending, I'd check scheduling and image downloads. If Pods are running but have no registered slots, I'd check how Grid registers them and what browsers and settings clients requested."
 sources:
   - label: Official docker-selenium chart installation and autoscaling
     url: https://github.com/SeleniumHQ/docker-selenium/tree/4.54.0-20261124/charts/selenium-grid
@@ -65,15 +65,10 @@ examples:
             enabled: false
 ---
 
-I'd compare the Chrome requests waiting in Grid with the slots that can actually serve them.
-Idle nodes for another browser won't help those requests. With the Selenium Grid Helm chart
-I'd let KEDA react to the pending Chrome sessions. I'd start at one slot per node, measure
-browser resource use, and keep the scaler's slot count consistent with the node.
+I'd compare the Chrome requests waiting in Selenium Grid with the available slots that can run Chrome. Grid runs browser sessions on machines called nodes. Nodes for other browsers can't help those requests. I'd use the Selenium Grid Helm chart, a package of Kubernetes settings, to let KEDA add nodes when Chrome requests wait. I'd start at one slot per node, measure a session's resource use, and keep the scaler's slot count in sync with the node.
 
-I'd watch how long a new Pod takes to schedule and register. The queued request timeout
-must leave room for that delay. The idle session timeout frees a slot when its client stops
-using it. I'd check that the burst clears and nodes leave after the work drains.
+I'd time how long a Pod, the unit that runs a container, takes to get assigned to a machine and register with Grid. The queued request timeout must allow for that delay. The idle session timeout frees a slot when its client stops using the session. I'd check that a burst of requests clears and that extra nodes stop after the work finishes.
 
 ### Example
 
-On a test cluster where the chart can install KEDA, save this as `grid-values.yaml`. After adding the official chart repository, run `helm install qa-grid docker-selenium/selenium-grid --version 0.65.1 -f grid-values.yaml`. These values allow up to six single-session Chrome nodes. Send four concurrent Chrome requests and expect them to get slots within the queue timeout when the cluster has capacity.
+I'd use a test cluster where the chart can install KEDA and save these settings as `grid-values.yaml`. After adding the official chart repository, I'd run `helm install qa-grid docker-selenium/selenium-grid --version 0.65.1 -f grid-values.yaml`. The settings allow up to six Chrome nodes with one session each. I'd send four Chrome requests together and expect slots before the queue timeout if the cluster has capacity.

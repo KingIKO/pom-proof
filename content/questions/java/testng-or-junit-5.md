@@ -1,19 +1,19 @@
 ---
-title: What would you check before moving a data-driven checkout suite from TestNG to JUnit 5?
+title: Your checkout tests run with several sets of data. What would you check before moving them from TestNG to JUnit 5?
 topic: java
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Map suite selection, groups, data inputs, and parallel settings before judging whether a migration pays off.
+oneLine: Before I judge whether a migration pays off, I map suite selection, groups, data inputs, and parallel settings.
 looksFor:
-  - Maps TestNG XML suite selection to JUnit Platform suite selectors.
-  - Maps TestNG groups to JUnit Jupiter tags.
-  - Uses ParameterizedTest and MethodSource as a counterpart to DataProvider.
-  - Compares parallel configuration explicitly instead of assuming it transfers unchanged.
-trap: Porting only the test annotations and assuming the runner still selects the same tests and scheduling rules.
+  - Map TestNG XML suite selection to JUnit Platform suite selectors.
+  - Map TestNG groups to JUnit Jupiter tags.
+  - Use `@ParameterizedTest` and `@MethodSource` as a counterpart to `@DataProvider`.
+  - Compare parallel settings explicitly instead of assuming they carry over unchanged.
+trap: Porting only the test annotations and assuming the runner still uses the same test selection and scheduling rules.
 followUps:
-  - question: What would you compare in a pilot migration?
-    answer: I'd compare selected test names and data rows, verify the same failures are reported, and watch for shared state when parallel execution is enabled.
+  - question: What would you compare if you moved a small set of tests first?
+    answer: I'd compare the selected test names and data rows. I'd check that the same failures are reported. When parallel execution is enabled, I'd watch for shared state.
 sources:
   - label: TestNG suites, groups, data providers, and parallel execution
     url: https://testng.org/
@@ -62,18 +62,14 @@ examples:
           }
 ---
 
-I'd inventory what the suite uses. TestNG's XML can select classes and groups. The JUnit
-Platform has suite selectors and filters, and Jupiter tags cover group-style selection.
-For data-driven methods, `@ParameterizedTest` with `@MethodSource` covers the usual
-`@DataProvider` pattern.
+First I'd list what the suite uses. In TestNG, the suite XML file can select classes and groups. The JUnit Platform is the base that runs JUnit 5 tests. It has suite selectors and filters for that job. Jupiter, the JUnit 5 way of writing tests, uses tags for group-style selection.
 
-I'd translate parallel settings deliberately. TestNG can parallelize by methods, classes,
-instances, or XML tests. Jupiter has opt-in parallel execution with execution modes for
-classes and methods. I'd keep TestNG if the existing suite relies on its XML scheduling or
-dependencies and there's no clear reason to move.
+Data-driven methods run once for each row of input data. For those methods, `@ParameterizedTest` with `@MethodSource` covers the usual `@DataProvider` pattern.
+
+I'd translate the parallel settings on purpose. TestNG can run tests in parallel by methods, classes, instances, or XML tests. Jupiter's parallel execution is opt-in, so it stays off until I turn it on. It has execution modes for classes and methods.
+
+If the existing suite relies on TestNG's XML scheduling or dependencies and there's no clear reason to move, I'd keep TestNG.
 
 ### Example
 
-Pickup is free, and courier delivery costs 499 cents below a 5,000-cent subtotal. The JUnit
-method source supplies pickup and courier cases, including either side of the free-delivery
-cutoff. Each row runs under the `checkout` tag.
+Pickup is free. Courier delivery costs 499 cents below a 5,000-cent subtotal. The JUnit method source supplies pickup and courier cases. They include cases on either side of the free-delivery cutoff. Each row runs under the `checkout` tag.

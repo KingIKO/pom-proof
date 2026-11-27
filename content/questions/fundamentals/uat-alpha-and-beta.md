@@ -1,34 +1,28 @@
 ---
-title: School staff like the new attendance app in a demo. What evidence would you ask for before rollout?
+title: School staff like the demo of the new attendance app. What would you check before more schools start using it?
 topic: fundamentals
 roles: [manual-qa, automation]
 level: junior
 type: concept
-oneLine: Separate acceptance of the attendance workflow from evidence about how it behaves away from the demo.
+oneLine: I'd find out whether staff can do their attendance work with the app. I'd also check how the app behaves outside the demo.
 looksFor:
-  - Starts with a claim that the demo cannot establish.
-  - Uses intended users to make an acceptance decision.
-  - Changes the environment to answer different questions in alpha and beta.
-  - Traces a late functional failure to a missing check or condition.
-trap: Promoting a successful trial of the demo flow to evidence that the school can adopt it.
+  - Name a question the demo can't answer.
+  - Ask the people who will use the app to help decide whether it meets their needs.
+  - Use different places to test in the alpha and beta trials to learn different things.
+  - Trace a late failure in how the app works to a test or condition you missed.
+trap: Treating a successful demo as proof that the school can use the app for its daily work.
 followUps:
-  - question: A school doesn't use the sample attendance categories. Who resolves that?
-    answer: I'd ask its attendance lead to confirm the categories needed for their daily report and record whether those are required for acceptance.
+  - question: If a school doesn't use the attendance categories in the demo, who decides which ones it needs?
+    answer: I'd ask the school's attendance lead which categories the daily report needs. I'd record whether the school requires those categories before it will accept the app.
 sources:
   - label: ISTQB glossary v4.6.2, acceptance and alpha and beta testing (Swedish Software Testing Board)
     url: https://sstb.se/wp-content/uploads/2025/12/Glossary-CTFL-4.0-ENSV-2025-12-11.pdf
 ---
 
-A teacher can mark a pupil absent in the demo. Can the attendance office correct a register and
-still submit its daily report? I'd put that task in user acceptance testing (UAT) with the staff
-who will do the work. I'd ask the school to name who records whether the new workflow is acceptable.
+A teacher can mark a pupil absent in the demo. I'd ask whether the attendance office can correct its attendance list and still submit the daily report. I'd put that task in user acceptance testing (UAT). That's where the staff who will use the app try it to see whether it meets their needs. I'd ask the school to name who records whether the new way of working is acceptable.
 
-I'd use different settings to answer different questions. In an alpha, school staff can try our
-prepared register in the development team's test environment while we observe. In a beta, a
-school tries the app at its own site. I'd compare the two reports before expanding the trial.
+I'd test in different settings to learn different things. In an alpha trial, school staff can try a prepared attendance list in the development team's test setup while we watch. In a beta trial, I'd have a school try the app at its own site. I'd compare the two reports before inviting more schools.
 
 ### Example
 
-I'd ask the office to correct a sample pupil marked absent and confirm the revised report meets its
-needs. If that same correction disappears at a beta school, I'd capture the conditions and add
-an earlier check for whatever the demo or alpha didn't exercise.
+I'd ask the office to correct a sample record for a pupil marked absent. I'd ask staff whether the revised report meets their needs. If that correction disappears at a beta school, I'd record what was different about that trial. I'd add an earlier check for the condition the demo or alpha missed.

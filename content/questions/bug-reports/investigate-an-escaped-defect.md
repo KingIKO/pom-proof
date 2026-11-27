@@ -1,25 +1,29 @@
 ---
-title: How do you investigate a defect that escaped to production and keep it from recurring?
+title: "A bug reached customers. How do you find out why and prevent it from coming back?"
 topic: bug-reports
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: Contain the customer impact, then find both the condition that caused the failure and the gap that let it ship.
+oneLine: "I help limit the harm to customers. I find what caused the failure and why our release checks missed it."
 looksFor:
-  - Assess the scope of harm and coordinate an immediate containment decision.
-  - Reproduce the failure with safe data and verify the proposed cause.
-  - Explain why the existing checks passed despite the defect.
-  - Assign a prevention action and show the new check catches the old failure.
-trap: Ending the review at “QA missed it” or counting a new test without proving it would have caught the defect.
+  - "Find out who was affected and agree on what to do to limit the immediate harm."
+  - "Repeat the failure with safe data and test the suspected cause."
+  - "Explain why the existing checks passed even with the bug."
+  - "Assign someone to prevent a repeat and show the new check catches the old bug."
+trap: "Ending the review at “QA missed it” or adding a test without proving it catches the failure."
 followUps:
-  - question: What if you can't reproduce it in staging?
-    answer: I'd compare production and staging inputs and configuration with the team. I'd preserve the observed evidence, label the cause as open, and still pursue any warranted containment.
-  - question: How do you choose where the regression test goes?
-    answer: I'd put the main check where it can reproduce the failure reliably. I'd add a higher-level check only if the connection between components could fail in a way that test can't see.
+  - question: "What if you can't reproduce the bug in staging, the environment you use before release?"
+    answer: "I'd compare the inputs and settings in the live and test environments with the team. I'd keep the evidence and leave the cause open. I'd still work to limit the harm if the evidence calls for it."
+  - question: "Where would you put a regression test, a test that catches the bug if it returns?"
+    answer: "I'd put the main test where it can reliably repeat the failure. I'd only add a test across components if the link between them can fail in a way the main test can't see."
 ---
 
-I'd start with who is affected and what we can do to limit more harm. Then I'd work with engineering to reproduce the failure with safe data. I'd keep two questions open until we can answer them with evidence: what caused the bad result, and why did our release checks pass? Each prevention action needs an owner and a way to prove it works.
+I'd find out who the bug affects and what we can do to limit more harm. I'd work with engineering to repeat the failure with safe data. I'd use evidence to answer two questions. What caused the bad result? Why did the release checks pass?
+
+I'd make sure someone owns each action we take to prevent a repeat. I'd agree on how to show each action works.
 
 ### Example
 
-Say monthly usage reports omit some of the last day's usage for customers west of UTC. I'd ask the release owner to pause the remaining sends while we work out which reports need replacing. A controlled replay shows the query uses a UTC cutoff where the report calls for the customer's local cutoff. Our fixtures used only UTC accounts, where both cutoffs match. I'd add a New York account with records just before and just after local midnight at the end of the month. I'd show that the same report check fails before the fix and passes after it.
+Suppose I find monthly usage reports leave out some of the last day's usage for customers west of UTC. UTC is the reference time used across time zones. I'd ask the release owner to pause the remaining sends while we find which reports need replacing. I'd replay the failure under known conditions. Suppose the query, the request for data, uses a UTC cutoff instead of the customer's local cutoff.
+
+I'd check our fixtures, the data we set up for tests. They use only UTC accounts, where both cutoffs match. I'd add a New York account with records on either side of local midnight at the end of the month. I'd show that the same report check fails before the fix and passes afterward.

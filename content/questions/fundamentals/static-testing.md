@@ -1,26 +1,28 @@
 ---
-title: "What can static testing catch before you run the software?"
+title: "What problems can you find without running the software?"
 topic: fundamentals
 roles: [manual-qa, automation, sdet]
 level: mid
 type: concept
-oneLine: "Reviews and static analysis can catch defects in work products without executing the software."
+oneLine: "I can catch problems by reading the requirements, design, or code. I can also use tools that check the code without running it."
 looksFor:
-  - "Gives an example of reviewing a work product."
-  - "Distinguishes a human review from a tool-driven check."
-  - "Names something that still requires execution."
-  - "Turns a finding into a clear decision or fix."
-trap: "Treating a review or a clean static analysis result as proof that a deployed feature works."
+  - "Give an example of reviewing something the team wrote."
+  - "Explain what a person can review and what a tool can check."
+  - "Name a check that requires running the app."
+  - "Use a finding to help the team make a decision or fix a problem."
+trap: "Assuming a feature works after release because a review or a tool found no problems in the source."
 followUps:
-  - question: "What would you review in a refund story?"
-    answer: "I'd check whether the specification covers repeated requests, partial refunds, and what the customer sees while the result is pending."
+  - question: "What would you look for in a written refund requirement?"
+    answer: "I'd look for rules about repeated requests and partial refunds. I'd check what the customer should see while they wait for the result."
 sources:
   - label: "ISTQB CTFL v4.0.1, chapter 3"
     url: https://www.istqb.org/certifications/certified-tester-foundation-level
 ---
 
-I can read a requirement, design, or piece of code and look for a problem before there's anything to deploy. A review can expose contradictory rules or missing error behavior. A static analysis tool can help with code patterns that have a clear rule, such as unreachable code. I record what needs to change and then use execution to check the behavior that depends on real data or running dependencies.
+Static testing means looking for defects without running the software. I can read a requirement, design, or piece of code before we have anything to deploy. In a review, I can spot rules that disagree or ask what should happen when something fails.
+
+I can also use static analysis, a tool's check for code that breaks a known rule. For example, it can find code that can never run. I record what needs to change. I still run the software to check behavior that depends on real data or other services.
 
 ### Example
 
-One screen might say a refund request is accepted before midnight local time, while the service design uses UTC. I'd bring a concrete timestamp to the review and get product to pick the intended rule. We'd still run the feature around midnight after the fix.
+If a refund screen promises to accept requests before local midnight, I'd compare that promise with the service design. The design might use UTC, a global time standard. I'd bring a specific time to the review and ask the product team which rule to follow. After the fix, I'd still test the running feature around midnight.

@@ -1,25 +1,25 @@
 ---
-title: Two patients can see the last appointment. Which check would you make required before release?
+title: "Two patients see the last appointment. What check would you require before a release?"
 topic: automation-strategy
 roles: [automation, sdet, senior]
 level: senior
 type: scenario
-oneLine: Make the check for double booking repeatable with a slot the test owns, and keep a browser check for the patient's confirmation.
+oneLine: "I'd use a slot the test owns to check that the system can't book it twice. I'd also check the patient's confirmation in the browser."
 looksFor:
-  - Explains the cost of giving two patients the same appointment.
-  - Uses a slot that can be created and cleared without touching anyone else's calendar.
-  - Separates the confirmed reservation from what the patient sees on screen.
-  - Checks what the patient and administrator can each verify before treating it as a requirement.
-trap: Using whatever happens to be the last slot on a shared calendar, then treating a red result as a double booking.
+  - "Explain what happens if two patients think they booked the same slot."
+  - "Set up and clear a slot without touching anyone else's calendar."
+  - "Check the saved reservation separately from the patient's screen."
+  - "Check what patients and administrators can each see before calling it a requirement."
+trap: "Using the last slot on a shared calendar and assuming any test failure means a double booking."
 followUps:
-  - question: The administrator can create a slot from the portal, but CI cannot clear it. Would you make the check required yet?
-    answer: I'd keep it advisory until CI has a dedicated calendar or a supported way to undo the booking. A job that can leave its own slot occupied will fail for the wrong reason on the next run.
+  - question: "The administrator can add a slot, but CI can't clear it. Would you require the check yet?"
+    answer: "I'd make it report-only until CI gets a dedicated calendar or a supported way to undo the booking. If one run leaves the slot occupied, the next run will fail for the wrong reason."
 ---
 
-I'd make the reservation rule the first candidate for CI. Two confirmations for one appointment could mean someone turns up and can't be seen. With no documentation, I'd book a slot in the test environment and check what the administrator's calendar records. I'd note which behavior I observed and which parts, such as how long a held slot lasts, still need confirmation.
+I'd start with double booking as a candidate for continuous integration (CI), the service that runs tests on code changes. If two patients receive confirmations for one slot, one may arrive and find nobody can see them. If the rules aren't documented, I'd book a test slot and check the administrator's calendar. I'd record what I saw and ask about anything still unknown, such as how long a hold lasts.
 
-Before making the job required, I'd prove CI can reach the portal, sign in as both patients, and leave the calendar clean afterward. I'd have the run log the slot ID, each attempt's result, and which patient the calendar recorded. For the browser check I'd target named controls on the confirmation screen. Once those results are dependable, I'd add cases for other ways a patient could lose an appointment.
+Before requiring the check, I'd make sure CI can open the portal, sign in as both patients, and clean up the calendar. I'd log the slot ID, each attempt's result, and which patient the calendar recorded. I'd check for named controls on the confirmation screen. Once those results are dependable, I'd test other ways a patient could lose a booking.
 
 ### Example
 
-I'd start with booking a seeded appointment and confirming a second patient cannot reserve the same time. I'd cover the conflict rule below the UI and keep a browser check for the confirmation the first patient sees.
+I'd prepare one appointment and book it for the first patient. I'd test below the browser that the second patient can't book the same time. I'd keep a browser check for the confirmation the first patient sees.

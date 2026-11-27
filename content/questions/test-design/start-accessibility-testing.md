@@ -1,19 +1,19 @@
 ---
-title: A refused renewal leaves focus in the library dialog. What should a reader hear and be able to do next?
+title: The library refuses a renewal and focus stays in the dialog. What should a reader hear and do next?
 topic: test-design
 roles: [manual-qa, automation, sdet]
 level: mid
 type: concept
-oneLine: Follow the refused renewal from the error announcement to the reader's next action and return to the loan list.
+oneLine: I'd listen to what the screen reader announces when renewal fails. I'd check what the reader can do next and how they return to the loan list.
 looksFor:
-  - Checks whether the refusal is announced and explains what the reader can do.
-  - Traces focus through dismissal and back to the loan list.
-  - Uses the scan to catch detectable problems in the open dialog.
-  - Relates the findings to the team's WCAG version and level.
-trap: Taking a clean automated scan as proof the renewal journey is accessible.
+  - Check that the screen reader announces the refusal and tells the reader what they can do.
+  - Follow keyboard focus as the reader closes the dialog and returns to the loan list.
+  - Scan the open dialog for problems the tool can detect.
+  - Compare the findings with the WCAG version and level the team follows.
+trap: Treating a clean automated scan as proof a reader can use the full renewal flow.
 followUps:
-  - question: The reader dismisses the refusal with Escape and ends up at the top of the page. What would you record?
-    answer: I'd record the loan and focused control before opening the dialog, where Escape sent focus, and whether the reader could resume at the same loan.
+  - question: Escape closes the dialog and sends the reader to the top of the page. What would you record?
+    answer: I'd record the loan and which control had focus before the dialog opened. I'd record where focus goes after Escape. I'd say whether the reader can resume at the same loan.
 sources:
   - label: W3C Recommendation, WCAG 2.2
     url: https://www.w3.org/TR/WCAG22/
@@ -44,17 +44,10 @@ examples:
           });
 ---
 
-I'd make the service refuse a renewal on a known loan. With a screen reader I'd listen for the
-reason and the available next action. I'd run it again with only the keyboard and follow focus
-from the loan into the dialog and back out. The user should be able to dismiss the refusal and
-pick up at the loan they were working on.
+I'd make the service refuse a renewal on a known loan. I'd use a screen reader, which reads the interface aloud, to listen for the reason and what I can do next. I'd repeat the test with just the keyboard. I'd follow focus, the control that receives keyboard input, from the loan into the dialog and back out. I'd expect to close the dialog and continue from the same loan.
 
-I'd use the team's agreed Web Content Accessibility Guidelines target to evaluate the findings.
-For WCAG 2.2 AA I'd also scan the open state for detectable issues like missing labels. I'd read
-the cover image's alternative text myself to see whether it helps the reader identify the book.
+I'd compare the results with the team's target under the Web Content Accessibility Guidelines (WCAG). If the target is WCAG 2.2 AA, I'd scan the open dialog for issues the tool can detect, such as missing labels. I'd read the cover image's alternative text, its written description, myself. I'd check whether it helps the reader identify the book.
 
 ### Example
 
-On a test account with one renewable loan, point the Playwright project's base URL at the library
-app and use that account's signed-in state. The example expects the open dialog to have no automated
-violations for the WCAG 2.2 A and AA rules the scanner covers, including applicable rules from 2.0 and 2.1.
+I'd use the saved sign-in for a test account with one renewable loan. I'd point the Playwright project's base URL, the starting app address, at the library app. I'd expect no scan findings for the covered WCAG 2.2 A and AA rules. That includes applicable rules from 2.0 and 2.1.

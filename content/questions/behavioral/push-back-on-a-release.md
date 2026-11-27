@@ -1,25 +1,25 @@
 ---
-title: Tell me about a time you pushed back on a release.
+title: "Tell me about a time you pushed back on a release."
 topic: behavioral
 roles: [manual-qa, automation, sdet, senior]
 level: mid
 type: behavioral
-oneLine: Bring reproducible customer impact and a release option the decision owner can act on.
+oneLine: "When I push back on a release, I explain why it shouldn't go ahead as planned. I show how to repeat the problem customers would see and give the release owner an option they can act on."
 looksFor:
-  - Your specific evidence and recommendation
-  - A clear release decision owner
-  - A measured outcome from the chosen option
-  - What you learned about setting release criteria
-trap: Saying QA blocked the release without explaining the impact or what alternatives you offered.
+  - "Share the evidence you collected and the option you recommended."
+  - "Name who made the release decision."
+  - "Show what happened after that decision."
+  - "Explain what you learned about deciding when a release can go out."
+trap: "Saying QA blocked the release without describing the impact or offering other options."
 followUps:
-  - question: What if the release owner had shipped anyway?
-    answer: I'd record the accepted risk and agree on a monitor, rollback trigger, and owner before the rollout.
+  - question: "What would you do if the release owner shipped the change anyway?"
+    answer: "I'd record the risk the owner accepted. Before rollout, I'd agree on what to watch, when to undo the release, and who would act."
 ---
 
-Two hours before a release, I found that changing the shipping address after applying a coupon could leave the confirmation total higher than the cart total. I needed to give the release owner a clear recommendation before the deployment window closed. I reproduced it on two accounts, saved both totals, and verified the previous checkout flow didn't have the issue.
+Two hours before a release, I found a problem with coupons. After I applied a coupon and changed the shipping address, the confirmation could show a higher total than the cart. I needed to give the release owner a recommendation before the time set aside to deploy ran out. I reproduced the issue on two accounts and saved both totals. I checked that the older checkout didn't have the problem.
 
-I recommended shipping the rest of the release with the new checkout flag off. The release owner agreed. I checked the fallback in the candidate build, then verified the fix before the flag went back on two days later. I learned to check fallback options before release day.
+I recommended shipping the rest of the release with the new checkout flag off. The flag was a setting that turned the new checkout on or off. The release owner agreed. I checked the old checkout in the build we planned to release. I confirmed the fix before the team turned the flag back on two days later.
 
 ### Example
 
-My issue included a cart total of $42 and a confirmation of $49 for the same order. The screenshots and steps let the release owner verify the difference without waiting for a meeting.
+I reported a $42 cart total and a $49 confirmation total for the same order. My screenshots and steps let the release owner see the difference without waiting for a meeting. I learned to test the fallback before release day.

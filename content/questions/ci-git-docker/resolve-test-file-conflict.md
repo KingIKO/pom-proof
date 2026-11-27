@@ -1,19 +1,19 @@
 ---
-title: How do you resolve a Git conflict when both branches changed the same test?
+title: "Both branches changed the same test. How do you resolve the conflict in Git?"
 topic: ci-git-docker
 roles: [manual-qa, automation, sdet]
 level: junior
 type: scenario
-oneLine: Read the reason for each change, preserve both intended behaviors, and rerun the affected case.
+oneLine: "I read why each side changed the test. I keep both expectations if they still apply and rerun the affected case."
 looksFor:
-  - The expectation behind each side of the conflict
-  - A check of the current requirement if expectations disagree
-  - A reviewed resolution and focused test run
-  - Care not to discard valid coverage to get a pass
-trap: Accepting the entire incoming or current version without checking what assertion disappears.
+  - "Explain which behavior each side expects."
+  - "Check the current requirement if the expectations disagree."
+  - "Review the combined change and run the tests it affects."
+  - "Show that you kept useful checks instead of dropping them to get a pass."
+trap: "Taking a whole version of the file without checking which expectation it drops."
 followUps:
-  - question: What if the expected results contradict each other?
-    answer: I'd check the accepted behavior with the change author or product owner before deciding which expectation survives.
+  - question: "What if the two versions expect different results?"
+    answer: "I'd ask the change author or product owner which behavior the team agreed to. I'd use that answer to decide which expectation to keep."
 sources:
   - label: Git merge conflict resolution
     url: https://git-scm.com/docs/git-merge#_how_conflicts_are_presented
@@ -21,10 +21,10 @@ sources:
     url: https://git-scm.com/docs/git-rebase
 ---
 
-I read both sides and look at the changes they came with. A conflict marker tells me the edits overlapped; it can't tell me which product behavior is right. I preserve both useful expectations if they still apply. If the changes disagree about what a customer should see, I ask which requirement applies before resolving the file.
+I read both sides and review the changes that came with them. Git's conflict markers show where edits overlap. I still need to find out which behavior is right. If both expectations still apply, I keep them. If they disagree about what the customer should see, I ask which rule applies before editing the file.
 
-I review the resolved diff, stage the file, and continue the merge or rebase. Then I run the affected test and its neighbors. I check the assertion against the accepted behavior instead of just accepting whichever wording makes the build green.
+I review the diff, the list of changes, and stage the file so Git records my resolution. I continue the merge or rebase, the operation bringing the changes together. Then I run the affected test and nearby tests. I compare the assertion, the check for the expected result, with the agreed behavior.
 
 ### Example
 
-If one branch renames the Refund action and the other adds an assertion about the refunded total, I'd use the new name and keep the total check. I still run the actual refund spec.
+Suppose I see one branch rename Refund and the other add a check for the refunded total. I'd keep the new name and the total check. I'd run the refund test rather than assume the combined file works.

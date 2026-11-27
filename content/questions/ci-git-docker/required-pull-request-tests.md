@@ -1,19 +1,19 @@
 ---
-title: How would you run automated tests on every pull request?
+title: "How would you run tests on every pull request and require them to pass before merge?"
 topic: ci-git-docker
 roles: [manual-qa, automation, sdet]
 level: junior
 type: tooling
-oneLine: Trigger a small repeatable suite on pull requests and make its result a required check before merging.
+oneLine: "I run a small set of tests the same way on each pull request. I require that check to pass before anyone can merge."
 looksFor:
-  - Test execution on pull request changes
-  - An environment and dependencies the job can recreate
-  - A required check distinct from a workflow trigger
-  - A failure that contributors can diagnose
-trap: Assuming a workflow that runs automatically also blocks merges when it fails.
+  - "Show what starts the test run when a pull request changes."
+  - "Use settings and package versions another run can recreate."
+  - "Explain the difference between starting a workflow and requiring its result."
+  - "Make the failure easy for the contributor to investigate."
+trap: "Assuming a check blocks merges just because it runs automatically."
 followUps:
-  - question: How would you prove it blocks a bad merge?
-    answer: I'd open a test pull request with an intentional failing assertion, confirm the check blocks merging, and restore the assertion.
+  - question: "How would you prove a failing check prevents a merge?"
+    answer: "I'd open a test pull request with a check that fails on purpose. I'd confirm GitHub blocks the merge. Then I'd restore the check."
 sources:
   - label: GitHub Actions pull request event
     url: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request
@@ -51,10 +51,10 @@ examples:
                 - run: npm run test:order-smoke
 ---
 
-On GitHub I'd set a workflow to run on `pull_request`, install the locked dependencies, and run the same test command a contributor can run locally. I'd start with fast checks for important paths and make sure an assertion failure gives the job a failed result. The output should tell the author which test failed and how to reproduce it.
+On GitHub I'd start a workflow on the `pull_request` event, which runs when a pull request is opened or updated. I'd install the saved package versions and run the same command contributors can run locally. I'd start with fast checks for important actions. If an assertion, a check for an expected result, fails, I'd make sure the job fails too. The output should tell the author which test failed and how to repeat it.
 
-Then I'd configure the target branch to require that check. Running a workflow and requiring its result are separate decisions. I'd try it with a small change that fails a check, and verify that a passing revision can proceed.
+I'd make that result a required check on the branch that receives the change. Starting a workflow and requiring its result are separate settings. I'd try a small change that fails and confirm I can proceed again after the check passes.
 
 ### Example
 
-Assume the repo has locked Node dependencies and an order smoke script that uses a local test service. I set `Checkout tests` as required in the target branch's rules. A checkout change runs unit tests and the smoke check. An order confirmation failure should fail the job and keep the pull request from merging.
+Suppose my repository saves exact Node package versions and has a quick order test against a local service. I'd require the `Checkout tests` check. A checkout change runs unit tests, which test small parts of the code, and the quick order check. If order confirmation fails, I'd expect the job to fail and GitHub to block the merge.

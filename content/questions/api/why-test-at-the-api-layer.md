@@ -1,19 +1,19 @@
 ---
-title: "The cart charges shipping at exactly $50. Which two requests would narrow down the bug?"
+title: "The cart charges shipping at exactly $50. Which two quote requests would help find the bug?"
 topic: api
 roles: [manual-qa, automation, sdet]
 level: junior
 type: concept
-oneLine: "Compare the shipping quotes at $49.99 and $50.00 before deciding whether to investigate the pricing service or the cart."
+oneLine: "I'd compare a quote at $49.99 with one at $50.00. I'd use the results to decide whether to look at the pricing service or the cart."
 looksFor:
-  - "Names the exact subtotals and expected shipping amounts."
-  - "Explains what to inspect in the cart if the quote is already correct."
-  - "Keeps the cutoff requests below the slower browser journey."
-  - "Leaves arithmetic variations in unit tests and checks that the service reads the subtotal correctly."
-trap: "Testing a cart far above $50 and missing the first subtotal that should qualify."
+  - "State the exact subtotals and shipping charges you expect."
+  - "Explain what you'd check in the cart if the quote is already right."
+  - "Send the cutoff requests directly instead of going through checkout each time."
+  - "Test arithmetic separately and check that the service reads the subtotal correctly."
+trap: "Testing a cart far above $50 and missing the first subtotal that should get free shipping."
 followUps:
-  - question: "The quote returns zero cents at $50, but checkout still shows $5.99. What would you check in the browser?"
-    answer: "I'd watch the cart cross the cutoff and see whether it requests a new quote, displays that reply, and uses it in the final total."
+  - question: "The quote is zero cents at $50, but checkout shows $5.99. What would you check in the browser?"
+    answer: "I'd watch the cart cross the cutoff. I'd check whether it requests a new quote and displays the reply. I'd also check whether the final total uses the new amount."
 sources:
   - label: Ham Vocke, the practical test pyramid
     url: https://martinfowler.com/articles/practical-test-pyramid.html
@@ -85,10 +85,10 @@ examples:
           }
 ---
 
-I'd ask the running quote service for $49.99 and then $50.00. If it charges at both, I'd check how it reads the subtotal and applies the cutoff. If the second quote is free, I'd turn to the cart and check whether it uses the new result. Two direct requests usually give me that answer faster than changing items and waiting for a page update.
+I'd send $49.99 and $50.00 to the running quote service. If it charges shipping at both amounts, I'd check how it reads the subtotal and applies the cutoff. If the second quote is free, I'd check whether the cart uses the new result. Two direct requests usually answer that faster than changing items and waiting for the page to update.
 
-I'd keep the arithmetic variations in unit tests and the two requests as service checks. I'd still keep one browser checkout to prove that the new shipping price is displayed and included in what the shopper pays.
+I'd keep the arithmetic cases in unit tests, which check the pricing code on its own. I'd keep the two requests as checks of the running service. I'd still go through checkout once in a browser to see that it shows and charges the right amount.
 
 ### Example
 
-A local quote service charges $5.99 below $50 and nothing at $50. Two requests check `shippingMinor` at 4999 and 5000 cents.
+In the local service, I'd quote 4999 and 5000 cents and read the `shippingMinor` field. I'd expect $5.99 below $50 and no charge at $50.

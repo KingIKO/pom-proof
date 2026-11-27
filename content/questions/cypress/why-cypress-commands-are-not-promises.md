@@ -1,19 +1,19 @@
 ---
-title: Why doesn't awaiting a Cypress query give you the receipt text?
+title: "Why doesn't `await` on a Cypress query give you the receipt text?"
 topic: cypress
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Use values when the command queue yields them, and wrap a real promise only at the right point in that queue.
+oneLine: "I read values when the Cypress command queue hands them to me. I wrap a real promise only at the point in the queue where I need its result."
 looksFor:
-  - Distinguishes queued commands from JavaScript promises.
-  - Uses a callback or alias to read the yielded subject.
-  - Creates a real promise when the queued flow reaches it.
-  - Explains why Cypress orders actions and queries this way.
-trap: Storing the chain in a variable and immediately treating it as the DOM element.
+  - "Explain the difference between a Cypress command and a JavaScript promise."
+  - "Use a callback or an alias to read the value a command gives you."
+  - "Start a real promise when the queued commands reach that point."
+  - "Explain why Cypress runs actions and searches in that order."
+trap: "Saving the command chain in a variable and treating it as the page element right away."
 followUps:
-  - question: What's the difference between then and should for reading something that updates?
-    answer: I use a retrying should assertion to wait for a known state. I use then to work once with the value after it's ready.
+  - question: "How do `then` and `should` differ when the value changes?"
+    answer: "I use `should` to keep trying a check until the expected result appears or time runs out. I use `then` to work once with a value once it is available."
 sources:
   - label: Cypress command queue
     url: https://docs.cypress.io/app/core-concepts/introduction-to-cypress
@@ -45,12 +45,10 @@ examples:
           });
 ---
 
-Calling a Cypress command queues work that runs later. The value returned at that moment is a command chain. `await` doesn't turn it into a receipt element. Cypress runs commands in order and controls which queries and assertions it retries, so one command can reliably provide the subject for the next.
+A Cypress command adds work to a queue, a list that runs in order. I get back a command chain, not the receipt element, so `await` doesn't give me the element. Cypress decides which searches and checks to repeat. One command can pass its subject, the value it found, to the next command.
 
-I'd use `then` to read the resolved subject once or an alias to refer to it later. For a real promise, I'd start it inside a queued callback if it depends on earlier commands, then return a `cy.wrap` chain to wait for the result.
-
-I'd normally use `cy.request` for a direct HTTP check. The example uses `cy.wrap` to show how an existing promise fits into the command queue.
+I'd use `then` to read that value once. To refer to it later, I'd give it an alias, a name Cypress can look up. A promise represents a result JavaScript will receive later. If a promise depends on earlier commands, I'd start it inside a callback, a function Cypress calls when it gets there. I'd return a `cy.wrap` chain so Cypress waits for the result.
 
 ### Example
 
-The local receipt page displays R42. Only after that text appears does the check ask the browser to fetch the audit endpoint, which should report the same receipt number.
+I normally use `cy.request` to check an HTTP reply directly. Here I use `cy.wrap` to show how an existing promise fits in the queue. After the local page shows R42, I ask the browser to fetch the audit address. I expect the same receipt number in its reply.

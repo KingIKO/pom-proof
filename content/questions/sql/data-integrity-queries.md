@@ -1,19 +1,19 @@
 ---
-title: "Invoice 1 stores a total of 100, but its two lines add to 40. What should the backfill report tell you?"
+title: "Invoice 1 stores a total of 100, but its two lines add up to 40. What should the backfill report show?"
 topic: sql
 roles: [sdet, senior]
 level: senior
 type: tooling
-oneLine: "Report the total mismatch and any separate defects on invoice 1 without hiding failures on other invoices."
+oneLine: "I'd report the wrong total and any other broken rules on invoice 1. I'd still report failures on other invoices."
 looksFor:
-  - "Calculates the expected amount from invoice 1's lines in minor units."
-  - "Keeps the repeated SKU and missing currency visible as separate findings."
-  - "Starts from lines when looking for a missing invoice, so a bad reference like 9 can appear."
-  - "Checks the report both with known violations and with clean data before using it for sign-off."
-trap: "Using NOT IN against a nullable column, which can turn a missing match into unknown."
+  - "Add up invoice 1's line amounts in the currency's smallest unit."
+  - "Report the repeated product code and the missing currency separately."
+  - "Start with invoice lines so the query can find a reference to a missing invoice such as 9."
+  - "Try the report on clean data and on data with known problems before using it for release."
+trap: "Using `NOT IN` on values that may be null, so the query can treat a missing match as unknown."
 followUps:
-  - question: "The backfill fixes invoice 1's total, but its currency is still missing. What should CI show?"
-    answer: "The total mismatch should disappear. The missing-currency row must stay in the report and still fail CI. I'd publish the rule and test invoice ID without copying private invoice details."
+  - question: "The backfill fixes invoice 1's total but leaves its currency missing. What should the automated check show?"
+    answer: "I'd expect the total complaint to disappear. The missing currency must still appear and fail the job. I'd publish the rule and test invoice ID without copying private details."
 sources:
   - label: SQLite NOT IN and EXISTS behavior
     url: https://www.sqlite.org/lang_expr.html
@@ -47,10 +47,10 @@ examples:
           ORDER BY rule, record_id;
 ---
 
-I'd give invoice 1 a row for each failed rule. Fixing the total shouldn't make the missing currency disappear from the report. Nor should it clear the repeated pen line if the contract allows only one row per SKU. A backfill can preserve the row count and produce all of those defects.
+I'd use the report to check a backfill, a job that fills in or changes existing records. I'd give invoice 1 one result row per broken rule. If the total gets fixed, the missing currency should still appear. If the rules allow only one row per SKU, or product code, the repeated pen line should still appear too. A backfill can leave the row count unchanged and still cause all these problems.
 
-I'd check from the line table when looking for references like invoice 9. `NOT EXISTS` finds lines with no matching invoice even if the inspected data contains nulls. A null in a `NOT IN` subquery can hide an unmatched line. I'd run the report on clean data and on planted defects before using an empty result as a release check.
+I'd start with the line table to find references to missing invoices like 9. The `NOT EXISTS` condition finds lines without a matching invoice even if some values are null, meaning absent. If a nested query returns a null, `NOT IN` can leave out an unmatched line. Before treating an empty report as a pass, I'd run it with clean data and with known faults.
 
 ### Example
 
-The query finds the orphan line for invoice 9. It reports three problems on invoice 1: a repeated SKU, a missing currency and a total mismatch. Invoice 2 passes.
+I'd expect the query to find a line with no matching invoice 9. I'd expect three rows for invoice 1, one each for the repeated SKU, missing currency, and wrong total. I'd expect no problem for invoice 2.

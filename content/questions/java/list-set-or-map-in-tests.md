@@ -1,19 +1,19 @@
 ---
-title: The shop seeded Blue mug and Red mug. What should the grid check tell you when it fails?
+title: The test shop starts with Blue mug and Red mug. If the grid check fails, what should it report?
 topic: java
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Report whether the mug grid returned the wrong number of titles or returned two titles that matched each other.
+oneLine: I'd report whether the mug grid returned the wrong number of titles, or returned two titles that matched each other.
 looksFor:
-  - Makes a missing title fail the two-row fixture's count check.
-  - Keeps both observed titles in a list for the failure message.
-  - Uses the size of a set to tell two matching titles apart from two distinct ones.
-  - Explains how a map can show the title for each SKU or count repeated labels.
-trap: Comparing the size of an empty list with the size of an empty set and reporting that the grid passed.
+  - Make a missing title fail the count check for the two-row fixture.
+  - Keep both observed titles in a list for the failure message.
+  - Use the size of a set to tell two matching titles apart from two distinct ones.
+  - Explain how a map can show the title for each SKU or count repeated labels.
+trap: Passing the grid check because an empty list and an empty set both contain zero items.
 followUps:
-  - question: Both mugs are now labeled Ceramic mug, but they have different SKUs. Which field would you check for repeats?
-    answer: I'd check for duplicate SKUs. A map of expected titles by SKU can still check each label without requiring the labels to differ.
+  - question: Both mugs now show Ceramic mug on the label and still have different product codes. Which field would you check for duplicates?
+    answer: I'd check for duplicate SKUs. A map of expected titles by SKU can still check each label, and it doesn't require the labels to differ.
 sources:
   - label: Java 21 List
     url: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html
@@ -61,17 +61,12 @@ examples:
           }
 ---
 
-If the grid reports `Blue mug` twice, I want the failure to show both readings. I'd keep
-them in an ordered `List` and compare its size with a `Set` built from those readings.
-Two rows but only one distinct title tells me what went wrong.
+If the grid reports `Blue mug` twice, I want the failure to show both readings. I'd keep them in a `List`, which keeps items in order and allows repeats. I'd compare its size with a `Set` built from those readings. A set keeps only distinct values. Two rows but only one distinct title tells me what went wrong.
 
-I'd assert the count of two first. If the page finds no matching title elements,
-Selenium's `findElements` returns an empty list, and comparing sizes alone would give me
-zero on both sides. If the failure needs counts for each repeated label, I'd use a `Map`.
-I can also keep expected titles in a map keyed by SKU.
+I'd assert the count of two first. If the page finds no matching title elements, Selenium's `findElements` returns an empty list. Comparing sizes alone would then give me zero on both sides.
+
+If the failure needs counts for each repeated label, I'd use a `Map`, which stores values by key. I can also keep expected titles in a map keyed by SKU, the product code.
 
 ### Example
 
-Chrome opens a fixture grid with two mugs. The test expects two rows and two distinct
-titles. Removing both rows fails the count check, and repeating either title fails
-the uniqueness check.
+Chrome opens a fixture grid with two mugs. The test expects two rows and two distinct titles. Removing both rows fails the count check. Repeating either title fails the uniqueness check.

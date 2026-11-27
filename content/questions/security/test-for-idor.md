@@ -1,19 +1,19 @@
 ---
-title: How would you verify invoice access is scoped to the signed-in customer?
+title: How would you check that signed-in customers can only see invoices they may read?
 topic: security
 roles: [automation, sdet]
 level: mid
 type: scenario
-oneLine: Define who may access an invoice and check that the server enforces that rule without exposing denied records.
+oneLine: I'd write down who may read an invoice. I'd check that the server enforces that rule without exposing invoices a customer can't read.
 looksFor:
-  - Checks record ownership on the server even if the UI already hides an invoice.
-  - Uses test-owned accounts with documented roles and fixed synthetic records.
-  - Includes an allowed case to prove the route and test session work.
-  - Compares the denied and missing responses according to the privacy contract.
-trap: Checking only that the invoice is absent from the customer portal menu.
+  - Check that the server enforces ownership rules even if the page hides the invoice.
+  - Use accounts just for the test, with named roles and known test records.
+  - Include an allowed read to show that the invoice API and test sign-in work.
+  - Compare replies for denied and missing invoices against the privacy rules.
+trap: Checking only that the customer portal menu doesn't show the invoice.
 followUps:
-  - question: Would you always expect 404 for a denied request?
-    answer: No. The application contract decides. If record existence is private, a 404 is a documented option and I'd check that its body doesn't distinguish a denied record from a missing one.
+  - question: When would you expect 404 for an invoice the customer isn't allowed to read?
+    answer: I'd follow the app's documented rules. If the rules hide whether the invoice exists, 404 is a documented option. I'd check that the reply body doesn't tell denied and missing invoices apart.
 sources:
   - label: OWASP authorization unit and integration testing
     url: https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html
@@ -128,10 +128,10 @@ examples:
           }
 ---
 
-I'd agree on a permissions table first. For an invoice, the owner might be allowed to read it while a viewer from a different account is denied. The service needs to make that decision for every relevant operation; hiding the button only covers its display. I'd run the table against known records and identities that the test setup owns.
+I'd agree on a permissions table, a list of who may do what. The rules might let the owner read an invoice and deny access to a viewer from another account. The server must decide for every relevant operation. Hiding a button only changes what the customer sees. I'd test the rules with known records and accounts created for the test.
 
-I'd include a successful read for each session so a missing record or invalid session can't make the denials look correct. If the contract hides whether a record exists, I'd expect denied and missing records to return the same status and error envelope, without leaking the invoice fields.
+I'd include a successful read for each signed-in session. That checks that a missing record or invalid sign-in didn't make the denials look right. If the rules hide whether records exist, I'd expect the same status for denied and missing invoices. I'd also expect the same error envelope, the fields that describe the error. Neither reply should expose invoice fields.
 
 ### Example
 
-The local test app uses synthetic sessions `test-owner` and `test-viewer`. Each can read its own seeded invoice, `fixture-101` and `fixture-102`, respectively. The viewer gets the same `404` JSON for the owner's invoice as for `fixture-missing`. With REST Assured 7, add `json-path-gpath` for the `id` field assertions.
+I'd use two made-up sessions in the local test app, `test-owner` and `test-viewer`. I'd check that the owner can read `fixture-101` and that the viewer can read `fixture-102`. I'd expect the viewer to get the same `404` JSON error for the owner's invoice and for `fixture-missing`. If I'm using REST Assured 7 to test the API, I'd add `json-path-gpath` to check the `id` field.

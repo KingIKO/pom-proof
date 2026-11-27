@@ -4,20 +4,22 @@ topic: api
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: "Run representative existing clients or their verified contracts against the candidate service, including the less obvious behaviors they rely on."
+oneLine: "I'd test the proposed service with existing clients or their verified contracts. I'd include behavior the clients rely on beyond which fields come back."
 looksFor:
-  - "Identifies supported consumers and versions."
-  - "Checks behavior as well as field shape."
-  - "Recognizes strict clients can reject additive changes."
-  - "Plans for coexistence and verifies rollout assumptions."
-trap: "Assuming an added field or enum value is safe because the response still parses as JSON."
+  - "Identify which clients and versions the service still supports."
+  - "Check what operations do as well as what fields they return."
+  - "Check whether a strict client rejects fields or values it doesn't know."
+  - "Plan for versions to run side by side and test what the rollout assumes."
+trap: "Assuming a new field or enum value is safe just because the response is still valid JSON."
 followUps:
-  - question: "What would you do if a needed change breaks a supported client?"
-    answer: "I'd propose a new version or a compatibility path, keep the existing behavior through migration, and check that we can measure adoption."
+  - question: "What if a change you need would break a supported client?"
+    answer: "I'd propose a new version or a way to keep the old client working. I'd keep its existing behavior through the move. I'd check that we can measure who has switched."
 ---
 
-I find out which clients we still support and how each selects an API version. Then I run representative old client flows or their verified contracts against the candidate service. I check semantics too: ordering, defaults, and error handling can change even when the fields look the same. If two versions will coexist, I test that each still gives its client the behavior it expects during the rollout.
+I'd check backward compatibility, which means supported older clients can still use the changed API. I'd find out which clients we still support and how each asks for an API version. I'd run typical workflows in those clients or check their verified contracts, the requests and results they rely on. I'd run those checks on the service version we're proposing for release.
+
+Even if the fields look the same, I'd check how the API orders results, picks defaults, and handles errors. If two versions will run together, I'd test the assumption that each still gives its clients the promised behavior during the rollout.
 
 ### Example
 
-Adding a `pending_review` refund state can break an older app that rejects unknown states. I'd run that app against the candidate. If it cannot handle the new state, I'd exercise the agreed older-version mapping and also test the new client's display before switching traffic.
+An enum value is one option in a fixed set, such as the possible refund states. Adding `pending_review` can break an older app that rejects unfamiliar states. I'd run that app against the proposed service. If it can't read the new state, I'd check the value we agreed to return for the old API version. I'd also check how the new app shows the state before switching traffic.

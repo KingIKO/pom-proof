@@ -1,19 +1,19 @@
 ---
-title: How would you replace the email sender in a password reset test?
+title: "How would you replace the real email sender in a password reset test?"
 topic: framework-design
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Pick the smallest test double that gives you the observation or control the case needs.
+oneLine: "I pick the simplest test double, a substitute for something the code normally uses. I choose one that lets me see or control what the test needs."
 looksFor:
-  - Uses a stub for a fixed answer.
-  - Uses a mock to verify an expected interaction.
-  - Differentiates a recording spy from a working fake.
-  - Preserves a separate check for the real integration.
-trap: Mocking every dependency and taking the result as proof that a real reset email can be delivered.
+  - "Use a stub when the test needs a fixed reply."
+  - "Use a mock when the test needs to check who calls what."
+  - "Tell a spy that records calls apart from a fake that does the job simply."
+  - "Keep a separate test that talks to the real service."
+trap: "Replacing every service and assuming the test proves that someone can receive a real reset email."
 followUps:
-  - question: What would you verify against the real service?
-    answer: I'd keep a separate provider integration check for accepted requests and the shape of failures the application relies on.
+  - question: "What would you still check with the real email service?"
+    answer: "I'd run a separate test to check which requests the provider accepts. I'd check that it returns errors in the form the app expects."
 sources:
   - label: Python mock return values, wraps, and call checks
     url: https://docs.python.org/3/library/unittest.mock.html
@@ -67,10 +67,10 @@ examples:
           }
 ---
 
-I'd stub the account lookup when I need a predictable eligible or ineligible answer. If sending the email is the behavior under test, I'd use a mock and verify who was notified. I'd choose a spy when I want to record calls while the original implementation still runs, and a fake when a lightweight working version helps, such as an in-memory mailbox I can query.
+I'd use a stub, a test double with a planned reply, to make the account lookup return an eligible or ineligible account. If my test is about who gets the email, I'd use a mock to check who the code tried to notify. I'd use a spy to record calls while the original code still runs. I'd use a fake for a simpler working version, such as a mailbox I can read from memory.
 
-The names describe roles. A mock library can also create a stub. Replacing more dependencies makes a failure easier to control, but those substitutes can drift from the real services. I'd keep a separate integration check where the delivery contract matters.
+The names describe what the substitute does. A library for making mocks can make a stub too. If I replace more services, I can make failures easier to control. Those substitutes can stop matching how the real services work. I'd keep a separate integration test, a test that talks to the real provider, when those delivery rules matter.
 
 ### Example
 
-The lookup returns an active address and an inactive one. The check requires exactly one send to the active address, without an actual mail provider.
+I'd have the lookup return an active address and an inactive one. I'd require exactly one send to the active address without calling the real mail provider.

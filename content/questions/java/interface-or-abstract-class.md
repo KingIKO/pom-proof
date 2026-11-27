@@ -4,16 +4,16 @@ topic: java
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Use an interface for browser capabilities and a small abstract class if page types need shared instance state and setup.
+oneLine: I use an interface for browser capabilities. If page types need shared instance state and setup, I add a small abstract class.
 looksFor:
-  - Distinguishes a capability interface from a shared base implementation.
-  - Explains multiple interfaces and single class inheritance.
-  - Compares a default method with a constructor and per-instance fields.
-  - Considers composition when pages only share a helper.
-trap: Putting a driver in an interface field and assuming every page instance gets its own copy.
+  - Tell a capability interface apart from a shared base implementation.
+  - Explain that a class can implement many interfaces but inherit from only one class.
+  - Compare a default method with a constructor and per-instance fields.
+  - Consider composition, passing in a helper object, when pages only share a helper.
+trap: Storing the browser driver in an interface field and expecting each page object to get a separate copy.
 followUps:
-  - question: When could a default interface method help here?
-    answer: It can implement an operation using other interface methods, such as checking a title through readHeading. It can't initialize a per-instance driver field.
+  - question: When could a default interface method help the returns page?
+    answer: I'd use a default method, one the interface already provides, to check a title through `readHeading`. I couldn't use it to set up the driver field on each page object.
 sources:
   - label: Java 21 superclasses and superinterfaces
     url: https://docs.oracle.com/javase/specs/jls/se21/html/jls-8.html#jls-8.1.4
@@ -66,17 +66,14 @@ examples:
           }
 ---
 
-I'd use an interface for the browser operations the page needs. That lets me swap in a small
-test double. A class can implement several interfaces for distinct capabilities, but it only has
-one direct superclass. I'd spend that choice on a base page only if pages have common state
-and setup worth sharing.
+A page object is a class that represents a page in a test. I'd use an interface for its browser contract, which says what browser actions a class must provide. An interface is a Java type that lists those methods. That lets me swap in a small test double, a stand-in for the real browser.
 
-Default interface methods can share behavior, but interfaces don't have per-instance fields or
-constructors. An abstract page can receive the browser in its constructor, keep the reference,
-and provide a shared lookup method. If pages only share a utility, I'd pass in that utility
-instead of building a class hierarchy.
+A class can implement several interfaces for distinct capabilities. But it only has one direct superclass, the class it extends. I'd spend that one choice on a base page only if pages have common state and setup worth sharing.
+
+Default interface methods can share behavior. But interfaces don't have per-instance fields or constructors. An abstract class is a base class that can't be created on its own. An abstract page can receive the browser in its constructor and keep the reference. It can also provide a shared lookup method.
+
+If pages only share a utility, I'd pass in that utility instead of building a class hierarchy.
 
 ### Example
 
-The returns page inherits lookups and implements a contract for pages with headings. A browser
-double gives it the text `Start a return`, which the check reads through that contract.
+The returns page inherits lookups and implements a contract for pages with headings. A browser double gives it the text `Start a return`. The check reads that text through the contract.

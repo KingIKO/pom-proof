@@ -4,32 +4,25 @@ topic: fundamentals
 roles: [manual-qa, senior]
 level: mid
 type: concept
-oneLine: Give the cutoff, reminder and any override checks a shared rule ID so a deadline change reaches them together.
+oneLine: I'd use one rule ID for the cutoff, reminder, and any checks for exceptions. I'd use that ID to find each test affected by a deadline change.
 looksFor:
-  - Connects the Friday reminder and the Thursday cutoff to the same requirement.
-  - Uses the links to spot an override with no recorded check.
-  - Can follow a failed test or bug back to the rule it concerns.
-  - Keeps results and links where the team will update them.
-trap: Creating a separate spreadsheet that falls out of date each time a rule or test changes.
+  - Link the Friday reminder and the Thursday cutoff to the same requirement.
+  - Use the links to spot an override, or allowed exception to the rule, without a recorded test.
+  - Follow a failed test or bug report back to the rule it affects.
+  - Store the results and links where the team already updates them.
+trap: Keeping a separate spreadsheet that nobody updates when a rule or test changes.
 followUps:
-  - question: The deadline test passes, but the reminder test last ran on the Friday build. What would you tell the release owner?
-    answer: We have evidence for the form's cutoff only. I'd rerun the reminder against the Thursday build and check the date in the message.
+  - question: If the deadline test passes but the reminder test only ran on the version with Friday's cutoff, what would you report?
+    answer: I'd say that we have evidence only for the form deadline. I'd rerun the reminder test on the version with Thursday's cutoff and check the date in the message.
 sources:
   - label: ISTQB CTFL v4.0.1, section 1.4.4
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
 ---
 
-I'd put the cutoff rule ID on the reminder bug. From that ID I'd want to see the tests for the
-form and the email, what each checked, and which build each ran on. If the school office has an
-override and it has no test linked, I'd ask whether we have any evidence for it.
+I'd put the cutoff rule's ID, or unique label, on the reminder bug report. I'd use it to find the form and email tests. I'd check what each test covered and which version of the app it ran on. If the school office can make an exception and I see no linked test, I'd ask what evidence we have for it.
 
-That works in both directions: a failed test points back to the rule, and changing the rule shows
-which cases and bug tickets need a look. For this change, links in the requirement and test
-records might be enough. I'd build a traceability matrix from those links if we needed one view
-across releases or for an audit.
+From a failed test, I'd follow the link back to the rule. If the rule changes, I'd follow its links to find the tests and bug reports to review. For this change, the links in the rule and test records might be enough. If I need to see the links across releases or for an audit, I'd put them in one table called a traceability matrix.
 
 ### Example
 
-If transcript requests move from a Friday cutoff to Thursday, I'd follow the rule ID to the deadline
-test and the late-request email check. If the admin override has no linked case, I'd ask whether that
-rule changed too and add the missing check.
+If the transcript deadline moves from Friday to Thursday, I'd look up its rule ID. I'd use it to find the deadline test and the email check for late requests. If the admin's exception has no linked test, I'd ask whether its rule changed too. I'd then add the missing check.

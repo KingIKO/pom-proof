@@ -1,34 +1,28 @@
 ---
-title: Billing has more reported bugs, but more were found in system testing. What would you investigate?
+title: "Billing has more reported bugs, and system tests caught more of them. What would you check?"
 topic: bug-reports
 roles: [manual-qa, senior]
 level: mid
 type: concept
-oneLine: Use defect density to compare defect counts against product size, and detection percentage to see where they were caught.
+oneLine: "I use defect density to compare bugs with product size. I use detection percentage to see what share a test stage caught."
 looksFor:
-  - Keeps the work product, window, and test level explicit.
-  - Explains how the two metrics can rise together.
-  - Checks for changes in reporting or test scope.
-  - Uses comparable numbers to choose where to look within one product.
-trap: Treating two rising numbers as contradictory, or using them to rank teams with different reporting practices.
+  - "Name what you're measuring, the time period, and the test stage."
+  - "Explain how both measures can rise together."
+  - "Check whether reporting or the range of testing changed."
+  - "Use comparable counts to pick an area to investigate within one product."
+trap: "Assuming both numbers can't rise together or ranking teams that count bugs differently."
 followUps:
-  - question: Support filed four tickets for one faulty invoice rule. How would you count them?
-    answer: Count one confirmed defect for the metric, and keep the four customer reports as a separate measure of impact.
+  - question: "If support files four tickets for one broken invoice rule, how would you count them?"
+    answer: "I'd count one confirmed bug in the measure. I'd keep the four customer reports separate to show the impact."
 sources:
   - label: ISTQB glossary v4.6.2, defect density and defect detection percentage (Swedish Software Testing Board)
     url: https://sstb.se/wp-content/uploads/2025/12/Glossary-ENSV-2025-12-11.pdf
 ---
 
-I'd check whether we're comparing the same billing code and the same reporting window. Defect
-density divides known defects in that scope by its size. Defect detection percentage for system
-testing divides the defects found at that level by those found there or later, then multiplies by 100.
+I'd check that both sets of numbers cover the same billing code and time period. I'd divide the known bugs in that work by its size to get defect density. System testing checks the product as a whole. To get its defect detection percentage, I'd divide the bugs found there by the bugs found there or later. Then I'd multiply by 100.
 
-If both numbers rise, I'd look at which new defects were found and how. Better system tests
-can uncover a cluster of previously unreported defects. Different sizing and reporting habits
-make this a poor way to rank teams.
+If both measures rise, I'd look at which new bugs the team found and how it found them. Better system tests can find a group of bugs nobody had reported. Teams measure size and report bugs differently, so I'd avoid ranking teams this way.
 
 ### Example
 
-For 10,000 lines of billing code, say we find 24 defects in system testing and six later, with a
-30-day post-release cutoff and no earlier defects in this example's count. The density is three
-per thousand lines. System testing found 24 of 30, or 80 percent.
+I'd take 10,000 lines of billing code and count bugs through a 30-day cutoff after release. Suppose I count 24 in system testing and six later, with no earlier bugs included. I'd report a density of three per thousand lines. System testing caught 24 of 30, or 80 percent.

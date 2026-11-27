@@ -1,25 +1,25 @@
 ---
-title: What should happen when an intermittent test blocks a merge?
+title: "A test sometimes fails and blocks a merge. What should happen next?"
 topic: ci-git-docker
 roles: [automation, sdet, senior]
 level: senior
 type: scenario
-oneLine: Triage the failure as product risk first, then limit any exception to the diagnosed check and track recovery.
+oneLine: "I check whether the first failure could be a product bug. If I make an exception, I limit it to that test and track the repair."
 looksFor:
-  - Triage from first-try evidence before allowing a bypass
-  - A release decision based on what the test protects
-  - A named approval and temporary alternate evidence
-  - A deadline and condition for restoring the check
-trap: Retrying until green or removing all required browser checks because one case fails intermittently.
+  - "Review the first failure before letting anyone bypass the check."
+  - "Base the release decision on what the test should catch."
+  - "Name who approved the exception and what evidence will replace the check for now."
+  - "Set an end date and say what must pass before the check is required again."
+trap: "Rerunning until tests pass or dropping all required browser checks because one test fails sometimes."
 followUps:
-  - question: Would you quarantine a checkout test if you cannot explain the failure?
-    answer: I'd keep the risk visible and ask the release owner to decide using direct alternate evidence. I wouldn't label it test noise without support.
+  - question: "Would you quarantine a checkout test if you can't explain the failure?"
+    answer: "I'd keep the risk visible and ask the release owner to decide based on direct evidence from another check. I wouldn't call it a test problem without evidence."
 ---
 
-I look at the first failure and ask what contract the check protects. If the checkout sometimes confirms the wrong price, it's still a product bug when the retry passes. I'd keep that failure visible to the release owner. If the evidence shows a broken test setup, I'd consider letting the rest of the gate stand while the owner repairs that specific check.
+I look at the first failure and name the behavior the test checks. If checkout sometimes confirms the wrong price, a passing retry doesn't remove the product bug. I'd keep the failure visible to the release owner. If the evidence shows a problem in test setup, I'd consider keeping the other merge checks required while someone fixes that test.
 
-For an exception, I record the cause, the exposed behavior, the approver, and the alternate coverage. I put an expiry on it and keep the test visible outside the gate when possible. Then I verify the repair under the original CI conditions before restoring it.
+Quarantining a test means temporarily taking it out of the required checks. If we make that exception, I record the cause and the behavior no longer covered by a required check. I name the person who approved it and what we'll test instead. I give the exception an end date and keep running the test separately when possible. Before restoring it, I check the repair under the same conditions in continuous integration (CI), where jobs run automatically.
 
 ### Example
 
-If a screenshot path collides between jobs, I'd require the normal checkout check and move only the affected snapshot check out of the gate temporarily.
+If two jobs save screenshots to the same path, I'd keep the normal checkout test required. I'd temporarily remove only the affected snapshot check, which compares a saved image with what the browser shows.

@@ -1,26 +1,28 @@
 ---
-title: "How would you prove an idempotency key prevents duplicate payments?"
+title: "How would you test that an idempotency key prevents a duplicate payment?"
 topic: api
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: "Retry the same logical payment after an uncertain result, then verify that it produced one payment across the systems that record it."
+oneLine: "I'd retry the same payment after losing its result. I'd check that each system still records just one payment."
 looksFor:
-  - "Uses the same key and equivalent input for the same intent."
-  - "Covers response loss after the service accepts the write."
-  - "Checks concurrency, key scope, and incompatible reuse against the contract."
-  - "Verifies effects in both the application and the provider where possible."
-trap: "Checking that the response bodies match and never looking for a second charge."
+  - "Reuse the key and equivalent inputs for the same intended payment."
+  - "Test what happens if the first reply is lost after the payment is accepted."
+  - "Check simultaneous requests, where the key applies, and reuse with different inputs against the API contract."
+  - "Check both the app and the payment provider if both are available."
+trap: "Comparing the response bodies and never looking for a second charge."
 followUps:
-  - question: "What happens if the key has expired?"
-    answer: "I'd test the documented retention rule and check how the client resolves the outcome before starting another payment."
+  - question: "What would you check after the key expires?"
+    answer: "I'd test how long the API promises to remember the key. I'd check how the client finds the first payment's result before starting another one."
 sources:
   - label: "Stripe, idempotent requests as one concrete example"
     url: https://docs.stripe.com/api/idempotent_requests
 ---
 
-I'd check the contract for key scope, retention, and what it does with conflicting input. Then I'd test the failure we actually care about: the provider accepted the payment, but the caller never received the result. The retry uses the same key and equivalent input. I'd verify one payment and one corresponding ledger entry. I also test concurrent submissions and reuse of the key with a different amount, using the policy for that API.
+An idempotency key marks requests for the same intended payment. I'd read the API contract, the rules it promises to callers. I'd check where the key applies, how long it stays valid, and what happens if I reuse it with different inputs.
+
+I'd test a payment the provider accepts but whose reply never reaches the caller. I'd retry with the same key and equivalent inputs. I'd then check for one payment and one matching ledger entry, the record of the charge. I'd also send requests at the same time and test reuse with a different amount under the API's policy.
 
 ### Example
 
-In a sandbox I'd make the test client drop the first reply after recording payment acceptance. After it repeats the request, I'd compare the logical payment ID and check both the provider's sandbox and the order ledger for a single charge. Matching responses alone would leave the duplicate risk open.
+In a sandbox, a test version of the payment service, I'd have the test client drop the first reply after recording acceptance. After retrying, I'd compare the payment IDs. I'd look in the provider's sandbox and the order ledger for a single charge. Matching replies alone wouldn't tell me whether the provider charged twice.

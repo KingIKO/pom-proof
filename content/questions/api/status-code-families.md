@@ -1,19 +1,19 @@
 ---
-title: "A reading-list API returns 200 for every action. Which statuses would you test?"
+title: "A reading-list API returns 200 for every action. Which status codes would you check?"
 topic: api
 roles: [manual-qa, automation, sdet]
 level: junior
 type: concept
-oneLine: "Use the status family to interpret the response and assert the exact status promised for each outcome."
+oneLine: "I'd use the first digit to tell what kind of reply I got. I'd check the exact status the API promises for each outcome."
 looksFor:
-  - "Explains all five HTTP status families."
-  - "Distinguishes successful reads, creates, and empty responses."
-  - "Separates credential errors, bad input, and conflicts with current state."
-  - "Treats the endpoint contract as the source of the expected code."
-trap: "Accepting any 2xx response when the client needs a body to display a successful read."
+  - "Explain what the five HTTP status families tell the client."
+  - "Give separate examples for a successful read, a new record, and a reply with no body."
+  - "Tell credential errors, bad input, and conflicts with current state apart."
+  - "Use the API's documented promise to choose the expected code."
+trap: "Accepting any 2xx when the client needs a body to show a successful read."
 followUps:
-  - question: "The reading list adds books in the background. What would a 202 check leave unproven?"
-    answer: "202 means the request was accepted for processing. I'd also check the documented completion signal and verify that the book actually appears in the list."
+  - question: "Adding a book runs in the background. What does a 202 leave unproven?"
+    answer: "I'd treat 202 as accepted for processing. I'd look for the documented signal that the work finished and check that the book appears in the list."
 sources:
   - label: RFC 9110, HTTP status codes
     url: https://www.rfc-editor.org/rfc/rfc9110.html#section-15
@@ -94,10 +94,10 @@ examples:
           }
 ---
 
-I use the first digit for orientation: 1xx means information, 2xx success, 3xx redirection, 4xx a client error and 5xx a server error. Then I check the exact status the caller relies on. A read may promise `200` with a representation, a create `201`, and a delete `204` with no content.
+I read the first digit to tell what kind of reply I got. The 1xx family is for information, and 2xx means success. The 3xx family is for redirection. A 4xx points to a client error, and a 5xx points to a server error. I still check the exact code the API promises.
 
-For errors I'd separate missing or invalid credentials (`401`) from refusal (`403`). `400` is a general client error. `422` fits content the server understands but cannot process. `409` signals a conflict with the resource's current state. The API's own contract determines which case gets which code.
+A read may promise `200` with a record, a create `201`, and a delete `204` with no body. I'd tell missing or invalid credentials (`401`) apart from refusal (`403`). `400` covers general client errors. `422` fits a request the server can read but can't carry out. `409` signals a conflict with the record's current state.
 
 ### Example
 
-Against a disposable reading list, create a book and read the returned ID before deleting it. The contract promises `201`, `200` with the title, and `204`, in that order.
+I'd create a book in a disposable reading list and use the returned ID to read it. I'd then delete it. For this API, I'd expect `201`, then `200` with the title, then `204`.

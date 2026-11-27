@@ -1,21 +1,21 @@
 ---
-title: The search gateway looks healthy but orders are slow. Would you raise the database pool size?
+title: The search gateway looks healthy, but orders are slow. Would you allow more database connections?
 topic: performance
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: Find where requests wait and make sure there is downstream capacity before changing the connection pool.
+oneLine: I'd find where requests wait and check whether the database can handle more connections before changing the pool of connections.
 looksFor:
-  - Uses traces to tell connection acquisition time from time spent running a query.
-  - Checks whether the database can take more connections without moving the wait downstream.
-  - Finds where tail latency rises while completed throughput stops keeping pace.
-  - Verifies the generator delivered the planned load before comparing runs.
-trap: Buying a larger database because its CPU graph is the first one you opened.
+  - Use records of each request's steps to tell a wait for a connection from a slow query.
+  - Check whether more connections would move the wait to the database.
+  - Find the load where slow requests take longer and fewer requests finish than arrive.
+  - Before comparing runs, check that the tool sent the planned traffic.
+trap: Buying a larger database because you looked at its CPU graph first.
 followUps:
-  - question: At 180 requests per second, the larger pool cuts acquisition time but p95 stays flat. Would you keep it?
+  - question: At 180 requests per second, getting a connection is faster with a larger pool. If p95 stays the same, would you keep it?
     answer: >-
-      I'd compare query time and database queue depth with the first run. If I only moved the
-      wait and gained no throughput, I wouldn't keep the extra connections on that evidence.
+      I'd compare query times and the number of requests waiting at the database with the first run.
+      If I only moved the wait and finished no extra requests per second, I wouldn't keep the extra connections on that evidence.
 sources:
   - label: Grafana k6, monitoring the load generator
     url: https://grafana.com/docs/k6/latest/testing-guides/running-large-tests/
@@ -27,19 +27,14 @@ sources:
     url: https://sre.google/sre-book/effective-troubleshooting/
 ---
 
-I'd find out where the time goes before making the pool bigger. If traces show that requests
-wait to get a connection and the database has spare capacity, the change is worth testing.
-If the queries themselves are waiting on locks, another connection may just join that queue.
+I'd find where requests wait before increasing the database connection pool, the set of connections the app reuses. I'd use traces, which record the steps of each request. If requests wait for a connection and the database can do more work, I'd test a larger pool. If queries wait for locks that protect data during other work, more connections may just add to that wait.
 
-I'd check the generator's CPU, memory, and network and compare its actual rate with what the
-service received. Once I trust the load, I'd look at the step where tail latency started to rise
-and completed throughput fell behind. I'd line up traces with pool and database metrics for
-that window, then change only what the evidence points to.
+I'd check CPU use, memory, and network activity on the load generator, the tool that sends test traffic. I'd compare what it sent with what the service received. I'd find where tail latency rose, meaning the slowest requests took longer. I'd also check where throughput, or requests completed per second, fell behind arrivals. I'd compare traces and measurements from the pool and database for that period.
+
+I'd change only what the evidence points to.
 
 ### Example
 
-Suppose search latency jumps at 180 requests per second. Gateway time is flat, but slow traces show
-connection acquisition taking hundreds of milliseconds while the application's database pool is
-full. I'd first check whether the database has spare capacity. If it does, I'd adjust only the pool
-size in the test environment and replay the same traffic. I'd compare tail latency and throughput
-and check whether the wait moved to the database.
+Suppose search response times jump at 180 requests per second. The gateway, which passes requests to the service, takes the same time as before. The pool is full, and traces show requests wait hundreds of milliseconds to get a connection. If the database can do more work, I'd change only the pool size in the test environment. I'd send the same traffic again.
+
+I'd compare throughput and p95, the time within which about 95 percent of requests finish. I'd also check whether the wait moved to the database.

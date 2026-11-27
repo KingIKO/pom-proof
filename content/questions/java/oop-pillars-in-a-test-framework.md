@@ -1,19 +1,19 @@
 ---
-title: How would you keep receipt tests working after a page redesign changes the selectors?
+title: A redesign changes how the tests find elements on the receipt page. How would you keep the tests working?
 topic: java
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Hide selectors in page objects, expose intent through interfaces, and share only behavior pages really have in common.
+oneLine: I hide selectors in page objects and expose intent through interfaces. I share only the behavior that pages really have in common.
 looksFor:
-  - Explains encapsulation with private receipt locators.
-  - Distinguishes an abstract contract from an inherited implementation.
-  - Describes dynamic dispatch for overridden instance methods.
-  - Explains which design choice makes the redesign cheaper to absorb.
-trap: Exposing every locator to the tests or putting unrelated actions in one shared base page.
+  - Explain encapsulation with private receipt locators.
+  - Tell an abstract contract apart from an inherited implementation.
+  - Describe dynamic dispatch, where Java picks an overridden instance method at runtime.
+  - Explain which design choice makes the redesign cheaper to handle.
+trap: Exposing every locator to the tests, or putting unrelated actions in one shared base page.
 followUps:
-  - question: Why accept WebDriver instead of ChromeDriver in the page constructor?
-    answer: The page depends on browser operations in the WebDriver interface and can receive another implementation without changing its code.
+  - question: Why accept `WebDriver` instead of `ChromeDriver` in the page constructor?
+    answer: The page depends on browser operations in the `WebDriver` interface. So it can receive another implementation without changing its code.
 sources:
   - label: Java 21 classes and overriding
     url: https://docs.oracle.com/javase/specs/jls/se21/html/jls-8.html
@@ -79,17 +79,14 @@ examples:
           }
 ---
 
-Encapsulation keeps the receipt locator private, so the test can ask for the heading without
-knowing how the page finds it. That's the biggest upkeep win here: a selector change is
-contained in one class.
+A page object is a class that represents one screen for the tests. A locator tells Selenium how to find an element on that screen. Encapsulation means a class hides such details behind its methods.
 
-Inheritance lets the receipt page reuse element reading from a small base page. Abstraction
-gives the test operations such as `heading()` and gives the page a browser contract in
-`WebDriver`. Polymorphism means Java calls the receipt page's override of `heading()` at
-runtime, even when the variable is typed as `Page`. I'd keep the base page small so a change
-to one screen doesn't force changes to the rest.
+Here, encapsulation keeps the receipt locator private. The test can ask for the heading without knowing how the page finds it. That's the biggest upkeep win here, because a selector change stays in one class.
+
+Inheritance lets the receipt page reuse element reading from a small base page. Abstraction gives the test operations such as `heading()`. It also gives the page a browser contract in `WebDriver`, a set of operations the page can call.
+
+Polymorphism means Java calls the receipt page's override of `heading()` at runtime. That happens even when the variable is typed as `Page`. I'd keep the base page small, so a change to one screen doesn't force changes to the rest.
 
 ### Example
 
-Chrome opens a local HTML receipt. The test asks a `Page` for its heading and expects
-`Order confirmed`. Only `ReceiptPage` knows the heading's element ID.
+Chrome opens a local HTML receipt. The test asks a `Page` for its heading and expects `Order confirmed`. Only `ReceiptPage` knows the heading's element ID.

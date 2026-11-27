@@ -1,19 +1,19 @@
 ---
-title: A refund test passes even when the calculator wrongly charges at 24 hours. What assertion is missing?
+title: The refund calculator wrongly charges a fee at 24 hours, but the test passes. What should the test check?
 topic: fundamentals
 roles: [sdet, senior]
 level: senior
 type: concept
-oneLine: Show whether the suite checks the fee at the cutoff, even if it already executes the fee calculation.
+oneLine: I'd check the fee at the cutoff, even if the existing tests already run the fee calculation.
 looksFor:
-  - Names the amount the test should assert at exactly 24 hours.
-  - Explains why a call at 25 hours can leave the no-fee path unchecked.
-  - Uses a deliberately changed comparison to challenge the assertion.
-  - Limits mutation work and checks whether a surviving change is observable.
-trap: Treating a fully covered line as evidence that a test checked its result.
+  - Name the refund amount the test should expect at exactly 24 hours.
+  - Explain why testing at 25 hours can leave the no-fee path unchecked.
+  - Change the cutoff comparison on purpose to see whether the check fails.
+  - Start with a small area and ask whether a change that still passes affects any visible result.
+trap: Assuming that because a test ran a line, it checked the result.
 followUps:
-  - question: The fee mutation still passes after you add a 24-hour test. What would you inspect?
-    answer: I'd check that the test gets the actual cutoff time into the calculator and compares the returned refund amount. I'd also check whether the changed comparison can alter any supported result.
+  - question: If the test for exactly 24 hours still passes after you change the fee rule on purpose, what would you check?
+    answer: I'd check that the test sends the exact cutoff time to the calculator. I'd check that it compares the refund the calculator returns. I'd also ask whether the changed comparison can affect any supported result.
 sources:
   - label: JaCoCo coverage counters
     url: https://www.jacoco.org/jacoco/trunk/doc/counters.html
@@ -21,18 +21,10 @@ sources:
     url: https://pitest.org/quickstart/basic_concepts/
 ---
 
-I'd ask whether the suite compares the returned refund at exactly 24 hours against the amount
-with no fee. I'd deliberately move the fee onto that cutoff and see whether the test fails.
-That's the question mutation analysis asks. I'd start with the refund calculation because each
-change takes a test run, and some changes leave the observable behavior identical.
+I'd look for a test that checks for a refund with no fee at exactly 24 hours. I'd change the code to charge at the cutoff and see whether the test fails. That's mutation analysis: I change the code on purpose to see whether the tests catch it. I'd start with just the refund calculation because each change needs a test run. Some changes also leave every visible result the same.
 
-Then I'd read the coverage report to explain the gap. Line coverage records which executable
-lines ran. Branch coverage shows which outcomes ran, including the no-fee path. A high score
-can still come from tests that exercised the branches and ignored what they returned.
+I'd read the coverage report to explain the gap. Line coverage shows which lines of runnable code the tests reached. Branch coverage shows which paths the tests took when the code made a choice, including the path with no fee. Tests can take both paths and earn a high score even if they ignore the results.
 
 ### Example
 
-The refund code subtracts a fee on its own line when a request arrives after 24 hours, then returns
-the total. A test that calls the function at 25 hours and ignores the return can execute every line
-without taking the no-fee branch or checking a single amount. I would assert both totals, including
-at exactly 24 hours, so a mutation that includes the cutoff in the fee period fails.
+If a request arrives after 24 hours, the code subtracts the fee on its own line. Then it returns the total. If I call the calculator at 25 hours and ignore the total, I can run every line without trying the no-fee path. I also haven't checked any amount. I'd check both totals, including the one at exactly 24 hours, so charging a fee at the cutoff fails the test.

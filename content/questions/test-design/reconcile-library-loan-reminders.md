@@ -1,21 +1,21 @@
 ---
-title: A library's reminder worker says it finished. Can you prove the right notices were queued?
+title: The library's reminder job says it finished. How would you check that it queued the right notices?
 topic: test-design
 roles: [automation, sdet, senior]
 level: senior
 type: scenario
-oneLine: Use the frozen due-loan list to prove that the worker queued exactly one notice per eligible loan.
+oneLine: I'd compare the queue with the due-loan list saved at closing. I'd check for exactly one notice per eligible loan.
 looksFor:
-  - Shows how the wrong loans can still produce the expected number of notices.
-  - Uses the same closing-time snapshot for an interrupted run and a retry.
-  - Knows which queue state warrants an alert even if the worker reports success.
-  - Separates queued notices from actual delivery.
-trap: Accepting two queued notices for two eligible loans without checking which loans they belong to.
+  - Explain how the count can be right even if notices name the wrong loans.
+  - Use the same list from closing time for the interrupted run and its retry.
+  - Name a queue result that should raise an alert even if the job reports success.
+  - Check which notices the worker queued separately from which ones borrowers received.
+trap: Seeing two notices for two eligible loans and accepting the count without checking loan IDs.
 followUps:
-  - question: Could the same borrower legitimately receive two notices from this run?
-    answer: Yes, one for each eligible loan. A duplicate means the same loan and reminder date appear twice.
-  - question: Which timestamp decides whether a late return cancels the reminder?
-    answer: For this rule, eligibility is frozen at the scheduled cutoff. I'd test a return immediately before it and another immediately after it.
+  - question: When would two notices for the same borrower be correct?
+    answer: I'd expect two notices if two of the borrower's loans qualify. I'd call it a duplicate only if the same loan and reminder date appear twice.
+  - question: Which time decides whether a late return cancels its reminder?
+    answer: I'd use the scheduled cutoff because this rule fixes the list of eligible loans at that time. I'd test a return just before it and another just after it.
 sources:
   - label: SQLite ordinary common table expressions
     url: https://www.sqlite.org/lang_with.html
@@ -39,18 +39,10 @@ examples:
           ORDER BY keys.id;
 ---
 
-I'd ask what an empty queue means. If no loans qualified at closing time, that's fine. If the
-worker says it's finished while eligible loans are missing, someone needs an alert. I'd use the
-closing-time list to tell those states apart, including on a busy evening when work can back up.
-I'd also check that an outright failure reaches the same owner.
+I'd use the closing-time list to tell why the queue, the list of notices waiting to go out, is empty. If no loans qualified at closing, there should be no notices. If notices for eligible loans are missing after the worker reports success, I'd expect an alert. I'd check that on a busy evening when work can pile up. I'd check that an outright failure alerts the same owner.
 
-The comparison is one notice per eligible loan and date. I can write the expected list by hand
-and check it against the real worker's output. If I stop the worker after it commits a notice,
-the next attempt should add only what's missing from that same list. Running a complete date
-again should add nothing. I would check mail delivery separately from the queue.
+I'd write the expected list by hand, with one notice per eligible loan and date. I'd compare it with what the real worker, the program that queues notices, produces. If I stop it after it saves a notice, the retry should only add missing notices from the same closing-time list. If I rerun a completed date, I'd expect no new notices. I'd check mail delivery separately.
 
 ### Example
 
-For one date, the due list has unique loan IDs 41 and 42. The captured queue has two notices
-for 41 and one for the returned loan 43. The query reports 41 as duplicated, 42 as missing,
-and 43 as ineligible. A correct queue would return no rows.
+For one date, I'd put two unique loan IDs, 41 and 42, on the due list. I'd test a saved queue with two notices for 41 and one for returned loan 43. I'd expect the query to flag 41 as repeated, 42 as missing, and 43 as ineligible. If the queue is right, I'd expect no result rows.

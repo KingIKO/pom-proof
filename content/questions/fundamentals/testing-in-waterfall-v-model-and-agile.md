@@ -1,35 +1,30 @@
 ---
-title: How would the delivery model change testing for a new payroll export?
+title: How would you test a new payroll export in waterfall, V-model, or agile delivery?
 topic: fundamentals
 roles: [manual-qa, automation]
 level: junior
 type: concept
-oneLine: Start reviewing early in any model and change when and how often you collect evidence from running software.
+oneLine: I'd review the requirements early in any model. I'd adjust when and how often I run the software to get test results.
 looksFor:
-  - Separates early reviews from execution of a build in waterfall.
-  - Pairs development work with corresponding test levels in the V-model.
-  - Gives an example of shorter feedback in iterative delivery.
-  - Keeps the useful test-level mapping without imposing sequential handoffs.
-trap: Saying no one tests anything until the end of a waterfall or V-model project.
+  - Tell early reviews in waterfall apart from running tests on a working build.
+  - Show how the V-model pairs each kind of development work with a test level.
+  - Give an example of getting results sooner by delivering work in short cycles.
+  - Keep the pairing without making teams wait for one step to finish before the next can start.
+trap: Assuming a team can do no testing until the end of a waterfall or V-model project.
 followUps:
-  - question: What would you keep from the V-model on a team that ships weekly?
-    answer: Name the evidence each design decision needs, such as an integration check for a file contract.
+  - question: If your team releases every week, what would you keep from the V-model?
+    answer: I'd name the evidence each design decision needs. If two parts exchange a file, I'd check that they agree on what the file must contain.
 sources:
   - label: ISTQB CTFL v4.0.1, sections 2.1.1, 2.1.2 and 2.2.1
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
 ---
 
-In a waterfall project, I'd review the payroll requirements and design tests early. Most feedback
-from running the full export comes later, once the parts are built and integrated. The V-model makes
-the pairing explicit: business needs inform acceptance checks, system requirements inform system
-checks, interface design informs integration checks, and detailed component design informs unit checks.
-Planning those checks early can catch holes in the design even before they can run.
+In waterfall, the team builds the product in stages. I'd review the payroll requirements and design tests early. I'd get most results from running the full export after the team builds its parts and connects them.
 
-In iterative delivery, I'd agree on a narrow working slice and run checks on it within the iteration.
-That gets feedback from running software sooner, and I can rerun checks from earlier slices when
-the next one arrives. I'd keep the V-model's pairing as a way to ask where each risk gets checked.
+In the V-model, I'd pair each kind of development work with a matching test. For acceptance checks, I'd use business needs to judge whether the product is ready to use. For system checks, I'd use requirements for the whole app. For integration checks, I'd use the design for how parts work together. For unit checks, I'd use the detailed design for each individual part.
+
+If I plan those checks early, I may spot a gap in the design before I can run the tests. In iterative delivery, which builds the product in small cycles, I'd agree on one small part that works. I'd test that part in the same cycle to get results sooner. When the next part is ready, I can rerun the earlier tests. I'd still use the V-model's pairing to see where I test each risk.
 
 ### Example
 
-For an overtime column, I'd review the formula up front in waterfall, define the handoff check against
-the file format during V-model design, or try a single pay period in the first working agile slice.
+For an overtime column in a payroll export, I'd review the formula early in waterfall. In V-model design, I'd plan to check that the part receiving the file gets the format it expects. In agile delivery, I'd try one pay period as soon as the team has the first small piece working.

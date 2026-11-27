@@ -1,19 +1,19 @@
 ---
-title: "A bookmark for bike 42 works only after a catalog visit. What would you compare in the two requests?"
+title: "The bookmark for bike 42 works only after a catalog visit. What would you compare?"
 topic: api
 roles: [manual-qa, automation, sdet]
 level: junior
 type: concept
-oneLine: "Hold bike 42's availability fixed and compare a bookmarked read before and after the catalog visit."
+oneLine: "I'd keep bike 42 available. I'd compare the bookmark request and result before and after visiting the catalog."
 looksFor:
-  - "Makes sure a new reservation didn't change bike 42 between reads."
-  - "Checks whether the working request carries context absent from the bookmarked read."
-  - "Treats the bike URL as a direct read and checks that the JSON describes the seeded bike."
-  - "Repeats the same comparison with the actual selected fields if the screen uses GraphQL."
-trap: "Reusing a client that already loaded the catalog, which can hide the dependency."
+  - "Check that no reservation changed bike 42 between reads."
+  - "Look for information in the working request that the direct read doesn't send."
+  - "Request the bike URL directly and check that the JSON shows the test bike."
+  - "If the screen uses GraphQL, compare requests with the fields the screen actually asks for."
+trap: "Using a client that already opened the catalog and hiding a state the bookmark might depend on."
 followUps:
-  - question: "Both bookmark requests include the same locale, but only the second works. What would you rule out before filing the bug?"
-    answer: "I'd compare the full requests for a cookie, credential or header added during catalog navigation. If they match and bike 42 stayed available, I'd raise the possible dependency on server-held session context."
+  - question: "Both bookmark requests send the same language setting, but only the second works. What would you rule out before reporting a bug?"
+    answer: "I'd check for a cookie, credential, or header that the catalog visit added. If the requests match and bike 42 stayed available, I'd flag a possible dependency on session data stored by the server."
 sources:
   - label: Fielding, REST architectural constraints and resource representations
     url: https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm
@@ -83,10 +83,10 @@ examples:
           }
 ---
 
-I'd save the request that works and repeat it from a fresh client while bike 42 stays available. If the catalog added a locale or credential, I'd test whether sending that explicitly makes the bookmark work. If identical requests behave differently only after the catalog visit, I'd suspect server-held session context. That's distinct from the bike's reservation state changing between reads.
+I'd save the working request and repeat it from a fresh client while bike 42 stays available. If visiting the catalog added a locale, such as a language preference, or a credential, I'd see whether sending it makes the bookmark work. If the same request works only after the visit, I'd suspect the server remembers something about the client's session. I'd check that separately from any change in the bike's reservation.
 
-In REST, `GET` on the bike URL should return the representation using the information in the request. I'd check the JSON state and any links the bookmark view uses next. For GraphQL I'd replay the bookmark's operation and compare its selected data and errors.
+In REST, I'd expect a `GET` request to the bike URL to return the bike using the information in that request. I'd check the details in the JSON response and any links the bookmark page uses next. If the screen uses GraphQL, I'd repeat its query with the exact fields it asks for. I'd compare the data and errors.
 
 ### Example
 
-For a public test catalog seeded with bike 42, make a direct request for its JSON representation. Expect `200`, the JSON media type, and bike 42 in the available state.
+I'd add bike 42 to a public test catalog and request it directly as JSON. I'd expect `200`, a content type for JSON, and bike 42 marked available.

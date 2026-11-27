@@ -1,19 +1,19 @@
 ---
-title: Every checkout test edit triggers a fresh dependency install. What would you change in the Dockerfile?
+title: "Every checkout test edit reinstalls packages. What would you change in the Dockerfile?"
 topic: containers
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Keep test edits out of the dependency layer and give the non-root runner a separate place to write reports.
+oneLine: "I keep test edits from forcing a new package install. I give the runner a writable report folder without running it as root."
 looksFor:
-  - Matches the browser image to the suite's Playwright version.
-  - Orders dependency installation before frequently edited source files.
-  - Runs the tests as a non-root user and keeps environment settings outside the image.
-  - Accounts for permissions on the mounted report directory.
-trap: Copying the whole checkout before installing packages and baking a staging token into the image.
+  - "Use a browser image that matches the Playwright package version."
+  - "Install packages before copying files people edit often."
+  - "Run with a regular account and pass environment settings when the container starts."
+  - "Check permission to write to the folder mounted for reports."
+trap: "Copying every file before installing packages or storing a staging token inside the image."
 followUps:
-  - question: What if the tests can reach staging but the reporter cannot write its XML?
-    answer: "I'd check the runner's effective user and the permissions on the host directory. A bind mount covers the image's directory, so changing permissions in the Dockerfile alone won't fix the mounted directory."
+  - question: "What if the tests can reach staging but the reporter can't write its XML file?"
+    answer: "I'd check which account runs the tests and whether it can write to the host folder. A bind mount shows that host folder in place of the image's directory. Changing the Dockerfile permissions alone won't change the host folder."
 sources:
   - label: Playwright Docker images and version matching
     url: https://playwright.dev/docs/docker
@@ -52,14 +52,10 @@ examples:
           CMD ["./node_modules/.bin/playwright", "test", "--reporter=junit", "--output=/reports/results"]
 ---
 
-I'd rebuild after changing just a test assertion and see which layer gets invalidated. The package
-install should depend on the manifest and lockfile, so I'd copy those first. I'd copy the config
-and specs after `npm ci`, and base the runner on the image that matches the locked Playwright version.
+I'd change just one test assertion, or expected result, and rebuild to see which image layer Docker rebuilds. A layer is a saved set of changes to the image. I'd copy the package manifest and lockfile first so the install depends on those files. They list the packages and exact versions. I'd copy settings and tests after `npm ci` and use the image that matches the locked Playwright version.
 
-Before shipping the image I'd run it as `pwuser` and check it can write its mounted report. The
-target URL belongs in runtime configuration because the same image can test more than one environment.
-I'd pass any credentials at runtime too, rather than put them in an image layer.
+I'd run the container as `pwuser`, an ordinary account, and check that the reporter can write to the mounted folder. The reporter is the part of the runner that writes test results. I'd pass the target URL when the container starts so the same image can test several environments. One example is staging, the setup used before release. I'd pass credentials the same way instead of saving them in an image layer.
 
 ### Example
 
-The checkout suite locks Playwright `1.64.1`. Its config reads `APP_BASE_URL` and its tests live under `tests/`. CI passes that URL with `--env` and mounts a directory writable by `pwuser` at `/reports`. A green run produces `junit.xml` there. A failed assertion should still write the report and leave CI with a nonzero exit code.
+Suppose my checkout tests lock Playwright to `1.64.1`, read `APP_BASE_URL`, and live under `tests/`. My automated job passes the URL with `--env` and mounts a folder at `/reports` that `pwuser` can write to. I'd expect `junit.xml` there after a pass. If an assertion fails, I'd expect the same report and a nonzero exit code.

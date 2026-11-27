@@ -1,21 +1,21 @@
 ---
-title: What runs in pull request smoke tests versus a full regression schedule?
+title: "Which tests belong on every pull request, and which should run on a schedule?"
 topic: ci-git-docker
 roles: [manual-qa, automation, sdet, senior]
 level: mid
 type: scenario
-oneLine: Check the fastest critical journeys before merge and run wider combinations on a schedule with a response owner.
+oneLine: "Before merge, I run fast checks on actions that must work. I schedule broader tests and name who handles failures."
 looksFor:
-  - A plausible pull request time budget
-  - Coverage chosen for the cost of finding a failure late
-  - An owner for nightly or release-candidate failures
-  - A plan when a scheduled check catches something
-trap: Scheduling expensive checks overnight without agreeing who reads the results or what they can block.
+  - "Give a realistic time budget for pull request checks."
+  - "Pick tests based on what it would cost to find the bug later."
+  - "Name who handles failures in nightly runs or builds nearing release."
+  - "Explain what the team does when a scheduled check fails."
+trap: "Running expensive tests overnight without saying who reads their results or what they can block."
 followUps:
-  - question: Do all important checks belong in the smoke suite?
-    answer: I'd look for a fast signal before merge and keep an expensive, necessary check on a schedule tied to the release decision.
-  - question: The cart smoke suite is green but the canary stops completing orders. Should you widen the rollout?
-    answer: I'd keep the cart canary at its current scope or roll it back under the release policy. The completed-order check decides whether to widen it. I'd look at the staging checkout result and use the same build's contract and image scan results to narrow what changed, even if those earlier promotion checks passed.
+  - question: "Do all important checks belong in the smoke suite?"
+    answer: "I'd use a fast check before merge. I'd put a slower check we still need on a schedule that informs the release decision."
+  - question: "Smoke tests pass, but the canary rollout stops completing orders. Would you expand it?"
+    answer: "I'd keep the canary, a rollout to a small group, at its current size or roll it back under the release policy. I'd use completed orders to decide whether to expand. I'd look at staging checkout. Even if they passed, I'd check the same build's service contract and image scan results for clues about what changed."
 sources:
   - label: GitHub Actions pull request and scheduled events
     url: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
@@ -57,10 +57,10 @@ examples:
                   run: npm run test:cart-regression
 ---
 
-I use smoke tests to prove the build is usable enough to merge. I want fast feedback on things like signing in or completing a normal order. I'd run focused checks for the changed feature too, even if those checks aren't in the default smoke list.
+I use smoke tests, quick tests of basic behavior, to see whether a build is usable enough to merge. I check important actions like signing in and completing an ordinary order. I'd run focused checks on a changed feature even when they aren't part of the usual smoke tests.
 
-Full regression can cover combinations that don't fit that feedback window, like a wider browser matrix and existing-account states. I choose the schedule based on how long a bad result can sit unnoticed. Each scheduled failure needs someone to triage it and a rule for when it blocks the next release. If a nightly check keeps finding expensive defects, I'd ask whether a smaller version belongs before merge.
+I'd use a full regression run to check more existing behavior. It can cover more browsers and existing account states than we have time for before merge. I pick the schedule based on how long a bug can go unnoticed. Each failure needs someone to review it and a rule for when it blocks release. If a nightly check keeps finding costly bugs, I'd look for a smaller version we could run before merge.
 
 ### Example
 
-Assume the cart repo defines the two scripts and runs against synthetic data. The pull request checks adding an item and completing checkout. The scheduled run uses the default branch and is set for 02:17 UTC to cover more coupon and shipping combinations. I'd rerun affected combinations on the release candidate.
+Suppose my cart project has both scripts and uses made-up data. On pull requests I test adding an item and checking out. At 02:17 UTC, I run more coupon and shipping combinations on the default branch. I'd rerun affected combinations against the version we plan to release.

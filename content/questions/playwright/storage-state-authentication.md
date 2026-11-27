@@ -1,19 +1,19 @@
 ---
-title: How do you reuse a signed-in session in Playwright without coupling tests?
+title: How would you reuse a Playwright sign-in and still let tests run independently?
 topic: playwright
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Save test account state after sign-in, load it into fresh contexts, and separate accounts for tests that change server state.
+oneLine: I'd load saved sign-in data into fresh browser contexts. If tests change server data, I'd give them separate accounts or records.
 looksFor:
-  - Save and load Playwright storage state
-  - Protect the saved state from the repository and artifacts
-  - Separate mutable test accounts
-  - Keep actual sign-in coverage
-trap: Putting a state file in Git or giving every parallel worker the same mutable account.
+  - Save and load the browser data Playwright needs for the session.
+  - Keep the saved file out of Git and ordinary test uploads.
+  - Give tests that change data separate accounts or records.
+  - Keep tests that actually sign in.
+trap: Checking the saved file into Git or letting every parallel worker change the same account.
 followUps:
-  - question: What happens when the saved session expires?
-    answer: The setup step should obtain fresh state and confirm that sign-in succeeded before dependent tests start.
+  - question: How would you handle a saved sign-in that expired?
+    answer: I'd have setup sign in again and save fresh browser data. I'd make sure sign-in succeeded before running the tests that need it.
 sources:
   - label: Playwright authentication
     url: https://playwright.dev/docs/auth
@@ -54,12 +54,12 @@ examples:
               expect(email).to_have_text("reader@example.test")
 ---
 
-I'd sign in as a test account in setup, wait until sign-in is complete, and save `storageState`. Later specs load that state into their own browser contexts. A saved state file can carry cookies or other session data, so I keep it out of source control and ordinary artifact uploads.
+I'd sign in as a test account during setup. Once sign-in finishes, I'd save `storageState`, Playwright's saved browser data. I'd load it into each test's own browser context, a group of pages that shares browser data. The saved file can contain cookies or other details that keep the session signed in. I'd keep it out of source control and ordinary test uploads.
 
-This can save time without sharing a live browser page. It still points at the same backend account if I reuse the same state everywhere. If tests make changes, I allocate independent accounts or data and make sure the scopes match the writes. I keep a small set of tests that exercises sign-in itself so cached state doesn't hide a broken login.
+This can save me time without sharing an open browser page. If I reuse the same file everywhere, the server still sees the same account. If tests make changes, I'd separate accounts or records based on what each test changes. I'd keep a small set of sign-in tests so a saved session can't hide a broken login.
 
 ### Example
 
-I'd let read-only order history checks share a test login. For parallel preference tests, I'd set up an account per worker and reset the relevant preferences for each test.
+I'd let order history tests share a login if they only read data. If preference tests run at the same time, I'd give each worker process an account. I'd reset the preferences each test uses.
 
-This local profile check uses a state file created by setup after verifying sign-in as `reader@example.test`. The fresh context should open the protected profile and display that exact account.
+For the local profile check, I'd verify sign-in as `reader@example.test` before saving the file. I'd load it into a fresh context and open the profile that requires sign-in. I'd check that the profile shows that exact account.

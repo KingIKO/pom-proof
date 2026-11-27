@@ -4,18 +4,19 @@ topic: performance
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Schedule arrivals in a scenario and use tagged metrics to decide whether the run passes.
+oneLine: I'd schedule when test visitors start and label the measurements for each endpoint. I'd set a separate pass limit for the seat map.
 looksFor:
-  - Defines a seat map latency target that fast event details cannot hide.
-  - Gives checks and requests stable endpoint tags for separate thresholds.
-  - Verifies that the scheduled journeys actually started.
-  - Explains the difference between recording a bad reply and failing the CI run.
-trap: Using status checks alone and treating a zero k6 exit code as a pass.
+  - Set a response time limit for the seat map so fast event details can't hide a slow map.
+  - Label requests and checks by endpoint so you can set separate pass limits.
+  - Check that every scheduled visit started.
+  - Explain why recording a bad reply doesn't automatically fail the automated run.
+trap: Checking reply status only and taking a zero k6 exit code as proof that the run passed.
 followUps:
   - question: What does a nonzero dropped iteration count tell you?
     answer: >-
-      Some scheduled iterations never started. Check the virtual user allocation and whether
-      slower requests kept those users busy before blaming the load generator or the service.
+      I'd know some scheduled visits never started. Those missed starts are dropped iterations.
+      I'd check how many virtual users k6 could use to start visits.
+      I'd see whether slower requests kept them busy before blaming either the test tool or the service.
 sources:
   - label: Grafana k6, constant arrival rate and virtual user allocation
     url: https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/constant-arrival-rate/
@@ -67,18 +68,14 @@ examples:
           }
 ---
 
-I'd put the latency requirement on seat map requests alone. If the event details route is fast,
-its timings shouldn't rescue a slow seat map. I'd tag the HTTP requests and the status checks by
-endpoint. A failed check records the bad response; a failed threshold gives CI a nonzero exit code.
+I'd set a response time threshold for seat map requests alone. A threshold is a limit the run must meet to pass. I'd use tags, or labels, to group requests and status checks by endpoint, the address each request goes to. That way, fast event details can't hide a slow seat map.
 
-I'd also require the run to deliver the planned workload. With a constant-arrival-rate scenario,
-visitor starts keep their pace while virtual users are available. A dropped iteration means a
-visitor never started. I count scheduled journeys separately from requests because the same
-visitor reads both endpoints.
+A failed check records a bad reply. A failed threshold returns a nonzero exit code, which tells CI, the automated test system, to fail the job.
+
+I'd require the test to send the planned traffic. With a constant-arrival-rate scenario, k6 starts visits at a steady pace while it has virtual users available to run them. I'd check for dropped iterations to see if the run met that plan. I count visits separately from requests because each visit reads both endpoints.
 
 ### Example
 
-The local ticket API has event 42 and a seeded seat map. Each iteration reads both endpoints, with
-eight iterations scheduled per second. The run should start every scheduled iteration and return
-HTTP 200 on more than 99 percent of checks for each endpoint. The seat map's p95 request duration
-must stay under 350 ms even if event details are much faster.
+I use a local ticket API with event 42 and a seat map set up as test data. I'd schedule eight visits per second and have each visit read both endpoints. The run must start every visit. At each endpoint, more than 99 percent of checks must get HTTP 200, a successful reply.
+
+I'd require a seat map p95 under 350 ms, even if event details are much faster. The p95 is the time within which about 95 percent of requests finish.

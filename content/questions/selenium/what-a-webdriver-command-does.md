@@ -1,19 +1,19 @@
 ---
-title: Your Selenium click returns an intercepted error. What happened between the test and browser?
+title: Selenium says the click was intercepted. What happened between your test and the browser?
 topic: selenium
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Follow the W3C command from the binding through the browser-specific driver and read the error at the right layer.
+oneLine: I'd follow the W3C WebDriver command from the Selenium library to the browser-specific driver. I'd check where the error came from.
 looksFor:
-  - Traces the classic WebDriver command as an HTTP request and response.
-  - Distinguishes browser behavior from session startup or transport failure.
-  - Explains how Selenium Manager finds a compatible driver.
-  - Contrasts Playwright's documented remote connection.
-trap: Assuming a successful session startup means every click must have reached the target element.
+  - Follow the WebDriver command from the HTTP request to the reply.
+  - Tell a browser error apart from a session that won't start or a connection that's broken.
+  - Explain how Selenium Manager finds a driver for the browser version.
+  - Explain what protocol Playwright uses for its documented remote connection.
+trap: Assuming every click reached its element just because the browser session started.
 followUps:
-  - question: The checkout test is already running on Grid. Where does the Submit click go after it reaches Grid?
-    answer: Grid routes that existing WebDriver session's command to the node running its browser. I'd look there for the intercepted-click error rather than diagnosing it as a new session request.
+  - question: The checkout test already has a Grid session. Where does Grid send the Submit click?
+    answer: Grid sends the command to the node running that session's browser. I'd look there for the error because the click doesn't start a new session.
 sources:
   - label: Selenium components
     url: https://www.selenium.dev/documentation/overview/components/
@@ -27,10 +27,10 @@ sources:
     url: https://playwright.dev/docs/api/class-browsertype#browser-type-connect
 ---
 
-The binding sends an HTTP command for a particular element in an existing W3C WebDriver session. ChromeDriver is the browser-specific driver for Chrome. It handles the command against that browser and returns success or a protocol error that the binding can report.
+I'd start at the binding, the Selenium library for my language. It sends an HTTP request to click an element in an existing session under the W3C WebDriver standard. A browser-specific driver controls a particular browser. For example, ChromeDriver tries the command in Chrome. It sends back success or an error the binding can report.
 
-Browser and driver versions need to be compatible for the session to start reliably. If the binding hasn't been supplied with a driver, Selenium Manager can discover the browser version and resolve an appropriate driver. Playwright's remote `browserType.connect` uses the Playwright protocol instead.
+For a session to start reliably, the browser and driver versions need to work together. If I don't supply a driver, Selenium Manager can find the browser version and pick a matching driver. In Playwright, I'd use the documented `browserType.connect` method for a remote connection. It uses Playwright's own protocol, the rules for exchanging commands and replies.
 
 ### Example
 
-If a checkout overlay covers Submit, the element-click command can return an intercepted error. That tells me the driver received the command and found that the target was obscured. I'd inspect the overlay before investigating driver installation.
+If a checkout overlay covers Submit, the click command can return an intercepted error. That tells me the driver got the command and found something covering the target. I'd inspect the overlay before looking at the driver installation.

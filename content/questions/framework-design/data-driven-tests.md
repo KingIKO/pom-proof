@@ -1,19 +1,19 @@
 ---
-title: How would you check four parcel-weight bands without copying the test?
+title: "How would you test four parcel weight bands without copying the test?"
 topic: framework-design
 roles: [automation, sdet]
 level: junior
 type: tooling
-oneLine: Give each tariff row its own case so a wrong quote identifies the weight band that failed.
+oneLine: "I run a named case for each row of the pricing table. If a quote is wrong, I can see which weight band failed."
 looksFor:
-  - Reads expected cents from the tariff instead of copying prices from the quote endpoint.
-  - Gives a failing weight its own name in the report without hiding the other outcomes.
-  - Explains when a separate rate file would make the rules easier to review.
-  - Uses generated weights for a property the four listed cases can't establish.
-trap: Putting every case in a single loop so the first failure hides the rest.
+  - "Read expected prices in cents from the rate table instead of copying them from the quote response."
+  - "Give each weight case its own result so one failure doesn't hide the rest."
+  - "Explain when moving rates into a separate file helps the people reviewing changes."
+  - "Use generated weights to test a rule the four sample cases can't prove."
+trap: "Checking every case in one test loop so the first failure hides the results for other weights."
 followUps:
-  - question: What could generated weights catch that the tariff rows miss?
-    answer: They could catch a price drop somewhere between the listed weights. I can generate pairs and check that the heavier parcel never costs less when every other factor stays the same.
+  - question: "What could generated weights catch that the sample rows miss?"
+    answer: "I could catch a price drop between listed weights. I'd generate pairs and check that the heavier parcel never costs less when I keep everything else the same."
 sources:
   - label: Playwright parameterized tests
     url: https://playwright.dev/docs/test-parameterize
@@ -82,10 +82,10 @@ examples:
           }
 ---
 
-I'd write one test for how to request a quote and one table for the weights and expected prices. Each row becomes an independent case with its own name in the report. If the large band changes, I can see its failure without preventing the other rows from running.
+I'd write one test for requesting a quote and use a table for weights and expected prices. In a data-driven test, each row supplies inputs and expected results to the same test code. I'd give each case a name in the report. If pricing for the large band changes, I can see that failure without stopping the other cases.
 
-I'd keep a short table in code so reviewers see the data with the assertion. An external file can suit a rate table maintained by another team, provided the test validates its columns and the review shows what changed. These are deliberate examples from a known tariff. Property-based tests can explore more inputs under a rule that should always hold.
+I'd keep a short table in the code so reviewers can see the values beside the check. If another team maintains the rate table, a separate file can help. I'd use one only if the test validates its columns and the review shows what changed. I'd pick examples from a known tariff, or list of rates. A property-based test can generate more inputs and check a rule that should always hold.
 
 ### Example
 
-The local quote endpoint takes parcel weight in grams. Each case expects an HTTP 200 and a price in cents from the sample tariff.
+I'd send each parcel weight in grams to the local quote service. I'd expect HTTP 200 and the price in cents from the sample tariff.

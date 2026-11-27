@@ -1,19 +1,19 @@
 ---
-title: "Support sees postcode 2108 for an order. What evidence would tell you where the zero was lost?"
+title: "Support sees postcode 2108 on an order. How would you find where the first zero went missing?"
 topic: sql
 roles: [manual-qa, automation]
 level: junior
 type: concept
-oneLine: "Use the same order ID to trace the postcode from the linked address through the API response to the screen."
+oneLine: "I'd use the same order ID to compare the postcode in the saved address, the API reply, and the screen."
 looksFor:
-  - "Uses a postcode with a leading zero so the defect is visible."
-  - "Checks whether the order points to the intended address before comparing values."
-  - "Identifies the first layer whose value differs from the input."
-  - "Uses an exact fixture ID and keeps diagnostic reads separate from test data setup."
-trap: "Querying the latest address row instead of the one the order screen reads."
+  - "Use a postcode that starts with zero so you can see if it disappears."
+  - "Before comparing values, check that the order points to the right address."
+  - "Find the first place where the value differs from the one you entered."
+  - "Use the exact test order ID and keep the database reads separate from setting up test data."
+trap: "Reading the latest address instead of the one the order screen uses."
 followUps:
-  - question: "Another tester saved a different address while you were reproducing the issue. How do you avoid mixing up the reads?"
-    answer: "Use a dedicated test order. Keep its ID from setup through the screen, API and database reads, and check the linked address ID before comparing the postcode."
+  - question: "Another tester saves a different address during your test. How would you make sure you read the right one?"
+    answer: "I'd use an order just for my test. I'd use its ID when I check the screen, API, and database. Before comparing postcodes, I'd check the linked address ID."
 sources:
   - label: SQLite SELECT, joins and row filters
     url: https://www.sqlite.org/lang_select.html
@@ -35,10 +35,10 @@ examples:
           WHERE o.id = 71;
 ---
 
-I'd reproduce the save on a test order with a leading-zero postcode and keep the order ID. Before blaming formatting, I'd query the order and check which address it actually points to. If it points to the right row but storage has `2108`, I'd look at the write path. If storage has `02108`, I'd compare the API response with the screen to see where they diverge.
+I'd save a test order with a postcode that starts with zero and keep its ID. Before checking how the screen formats the value, I'd use SQL to read the saved order and find the address it points to. If the right address contains `2108`, I'd check how the app saved it. If it contains `02108`, I'd compare the API reply with what the screen shows.
 
-SQL also helps me find an editable order before reproducing the defect. I'd prepare data in a disposable database when I need to write it and use a read-only connection for diagnosis.
+I'd also use SQL to find an order I can edit before trying to repeat the problem. If I need to set up records, I'd write them to a database I can throw away. I'd use a read-only connection to investigate the problem.
 
 ### Example
 
-Order 71 should point to address 8 in Boston. The query returns `02108`, including the leading zero. If the screen shows `2108`, I'd check where the string became a number.
+I'd expect order 71 to point to address 8 in Boston. I'd expect the query to return `02108` with the first zero intact. If the screen shows `2108`, I'd look for where the app turned the text into a number.

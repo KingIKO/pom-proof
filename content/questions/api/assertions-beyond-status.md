@@ -1,19 +1,19 @@
 ---
-title: "What do you assert after an API returns the expected status?"
+title: "After an API returns the expected status, what else do you check?"
 topic: api
 roles: [manual-qa, automation, sdet]
 level: mid
 type: scenario
-oneLine: "Check the response contract, the values that matter to the caller, and the state or side effect the request promised."
+oneLine: "I'd check what the API promises to return and the values the client uses. I'd also check what the request actually did."
 looksFor:
-  - "Chooses meaningful response fields and headers."
-  - "Uses expected values derived from test inputs."
-  - "Reads back persisted state or waits on a documented outcome."
-  - "Avoids brittle whole-response snapshots."
-trap: "Asserting that a field exists without checking whether its value is correct."
+  - "Check the response fields and headers the caller uses."
+  - "Work out the expected values from the test inputs."
+  - "Read the saved record or wait for an outcome the API promises."
+  - "Avoid comparing a saved copy of the entire response if unrelated values can change."
+trap: "Checking that a field exists without checking its value."
 followUps:
-  - question: "What if the operation completes asynchronously?"
-    answer: "I'd assert the immediate acknowledgement, then wait for the promised outcome through the status endpoint or event with a deadline from the test contract."
+  - question: "What if the operation finishes after the API responds?"
+    answer: "I'd check the immediate reply. I'd wait for the promised result through the status endpoint or event, using the deadline in the test contract."
 sources:
   - label: "MDN, HTTP response status codes"
     url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
@@ -92,10 +92,10 @@ examples:
           }
 ---
 
-First I check the fields the consumer needs, with values I can predict from the data I sent. I check a response header if the client depends on it, such as content type. For a write, I'd read the resource back or inspect the resulting event. A response echo can look convincing even when the record was saved with different values. I avoid asserting incidental fields that change on every run.
+I check the fields the caller needs and predict their values from the data I send. I check a response header if the client uses it, such as the content type that says how to read the body. If a request saves something, I'd read it back or check the event it creates. The response can repeat what I sent even if the service saves a different value. I skip unrelated fields that change on every run.
 
-My first priorities are the [response contract](/pom-proof/questions/api/response-schema-testing/) and [access control](/pom-proof/questions/api/authentication-vs-forbidden-vs-not-found/). Next I check rejected inputs and the error bodies the caller uses. Then I check that retries leave the promised number of records. I measure response time separately against the agreed budget so network noise doesn't obscure a functional failure.
+I start with the [response contract](/pom-proof/questions/api/response-schema-testing/), what the API promises to send, and [access control](/pom-proof/questions/api/authentication-vs-forbidden-vs-not-found/). I check which inputs the API rejects and the error details clients use. I check how many records are left after retries. I'd measure response time against the agreed limit in a separate check. That way, network delays won't obscure a failure in what the API does.
 
 ### Example
 
-In a disposable invoice service, expect `201` with an identifier, `1299` minor units and `USD`. Then read that ID and expect `200` with the same saved amount and currency. That catches a service that echoes `1299` and stores `12` after a rounding mistake.
+On a disposable invoice service, I'd expect `201` with an ID, `1299` minor units, and `USD`. I'd read that ID and expect `200` with the same saved amount and currency. This catches a rounding mistake where the API returns `1299` but stores `12`.

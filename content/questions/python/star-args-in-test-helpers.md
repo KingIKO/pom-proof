@@ -1,19 +1,19 @@
 ---
-title: How would you pass line items and optional overrides through an order fixture helper?
+title: How would you pass order items and optional settings through a Python test helper?
 topic: python
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Collect extra positional and keyword arguments with stars, then unpack them when a wrapper forwards the call.
+oneLine: I'd collect extra values passed by position or by name. I'd use stars to pass the individual values on to the next function.
 looksFor:
-  - Identifies the tuple produced by a starred parameter.
-  - Identifies the dictionary produced by a double-starred parameter.
-  - Distinguishes collecting parameters from unpacking arguments.
-  - Keeps required fields and common options visible in the signature.
-trap: Wrapping a helper and forwarding only its positional arguments, which silently drops named overrides.
+  - Say what the tuple holds when a parameter begins with one star.
+  - Say what the dictionary holds when a parameter begins with two stars.
+  - Explain when stars collect values and when they pass those values on separately.
+  - List required values and common options by name in the function's definition.
+trap: Passing on values by position only and silently dropping options the caller named.
 followUps:
-  - question: What happens if two keyword unpackings both pass currency?
-    answer: Python raises TypeError for the repeated keyword at the call. Merge the dictionaries first if you want an explicit precedence rule.
+  - question: What happens if I unpack two dictionaries that both supply `currency`?
+    answer: I'd get a `TypeError` because the call supplies the same name twice. If I want to choose which value wins, I'd combine the dictionaries first.
 sources:
   - label: Python argument lists and unpacking
     url: https://docs.python.org/3/tutorial/controlflow.html#arbitrary-argument-lists
@@ -46,16 +46,10 @@ examples:
           }
 ---
 
-I'd keep the customer as an explicit argument. `*items` catches any leftover positional arguments
-in a tuple, so callers can pass however many products the case needs. `**overrides` collects any
-remaining keyword arguments in a dictionary. I'd give common options such as `currency` a named
-parameter so people can see them without reading the helper body.
+I'd name the customer in the function's parameter list. I'd use `*items` to collect extra positional arguments, values supplied by order, in a tuple. A tuple is an ordered collection. I'd use `**overrides` to collect extra keyword arguments, values supplied by name, in a dictionary that maps names to values. I'd name common options, such as `currency`, up front so readers can find them without reading the function body.
 
-At the call site the stars go the other way. `*items` passes the individual items as positional
-arguments and `**options` passes each dictionary entry as a keyword argument. A wrapper can use both
-forms to forward a call without dropping any options.
+When I call another function, the stars unpack values instead of collecting them. I'd use `*items` to pass the items one by one in order. I'd use `**options` to pass each dictionary entry by name. A wrapper, a function that calls another function, can use both to pass the values on without losing options.
 
 ### Example
 
-The guest order helper fixes the customer value while forwarding two products and a pair of named
-options. The resulting payload contains both products, uses CAD, and requests pickup.
+I'd set a fixed customer value in a guest order helper. I'd pass through two products and two named options. I'd expect the order data to include both products, use CAD, and ask for pickup.

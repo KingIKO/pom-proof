@@ -1,19 +1,19 @@
 ---
-title: Customers get pickup notices for orders still being packed. What do you do?
+title: "Customers get pickup notices for orders still being packed. What do you do?"
 topic: bug-reports
 roles: [manual-qa, automation, sdet]
 level: mid
 type: scenario
-oneLine: Stop further wrong notices with the incident team, then separate messages already sent from work still queued.
+oneLine: "I work with the incident team to stop more wrong notices. I separate notices already sent from those still waiting to go out."
 looksFor:
-  - Escalates with a concrete customer impact while investigation continues.
-  - Separates sent notices from queued notices using order and message records.
-  - Considers what each mitigation can and cannot undo.
-  - Defines recovery checks and leaves a timeline for review.
-trap: Calling the incident resolved when the queue stops growing while customers still have bad notices.
+  - "Tell the people handling the incident what customers are seeing while you investigate."
+  - "Use order and message records to tell sent notices from notices still waiting."
+  - "Explain what each proposed action can undo and what it leaves behind."
+  - "Say how you'll check recovery and record when key events happened."
+trap: "Calling the incident over because the queue stopped growing, even though customers still have wrong notices."
 followUps:
-  - question: Support asks which customers to contact before the fix is ready. What can you give them?
-    answer: I'd give the incident lead a deduplicated list of confirmed deliveries so support can reach affected customers through its approved workflow.
+  - question: "What can you give support if it needs to contact customers before the fix?"
+    answer: "I'd give the incident lead a list of confirmed deliveries without duplicates. Support could use its approved process to contact the affected customers."
 sources:
   - label: Google SRE, managing incidents
     url: https://sre.google/sre-book/managing-incidents/
@@ -21,18 +21,10 @@ sources:
     url: https://sre.google/workbook/postmortem-culture/
 ---
 
-I'd page the fulfillment on-call and tell support what customers are seeing. I'd ask the incident
-lead to consider pausing pickup notices while keeping order processing available. Then I'd match
-message receipts to order states at send time. That tells us who got a wrong message and which
-queued jobs might still send one.
+I'd alert the person on call for order fulfillment and tell support what customers see. I'd ask the incident lead to consider pausing pickup notices without stopping order processing. I'd match delivery receipts to each order's status when the message went out. I'd use that to identify who got the wrong notice. I'd also check the queue, where jobs wait to run, for jobs that could still send one.
 
-Before restarting, I'd ask what the queue will do with older work. A code rollback may stop the
-bad rule from creating new notices while leaving bad work already in the queue. I'd give the
-incident lead that evidence and, with approval, check recovery on a synthetic order. I'd record
-the first affected send, containment, customer impact and recovery evidence for review.
+Before restarting, I'd ask what happens to older jobs in the queue. A rollback, or return to the previous code, may stop new bad notices without removing work already waiting. I'd share that evidence and get approval to check recovery with a made-up order. I'd record the first wrong send, what we did to stop it, who it affected, and how we checked recovery.
 
 ### Example
 
-Say North Street's orders are still packing but the mail provider has delivered 18 notices. I'd
-check that any remaining bad work stays out of the resumed run and that a genuinely ready order
-still gets one notice.
+Suppose I see 18 delivered notices for North Street orders still being packed. I'd check that the resumed queue skips any remaining wrong notices. I'd check that an order that's truly ready still gets one notice.

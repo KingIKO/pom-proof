@@ -1,25 +1,27 @@
 ---
-title: How would you tell whether a change to defect triage is working?
+title: "How would you tell whether a change to defect triage is working?"
 topic: bug-reports
 roles: [senior]
 level: senior
 type: scenario
-oneLine: Measure the delay the change is meant to remove and sample decisions for quality before calling faster triage an improvement.
+oneLine: "I measure the wait the change should reduce. I review a sample of decisions to see if they're still useful."
 looksFor:
-  - Identify the bottleneck and take a baseline before changing the process.
-  - Define a useful decision and measure how long reaching it takes.
-  - Compare similar groups of defects and account for tickets still waiting.
-  - Check a sample for premature closure or loss of useful information.
-trap: Calling triage healthier because the backlog is smaller, without checking how tickets left it.
+  - "Find what causes the wait and measure it before changing the process."
+  - "Define a useful decision and measure how long the team takes to make it."
+  - "Compare similar reports and count reports still waiting."
+  - "Check a sample for tickets closed too soon or useful information that went missing."
+trap: "Calling triage better because fewer reports are waiting without checking why they left the list."
 followUps:
-  - question: What if the median improves but several high-impact reports still wait days?
-    answer: I'd break out that group and review the stalled reports individually. The overall median can hide the very delays we wanted to fix.
-  - question: How would you handle a rush of low-impact tickets after a release?
-    answer: I'd report the change in volume and compare similar impact groups before drawing any conclusion about the process change.
+  - question: "What if the median wait falls but several bugs with serious impact still wait days?"
+    answer: "I'd report that group separately and read each stalled report. The median, the middle wait when I put the waits in order, can hide the delays we wanted to fix."
+  - question: "How would you handle many low-impact reports arriving right after a release?"
+    answer: "I'd show how the number of reports changed. Before drawing a conclusion, I'd compare groups of reports with similar impact."
 ---
 
-I'd start with the delay we're trying to fix. If defect reports are sitting unowned, I'd measure time from filing to a decision that names an owner and next step, or gives a reason the report needs no further work. I'd also count reports still waiting so the metric doesn't improve just because nobody picked them up. I'd sample decisions to see whether reporters can act on them.
+I'd start with the delay we're trying to fix. Triage is when the team decides what to do with a bug report. If reports sit without an owner, I'd measure the time from filing to a decision. A useful decision names an owner and a next step or explains why the report needs no more work.
+
+I'd count reports still waiting, so the metric can't look better just because nobody picked them up. I'd check some decisions to see whether the people who filed the reports can act on them.
 
 ### Example
 
-Suppose defects from one product area often sit until the next triage meeting because nobody owns first review. I'd try a rotating reviewer for that area. If the median falls from two days to one, I'd check whether older tickets are still piling up and whether the reviewer is closing reports for missing setup without asking for it. If the review finds a pattern of premature closures, I'd fix that before expanding the rotation to other teams.
+Suppose I find reports in one area often sit until the next triage meeting because nobody owns the first review. I'd try taking turns as reviewer for that area. If the median falls from two days to one, I'd check whether older reports still pile up. I'd also see whether the reviewer closes reports for missing setup details without asking for them. If I find reports are regularly closed too soon, I'd fix that before expanding the rotation to other teams.

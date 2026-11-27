@@ -1,26 +1,28 @@
 ---
-title: "How would you explain the test levels on a checkout feature?"
+title: "What would you check at each test level for checkout?"
 topic: fundamentals
 roles: [manual-qa, automation, sdet]
 level: junior
 type: concept
-oneLine: "Choose a level based on what needs to work together, from one calculation to the whole business workflow."
+oneLine: "I choose a test level based on how much needs to work together, from one calculation to the whole business task."
 looksFor:
-  - "Distinguishes component from component integration."
-  - "Distinguishes system from system integration."
-  - "Explains who or what sets acceptance expectations."
-  - "Gives matching examples on one feature."
-trap: "Calling every test that uses the browser an acceptance test."
+  - "Tell testing one piece of the app apart from testing how pieces work together."
+  - "Tell testing the whole app apart from testing its connection to another system."
+  - "Say whose needs determine whether the team accepts the feature."
+  - "Give an example of each level using the same feature."
+trap: "Assuming that any test in a browser proves the product meets the user's or business's needs."
 followUps:
-  - question: "Where would you first test a rounding rule?"
-    answer: "At the pricing component, where I can specify the numbers directly and identify the calculation that failed."
+  - question: "Which part would you test first for a rule about rounding prices?"
+    answer: "I'd start with the piece that calculates prices. I can give it exact numbers and tell which calculation failed."
 sources:
   - label: "ISTQB CTFL v4.0.1, section 2.2.1"
     url: https://www.istqb.org/certifications/certified-tester-foundation-level
 ---
 
-I call them levels because the scope changes. A component test can check a calculation alone. Component integration checks cooperating pieces within the system. A system test checks the behavior of the assembled product, and system integration checks its interaction with another system. At acceptance I look for evidence it meets the business or user needs that decide whether it can be accepted.
+A test level tells me how much of the system I'm testing. In a component test, I check one piece on its own, such as a calculation. In a component integration test, I check how pieces of the same system work together.
+
+In a system test, I check the assembled product. In a system integration test, I check how that product works with another system. In an acceptance test, I look for evidence that the product meets the business or user needs that decide whether it can be accepted.
 
 ### Example
 
-For checkout I'd test rounding in pricing, then check that order creation uses the amount pricing returns. I'd exercise the assembled checkout with controlled dependencies, and separately prove it can exchange a payment with the provider's sandbox. For acceptance, operations might try looking up and refunding an order using their actual support tools.
+For checkout, I'd first test rounding in the code that sets prices. Then I'd check that order creation uses the amount that code returns. I'd test the assembled checkout with the services it depends on under my control. Separately, I'd prove it can send and receive payment data with the provider's sandbox, a test version of its service. For acceptance, I might ask operations staff to look up and refund an order with the support tools they use at work.

@@ -1,19 +1,19 @@
 ---
-title: How would you retry a temporary error when a Python test reads a shipment receipt?
+title: How would you make a Python test retry a shipment receipt read after a temporary error?
 topic: python
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Retry the specific transient exception on the read, increase the wait each time, and let the last failure through.
+oneLine: I'd retry only the read and only for expected temporary errors. I'd wait longer between attempts and report the last error if they all fail.
 looksFor:
-  - Configures the exception types and attempt count.
-  - Waits between attempts and re-raises the last exception on exhaustion.
-  - Uses functools.wraps and forwards positional and keyword arguments.
-  - Keeps retries away from failed assertions and unsafe writes.
-trap: Decorating an entire flaky test to retry any exception and treating a later pass as proof of correctness.
+  - Set which errors to retry and how many attempts are allowed.
+  - Wait between attempts and raise the last error again if no attempt succeeds.
+  - Use `functools.wraps` and pass through arguments supplied by position and by name.
+  - Keep retries separate from failed checks and writes that aren't safe to repeat.
+trap: Retrying an entire unreliable test for any error and treating a later pass as proof it works.
 followUps:
-  - question: How would you check the backoff without slowing down the test?
-    answer: Inject a delay function that records the requested waits, then assert those waits and the number of calls.
+  - question: How would you check the waits between attempts without making the test slower?
+    answer: I'd supply a delay function that records each requested wait without sleeping. I'd check the recorded waits and the number of attempts.
 sources:
   - label: Python functools.wraps
     url: https://docs.python.org/3/library/functools.html#functools.wraps
@@ -72,16 +72,12 @@ examples:
           assert waits == [0.25, 0.5]
 ---
 
-I'd wrap the receipt read, since repeating a read leaves the shipment alone. The decorator takes
-the exception types we expect to be transient, a total attempt count, and a starting delay. It
-waits between failed attempts, growing the delay each time. Once the attempts run out, a bare
-`raise` keeps the last error and its traceback. Any unlisted error goes straight back to the caller.
+I'd use a decorator, a wrapper that adds behavior to a function, around just the receipt read. Repeating the read leaves the shipment alone. I'd give the decorator the types of temporary errors it can retry, the total number of attempts, and the first delay. I'd increase the wait after each failed attempt. If the attempts run out, a bare `raise` keeps the last error and its traceback, the record of where it happened.
 
-`functools.wraps` preserves the function's name and docstring. If the shipping service needs
-this policy too, I'd configure Tenacity's stop and wait rules rather than ship a second retry loop.
-I'd keep the assertion outside the wrapper so it checks the first receipt the read returns.
+If an error isn't on the list, I'd let it go straight back to the caller.
+
+I'd use `functools.wraps` to keep the wrapped function's name and docstring, the text that describes it. If the shipping service needs the same policy, I'd set the stop and wait rules in Tenacity, a retry library. That saves writing another retry loop. I'd keep my check outside the wrapper so it checks the first receipt the read returns.
 
 ### Example
 
-A stub receipt read times out twice and then reports `packed`. The test records the two requested
-waits instead of sleeping, so it can check the backoff directly.
+I'd use a stub, a stand-in for the real read, that times out twice and then returns `packed`. I'd record the two requested waits instead of sleeping. I'd check the backoff, the way the waits increase between attempts.

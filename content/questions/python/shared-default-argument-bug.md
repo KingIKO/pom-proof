@@ -1,19 +1,19 @@
 ---
-title: Why does a Python cart builder carry one test's product into the next?
+title: Why does a Python cart helper put a product from one test into another test's cart?
 topic: python
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Replace the mutable default with None and allocate a fresh list inside the helper.
+oneLine: I'd use `None` as the default. If the caller leaves out the list, I'd make a fresh one inside the helper.
 looksFor:
-  - Says when Python evaluates a default argument.
-  - Traces how mutation from one call becomes input to the next.
-  - Shows the None sentinel with an identity check.
-  - States whether the builder mutates or copies explicitly supplied input.
-trap: Using an empty list as the default and appending to it for each test case.
+  - Say when Python computes a default argument value.
+  - Explain how a change made by one call shows up in the next.
+  - Show how to check whether the caller's value is `None`.
+  - Say whether the helper changes or copies a list the caller supplies.
+trap: Using an empty list as the default and adding each test's items to that same list.
 followUps:
-  - question: Why check items is None instead of checking whether items is falsey?
-    answer: An explicitly supplied empty list is meaningful input. An identity check distinguishes it from the sentinel.
+  - question: Why check `items is None` rather than use a test that also treats an empty list as false?
+    answer: I'd treat an empty list as input the caller chose. The identity check tells me if `items` is `None` itself, the marker I use for missing input.
 sources:
   - label: Python default argument values
     url: https://docs.python.org/3/tutorial/controlflow.html#default-argument-values
@@ -39,16 +39,10 @@ examples:
           assert starter == ["BAG"]
 ---
 
-The default expression runs when Python defines the function. With `items=[]` in the signature,
-calls that omit `items` receive the same list, so appending a pen in one test can change what a
-later test sees.
+Python computes the default value when it defines the function. If I declare `items=[]` in the function's parameter list, every call that leaves out `items` gets the same list. If I add a pen in one test, a later test may see it.
 
-I'd default `items` to `None` and allocate the list inside the helper. I'd also decide what should
-happen if a caller supplies an existing list. For this builder I'd copy it before appending so the
-caller can reuse the same starting items in another case.
+I'd set the default for `items` to `None`, a special value I use here to mark missing input. If I get `None`, I'd create a new list inside the helper. If the caller gives me a list, I'd copy it before adding anything. The caller can then reuse the original list in another test.
 
 ### Example
 
-I order a pen and a pad in separate calls. Each cart should contain just its own product. Then I
-pass a list that already has a bag and check that the helper adds the pen without changing the
-original list.
+I'd order a pen and a pad in separate calls. I'd expect each cart to contain only its own product. Then I'd pass a list that already has a bag. I'd check that my helper adds the pen to the cart without changing the original list.

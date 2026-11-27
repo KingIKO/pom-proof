@@ -1,19 +1,19 @@
 ---
-title: The pottery class is full. What should its waitlist scenario promise the learner?
+title: "The pottery class is full. What should the waitlist scenario check?"
 topic: bdd
 roles: [manual-qa, automation, sdet]
 level: mid
 type: concept
-oneLine: Make the waitlist confirmation and the absence of a seat reservation visible in the scenario.
+oneLine: "I'd check that the learner gets a waitlist confirmation and that the app doesn't reserve a seat."
 looksFor:
-  - Lets the class organizer distinguish a place on the waitlist from a booked seat.
-  - Names the full class and the learner's decision to join.
-  - Keeps the click path in step code so the scenario survives a layout change.
-  - Keeps the sequence visible when the user's ability to follow it is the requirement.
-trap: Removing the selectors but leaving the scenario as a list of menu operations.
+  - "Tell a waitlist confirmation apart from a reserved seat."
+  - "Say that the class is full and the learner chooses to join the waitlist."
+  - "Keep the usual click sequence in step code so a layout change doesn't change the scenario."
+  - "Describe the steps the learner must be able to follow if that sequence is part of the requirement."
+trap: "Removing the code that finds the controls but leaving a list of menu clicks in the scenario."
 followUps:
-  - question: The pottery class now requires consent before joining the waitlist. What belongs in the scenario?
-    answer: I'd write that the learner must consent before joining and add a case where they decline. The control used to record consent can stay in step code.
+  - question: "The learner must now give consent before joining. What should the scenario say?"
+    answer: "I'd say the learner must consent before joining. I'd add a separate case where they decline. I'd leave the choice of control in the step code."
 sources:
   - label: Cucumber, writing better Gherkin
     url: https://cucumber.io/docs/bdd/better-gherkin/
@@ -33,16 +33,10 @@ examples:
               But the learner receives no seat reservation
 ---
 
-I'd show the organizer the two outcomes in plain language: the learner gets a waitlist
-confirmation and still has no seat. The full pottery class is the starting state, and
-joining its waitlist is the action. That's the declarative version.
+I'd show the organizer what the learner sees and what the system does. The class is full. When the learner joins the waitlist, they get a confirmation and still have no seat. I'd call this declarative because it says what happens without naming the clicks.
 
-The imperative version walks through the Classes menu, the third card and the button. I'd
-keep that navigation in step code. If the requirement says the learner must be able to tab
-from the class details to Join waitlist, I'd spell out that movement in its own check.
+An imperative version spells out how to get there. It might name the Classes menu, the third card, and the button. I'd keep those clicks in the code for the step. If the learner must be able to tab from class details to Join waitlist, I'd describe that movement in its own check.
 
 ### Example
 
-The rewritten scenario starts with a full pottery class and checks what the learner actually
-receives. It would still describe the same rule if the app moved the waitlist control to a
-different page.
+I'd start the scenario with a full pottery class and check what the learner actually gets. If the app moved Join waitlist to another page, I'd keep the same rule in the scenario.

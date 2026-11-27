@@ -1,25 +1,25 @@
 ---
-title: A shipping-price patch is ready for review but has no unit tests. How would you handle it?
+title: "A shipping-price patch is ready for review but has no unit tests. How would you handle it?"
 topic: automation-strategy
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Ask the patch author to pin down the $50 cutoff in the same change, and use the review to make those checks easy to run.
+oneLine: "I'd ask the author to test the $50 cutoff in the same change. I'd help make those checks easy to run."
 looksFor:
-  - Asks the patch author to put the $49.99 and $50 cases next to the pricing rule.
-  - Offers to pair on the expected prices or remove shared setup that slows the check.
-  - Chooses cases that belong below the browser.
-  - Answers a time objection with observed costs.
-trap: Sending implementation to one queue and asking a separate team to discover its intended behavior afterward.
+  - "Ask the author to test $49.99 and $50 near the pricing code."
+  - "Offer to work out the expected prices together or remove setup that slows the check."
+  - "Pick cases that can run without a browser."
+  - "Compare the time to add checks with the cost of an earlier pricing bug."
+trap: "Sending the change to a separate team to work out what it should do after it's built."
 followUps:
-  - question: The author can add two cases before review closes. Which cases do you ask for, and why those?
-    answer: I'd ask for $49.99 to retain the charge and $50.00 to drop it. That pair catches a misplaced cutoff without waiting for a checkout build. I'd compare the time to add it with what the last pricing mismatch cost after integration.
+  - question: "The author has time for two cases before review closes. Which ones would you choose, and why?"
+    answer: "I'd check that $49.99 still has a charge and $50.00 drops it. Together they catch a wrong cutoff without waiting for checkout to build. I'd compare the time to add them with what the last pricing bug cost after the code was put together."
 ---
 
-I'd ask the author to add a price table in the patch, right next to the code that decides whether shipping is free. We can settle what should happen at $50 during the review, and the author can run the table again after changing the comparison. If the only way to run it involves setting up a full basket, I'd pair with them on a small fixture the next pricing change can also use.
+I'd ask the author to add a table of prices to the patch, the proposed code change. The table would go next to the code that decides whether shipping is free. We'd agree on what happens at $50 in the review. The author could rerun those checks after changing the comparison. If the check needs a full basket, I'd work with the author on a smaller fixture, or test setup, we can reuse.
 
-If the team says it has no time, I'd ask what it spent last time a pricing bug made it to a shared environment. We can compare that with the effort of adding a few cases to a function that takes plain inputs and returns a price.
+If the team is short on time, I'd ask how long the last pricing bug took to fix after it reached a shared environment. I'd compare that with adding a few cases to a function that takes simple inputs and returns a price.
 
 ### Example
 
-For free shipping at $50 I'd ask the developer for $49.99 and $50 boundary checks. I'd add a browser check only for the separate risk that checkout fails to show the recalculated charge.
+For free shipping at $50, I'd ask the developer to check $49.99 and $50 in a unit test that runs the pricing code by itself. I'd add a browser check only for the separate risk that checkout shows the wrong charge after recalculating.

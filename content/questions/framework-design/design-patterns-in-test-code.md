@@ -1,19 +1,19 @@
 ---
-title: A returns suite repeats setup and user flows. What would you extract?
+title: "Several returns tests repeat setup and the same steps. What would you pull into shared code?"
 topic: framework-design
 roles: [sdet, automation]
 level: senior
 type: concept
-oneLine: Choose a pattern for each repeated job and keep mutable browser and data resources owned by the test.
+oneLine: "I choose a design pattern, a common way to arrange code, for each repeated job. I let each test own the browser state and data it can change."
 looksFor:
-  - Uses page and component objects for UI interactions.
-  - Applies builders or factories to test-owned data.
-  - Connects facades and strategies to actual variation.
-  - Recognizes the parallel-run cost of a single shared driver.
-trap: Hiding every test behind a generic scenario facade and sharing one driver across the suite.
+  - "Keep repeated page or control interactions in page or component objects."
+  - "Use builders or factories for data each test owns."
+  - "Show what different needs a facade or strategy would serve."
+  - "Explain how one shared driver can break tests that run together."
+trap: "Hiding every test behind one generic facade and sharing one browser driver across the suite."
 followUps:
-  - question: The returns suite adds Firefox alongside Chrome. Would you change the objects that drive the return form?
-    answer: I'd try the runner's browser setting first and leave the form object alone. I'd add a strategy if two actual driver implementations needed different ways to carry out the same form operation.
+  - question: "If the suite adds Firefox alongside Chrome, would you change the helpers that use the form?"
+    answer: "I'd try the runner's browser setting first and leave the form helper alone. If the two drivers need different code for the same form action, I'd use a strategy."
 sources:
   - label: Playwright page object models
     url: https://playwright.dev/docs/pom
@@ -96,10 +96,12 @@ examples:
           }
 ---
 
-I'd give recurring controls a page or component object and keep business expectations in the test. A builder supplies useful data defaults so each test can name the one change it cares about. A factory can then create the record through a setup API. A small flow facade helps if several tests repeat the same complete business operation.
+I'd put repeated screen actions in a page or component object, code for a page or part of one. I'd keep checks for business rules in the tests. I'd use a builder to supply useful defaults so each test can name only the data it changes. A factory can create the record by calling a setup service.
 
-I'd use a strategy only when we have interchangeable drivers or clients that need the same test-facing interface. A single shared driver is a bad use of the singleton pattern: one test can close the session or change the page while another uses it.
+If several tests repeat a whole business task, I'd consider a flow facade, a helper that gives tests one call for those steps.
+
+I'd use a strategy if drivers or clients need different code for a job but tests should use them the same way. A singleton, one instance for the whole suite, is a bad fit for a browser driver. One test can close the session or change the page while another test uses it.
 
 ### Example
 
-The local eligibility endpoint evaluates an order without saving it. Each variant builds an otherwise returnable recent order and changes only final-sale status. It expects the specific reason `final_sale`.
+I'd call a local service that checks return eligibility without saving the order. In each version, I'd build a recent order that would otherwise qualify. I'd change only whether it's final sale and expect the reason `final_sale`.

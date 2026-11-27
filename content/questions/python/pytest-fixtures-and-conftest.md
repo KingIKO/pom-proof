@@ -1,19 +1,19 @@
 ---
-title: How would you give each invoice API test its own HTTP sessions in pytest?
+title: How would you set up separate HTTP sessions for each invoice API test in pytest?
 topic: python
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Put a function-scoped factory fixture in the API tests' conftest.py and close every session it creates.
+oneLine: I'd use a fixture in `conftest.py` to give each test a way to create its own sessions. The fixture would close them when the test ends.
 looksFor:
-  - Explains how pytest injects fixtures by argument name.
-  - Picks fixture scope based on how long the resource can safely be shared.
-  - Uses a factory when a test needs several independently configured sessions.
-  - Closes all sessions after the test, including on assertion failure.
-trap: Putting one mutable Requests session at session scope for tests that change cookies or headers.
+  - Explain how pytest matches an argument name to a fixture.
+  - Choose how long the fixture lasts based on what tests can safely share.
+  - Give a test a function to create sessions if it needs several with different settings.
+  - Close every session when the test ends, even if a check fails.
+trap: Sharing one Requests session across the run when tests change cookies or headers.
 followUps:
-  - question: What happens to teardown if this fixture raises before yield?
-    answer: pytest does not run the code after its yield, so any setup that can fail after acquiring a resource needs its own cleanup.
+  - question: What happens to cleanup if the fixture fails before `yield`?
+    answer: Pytest won't run the code after `yield`. If setup can fail after opening a session, I'd add cleanup for that failure.
 sources:
   - label: pytest fixture scopes, teardown, and factories
     url: https://docs.pytest.org/en/stable/how-to/fixtures.html
@@ -51,17 +51,12 @@ examples:
               assert east.headers["X-Region"] == "east"
 ---
 
-I'd put the fixture in the API tests' `conftest.py`. A test asks for it by naming the fixture in its
-arguments. pytest discovers `conftest.py` for tests in that directory and its descendants, so the
-tests don't need to import the fixture.
+I'd put the fixture, which sets up what a test needs, in the API tests' `conftest.py` file. A test asks for the fixture by naming it as an argument. Pytest finds `conftest.py` for tests in that folder and its subfolders. I don't have to import the fixture in each test.
 
-I'd keep each Requests session at function scope because cookies and headers can change. pytest
-also supports class, module, package, and session scopes. I'd use a wider scope for something the
-tests can safely share, such as read-only settings. If a single test needs two clients, I'd yield a
-factory that makes a new session per call. The fixture closes both when the test ends.
+I'd use function scope, which gives each test its own setup, because a Requests session's cookies and headers can change. Pytest also offers class, module, package, and session scopes for sharing setup. I'd use a wider scope for things tests can safely share, such as settings they only read.
+
+If one test needs two clients, I'd give it a factory, a function that opens a fresh session every time I call it. The fixture hands it over with `yield` and closes both sessions when the test ends, even after a failed check.
 
 ### Example
 
-For this single-file example, I've kept the fixture in the test module. One invoice test builds a
-west-region client and an east-region client. It checks that creating the second client leaves the
-first client's header alone. The check needs no network.
+For a single-file example, I'd keep the fixture in the test file. I'd create one client for the west region and one for the east region. I'd check that creating the second client leaves the first client's header unchanged. I don't need the network for this check.

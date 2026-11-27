@@ -4,16 +4,16 @@ topic: api
 roles: [automation, sdet]
 level: mid
 type: scenario
-oneLine: "Keep team 17's draft fixed and vary one credential property at a time so each denial has an explanation."
+oneLine: "I'd keep team 17's draft fixed. I'd change one thing about the token at a time so I can tell why each read is denied."
 looksFor:
-  - "Uses the successful team 17 read as a control for the denied requests."
-  - "Changes scope and team membership separately so a denial can be traced to one rule."
-  - "Checks the replacement token still respects the original team's access after a refresh."
-  - "Can identify which synthetic credential failed without logging a token or invoice data."
-trap: "Using a token that is both expired and from the wrong team, then counting the denial as proof of team isolation."
+  - "Read the draft with team 17's valid token before trying requests that should fail."
+  - "Change the allowed action and team membership separately to tell which rule blocked a request."
+  - "After refreshing the token, check that it keeps the same limits on team access."
+  - "Name the test credential that failed without logging a token or invoice details."
+trap: "Using a token that's both expired and from the wrong team, then treating rejection as proof of team isolation."
 followUps:
   - question: "A team 17 reader refreshes an expired token. Which two invoice reads would you repeat?"
-    answer: "I'd reread team 17's draft and try an equivalent draft owned by another team. The replacement should restore the first read without changing the second denial. I'd use the issuer's test clock or short-lived credentials to set up expiry."
+    answer: "I'd try team 17's draft and an equivalent draft that belongs to another team. I'd expect the first read to work and the second to stay blocked. I'd set up expiry with the issuer's test clock or short-lived credentials."
 sources:
   - label: RFC 6749, OAuth token grants and refresh
     url: https://www.rfc-editor.org/rfc/rfc6749.html
@@ -110,10 +110,10 @@ examples:
           }
 ---
 
-I'd prove the draft exists with team 17's reader, then keep the URL fixed. A write-only credential from the same team checks scope. A read credential from another team checks ownership. I'd verify the roles for both reads and writes, and make sure a denial doesn't reveal invoice data.
+I'd read the draft with team 17's reader to show it exists. Then I'd keep the URL fixed. A write-only token from the same team checks scope, the actions the token allows. A read token from another team checks ownership. I'd check read and write permissions and make sure a denial never reveals invoice data.
 
-I'd get the tokens from a test issuer or seeded fixtures without scripting sign-in. I'd cover missing, malformed, altered and expired credentials separately. After refresh I'd repeat an allowed and a denied read. For revocation I'd check which tokens stop working and when, according to the issuer. CI supplies the secrets, and I report the case name without the header.
+I'd get credentials from a test issuer, the service that makes tokens, or from prepared test data instead of scripting sign-in. I'd check missing, badly formatted, changed, and expired tokens separately. After refresh gives me a replacement, I'd repeat a permitted and a blocked read. If access is revoked, I'd check which tokens stop working and when, according to the issuer's rules. I'd get secrets from CI and report the case name without the credential header.
 
 ### Example
 
-Seed team 17's draft locally. Set the three environment variables shown in the test to a valid read token, a valid write-only token, and an expired test token. This contract expects `200`, `403`, and `401` respectively.
+I'd set up team 17's draft locally. I'd use the three test environment variables for a valid read token, a valid write-only token, and an expired test token. I'd expect `200`, `403`, and `401` in that order.

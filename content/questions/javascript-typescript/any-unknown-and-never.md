@@ -1,19 +1,19 @@
 ---
-title: How would you type a cart check that branches on status and reports unexpected errors?
+title: Which types would you use in a cart test that handles each status separately and reports unexpected errors?
 topic: javascript-typescript
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Narrow unknown errors before reading them and use never to make an incomplete status switch fail type checking.
+oneLine: I narrow a caught `unknown` error, which means I check its type before I read it. I use `never` so that a status switch with a missing case fails type checking.
 looksFor:
-  - Explains that any bypasses checking of operations on the value.
-  - Narrows unknown before accessing error properties.
-  - Uses never to enforce exhaustive handling of known statuses.
-  - Keeps runtime data validation separate from the compiler's exhaustiveness check.
-trap: Typing a caught value as any and assuming it always has a message property.
+  - Explain that `any` turns off checking of operations on the value.
+  - Narrow an `unknown` value before reading its error properties.
+  - Use `never` to make the code handle every known status.
+  - Keep runtime checks of the data separate from the compiler's check that every case is handled.
+trap: Typing a caught value as `any` and assuming it always has a `message` property.
 followUps:
   - question: What changes if a third status is added to the union?
-    answer: The default branch can now receive that status, so passing it to a function that accepts never fails type checking until the new case is handled.
+    answer: The default branch can now receive that status. If I pass it to a function that accepts `never`, the compiler reports a type error. The error stays until I handle the new case.
 sources:
   - label: TypeScript any
     url: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#any
@@ -57,15 +57,12 @@ examples:
           checkButton({ status: 'expired' }, 'Start over');
 ---
 
-I'd treat a caught error as `unknown`. With `any`, TypeScript lets me read `error.message` even
-if the thrown value is a string. With `unknown`, the compiler makes me check first. I can use
-`instanceof Error` before taking the message and fall back to converting other values to text.
+I'd treat a caught error as `unknown`. That type accepts any value, but the compiler makes me check its type before I use it. With `any`, TypeScript stops checking the value. It lets me read `error.message` even if the thrown value is a string.
 
-`never` has no possible values. Once my switch handles every member of a status union, the
-default branch has nothing left. A helper that accepts `never` gives me a compiler error in that
-branch if a new status goes unhandled. I'd still validate the response that supplied the status.
+With `unknown`, I check `instanceof Error` before I take the message. For any other value, I fall back to converting it to text.
+
+The `never` type has no possible values. My cart status is a union, which is a type that can be any one of several listed options. Once my switch handles every member of the union, the default branch has nothing left. If a new status goes unhandled, a helper that accepts `never` gives me a compiler error in that branch. I'd still validate the response that supplied the status.
 
 ### Example
 
-The active and expired cart fixtures each expect a different button. Both checks pass as written.
-Adding an unhandled cart status makes the call to `unexpected` fail type checking.
+The active and expired cart fixtures, or test carts, each expect a different button. Both checks pass as written. If I add a cart status without handling it, the call to `unexpected` fails type checking.

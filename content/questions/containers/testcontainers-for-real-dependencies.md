@@ -1,19 +1,19 @@
 ---
-title: A repeated refund tries to replace 2,500 cents with 4,000. Which assertion belongs in PostgreSQL?
+title: "A repeat refund tries to change 2,500 cents to 4,000. What would you check in PostgreSQL?"
 topic: containers
 roles: [sdet]
 level: senior
 type: tooling
-oneLine: Read back the refund and require one row for the original amount after the second insert.
+oneLine: "After the second insert, I read the refund back and check there's one row with the original amount."
 looksFor:
-  - Verifies PostgreSQL keeps the first amount and does not add a second row.
-  - Keeps error handling in a cheaper test when it does not depend on database semantics.
-  - Connects with the disposable database's JDBC URL after it starts.
-  - Factors in the cost of starting databases across concurrent CI jobs.
-trap: Hard-coding the database address or reusing the same mutable test rows across CI jobs.
+  - "Check that PostgreSQL keeps the first amount without adding another row."
+  - "Use a cheaper test for error handling if it doesn't depend on how the database works."
+  - "Use the temporary database's JDBC address after it starts."
+  - "Count database startup costs when several automated jobs run at once."
+trap: "Fixing the database address in code or sharing rows any test can change."
 followUps:
-  - question: A second method in RefundInsertTest needs an empty refunds table. Would you start another database?
-    answer: "For a sequential JUnit class I'd use a static `@Container`, which runs once for the class, and reset data between methods so the tests don't depend on execution order."
+  - question: "If another method in `RefundInsertTest` needs an empty refunds table, would you start another database?"
+    answer: "If the JUnit class runs methods one at a time, I'd use a static `@Container`, which starts once for the class. I'd reset the data between methods so test order doesn't matter."
 sources:
   - label: Testcontainers PostgreSQL module and JDBC driver dependency
     url: https://java.testcontainers.org/modules/databases/postgres/
@@ -87,15 +87,10 @@ examples:
           }
 ---
 
-I'd read the refund back after both inserts and expect one row with the original amount. That
-checks PostgreSQL's conflict behavior. For the checkout service's response to a database error,
-a mock suffices and costs less to run.
+I'd read the refund back after both inserts and expect one row with the original amount. That checks what PostgreSQL does when two rows use the same reference. If I only want to test the checkout service's response to a database error, a mock, a substitute that gives a planned response, costs less.
 
-A shared database could already contain that refund reference. I'd let the class own a disposable
-PostgreSQL instance through Testcontainers. When the instance is ready, I'd connect using its
-JDBC URL and mapped port. I'd measure image pulls, startup time, and memory on concurrent CI
-runs before deciding whether to use a fresh instance per method.
+A shared database may already have a refund with that reference. I'd use Testcontainers to give the test class its own temporary PostgreSQL database. When it starts, I'd connect with its JDBC URL, the Java database address, and the port mapped to the host. I'd measure image downloads, startup time, and memory use during overlapping CI runs. Then I'd decide whether each method needs its own database.
 
 ### Example
 
-A refund with an existing reference should leave one row with the original amount. This test runs the insert rule directly and reads the resulting rows. It expects one refund for 2,500 cents after trying the same reference with 4,000 cents. The runner needs a Docker-compatible runtime, the Testcontainers `2.0.5` PostgreSQL and JUnit Jupiter modules, and the PostgreSQL JDBC driver.
+I'd run the insert rule directly and read the rows it leaves. After trying the same refund reference for 4,000 cents, I'd expect just the original row for 2,500 cents. I'd use a Docker-compatible runtime, the Testcontainers `2.0.5` PostgreSQL and JUnit Jupiter modules, and the PostgreSQL JDBC driver.

@@ -1,23 +1,25 @@
 ---
-title: What do you do when you find a possible bug but the expected behavior is unclear?
+title: "What do you do if you find a possible bug but the rule is unclear?"
 topic: bug-reports
 roles: [manual-qa, automation]
 level: junior
 type: scenario
-oneLine: Record what happened and who it affects, then ask the owner to clarify the rule before you decide whether the behavior is defective.
+oneLine: "I record what happened and who it affects. I ask who owns the rule to clarify it before I call the behavior a bug."
 looksFor:
-  - Describe the actual behavior and where the expectation came from.
-  - Point out conflicting evidence or a missing requirement.
-  - Ask a specific question the owner can answer and record the decision.
-  - Explain how the decision changes the ticket and the next test.
-trap: Assuming your preferred behavior is the requirement, or dropping the finding because the requirement is incomplete.
+  - "Describe what happened and where you got the expected result."
+  - "Point out any evidence that disagrees or any rule that's missing."
+  - "Ask the owner a specific question and write down the answer."
+  - "Explain how the answer changes the ticket and what you'll test next."
+trap: "Assuming the rule works the way you'd prefer or dropping the finding because the rule is unclear."
 followUps:
-  - question: What if the owner confirms the behavior is intentional?
-    answer: I'd record the decision. If the screen still promises something different, I'd raise that mismatch separately with the wording the user sees.
+  - question: "What if the owner says the behavior is intentional?"
+    answer: "I'd record the decision. If the screen promises something different, I'd file that as a separate issue and quote what the customer sees."
 ---
 
-I write down what happened while I can still reproduce it. Then I check the requirement and what the screen tells the customer. If they disagree or leave a case open, I'd say so in the report and ask whoever owns the rule a specific question. I'd also explain the impact so they can decide how quickly we need an answer.
+I write down what happened while I can still repeat it. I compare the requirement with what the screen tells the customer. If the two disagree or leave a case unanswered, I say so in the report. I ask the person who owns the rule a specific question. I give them the impact so they can decide how quickly we need an answer.
 
 ### Example
 
-A booking says “Free cancellation until 6:00 p.m.” At 6:00 exactly, the confirmation screen shows a $25 fee. The story doesn't say whether 6:00 is included or which time zone applies. I'd capture the booking's local time and the quoted fee before confirming, then ask product to define the cutoff. If 6:00 is included, I'd report the fee as a defect. If it's excluded, I'd ask for clearer copy and check just before and at the cutoff against the agreed rule.
+I see “Free cancellation until 6:00 p.m.” on a booking. At 6:00 exactly, the confirmation screen shows me a $25 fee. The feature ticket doesn't say whether 6:00 is included or which time zone applies. Before confirming, I'd save the booking's local time and the fee on the screen.
+
+I'd ask the product team to define the cutoff. If 6:00 is included, I'd report the fee as a bug. If it's excluded, I'd ask for clearer wording. I'd also test just before and at the cutoff against the agreed rule.

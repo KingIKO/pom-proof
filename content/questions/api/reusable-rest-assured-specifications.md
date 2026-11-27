@@ -4,16 +4,16 @@ topic: api
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: "Share request configuration and stable response expectations through specifications, then put resource paths behind a small client."
+oneLine: "I'd share request settings and common response checks in specifications. I'd put repeated paths in a small client."
 looksFor:
-  - "Gives the account client one place to get its request settings and one place to apply the successful-read defaults."
-  - "Includes only genuinely shared configuration and expectations."
-  - "Keeps per-test credentials and fixture IDs under the test's control."
-  - "Leaves the business expectation visible at the call site."
-trap: "Using a shared success specification for tests whose contracts expect errors."
+  - "Give the account client one place for request settings and one place for checks that apply to successful reads."
+  - "Share only settings and checks that every caller of the specification needs."
+  - "Let each test set its own credentials and record IDs."
+  - "Show the expected business result where the test calls the client."
+trap: "Using a shared success check in a test that expects an error."
 followUps:
-  - question: "How would you test the unauthorized response?"
-    answer: "I'd use a request spec without the token and a separate expected response or local assertions for the rejection contract."
+  - question: "How would you test a request that should be refused without a token?"
+    answer: "I'd use a request specification without the token. I'd check the documented rejection with a separate response specification or checks in that test."
 sources:
   - label: REST Assured request and response specification reuse
     url: https://rest-assured.io/docs/usage/specification-reuse/
@@ -63,10 +63,12 @@ examples:
           }
 ---
 
-I'd put the base URI, authentication and media type in a request specification. A response specification is useful for shared outcomes such as a successful account read returning JSON. I'd only share an expectation when it applies to every use of that specification.
+I'd use a request specification, a reusable set of settings, for authentication, the base URI, and the media type. The base URI is the starting address for requests. The media type names a format for the body, such as JSON.
 
-Then I'd give the account client a method like `read(id)` so tests don't repeat the route. The test can still show the plan or balance it expects. I build request specs from the test's target and identity rather than changing global settings when tests run in parallel.
+A response specification is a reusable set of checks. I'd use one to check that a successful account read returns JSON. I'd share a check only if it applies each time I use that specification.
+
+I'd add a method like `read(id)` to the account client so tests don't repeat the path. The test would still say which plan or balance it expects. If tests run in parallel, I'd build each request specification from its own target and identity instead of changing global settings.
 
 ### Example
 
-Configure the local service with account 42 on a trial plan and a dedicated test token. The shared response spec expects `200` JSON. The test adds the assertion for `plan: trial`. With REST Assured 7, add `json-path-gpath` for the field assertion.
+I'd set up account 42 on a trial plan in the local service. I'd use a dedicated test token. The shared response specification expects `200` and JSON. I'd add the check for `plan: trial` in the test. With REST Assured 7, I'd use `json-path-gpath` for that field check.

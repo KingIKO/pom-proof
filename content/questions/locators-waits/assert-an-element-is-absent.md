@@ -1,19 +1,19 @@
 ---
-title: How would you prove an archived contact is gone from the active list?
+title: After you archive a contact, how would you check that it no longer appears in the active list?
 topic: locators-waits
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Wait for evidence that the refreshed list is complete before checking that the contact has no match.
+oneLine: I wait for evidence that the refreshed list is complete. Then I check that the contact has no match.
 looksFor:
-  - Identifies a positive readiness signal for the current action.
-  - Explains how a temporary render can make absence pass early.
-  - Distinguishes missing from merely hidden.
-  - Uses Selenium list lookup for zero matches.
-trap: Checking for the row while the app is showing a blank loading state.
+  - Name a positive signal that the page is ready after the current action.
+  - Explain how a temporary render can make an absence check pass early.
+  - Tell an element that is missing apart from one that is only hidden.
+  - Use a Selenium list lookup to check for zero matches.
+trap: Looking for the row before the app finishes loading the list.
 followUps:
-  - question: The refreshed list hides C218 with CSS but leaves its row in the DOM. Should the zero-count check pass?
-    answer: No. I'd use zero matches if removal from the document is required. If the product only promises that users can't see the row, I'd test visibility after the same refresh signal.
+  - question: After a refresh, CSS hides row C218 but the DOM still contains it. Would you expect the check for zero matches to pass?
+    answer: No. If removal from the document is required, I'd check for zero matches. If the product only promises that users can't see the row, I'd test visibility after the same refresh signal.
 sources:
   - label: Playwright locator count assertions
     url: https://playwright.dev/docs/test-assertions
@@ -81,10 +81,10 @@ examples:
           }
 ---
 
-I first wait for a signal tied to the archive and the resulting list refresh. An empty list during a reload says very little. Once the app says it has rendered the refreshed active list, I check that the archived contact has no match. That lets the test finish as soon as we have evidence instead of waiting out a timeout on purpose.
+I first wait for a signal tied to the archive and the list refresh it causes. An empty list during a reload says very little. Once the app says it has rendered, or drawn, the refreshed active list, I check that the archived contact has no match. The test can then finish as soon as we have evidence, without waiting out a timeout on purpose.
 
-In Selenium I'd use a list lookup for the final check. It naturally returns an empty list for zero matches, whereas a single-element lookup treats zero matches as a missing-element error.
+In Selenium, I'd use a list lookup for the final check. A list lookup returns an empty list for zero matches. A single-element lookup treats zero matches as a missing-element error instead.
 
 ### Example
 
-The local fixture starts with active contact C218. Archiving it refreshes the list and publishes a status after rendering. The test waits for that status and expects zero rows for C218.
+The local fixture, or test page, starts with active contact C218. Archiving C218 refreshes the list. After the list renders, the app publishes a status. The test waits for that status and expects zero rows for C218.

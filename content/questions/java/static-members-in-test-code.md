@@ -1,19 +1,19 @@
 ---
-title: Which parts of a shipment test helper would you make static?
+title: In a shipment test helper, what would you make static so it belongs to the class?
 topic: java
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Share constants and stateless methods, and give each test its own mutable fixtures and browser session.
+oneLine: I share constants and stateless methods. I give each test its own mutable fixtures and browser session.
 looksFor:
-  - Explains that static members belong to the class.
-  - Picks a constant and a stateless helper as appropriate examples.
-  - Traces the risk of parallel tests sharing a driver or a mutable fixture.
-  - Gives mutable test state a per-test owner with explicit cleanup.
-trap: Making the driver static for convenience and letting one test close the session while another is using it.
+  - Explain that `static` members belong to the class.
+  - Pick a constant and a stateless helper as suitable examples.
+  - Trace the risk when parallel tests share a driver or a mutable fixture.
+  - Give mutable test state an owner for each test, with explicit cleanup.
+trap: Making the driver `static` for convenience and letting one test close the session while another is using it.
 followUps:
-  - question: Does a static final list become a safe shared fixture?
-    answer: The field can't be reassigned, but a mutable list can still change. Use an unmodifiable list with immutable elements if the tests only read it.
+  - question: Does a `static final` list become a safe shared fixture?
+    answer: The field can't be reassigned, but a mutable list can still change. If the tests only read it, I'd use an unmodifiable list with immutable elements.
 sources:
   - label: Java 21 static fields and class methods
     url: https://docs.oracle.com/javase/specs/jls/se21/html/jls-8.html
@@ -50,16 +50,12 @@ examples:
           }
 ---
 
-A `static` field belongs to the class, so instances see the same field. I'd make a fixed
-default SKU a static constant and make a fixture factory static if the method needs no
-per-instance state. A factory can still give every caller its own list.
+A `static` field belongs to the class, so all instances see the same field. I'd make a fixed default SKU, or product code, a static constant.
 
-I'd keep a `WebDriver` session with the test that owns it and close it in that test's
-teardown. If parallel tests share one static driver, one test can change the page under
-the other or close its session. The same problem applies to shared maps and lists that
-tests edit.
+A fixture factory is a method that builds new test data. If the method needs no per-instance state, meaning data stored on one object, I'd make it static. A static factory can still give every caller its own list.
+
+A `WebDriver` session is the browser connection that Selenium controls. I'd keep it with the test that owns it and close it in that test's teardown. If parallel tests share one static driver, one test can change the page under the other test. It can also close the other test's session. The same problem applies to shared maps and lists that tests edit.
 
 ### Example
 
-Both shipments start with a default box. Adding a second box to the first shipment
-leaves the second shipment's list unchanged.
+Both shipments start with a default box. Adding a second box to the first shipment leaves the second shipment's list unchanged.

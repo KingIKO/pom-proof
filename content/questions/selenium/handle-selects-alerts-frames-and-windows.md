@@ -1,21 +1,21 @@
 ---
-title: A report preview uses a dropdown, an iframe, and a confirmation alert. How would you drive it?
+title: How would you use Selenium for a report preview with a dropdown, an iframe, and a confirmation alert?
 topic: selenium
 roles: [automation, sdet]
 level: junior
 type: tooling
-oneLine: Identify the actual widget and change WebDriver's browsing context only where the interaction needs it.
+oneLine: I'd check what kind of dropdown the page uses. I'd switch WebDriver to a frame or window only when I need to work inside it.
 looksFor:
-  - Uses Select for native select elements only.
-  - Switches into and out of the iframe explicitly.
-  - Handles the alert and restores the right window after a new tab.
-  - Knows Playwright's corresponding locator and event model.
-trap: Applying Select to a custom menu or searching the top document for a button inside the frame.
+  - Use `Select` only for the browser's built-in select element.
+  - Switch into the embedded frame to use its controls and back out to check the main page.
+  - Handle the browser alert and return to the original window after using a new tab.
+  - Say how Playwright finds controls and waits for alerts or tabs.
+trap: Using `Select` on a custom menu or looking for a frame's button in the main page.
 followUps:
-  - question: What if the preview opens a new tab?
-    answer: I'd save the current handle, wait for a new one, switch to it, then close it and switch back to the original window.
-  - question: You port Monthly publishing to Playwright. Where do you register the handler for the Publish confirmation?
-    answer: I'd register it on the page before clicking Publish inside the frame. I'd use selectOption for the Monthly control if it remains a native select, a frame locator for Publish, and a separate popup wait if the preview opens another tab.
+  - question: How would you return to the original window if the preview opens in a new tab?
+    answer: I'd save the original window handle, its unique ID. I'd wait for a new handle and switch to it. When I'm done, I'd close the new tab and switch back.
+  - question: In Playwright, when and where would you start listening for the Publish confirmation?
+    answer: I'd start listening on the page before clicking Publish inside the frame. If Monthly still uses a built-in select, I'd choose it with `selectOption`. I'd use a frame locator to find Publish inside the frame. If the preview opens a tab, I'd wait for that separately.
 sources:
   - label: Selenium select lists
     url: https://www.selenium.dev/documentation/webdriver/support_features/select_lists/
@@ -99,10 +99,12 @@ examples:
                   ))
 ---
 
-I inspect the dropdown first. Selenium's `Select` helper works with a native select element. A custom dropdown needs ordinary interactions with its trigger and options. I switch to the iframe before finding its confirmation control and back to the top document to check the result.
+I'd inspect the dropdown first. Selenium's `Select` helper works with the browser's native select element. If the app built a custom dropdown, I'd open its menu and choose an option using ordinary clicks. An iframe embeds a separate page inside the main page. I'd switch WebDriver, Selenium's browser control interface, into the iframe before looking for its confirmation control.
 
-A browser alert has its own interface. I wait for it, check the prompt, and accept or dismiss it as the case requires. For a new window or tab, I switch to its handle and restore the original when finished.
+I'd switch back to the main page to check the result.
+
+A browser alert has its own controls. I'd wait for the alert and check its message. I'd accept or dismiss it as the test requires. If a new window or tab opens, I'd switch to its handle, the ID WebDriver uses for it. I'd switch back to the original when done.
 
 ### Example
 
-The local reports page loads an embedded preview after selecting Monthly. I publish from the frame, accept the browser's confirmation, and wait for the outer page to report that the monthly report was published.
+I'd choose Monthly on the local reports page to load the embedded preview. I'd click Publish inside the frame and accept the browser's confirmation. I'd wait for the page outside the frame to report that the monthly report was published.

@@ -4,16 +4,16 @@ topic: locators-waits
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Identify which kind of boundary you have before changing the selector.
+oneLine: Before I change the selector, I find out which kind of boundary the control sits behind.
 looksFor:
-  - An iframe has a separate document
-  - How to target a frame in Playwright
-  - Limits around closed shadow roots and XPath
-  - Correct Selenium equivalents when asked
-trap: Making a longer top-level XPath without checking whether the target lives in a different document.
+  - Explain that an iframe has a separate document.
+  - Show how to target a frame in Playwright.
+  - Name the limits around closed shadow roots and XPath.
+  - If asked, give the correct Selenium equivalents.
+trap: Making the XPath from the main page longer before checking whether the element sits in its own document.
 followUps:
-  - question: What if a component uses a closed shadow root?
-    answer: I'd test its public behavior or agree on a component test interface instead of depending on access to private nodes.
+  - question: How would you test the component if its shadow root is closed?
+    answer: I'd test its public behavior or agree on a component test interface. I wouldn't depend on access to its private nodes.
 sources:
   - label: Playwright frames
     url: https://playwright.dev/docs/frames
@@ -88,12 +88,12 @@ examples:
           }
 ---
 
-I inspect where the control lives. An iframe has its own document, so in Playwright I'd use `frameLocator` to reach it and then locate the control within that frame. In Selenium I'd switch to the frame before searching and switch back when I need the outer page.
+I inspect where the control lives. An iframe is a frame that loads its own document inside the page. In Playwright, I'd use `frameLocator` to reach the frame. Then I'd locate the control within that frame. In Selenium, I'd switch to the frame before searching and switch back when I need the outer page.
 
-A shadow root belongs to a host element. Playwright locators generally reach into open shadow roots; XPath doesn't cross them, and closed roots aren't supported by that locator behavior. In Selenium Java I'd get the host's shadow root with `getShadowRoot()` and search from the returned context.
+A shadow root belongs to a host element. It starts the shadow DOM, a separate tree of elements attached to that host. Playwright locators generally reach into open shadow roots. XPath doesn't cross them, and that locator behavior doesn't support closed roots. In Selenium Java, I'd get the host's shadow root with `getShadowRoot()` and search from the returned context.
 
 ### Example
 
-If a shipping estimator sits in a named iframe and uses a custom date component, I'd first locate the frame, then use the date field's label inside its open shadow DOM. I'd assert the resulting estimate on whichever document actually displays it.
+Suppose a shipping estimator sits in a named iframe and uses a custom date component. I'd first locate the frame. Then I'd use the date field's label inside the component's open shadow DOM. I'd assert the resulting estimate on whichever document actually displays it.
 
-In the local fixture the date is a labeled text input inside an open shadow root. The check enters an ISO date and verifies the field holds that value.
+In the local fixture, or test page, the date is a labeled text input inside an open shadow root. The check enters an ISO date, written as year-month-day. Then it verifies that the field holds that value.

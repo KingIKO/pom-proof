@@ -1,19 +1,19 @@
 ---
-title: What is the difference between merging and rebasing a test branch?
+title: "What changes when you merge a test branch or rebase it?"
 topic: ci-git-docker
 roles: [manual-qa, automation, sdet]
 level: junior
 type: tooling
-oneLine: Merging combines histories; rebasing replays commits onto a new base and changes the replayed commit IDs.
+oneLine: "When I merge, I join the branch histories. When I rebase, I replay commits on a new starting point, which gives them new IDs."
 looksFor:
-  - How a merge can preserve existing commits
-  - What rebase does to replayed commit IDs
-  - Care around a shared branch
-  - Why the affected tests need to run afterward
-trap: Rebasing a branch others are working from without checking the team's policy.
+  - "Explain how a merge keeps the original commits."
+  - "Explain why commits that rebase replays get new IDs."
+  - "Say what you'd check before rebasing a branch other people use."
+  - "Explain why you rerun the tests after either update."
+trap: "Rebasing a shared branch before checking what the team has agreed to do."
 followUps:
-  - question: Do all merges create a merge commit?
-    answer: No. A fast-forward merge can move the branch pointer when the history hasn't diverged.
+  - question: "Does every merge add a merge commit?"
+    answer: "No. If the histories haven't split, I can do a fast-forward merge. That just moves my branch to the newer commit."
 sources:
   - label: Git merging
     url: https://git-scm.com/docs/git-merge
@@ -39,10 +39,10 @@ examples:
           git log --graph --oneline settings-merge settings-rebase origin/main
 ---
 
-If I merge the target branch into my feature branch, the original commits stay in its history. If the branches diverged, a normal merge can create a new commit that joins them. Rebasing my branch onto the target replays my changes from that new base, so the replayed commits have different IDs.
+When I merge a target branch into my feature branch, I keep the original commits in the history. If the histories have split, a normal merge can add a commit that joins them. When I rebase, Git plays my changes back on top of the target branch. The commits it replays get new IDs.
 
-On my own branch I'd rebase if that's the team's convention. On a shared branch, I'd avoid rewriting commits other people may already be using unless we agree how to coordinate. Either way a clean update can still change what the code does together, so I run the affected tests after integrating it.
+On my own branch, I'd rebase if that's what the team does. If others use the branch, I'd avoid rewriting commits they may already have unless we agree on how to do it together. Even if the update has no conflicts, the changes may behave differently together. I run the affected tests afterward.
 
 ### Example
 
-Say the clean local `settings-tests` branch adds a test for a renamed preference and has diverged from `origin/main`. I use two new branches so both start from the same tip. If both integrations proceed without conflicts, the graph shows a merge with both histories and a rebase with the test commit replayed. I'd run the preference spec on the branch I plan to submit.
+Suppose my clean local `settings-tests` branch adds a test for a renamed preference. It has split from `origin/main`, my local record of the remote branch. I start both attempts from the same commit using two new branches. If there are no conflicts, the merge shows both histories and the rebase shows a replayed test commit. I run the preference test on the branch I'll submit.

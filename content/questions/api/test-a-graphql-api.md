@@ -1,19 +1,19 @@
 ---
-title: "Guests and staff open the same order screen. What should their GraphQL responses show?"
+title: "Guests and staff open the same order screen. Which parts of the GraphQL reply should differ?"
 topic: api
 roles: [automation, sdet]
 level: senior
 type: concept
-oneLine: "Run the screen's operation with both identities, and assert that public fields still render when a private field is denied."
+oneLine: "I'd run the screen's request as both users. I'd check that the screen can still show public fields when it can't show a private one."
 looksFor:
-  - "Uses a staff read to prove the seeded note really exists."
-  - "Checks that guest data keeps the order ID and reports the note error at the correct path."
-  - "Replays the screen's saved operations when the schema changes."
-  - "Uses a larger fixture to distinguish slow resolver work from a documented query limit."
-trap: "Treating HTTP 200 as proof every requested field resolved successfully."
+  - "Read as staff first to show that the test note exists."
+  - "Check that a guest still gets the order ID and that the error names the note field."
+  - "Rerun the screen's saved requests when the schema changes."
+  - "Use more test data to tell slow field processing from the API's documented query limit."
+trap: "Treating HTTP 200 as proof that every requested field came back successfully."
 followUps:
-  - question: "The guest query returns a null note without an error. What would you check before calling it a bug?"
-    answer: "I'd check the staff response for the seeded note and confirm whether the guest contract promises a field error or intentionally returns a silent null."
+  - question: "The guest gets a null note with no error. What would you check before reporting a bug?"
+    answer: "I'd check that staff can see the test note. I'd check whether the API promises a field error to guests or intends to return null with no error."
 sources:
   - label: GraphQL specification, response and field errors
     url: https://spec.graphql.org/September2025/#sec-Response
@@ -91,10 +91,10 @@ examples:
           }
 ---
 
-I'd take the order screen's actual query and seed a note I know staff can read. Then I'd run the same query as a guest. I want the screen to keep the order ID without exposing the note. HTTP `200` can carry that partial result, so I'd check `data` and the path in `errors` together.
+I'd use the order screen's actual GraphQL query, which names the fields the client wants back. I'd add a test note staff can read and run the same query as a guest. I'd check that the guest still gets the order ID without seeing the note. HTTP `200` can carry a partial result. I'd check `data` and the field path in `errors` together.
 
-I'd save the screen's queries and mutations as compatibility checks. If staff can edit a note, I'd read the edit back. I'd run the order query with many line items and look at resolver time and storage calls. Separately I'd use operations on either side of the documented depth or cost limit and check which ones the server admits.
+I'd save the screen's queries and mutations, its read and change requests, to rerun when the schema changes. If staff can edit a note, I'd read it back after the edit. I'd test many line items and measure time in the resolvers, the code that fetches each field. I'd also count their storage calls. I'd separately try requests on either side of the documented depth or cost limit and see which ones the server accepts.
 
 ### Example
 
-The local graph lets a guest read a demo order's ID. Its nullable `internalNote` is staff-only and the resolver reports a field error. Expect `200`, ID `61`, a null note, and the error path `order.internalNote`.
+In the local test API, I'd use a guest to read a demo order. The staff-only `internalNote` field can hold null, and the resolver reports an error. I'd expect `200`, ID `61`, a null note, and the error path `order.internalNote`.

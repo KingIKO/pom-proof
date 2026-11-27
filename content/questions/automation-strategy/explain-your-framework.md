@@ -1,25 +1,25 @@
 ---
-title: How would you explain your automation framework to a new teammate?
+title: "How would you explain your automation framework to a new teammate?"
 topic: automation-strategy
 roles: [automation, sdet, senior]
 level: mid
 type: concept
-oneLine: Walk one test from its data setup to its failure report, then explain a design choice and its cost.
+oneLine: "I'd walk through one test from setup to its failure report. I'd explain one design choice and what it costs."
 looksFor:
-  - A real test that makes architecture legible
-  - Where setup and assertions live
-  - How someone diagnoses a CI failure
-  - A deliberate tradeoff and a way to measure it
-trap: Reciting a directory tree or tools list without explaining how a test runs or fails.
+  - "Pick a real test that shows how the pieces fit together."
+  - "Show where the test gets its data and checks the result."
+  - "Show how to investigate a failure in CI."
+  - "Explain one tradeoff and say how you'd measure it."
+trap: "Listing folders and tools without showing how a test runs or what a failure looks like."
 followUps:
-  - question: What would you change if the suite doubled?
-    answer: I'd measure where time goes first. Slow seed endpoints call for a different fix than slow browser startup or congested runners.
+  - question: "What would you change if the suite grew to twice its size?"
+    answer: "I'd first measure where time goes. I'd fix slow setup requests differently from slow browser startup or a queue of jobs waiting to run."
 ---
 
-I'd start with one spec and follow it through the run. I show where the test gets data, which screen interactions it owns, and the lines that state the result. Then I open a failure report and show what a teammate can use to tell a setup problem from a product bug.
+I'd explain the automation framework, the shared tools and code that help us write and run tests, with one test file. I'd follow it through a run and show where it gets its data and which screen actions it handles. I'd point to its assertions, the lines that check the expected result. Then I'd open a failure report and show how to tell a setup failure from a bug in the product.
 
-I'd explain one choice that has a cost. Our team might prepare records through an API to shorten browser runs, which means a setup service outage can stop those runs. I'd explain how the report exposes that failure and which suite still tests the normal customer path. The teammate should be able to add a test and read its first failure after the walkthrough.
+I'd explain one choice the team made. For example, I might create records through an API, an interface code can call, to shorten browser runs. If that setup service goes down, it can stop the runs. I'd show what the failure looks like and point to the suite that still tests the usual customer path. Afterward, I'd expect the teammate to be able to add a test and read its first failure.
 
 ### Example
 
-I'd show the booking cancellation spec. It creates an appointment, changes it from the customer screen, and checks the released slot in the calendar. On CI I'd show where to find the appointment ID and the failing step.
+I'd show our booking cancellation test. It creates an appointment, cancels it on the customer screen, and checks that the calendar shows the slot as open. In continuous integration (CI), I'd point out the appointment ID and the step that failed.

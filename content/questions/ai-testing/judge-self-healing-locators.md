@@ -1,21 +1,19 @@
 ---
-title: A healed checkout test opened the gift card panel. What should count as a pass?
+title: "A self-healing checkout test opened the gift card panel. What should count as a pass?"
 topic: ai-testing
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Require evidence that the shopper can apply a discount, and review any locator change against that purpose.
+oneLine: "I'd check that a shopper can still apply a discount. I'd review a proposed change to how the test finds the button against that goal."
 looksFor:
-  - Requires a discount code to change the expected order total.
-  - Keeps the original failure visible when the proposed button opens a different panel.
-  - Uses the saved attributes to explain why the gift card button looked like a match.
-  - Requires someone to approve any saved locator change against the intended action.
-trap: Updating the saved locator automatically whenever a substitute lets the test pass.
+  - "Check that applying a discount code changes the total to the expected amount."
+  - "Keep the original failure visible if the suggested button opens the wrong panel."
+  - "Use the original button's saved attributes to explain why the gift card button looked like a match."
+  - "Have someone check the intended action before approving a permanent change to the locator."
+trap: "Saving a new locator automatically because the test passed with it."
 followUps:
-  - question: In one checkout build Apply discount was renamed, and in another it was removed. Which suggestion would you accept?
-    answer: >-
-      I'd accept a replacement only in the renamed build, after checking that it still applies a
-      discount. In the build without the feature, the original failure must remain visible.
+  - question: "One build renames Apply discount and another removes it. When would you accept a replacement?"
+    answer: "I'd accept a replacement only in the renamed build and only after checking that it still applies a discount. In the build without the feature, I'd keep the original failure visible."
 sources:
   - label: Nass and colleagues, Similo matching method and evaluation (accessed 2026-11-27)
     url: https://arxiv.org/html/2208.00677v1
@@ -23,17 +21,12 @@ sources:
     url: https://github.com/healenium/healenium-web
 ---
 
-I'd keep the original run failed. Opening a gift card panel doesn't demonstrate that the
-discount control works. I'd strengthen the test by requiring the discount field and checking
-that applying a valid code changes the order total as expected.
+I would leave the original run marked as failed. Opening a gift card panel doesn't show that shoppers can apply a discount. I'd check that the discount field appears. Then I'd apply a valid code and check that the total changes to the expected amount.
 
-A similarity-based locator can compare saved attributes with elements on the current page.
-Its highest score is only a suggestion; nearby controls can share an appearance and have
-different effects. I'd record the proposed change for review, then update the saved locator
-only if someone confirms it still refers to the same control.
+A locator tells a test how to find a page element. If it can't find the element, a self-healing test can try a replacement. A similarity-based locator compares saved attributes, or details like the button's name, with those of elements on the current page. I treat the highest score as a suggestion because nearby buttons can look alike and do different things.
+
+I'd record the proposed change for review. I'd update the saved locator only after someone checks that it finds the intended control.
 
 ### Example
 
-The checkout page loses its Apply discount button, and the closest candidate is Apply gift
-card. Both open a panel, so a test that only checks for a panel can turn green. I'd reject the
-substitution and check for the discount code field as part of the original behavior.
+The checkout page loses Apply discount, and Apply gift card is the closest match. Both buttons open a panel, so a test that checks only for a panel can pass. I'd reject the replacement and check for the original discount code field.

@@ -1,22 +1,22 @@
 ---
-title: Why does JMeter say the departure board is healthy when riders see empty results?
+title: Why can a JMeter test pass when riders see an empty departure board?
 topic: performance
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Assert that the board has usable data and pace the requests like riders who read before clicking.
+oneLine: I'd check that the board shows usable data. I'd also let each simulated rider pause to read it before opening train details.
 looksFor:
-  - Uses the Thread Group for concurrent users and the time it takes to start them.
-  - Puts requests in samplers and shares defaults and input data through configuration elements.
-  - Sets the scope of timers and assertions deliberately.
-  - Uses listeners to collect results and runs the load from the command line.
-trap: Using the thread count as if it were the number of requests per second.
+  - Set the rider count and how quickly riders start in the Thread Group.
+  - Define the requests in samplers and put shared settings and inputs in configuration elements.
+  - Apply delays and checks only to the requests that need them.
+  - Collect results with a listener and run the load test from the command line.
+trap: Treating the number of simulated riders as the number of requests per second.
 followUps:
-  - question: The two-second pause shows up before the board loads instead of before train 624 opens. Where would you move it?
+  - question: The two-second pause delays the board load. Where would you move it so it delays opening train 624 instead?
     answer: >-
-      I'd put the timer under the details sampler. That gives the rider time to read the
-      board after it loads. I'd check the request timestamps in a small run before repeating
-      the load test.
+      I'd attach the timer to the sampler that sends the details request.
+      That gives the rider time to read the board after it loads.
+      Before repeating the load test, I'd check when requests go out in a small run.
 sources:
   - label: Apache JMeter, elements and scoping of a test plan
     url: https://jmeter.apache.org/usermanual/test_plan.html
@@ -26,18 +26,12 @@ sources:
     url: https://grafana.com/docs/k6/latest/using-k6/scenarios/concepts/open-vs-closed/
 ---
 
-A fast response that says there's no train is wrong if the selected station has departures. I'd
-add an assertion to the board sampler that checks a known train for that station. I'd feed the
-station data through a configuration element and use HTTP Request Defaults for the shared host.
+If I know the station has departures, a fast reply with no trains is still wrong. I'd add an assertion, a check for a known train, to the sampler that sends the board request. I'd supply the station data through a configuration element, which provides shared inputs. I'd set the common server address in HTTP Request Defaults.
 
-Then I'd check what the test actually asks of the app. The Thread Group controls the rider count
-and ramp-up. I'd scope the reading delay to the details sampler and leave the initial search
-undelayed. Removing that pause changes the traffic even at the same thread count. I'd debug a
-small run in the GUI and save sample results with a listener when I run the load from the CLI.
+I'd use the Thread Group to set the rider count and ramp-up, the time it takes to start them. I'd put the reading delay on the details sampler so the initial search starts without waiting. Removing that pause changes the traffic even with the same rider count.
+
+I'd use JMeter's graphical interface to debug a small run. For the load test, I'd run from the command line and save request results with a listener, which collects them.
 
 ### Example
 
-I seed a station where train 624 is due at noon. The board assertion fails if that train is
-missing even when the page returns HTTP 200. A two-second timer under the details sampler gives
-the rider time to read the board. I compare throughput and latency only with runs using the
-same pace and station mix.
+I'd set up test data for a station where train 624 is due at noon. If that train is missing, my board check fails even when HTTP 200 says the request succeeded. I'd put a two-second timer on the details sampler to give the rider time to read. I'd compare response times and requests completed per second only across runs with the same pace and mix of stations.

@@ -1,19 +1,19 @@
 ---
-title: How would you report duplicate store titles after ignoring case and surrounding spaces?
+title: How would you report store titles that match after you ignore case and spaces at either end?
 topic: java
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Normalize the collected strings, count equal titles with groupingBy, and keep the counts greater than one.
+oneLine: I normalize the collected strings and count equal titles with `groupingBy`. Then I keep the counts greater than one.
 looksFor:
-  - Applies the product's normalization rule before grouping.
-  - Uses map followed by groupingBy and counting.
-  - Returns duplicate titles with counts for diagnosis.
-  - Knows when a loop gives clearer diagnostics than a longer pipeline.
-trap: Starting a stream from live browser calls and adding side effects inside map to gather diagnostic state.
+  - Apply the product's normalization rule before grouping.
+  - Use `map` followed by `groupingBy` and `counting`.
+  - Return the duplicate titles with their counts for diagnosis.
+  - Know when a loop gives clearer diagnostics than a longer pipeline.
+trap: Starting a stream from live browser calls and adding side effects inside `map` to gather diagnostic state.
 followUps:
-  - question: When does map run in this example?
-    answer: It is an intermediate operation. The stream starts processing its input when the terminal collect operation runs.
+  - question: When does `map` run in this example?
+    answer: I use `map` as an intermediate operation, which sets up a step without processing the input yet. I start the work when I call the terminal operation `collect`, the final step in this stream.
 sources:
   - label: Java 21 stream pipelines
     url: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/package-summary.html
@@ -52,16 +52,14 @@ examples:
           }
 ---
 
-I'd collect the page texts before starting the stream so browser operations stay separate from
-the data check. If the store ignores surrounding spaces and case, I'd map each title to its
-normalized form. I'd use a locale-neutral lowercase conversion for this fixture.
+A stream is a Java pipeline of steps over a collection of values. I'd collect the page texts before I start the stream. That keeps browser operations separate from the data check.
 
-Then I'd group by that title with `groupingBy` and `counting`, and report the entries whose
-counts exceed one. A loop that increments a map is also fine. If I need to show original
-spellings and row numbers for each duplicate, I'd use whichever version makes that evidence
-easier to follow.
+If the store ignores surrounding spaces and case, I'd map each title to its normalized form. That form has no surrounding spaces and uses one letter case. For this fixture, I'd use a locale-neutral lowercase conversion, one that doesn't depend on a language setting.
+
+Then I'd group by that title with `groupingBy` and `counting`. `groupingBy` sorts values into groups by a key, and `counting` counts each group. I'd report the entries whose counts exceed one.
+
+A loop that increments counts in a map is also fine. If I need to show original spellings and row numbers for each duplicate, I'd use whichever version makes that evidence easier to follow.
 
 ### Example
 
-The fixture contains two spellings of `mug` and one `apron`. The result reports only `mug`
-with a count of two.
+The fixture contains two spellings of `mug` and one `apron`. The result reports only `mug`, with a count of two.

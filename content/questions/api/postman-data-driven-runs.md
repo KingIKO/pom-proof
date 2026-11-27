@@ -1,19 +1,19 @@
 ---
-title: "How would you check several coupon outcomes without cloning the Postman request?"
+title: "How would you test several coupon results with one Postman request?"
 topic: api
 roles: [manual-qa, automation]
 level: mid
 type: tooling
-oneLine: "Run the same request once per data row and assert the status and outcome specified by that row."
+oneLine: "I'd run the request once per data row. I'd use that row to check the status and result."
 looksFor:
-  - "Uses CSV column names or JSON keys as iteration variables."
-  - "Puts expected outcomes beside the input in the data file."
-  - "Reads expectations explicitly from iteration data in the script."
-  - "Keeps fixtures independent and labels failures by the case."
-trap: "Varying the coupon code per row but asserting `200` for every result."
+  - "Use CSV column names or JSON keys to supply a value for each run."
+  - "Put each expected outcome next to its input in the data file."
+  - "Read the expected values from the row in the script."
+  - "Keep cases independent and include the case name when a check fails."
+trap: "Changing the coupon by row but checking for `200` every time."
 followUps:
-  - question: "Why convert the expected status before comparing it?"
-    answer: "A CSV value may come through as text. I'd convert it to a number because pm.response.code is numeric."
+  - question: "Why would you convert the expected status before comparing it?"
+    answer: "A CSV file can supply the expected status as text. I'd turn it into a number before comparing it because pm.response.code is numeric."
 sources:
   - label: Postman CSV and JSON data files
     url: https://learning.postman.com/docs/tests-and-scripts/running-collections/test-data/working-with-data-files/
@@ -37,10 +37,10 @@ examples:
           });
 ---
 
-I'd keep one coupon validation request and put the inputs and expectations in a data file. Each CSV row or JSON object is one iteration. The request uses `{{coupon}}` and the post-response script reads the expected status and code from `pm.iterationData`. That lets the expired and valid cases share the request without sharing an expectation.
+I'd keep one request that checks a coupon. I'd put the inputs and expected results in a data file. Each CSV row or JSON object gives Postman one iteration, or repeat of the request. The `{{coupon}}` placeholder gets the coupon value. After the response, I'd read the expected status and code from `pm.iterationData`, the values for that run.
 
-I'd check the column names and number conversion when bringing in a file. I'd use fixed sandbox coupons, or reset them if checking redemption changes their state.
+That way, valid and expired coupons use the same request but have different expected results. I'd check the column names and number conversion when I first use the file. I'd use fixed test coupons or reset them if redeeming them changes their state.
 
 ### Example
 
-In a data-file run, submit `TRY10` and `OLD10`. The file pairs `TRY10` with `200` and `accepted`, and `OLD10` with `422` and `expired`. Both bodies have a `code` field.
+I'd submit `TRY10` and `OLD10` in a data-file run. I'd expect `200` and `accepted` for `TRY10`. I'd expect `422` and `expired` for `OLD10`. Both bodies have a `code` field.

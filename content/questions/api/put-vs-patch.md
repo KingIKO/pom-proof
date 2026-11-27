@@ -1,26 +1,28 @@
 ---
-title: "How would you test PUT versus PATCH on the same resource?"
+title: "How would you test PUT and PATCH on the same record?"
 topic: api
 roles: [manual-qa, automation, sdet]
 level: junior
 type: concept
-oneLine: "PUT generally supplies a replacement representation; PATCH applies a set of changes whose exact behavior depends on the patch format."
+oneLine: "I usually use PUT to send the replacement record. I use PATCH to apply changes, and what those changes do depends on the patch format."
 looksFor:
-  - "Knows the replacement versus change distinction."
-  - "Checks omission separately from explicit null."
-  - "Reads back saved state and unaffected fields."
-  - "Does not assume every PATCH is idempotent."
-trap: "Sending only the changed field with PUT and assuming every omitted field will be preserved."
+  - "Tell replacing the record apart from applying selected changes."
+  - "Test leaving a field out separately from setting it to null."
+  - "Read the record and check the fields that should change or stay the same."
+  - "Explain why PATCH isn't always idempotent, meaning a repeat can have an extra effect."
+trap: "Sending only the changed field with PUT and assuming the missing fields stay as they were."
 followUps:
-  - question: "Is PATCH safe to retry by definition?"
-    answer: "No. Setting an email preference can be repeatable, while a patch that appends an item can change the resource with each application."
+  - question: "Can you always retry an identical PATCH safely?"
+    answer: "I'd check the operation first. Setting an email preference can have the same effect if repeated. A patch that appends an item may add another one on each run."
 sources:
   - label: "MDN, PATCH request method"
     url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods/PATCH
 ---
 
-For a PUT I'd start from the documented replacement representation. I'd test the full request and check what the contract says to do when a field is omitted. For a PATCH I'd check the rules of the accepted patch format, including whether an explicit null clears a field. I read the resource back after both requests and compare fields I expected to change and fields I expected to keep.
+I'd start a PUT test with the full replacement the API documents. I'd check the result of sending the full request. In another case, I'd leave out a field and check what the API promises to do with it.
+
+For PATCH, I'd check the rules of the patch format, the way the API describes changes. I'd find out whether an explicit null clears a field. After either request, I'd read the record back. I'd check both the fields that should change and the ones that should stay the same.
 
 ### Example
 
-Suppose a customer's settings include a time zone and an optional display name. If our partial update promises to leave omitted fields alone, changing the name must preserve the time zone. To clear the name I'd use the operation the contract defines, then check what a fresh settings read returns.
+I'd use customer settings with a time zone and an optional display name. If a partial update promises to leave missing fields alone, I'd change the name and expect the same time zone. To clear the name, I'd use the documented operation and check a fresh read.

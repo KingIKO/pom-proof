@@ -1,19 +1,19 @@
 ---
-title: What belongs in a fixture versus a page object?
+title: "What should a fixture do, and what should a page object do?"
 topic: automation-strategy
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Let fixtures own setup and cleanup; let page objects describe interactions a test can read.
+oneLine: "I'd use fixtures to set up tests and clean up afterward. I'd use page objects to name screen actions clearly."
 looksFor:
-  - Separate responsibility for state and UI actions
-  - Test scope for mutable data
-  - Ownership of cleanup
-  - A spec that makes the behavior under test visible
-trap: Creating database records as a side effect of constructing a page object.
+  - "Give setup and screen actions separate owners."
+  - "Give each test its own records if the test changes them."
+  - "Say which code cleans up the test data."
+  - "Keep the behavior you're checking visible in the test file."
+trap: "Creating database records just by making a page object."
 followUps:
-  - question: What would you share between workers?
-    answer: I would consider read-only reference data; accounts or orders that tests edit need independent state.
+  - question: "What could tests share across workers that run them in parallel?"
+    answer: "I'd consider sharing data that tests can only read. If tests edit accounts or orders, I'd give each test its own records."
 sources:
   - label: Playwright fixtures
     url: https://playwright.dev/docs/test-fixtures
@@ -21,10 +21,10 @@ sources:
     url: https://playwright.dev/docs/pom
 ---
 
-I use a fixture to answer what this test needs before it can begin and who cleans up afterward. A page object answers how I perform an interaction on the screen. A fixture can supply a page object, but I keep record creation out of the object's constructor. That way opening the settings page doesn't silently change anybody's settings.
+I use a fixture to provide what a test needs before it starts and to handle cleanup. A page object groups named actions I can take on a screen. A fixture can give the test a page object. I keep record creation out of the constructor, the code that creates the object. That way, opening the settings page doesn't silently change anyone's settings.
 
-I keep mutable records test-scoped unless there's a reason to do otherwise. I can share a read-only reference list without one test changing another test's starting point. The fixture should return the IDs the test needs for assertions and cleanup, so those operations can name the exact records.
+Unless I have a reason to share, I give each test its own records to change. If the records are read-only, I can share them without tests changing each other's starting point. I'd have the fixture return the exact record IDs for checks and cleanup.
 
 ### Example
 
-I'd have a fixture create a pending reimbursement and remove that record after the test. `ReimbursementPage.approve()` clicks the relevant button. The spec checks that the original reimbursement is marked approved, so the expected transition is clear in one place.
+I'd have a fixture create a pending reimbursement and remove it after the run. The `ReimbursementPage.approve()` method clicks the approval button. In the test itself, I'd check that the original reimbursement now shows approved.

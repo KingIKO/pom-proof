@@ -1,19 +1,19 @@
 ---
-title: How would you avoid repeating sign-in for every customer profile test?
+title: "How would you reuse sign-in between Cypress profile tests?"
 topic: cypress
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Use cy.session with a non-secret identity key, verify the restored account, and keep separate sign-in coverage.
+oneLine: "I use `cy.session` with a key that contains no secrets. I check the restored account and test the sign-in form separately."
 looksFor:
-  - Knows what test isolation clears.
-  - Includes identity and login mode in the session key where needed.
-  - Checks the restored session and handles expiration.
-  - Keeps a real check of the sign-in form.
-trap: Putting a password in the session key or assuming a restored cookie proves the sign-in form works.
+  - "Explain what Cypress clears to keep tests independent."
+  - "Include the account and sign-in method in the key when they matter."
+  - "Check the account after restoring it and explain what happens when the session expires."
+  - "Keep a test that goes through the real sign-in form."
+trap: "Putting a password in the key or assuming a restored cookie proves the sign-in form still works."
 followUps:
-  - question: What happens when a restored session fails validation?
-    answer: Cypress reruns setup for the invalid session. A validation failure immediately after setup fails the test.
+  - question: "What if Cypress restores a session but the check says it's invalid?"
+    answer: "I'd expect Cypress to run setup again. If the new session fails its check right after setup, I'd expect the test to fail."
 sources:
   - label: Cypress test isolation
     url: https://docs.cypress.io/app/core-concepts/test-isolation
@@ -55,10 +55,10 @@ examples:
           });
 ---
 
-With end-to-end test isolation on, Cypress clears cookies and browser storage between tests. I'd use `cy.session` to save and restore the browser state for a named test identity. The key can distinguish a reader from an administrator and should leave out credentials. I'd validate the restored state against a protected endpoint that returns the expected user.
+If end-to-end test isolation is on, Cypress clears cookies and browser storage between tests. That keeps sign-in state from leaking from one test into the next. I'd use `cy.session` to save and restore browser state for a named test account. The session key tells a reader apart from an administrator and can include the sign-in method. I'd leave credentials out of that key.
 
-I'd still visit the feature page after restoring state. A valid cached login can hide a broken sign-in form, so I'd exercise the form in a separate test. If tests change server-side profile data, I'd give those tests separate accounts or records.
+I'd check the restored state by calling an address that requires sign-in and returns the expected user. I'd still visit the feature page after restoring sign-in. If tests change profile data on the server, I'd give them separate accounts or records. I'd keep a real sign-in form test because a saved login can hide a broken form.
 
 ### Example
 
-The local fixture has a dedicated read-only reader account and a configured Cypress `profilePassword` secret. The API login sets its cookie, and the protected profile should show the same email that session validation observed.
+I'd set up a local read-only reader account and use the Cypress `profilePassword` secret. I'd sign in by calling the service directly so it sets the cookie. I'd expect the protected profile to show the same email I saw when I checked the session.

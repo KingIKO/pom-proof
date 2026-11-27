@@ -1,21 +1,21 @@
 ---
-title: Why can a visible Playwright button still time out on click?
+title: Why might Playwright run out of time trying to click a button that's already visible?
 topic: locators-waits
 roles: [automation, sdet]
 level: junior
 type: tooling
-oneLine: A visible button may still be moving, disabled, or covered, so inspect the check that kept the click from happening.
+oneLine: A visible button may still be moving, disabled, or covered. I inspect the check that kept the click from happening.
 looksFor:
-  - A single matching element
-  - Visibility, stability, enabled state, receiving events, and not being inert
-  - A reason a real user would also be blocked
-  - A useful alternative to a sleep or forced click
-trap: Forcing the click before finding out whether a loading overlay blocks users too.
+  - Explain that the locator must match a single element.
+  - "Name the checks: visible, stable, enabled, able to receive events, and not inert."
+  - Give a reason a real user would also be blocked.
+  - Offer a useful alternative to a sleep or a forced click.
+trap: Forcing Playwright to click before checking whether a loading layer also stops users from clicking.
 followUps:
-  - question: Is a successful click proof that the form saved?
-    answer: No. I would check a user-facing confirmation or the resulting saved state after the click.
-  - question: What if the app has no visible signal that a background action finished?
-    answer: I can start waiting for the matching response before the action, or use expect.poll in Playwright Test to observe a value until it reaches the expected state.
+  - question: If the click succeeds, can you conclude that the app saved the form?
+    answer: No. After the click, I would check a confirmation the user sees or the resulting saved state.
+  - question: What would you check if nothing on the page shows that the background action finished?
+    answer: I can start waiting for the matching response before the action. Or I can use `expect.poll` in Playwright Test. It observes a value until the value reaches the expected state.
 sources:
   - label: Playwright actionability
     url: https://playwright.dev/docs/actionability
@@ -62,12 +62,14 @@ examples:
               assert event.value.json()["cents"] == 750
 ---
 
-For `locator.click()`, Playwright waits for a single match that is visible, stable, enabled, outside an inert subtree, and able to receive events at the click point. A button can be painted on the screen but sit behind a spinner that intercepts the click. Other actions have their own set of checks, so I'd look at the call log for the actual action that timed out.
+For `locator.click()`, Playwright waits for a locator, its way of finding an element, to have a single match. That element must be visible, enabled, and stable, which means not moving. It must be able to receive events at the click point. It must also sit outside an inert subtree, a part of the page that ignores user input.
 
-I find what the user is waiting for and decide whether it should have happened. If the overlay is stuck because a request failed, I want the failure to point there. Forcing the click can bypass checks that were telling me about the bug.
+A button can be painted on the screen but sit behind a spinner that intercepts the click. Other actions have their own set of checks. So I'd read the call log, the list of steps Playwright reports, for the actual action that timed out.
+
+I find what the user is waiting for. Then I decide whether it should have happened. If the overlay, the layer covering the button, is stuck because a request failed, I want the failure to point there. Forcing the click can bypass checks that were telling me about the bug.
 
 ### Example
 
-On a shipping form, I'd inspect the pending rate lookup and look for the chosen delivery option. Once a normal click works, I'd still assert the updated order summary before calling the test a pass.
+On a shipping form, I'd inspect the pending rate lookup. I'd also look for the chosen delivery option. Once a normal click works, I'd still assert the updated order summary before I call the test a pass.
 
-In the local fixture, a shipping address is already entered. The example watches the POST made by Get rate and expects a quote of 750 cents. That check isolates the lookup; the summary needs its own assertion.
+In the local fixture, or test page, a shipping address is already entered. The example watches the POST made by Get rate and expects a quote of 750 cents. That check tests the lookup on its own. The summary needs its own assertion.

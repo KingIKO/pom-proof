@@ -1,22 +1,22 @@
 ---
-title: The new city adds 10 checkouts per second, and an opening offer could add 15 more. Which load must pass?
+title: The new city adds 10 checkout starts per second. An opening offer could add 15 more. What load must the service handle?
 topic: performance
 roles: [sdet, senior]
 level: senior
 type: concept
-oneLine: Agree whether the promotion is part of launch, then set a pass condition for the demand the business plans to serve.
+oneLine: I find out if the launch includes the offer. Then I agree with the business on what the service must handle to pass.
 looksFor:
-  - Separates the launch requirement from the opening-offer scenario.
-  - Gets agreement on checkout latency, errors, and sustained duration before testing.
-  - Uses a comparable city peak to explain the starting rate.
-  - Gives a range based on expected activity if there is no comparable city.
-trap: Choosing a round user count and deciding whether it passed after seeing the charts.
+  - Separate the expected launch load from the extra traffic an opening offer could bring.
+  - Agree before testing on acceptable checkout times, error limits, and how long the service must handle the load.
+  - Use the busiest period in a similar city to explain the starting rate.
+  - If no similar city exists, estimate a range from the activity you expect.
+trap: Picking a round number of users and waiting until after the test to decide what counts as a pass.
 followUps:
-  - question: Marketing confirms the offer will run on opening night. How does that change the 65-start test?
+  - question: Marketing confirms the offer for opening night. How does that change the test at 65 checkout starts per second?
     answer: >-
-      I'd ask the launch owner to make 65 an explicit pass case for the offer window. I'd
-      record the assumptions, test slower and faster arrival estimates, and revise the forecast
-      using early rollout traffic.
+      I'd ask the launch owner to require a pass at 65 starts per second for the offer period.
+      I'd write down what I assumed. I'd also test lower and higher rates.
+      I'd update the forecast using traffic from the early rollout.
 sources:
   - label: Google SRE, launch capacity planning and overload tests
     url: https://sre.google/sre-book/reliable-product-launches/
@@ -26,20 +26,12 @@ sources:
     url: https://grafana.com/docs/k6/latest/testing-guides/api-load-testing/
 ---
 
-I'd start with the busiest short windows from comparable cities. I'd record order placement
-separately from browsing and cart updates. Then I'd add the expected launch demand and leave
-headroom for a promotion or growth. I'd keep the assumptions visible so we can revise the targets
-when we have better numbers.
+I'd start with short periods when similar cities were busiest. I'd count orders separately from browsing and cart changes. I'd add the demand I expect at launch. I'd also leave room for an offer or growth. I'd write down my assumptions so we can update the targets when we get better numbers.
 
-If this were the first city, I'd start with expected active users during the busiest interval and
-estimate how many times each starts an order in that window. I'd use a low and high estimate and
-include a short burst if marketing expects people to arrive together. Before testing, I'd agree
-with the business on the load and duration the service must sustain. I'd set latency and error
-limits that define a pass at that load.
+If this were the first city, I'd estimate how many people use the service during the busiest period. I'd estimate how often each person starts an order then. I'd use both a low and a high estimate. If marketing expects people to arrive together, I'd include a short burst.
+
+Before testing, I'd agree with the business on the load and how long the service must hold it. I'd set limits for checkout response time and errors at that load.
 
 ### Example
 
-If checkout peaks at 40 starts per second and the new city is forecast to add 10, I'd propose
-50 starts per second as the launch case. If an opening offer is expected to add another 15, I'd
-test 65 as a separate case. Whether 65 must pass or is just for diagnosis is a decision I'd get
-written down before running it.
+If checkout peaks at 40 starts per second and the new city adds an estimated 10, I'd propose 50 starts per second for launch. If I expect the offer to add another 15, I'd test 65 separately. Before running it, I'd record whether 65 must pass or is only for diagnosis. A run for diagnosis helps me see what happens at that load without making it a launch requirement.

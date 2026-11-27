@@ -1,23 +1,25 @@
 ---
-title: "How would you test an API that has no usable documentation?"
+title: "How would you test an API without usable documentation?"
 topic: api
 roles: [manual-qa, automation, sdet]
 level: mid
 type: scenario
-oneLine: "Use an approved test setup and current consumers to learn the behavior, then confirm which observations clients can depend on."
+oneLine: "I'd learn how current clients use it in an approved test setup. I'd ask the owner which results clients can count on."
 looksFor:
-  - "Finds service owners and known callers."
-  - "Uses safe environments and ordinary approved workflows."
-  - "Separates observed behavior from a promised contract."
-  - "Turns agreed behavior into a reusable example."
-trap: "Freezing the first response as the contract, including fields the service owner never intended clients to use."
+  - "Find the service owner and the callers that use it."
+  - "Use approved test environments and normal workflows."
+  - "Keep what you saw apart from what the service promises."
+  - "Turn agreed behavior into an example others can use."
+trap: "Treating the first reply as a promise, including fields the owner never intended clients to use."
 followUps:
-  - question: "What if the service owner is temporarily unavailable?"
-    answer: "I'd document observations as provisional and keep checks that depend on unanswered behavior separate until someone can confirm it."
+  - question: "What if the service owner isn't available yet?"
+    answer: "I'd write down what I saw and mark it as unconfirmed. I'd keep tests that depend on open questions separate until someone can confirm the expected result."
 ---
 
-I'd ask the owner which clients use the API and whether they have examples in code or tests. In an approved test environment I'd exercise a normal workflow with known data, record the request and response, and ask which parts are stable. I keep observations separate from requirements, especially when an error could just be today's implementation. Once we agree on behavior, I write a small set of examples consumers can refer to.
+I'd ask the owner which clients use the API and whether they have examples in code or tests. I'd try a normal workflow with known data in an approved test environment. I'd record what I sent and what came back. I'd ask which parts of the reply clients can rely on.
+
+I'd keep observations separate from requirements. The error I see today may be an accident of how the service works. Once we agree on the behavior, I'd write a few examples clients can use.
 
 ### Example
 
-The account screen might read a statement endpoint whose empty results sometimes appear as an empty list. I'd check the existing client and ask the team to settle the empty response before locking it into a compatibility test. Until then I'd label it as observed behavior.
+The account screen might call a statement URL that sometimes returns an empty list when there are no results. I'd check how the current client handles it. I'd agree with the team on what empty results should look like before testing that the API still works with that client. Until then, I'd record the empty list as something I saw.

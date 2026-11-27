@@ -1,25 +1,27 @@
 ---
-title: Tell me how you helped a QA team grow without becoming a bottleneck.
+title: How did you help a QA team grow without making everyone wait for you?
 topic: leadership
 roles: [senior]
 level: senior
 type: behavioral
-oneLine: Give people real ownership, pair on the first attempts, and measure what they can handle independently.
+oneLine: I give people real ownership and work alongside them on their first attempts. Then I measure what they can handle on their own.
 looksFor:
-  - The gap you diagnosed before assigning ownership
-  - Your specific coaching or process change
-  - Evidence the team handled work without you
-  - How you adjusted after feedback
-trap: Claiming growth because headcount rose while every acceptance decision still required your approval.
+  - Name the gap you found before you handed over ownership.
+  - Describe the specific coaching or process change you made.
+  - Show evidence that the team handled work without you.
+  - Explain how you adjusted after feedback.
+trap: Claiming the team grew because headcount rose, while every decision to accept a change still needed your approval.
 followUps:
-  - question: How did you handle a release judgment you disagreed with?
-    answer: I'd ask for the evidence against shared criteria and coach the judgment, then intervene if the risk exceeded their agreed decision scope.
+  - question: What did you do when someone made a release decision you disagreed with?
+    answer: I'd ask for their evidence against the criteria we had agreed on and coach the judgment. If the risk went beyond the decision scope we had agreed for them, I'd step in.
 ---
 
-Our team doubled from two testers to four, but I was still reviewing every change before release. I mapped which decisions waited on me and found that newer testers knew the product but had little practice making a risk call. I paired with each on one release and wrote down when to ask for a second person. Then I gave each ownership of a product area.
+Our team doubled from two testers to four. But I was still reviewing every change before release. I listed which decisions waited on me. The newer testers knew the product. But they had little practice making a risk call, which means deciding whether a risk is acceptable.
 
-Within six weeks, three teammates had each led a release review without me running the meeting. I kept a short debrief and adjusted the escalation examples when they were unclear. I learned to teach the judgment behind the checklist before stepping away.
+I paired with each of them on one release, meaning we worked through it together. I wrote down when to ask for a second person. Then I gave each tester ownership of a product area.
+
+Within six weeks, three teammates had each led a release review without me running the meeting. I kept a short debrief, a brief talk about how the review went. When the escalation examples were unclear, I adjusted them. Escalation means bringing another person into a decision. I learned to teach the judgment behind the checklist before stepping away.
 
 ### Example
 
-One tester recommended shipping with a low-impact search defect and named a monitoring owner. I asked for their evidence and let them present the recommendation to product.
+One tester recommended shipping with a low-impact search defect. They named an owner for monitoring it. I asked for their evidence. Then I let them present the recommendation to product.

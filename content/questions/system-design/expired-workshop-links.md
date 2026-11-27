@@ -1,19 +1,19 @@
 ---
-title: A workshop link still opens after registration closes. What evidence would tell you why?
+title: A workshop link still works after registration closes. How would you find why it didn't expire?
 topic: system-design
 roles: [sdet]
 level: senior
 type: scenario
-oneLine: Compare the redirect at closing for a fresh link lookup and a cached one, then isolate the failing layer.
+oneLine: At closing, I'd compare where a fresh lookup and a saved lookup send the browser. I'd use that difference to find where the problem starts.
 looksFor:
-  - Replays the close time with hot and cold lookups and records where the redirect came from.
-  - Uses the stored workshop and expiry to distinguish a stale cache entry from a bad record.
-  - Checks that a new allocation cannot change who owns the existing short code.
-  - Keeps private registration behind authorization even if a short code is known.
-trap: Clearing the cache before each test so the bug only customers see is never exercised.
+  - Test at closing with and without a saved lookup and record where the redirect came from.
+  - Compare the saved workshop and expiry with the cached copy to find which one is wrong.
+  - Check that assigning another workshop a code can't take the existing code away.
+  - Require permission for private registration even when someone knows the code.
+trap: Clearing the cache before every test and missing the failure visitors can see after using a link.
 followUps:
-  - question: The registration link works before closing, but it takes much longer right after the workshop email goes out. What traffic would you replay?
-    answer: I'd replay the expected ratio of lookups to creates with popular and seldom-used codes, and check lookup latency against its own target.
+  - question: The link works before closing but slows down after the workshop email goes out. What traffic would you repeat in a test?
+    answer: I'd use the expected mix of looking up codes and creating new ones. I'd include both popular and rarely used codes. I'd compare lookup times with their own target.
 sources:
   - label: IETF HTTP semantics, Location response field
     url: https://www.rfc-editor.org/rfc/rfc9110.html#section-10.2.2
@@ -21,18 +21,10 @@ sources:
     url: https://cwe.mitre.org/data/definitions/601.html#Potential_Mitigations
 ---
 
-I'd set the clock just before and then at closing. I'd compare an already visited link with
-a fresh lookup and record the response before following it. If only the visited link keeps
-redirecting, I'd check when the cached entry expires. If both still redirect, I'd compare the
-stored expiry and the clock the lookup uses.
+I'd set the clock just before closing and then at closing. I'd compare a lookup that uses a cache, a saved result from an earlier visit, with a fresh lookup. I'd record each response before following any redirect, which sends the browser to another address. If only the previously visited link still redirects, I'd check when its cached result expires. If both redirect, I'd compare the saved expiry time with the clock the lookup uses.
 
-Before closing I'd read the stored destination and check that `Location` keeps the session
-filter and any encoded characters. I'd also check whether another workshop's code allocation
-could have replaced this record. Invalid or unapproved destinations should be rejected when
-saved. A private session still needs authorization and safeguards against guessing its code.
+Before closing, I'd read the saved destination. I'd check that the `Location` header, which tells the browser where to go, keeps the session filter and any encoded characters. I'd check whether assigning a code to another workshop could replace this record. I'd check that saving an invalid or unapproved destination fails. If the session is private, I'd require permission and protections against guessed codes.
 
 ### Example
 
-A workshop link includes a session filter and expires when registration closes. It should
-open the filtered page just before closing and show the expiry response at closing without
-redirecting, even if the link had been visited repeatedly.
+I'd use a workshop link that filters the page to a session and expires at closing. Just before closing, I'd expect the filtered page to open. At closing, I'd expect the expired-link reply with no redirect, even after several earlier visits.

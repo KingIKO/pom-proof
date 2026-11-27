@@ -1,33 +1,27 @@
 ---
-title: Two phones show the same chat in a different order. How would you pin down what happened?
+title: Two phones show the same messages in different orders. How would you find what happened?
 topic: test-design
 roles: [manual-qa, automation, sdet]
 level: mid
 type: scenario
-oneLine: Compare where Room 2 and Room 4 land after reconnecting, then check what the recipient actually got.
+oneLine: After reconnecting, I'd compare the order of Room 2 and Room 4. I'd check what the recipient actually got.
 looksFor:
-  - States what should determine the order of Room 2 and Room 4.
-  - Uses the recipient's chat to check delivery and duplicate messages.
-  - Separates the case of being offline from the case of losing an acknowledgment.
-  - Keeps group and media checks separate from the direct chat case.
-trap: Watching one green status on the sender's phone without checking what the recipient received.
+  - Say what decides the order of Room 2 and Room 4.
+  - Check the recipient's chat to see what arrived and whether anything arrived twice.
+  - Test being offline separately from losing the server's reply to a send.
+  - Keep group chat and attachment checks separate from the direct chat test.
+trap: Trusting the green status on one sender phone without checking what arrived.
 followUps:
-  - question: Room 2 appears in both sender histories but is missing from the recipient's chat. What does that establish?
-    answer: The sender's views agree, but I have no proof of delivery. I'd check whether the service accepted the message and what delivery status the sender sees before the recipient opens the chat.
+  - question: Both sender phones show Room 2, but the recipient doesn't see it. What can you conclude?
+    answer: I know the sender's phones agree. I can't tell whether the recipient got the message. I'd check whether the service accepted it and what status the sender sees before the recipient opens the chat.
 ---
 
-I'd use Room 2 and Room 4 as labels so I can tell the messages apart on every screen. For this
-direct chat, both sender phones should agree on the order after sync. I'd establish whether
-the app promises server acceptance order before calling either display wrong.
+I'd label the messages Room 2 and Room 4 so I can tell them apart on each screen. In a direct chat, both sender phones should show the same order after updating from the service. Before deciding either display is wrong, I'd confirm whether the app sorts messages by when the server accepts them.
 
-I'd check that the sender sees delivery while the recipient's chat is still closed. Then I'd
-open the recipient's chat, count the copies of Room 2, and check that the sender now sees it
-as read. I'd use the same observations when the service accepts a send but the first phone
-loses the acknowledgment. Both phones can agree about the order and still show a duplicate.
-I'd check muted group chats and the attachment-size limit separately if those are in scope.
+I'd check that the sender sees the delivered status while the recipient's chat is closed. I'd open the recipient's chat and count copies of Room 2. I'd check that the sender then sees it marked as read. I'd repeat those checks if the service accepts the send but the first phone misses the acknowledgment, the reply that confirms acceptance. Both phones can agree on order and still show a duplicate.
+
+If muted group chats and the attachment size limit are in scope, I'd test them separately.
 
 ### Example
 
-If the rule sorts by server acceptance, I'd send "Room 2" on the first phone offline, then send
-"Room 4" from the connected phone. Both message lists should settle on Room 4 followed by Room 2
-when the first phone reconnects.
+If the app sorts by server acceptance, I'd send "Room 2" on the first phone while it's offline. I'd then send "Room 4" from the connected phone. Once the first phone reconnects, I'd expect both chats to show Room 4 before Room 2.

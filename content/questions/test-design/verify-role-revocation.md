@@ -1,30 +1,30 @@
 ---
-title: How would you test a role change for someone who is already signed in?
+title: How would you test a role change for someone who's already signed in?
 topic: test-design
 roles: [automation, sdet, senior]
 level: senior
 type: scenario
-oneLine: Define when the new permissions take effect, then use controlled accounts to verify old and new sessions against both denied and retained actions.
+oneLine: I'd agree on when the new permissions take effect. I'd check what test accounts can do in sessions that started before and after the change.
 looksFor:
-  - Establishes the role matrix and when a saved change takes effect.
-  - Uses an existing session and a fresh session for the changed account.
-  - Verifies the actual action outcome and that no unauthorized change is saved.
-  - Uses controls to show that permitted actions and unaffected accounts still work.
-trap: Concluding the permission is gone because the publish button disappears after signing out and back in.
+  - List what each role can do and when a saved role change takes effect.
+  - Test the changed account with an existing sign-in and a new one.
+  - Check whether the service rejects the action and leaves the record unchanged.
+  - Check that actions still work for the changed account where allowed and for accounts whose roles didn't change.
+trap: Assuming publishing is blocked because the button disappears after you sign out and sign back in.
 followUps:
-  - question: What would you do if the product has an agreed propagation window?
-    answer: I'd measure from the event the policy names, check behavior during the window against that policy, and verify denial by the agreed end. I'd record when both the administrative change and the denial were observed.
-  - question: What would you still want to prove if the open page hides the button?
-    answer: I'd check the service response for a test account on the documented interface and confirm the record stayed unchanged. Hiding a button doesn't prove the permission was enforced there.
+  - question: How would you test a role change if the product has an agreed propagation window?
+    answer: I'd start timing from the event the policy names. I'd check the account's actions against that policy during the propagation window, the time allowed for the change to take effect. I'd verify that the service denies the action by the agreed end. I'd record when I saw the admin change and when I saw the denial.
+  - question: If the open page hides the button, what would you still check?
+    answer: I'd check the documented service response for a test account. I'd confirm the record stayed unchanged. If the page hides a button, that alone doesn't show that the service enforces the permission.
 sources:
   - label: OWASP authorization guidance, validate permissions on every request
     url: https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html#validate-the-permissions-on-every-request
 ---
 
-I'd write down which actions the person loses, which they keep, and when the change is supposed to take effect. In a test environment I'd open a session for the affected account before the change and a fresh one afterward. I'd check the outcomes at the service as well as in the interface. I'd also use an unaffected account as a control so a system-wide failure doesn't look like a successful revocation.
+I'd write down which actions the person loses and which they keep. I'd agree on when the change should take effect. In a test environment, I'd sign in as that account before the change and start a fresh session afterward. I'd check what happens at the service and in the interface. I'd also check an account whose role didn't change so a service failure doesn't look like the role change worked.
 
-I'd ask who can answer questions about delayed updates and make the timing expectation part of the test. The app should enforce the agreed rule even if an already-open page hasn't caught up visually.
+I'd find out who can answer questions about delays and include the expected timing in the test. I'd expect the app to enforce that rule even if the open page hasn't updated yet.
 
 ### Example
 
-A newsroom requires an editor demoted to reader to lose publish access as soon as the administrator sees the role change confirmed. I'd check that attempts to publish a test draft from the old and new sessions are denied and that the draft stays private. The demoted user should still be able to read, and an unchanged editor should still be able to publish.
+Suppose a newsroom changes an editor's role to reader. As soon as the administrator sees confirmation, I'd expect that account to lose publishing access. I'd check that neither its old nor its new session can publish a test draft. I'd check that the draft stays private and that the new reader can still read. I'd expect an editor whose role didn't change to still be able to publish.

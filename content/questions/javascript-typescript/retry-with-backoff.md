@@ -1,19 +1,19 @@
 ---
-title: How would you retry a receipt lookup when the read endpoint briefly returns 503?
+title: If a request to read a receipt briefly returns 503, how would you retry it?
 topic: javascript-typescript
 roles: [automation, sdet]
 level: senior
 type: tooling
-oneLine: Retry the eligible read failure within a budget, cap and randomize the wait, and preserve the final error.
+oneLine: I retry a read failure that qualifies for a retry, within an attempt budget. I cap and randomize each wait, and I keep the final error unchanged.
 looksFor:
-  - Chooses retryable failures based on the endpoint contract and operation safety.
-  - Applies capped exponential backoff with jitter and a total attempt limit.
-  - Returns successes promptly and throws the final error unchanged.
-  - Keeps the retry policy separate from test assertions and accounts for per-request timeouts.
-trap: Retrying every failure, including assertion failures and writes that might already have succeeded.
+  - Choose which failures to retry based on the endpoint contract and whether the operation is safe to repeat.
+  - Apply capped exponential backoff with jitter and a total attempt limit.
+  - Return a success right away and throw the final error unchanged.
+  - Keep the retry policy separate from test assertions and account for a timeout on each request.
+trap: Retrying even when a test check failed or a request might already have saved a change.
 followUps:
-  - question: What if the server supplies Retry-After?
-    answer: I'd honor it when it fits the caller's time budget. If it doesn't, I'd surface the failure instead of retrying sooner.
+  - question: What if the server sends a `Retry-After` header?
+    answer: If its wait fits the caller's time budget, I'd honor it. If it doesn't fit, I'd report the failure instead of retrying sooner.
 sources:
   - label: AWS guidance on retry budgets, backoff, and jitter
     url: https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/
@@ -65,16 +65,12 @@ examples:
           export {};
 ---
 
-I'd retry the receipt read on a 503 if the endpoint contract treats that response as temporary.
-The code that checks the HTTP status can translate that response to a specific error. A wrong
-receipt, a bad request, or a failed assertion should fail without a retry.
+If the rules for the receipt endpoint treat a 503 status as temporary, I'd retry the read. The endpoint is where the client sends the request. The code that checks the HTTP status can turn that response into a specific error. A wrong receipt, a bad request, or a failed test check should fail without a retry.
 
-After each eligible failure I'd pick a random delay up to an exponentially growing ceiling,
-with a maximum on that ceiling. The jitter spreads out workers that failed together. I'd set a
-total attempt budget, give each real request a timeout, and throw the last error if the attempts run
-out. I'd apply the helper to the read alone so a test can't hide a product defect by rerunning.
+After each eligible failure, I'd wait for a random delay. The delay can go up to a ceiling that grows by a fixed factor after each attempt. The ceiling itself has a maximum. This pattern is called capped exponential backoff. The random part is called jitter, and it spreads out workers that failed together.
+
+I'd set a total attempt budget and give each real request a timeout. If the attempts run out, I throw the last error. I'd apply the helper to the read alone. That way a test can't hide a product defect by rerunning.
 
 ### Example
 
-The read stub fails three times, then returns `R-18`. With a fixed random draw of 0.5, the test sees
-waits of 50, 100, and 125 milliseconds, without sleeping.
+The read stub, a stand-in for the real read, fails three times and then returns `R-18`. The test fixes the random draw at 0.5. It then sees waits of 50, 100, and 125 milliseconds, without actually sleeping.

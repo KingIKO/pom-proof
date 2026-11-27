@@ -1,21 +1,19 @@
 ---
-title: Every generated late-fee test passes, including one that charges on day one. What would you keep?
+title: "Generated late-fee tests pass when the app charges too early. Which tests would you keep?"
 topic: ai-testing
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Keep only tests that fail on a violation of the fee policy and that the team can safely run and maintain.
+oneLine: "I'd keep a test only if it catches a fee policy violation and the team can run and maintain it safely."
 looksFor:
-  - Shows that the day-one check fails against the build that charges too early.
-  - Gets the expected charge from the written fee policy.
-  - Replaces unsafe fixtures before anyone runs or shares the draft.
-  - Asks the maintainer to show the draft runs with the team's existing helpers and checks.
-trap: Treating a passing generated suite as proof that its expected results are correct.
+  - "Show that the day-one check fails on the build that charges too early."
+  - "Work out the expected charge from the written policy."
+  - "Replace unsafe test data before anyone runs or shares the draft."
+  - "Ask the maintainer to run the draft with the team's existing helpers and checks."
+trap: "Assuming a passing set of generated tests has the right expected results."
 followUps:
-  - question: After you fix day one, the same generated check still passes with a late fee of one cent. What does it need to assert?
-    answer: >-
-      I'd check that the amount on day one is exactly zero. Then I'd run it against the
-      one-cent version and confirm the failure comes from that assertion.
+  - question: "After fixing day one, the test still passes with a one-cent charge. What should it check?"
+    answer: "I'd check that the amount on day one is exactly zero. I'd run the test on the one-cent version and make sure that specific check fails."
 sources:
   - label: On the evaluation of LLM unit tests, unresolved API symbols (accessed 2026-11-27)
     url: https://arxiv.org/html/2406.18181
@@ -27,18 +25,12 @@ sources:
     url: https://airc.nist.gov/airmf-resources/playbook/govern/
 ---
 
-I'd discard the day-one expectation if the rule says that day is free. I'd replace it with
-an assertion for zero and show it fails on the version that charges early. A test that checks
-only for a returned number wouldn't catch that problem.
+If the policy says the first late day is free, I'd replace the draft's expected charge with zero. I'd run it against the version that charges early and check that it fails. A test that accepts any number can't catch the wrong amount.
 
-I'd review what the draft runs with before executing it. If it contains real patron details or
-credentials, I'd replace them with fictional records. I'd ask the person responsible for fee
-tests to check how the fixture fits the suite and to own future policy changes. The usual lint
-and type checks can flag convention and helper mistakes. A local run can expose setup errors
-those checks miss.
+Before I run the draft, I'd review the test's fixtures, the data and setup it needs to run. If the draft contains real patron details or credentials, I'd replace them with fictional data. I'd ask the person who owns fee tests to review the setup and keep the test up to date when the policy changes.
+
+I'd run lint and type checks. These can flag problems with our code conventions or how the draft calls a helper. I'd also run the test locally to catch setup errors those checks miss.
 
 ### Example
 
-The first late day is free, but a draft expects a fee immediately because that's what the current
-code does. I'd correct the expected result and prove the test fails on that faulty version. If
-the test only asserts that a numeric value came back, I'd replace it with the expected zero.
+The first late day is free. The draft expects an immediate fee because the app charges one. I'd correct the expected result and show the test fails on the faulty version. If the test only checks that the app returns a number, I'd change it to check for exactly zero.

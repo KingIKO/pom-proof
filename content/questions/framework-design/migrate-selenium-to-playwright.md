@@ -1,19 +1,19 @@
 ---
-title: A Java Selenium suite takes forty minutes. How would you pilot Playwright?
+title: "A Java Selenium suite takes forty minutes. How would you try Playwright before switching?"
 topic: framework-design
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: Measure the existing suite, run a representative pilot in parallel, and migrate by verified coverage.
+oneLine: "I measure the existing tests and try a representative set in both tools. I remove an old test only after its replacement proves it covers the risk."
 looksFor:
-  - Measures reliability, duration, diagnosis, and migration cost.
-  - Includes a hard flow from the real browser matrix.
-  - Rewrites tests using Playwright locators and assertions.
-  - Defines the evidence required to retire old checks.
-trap: Translating every test line by line before proving the new suite can cover the required browsers.
+  - "Measure run time, first-attempt passes, time to find the cause, and cost to move the tests."
+  - "Include a difficult flow on browsers the team actually supports."
+  - "Use Playwright's ways of finding elements and checking their state."
+  - "Say what evidence you need before removing old tests."
+trap: "Copying every Selenium step before proving Playwright can test the required browsers."
 followUps:
-  - question: The new invoice export test runs faster, but only Selenium can run it on a required browser build. Would you remove the Selenium case?
-    answer: I'd keep that run in Selenium until its browser coverage has a verified replacement or the support policy changes. Then I'd check whether the faster runs justify maintaining both versions in the meantime.
+  - question: "Invoice export runs faster in Playwright, but only Selenium runs it on a required browser build. Would you remove it?"
+    answer: "I'd keep that run in Selenium until a verified replacement covers that browser or the support policy changes. I'd check whether the faster runs justify keeping both versions in the meantime."
 sources:
   - label: Playwright locators
     url: https://playwright.dev/docs/locators
@@ -23,10 +23,10 @@ sources:
     url: https://playwright.dev/docs/browsers
 ---
 
-I'd measure where the forty minutes go, how many checks pass on the first attempt, and how long a failure takes to diagnose. Then I'd choose a slice that includes a routine flow and a hard one, and confirm we can still test the required browsers. In the pilot I'd write user-facing locators and retrying assertions where they fit instead of carrying over every explicit wait.
+I'd measure where the forty minutes go. I'd count first-attempt passes and time how long a failure takes to explain. I'd choose a routine flow and a difficult one for the pilot, a small trial before switching. I'd check that I can still test the required browsers.
 
-I'd run both suites on the same changes and show that the new checks catch the important known failures. I would remove redundant cases instead of porting them all. I'd retire each old slice once the replacement handles its risk, runs reliably in CI, and has an owner.
+I'd write locators that find controls by what users see, such as names. Where it fits, I'd use retrying assertions, checks that try again while the page updates, instead of copying every wait. I'd run both suites on the same changes and show that the new tests catch important known failures. I'd remove duplicates instead of moving them all. I'd retire each old group after its replacement covers the risk, passes reliably in automated runs, and has an owner.
 
 ### Example
 
-I might pilot sign-in and a delayed invoice export. If the export suite is slow because the service takes minutes to prepare the file, changing browser libraries alone won't make that wait disappear.
+I might try sign-in and a delayed invoice export. If the service takes minutes to prepare the file, switching browser tools alone won't make my export test stop waiting for it.

@@ -1,33 +1,25 @@
 ---
-title: A shopper sees a payment timeout on the last item. What would you check before they try again?
+title: Payment times out on the last item in stock. What would you check before the shopper pays again?
 topic: test-design
 roles: [manual-qa, automation, sdet]
 level: mid
 type: scenario
-oneLine: Find out whether the $42 attempt already bought the last unit before asking the shopper to pay again.
+oneLine: Before asking the shopper to pay again, I'd check whether the $42 payment already bought the last unit.
 looksFor:
-  - Looks up the same attempt in the provider, order and stock records.
-  - Explains when the last unit should stay held and when it should be released.
-  - Works out the $42 total independently of checkout.
-  - Checks that repeating the purchase leaves one charge and one paid order.
-trap: Checking the confirmation screen while a charge or reserved item remains in the wrong state.
+  - Find the same attempt in the payment provider's records and in order and stock records.
+  - Explain when the store should hold the last item and when it should release it.
+  - Calculate the $42 total without using the checkout result.
+  - Check that a retry leaves one charge and one paid order.
+trap: Checking the confirmation screen alone while the charge or stock reservation is still wrong.
 followUps:
-  - question: The provider confirms $42 but a second cart can reserve the last unit. What would you check?
-    answer: I'd look up which order owns the unit and when the first hold changed. I'd use two test carts to see if the hold can expire before the successful charge is reflected in the order.
+  - question: The provider confirms $42, but another cart can reserve the last unit. What would you check?
+    answer: I'd find which order holds the unit and when the first hold changed. I'd use two test carts to see if the hold can expire before the order records the charge.
 ---
 
-I'd look for the payment that matches the order before testing the retry button. If the provider
-already took $42, that attempt should end with one paid order and one unit sold. I'd check the
-total against the discount and tax rules, including how rounding is handled, and make sure the
-unit never becomes sellable to a second cart while the first purchase is being settled.
+Before testing the retry button, I'd find the payment that matches the order. If the payment provider already took $42, I'd expect one paid order and one unit sold. I'd calculate the expected total from the discount and tax rules. I'd include how the service rounds the amount. I'd check that a second cart can't buy the unit while the first payment is still going through.
 
-If there is no confirmed result, I'd ask which payment methods can still settle and when the
-shop considers the purchase abandoned. A confirmed decline and an expired cart should release
-the hold according to the shop's rules. I'd settle those cases before spending time on layout.
+If the outcome is unknown, I'd ask which payment methods might still go through. I'd also ask when the shop considers the purchase abandoned. If the payment is declined or the cart expires, I'd expect the item hold to end according to the shop's rules. I'd work through these cases before checking the layout.
 
 ### Example
 
-Say a $50 item has a $10 discount and 5 percent tax on the discounted amount. I'd expect a $42
-charge. In the payment sandbox I'd arrange for the gateway to accept that amount but for checkout
-to miss the reply. Retrying the same purchase should leave one paid order, one charge of $42 and
-one unit deducted.
+I'd use a $50 item with a $10 discount and 5 percent tax on the discounted amount. I'd expect a $42 charge. In the payment sandbox, the provider's test environment, I'd have the gateway accept the amount without checkout receiving the reply. After retrying the same purchase, I'd expect one paid order and one charge of $42. I'd check that stock went down by one unit.

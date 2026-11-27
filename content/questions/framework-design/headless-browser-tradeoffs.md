@@ -1,19 +1,19 @@
 ---
-title: Packing slip P218 loses its heading in windowless CI. What would you compare with a headed run?
+title: "Packing slip P218 loses its heading in headless CI. What would you compare with a headed run?"
 topic: framework-design
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Compare equivalent browser setups and capture the headless run's actual viewport, rendering, and failure evidence.
+oneLine: "I match the two browser setups. I save the actual page size, how the page looks, and the evidence from the failure."
 looksFor:
-  - Explains what headless execution removes.
-  - Checks browser builds, viewport, fonts, and media settings.
-  - Keeps artifacts from the failing run.
-  - Tests one suspected difference at a time.
-trap: Changing the CI test to headed mode without finding which setting exposed the problem.
+  - "Explain what a browser runs without in headless mode."
+  - "Compare browser versions, page area, fonts, and media settings."
+  - "Keep the saved files that show what went wrong."
+  - "Change one setting at a time."
+trap: "Switching to a visible browser in CI without finding which setting exposed the problem."
 followUps:
-  - question: P218 passes locally, but CI captured it at a narrower viewport. Which run would you do next?
-    answer: I'd rerun the same build locally with the CI viewport and fonts, then compare headed and headless captures. I'd keep headless as the normal CI mode while I isolate the difference.
+  - question: "P218 passes locally, but the automated run used a narrower page area. What would you try next?"
+    answer: "I'd rerun the same build locally using the same page area and fonts. I'd compare screenshots with and without a browser window. I'd keep headless as the usual mode for automated tests while finding what changed."
 sources:
   - label: Playwright browsers and Chromium headless modes
     url: https://playwright.dev/docs/browsers
@@ -93,10 +93,12 @@ examples:
           }
 ---
 
-Headless runs a browser rendering engine without a visible window, which fits unattended CI. I'd first compare the exact browser builds and launch options. Playwright can use a separate Chromium headless shell by default; choosing the Chromium channel lets its regular Chromium build run headless. I'd check viewport, fonts, and media settings before blaming the difference on a missing window.
+Headless mode runs the browser's rendering engine without showing a window. A headed run shows the browser window. I can use headless mode for continuous integration (CI), where automated jobs run unattended. I'd compare exact browser builds and startup settings first.
 
-I'd retain an image and useful logs from the failing run, then repeat it with the same build and data. Once I can reproduce it, I'd vary one setting at a time.
+Playwright can use a separate Chromium headless shell by default. If I select the Chromium channel, I can run regular Chromium without a window.
+
+I'd check the viewport, the area available to the page, along with fonts and media settings such as print or screen. I'd save a screenshot and useful logs from the failure. I'd repeat the run with the same build and data. When I can reproduce it, I'd change one setting at a time.
 
 ### Example
 
-The local packing slip page serves a heading with the order number. Each check expects `Packing slip P218`. Publish `test-results` from failed CI runs so the screenshot survives. Compare it with a headed capture at a measured matching viewport.
+My local page shows the order number in its packing slip heading. I expect `Packing slip P218`. I'd upload `test-results` from failed CI runs so I keep the screenshot. I'd compare it with a screenshot from a visible browser at the same measured viewport.

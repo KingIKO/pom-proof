@@ -1,19 +1,19 @@
 ---
-title: An order filter test sleeps for five seconds. What would you wait for instead?
+title: A test waits five seconds after filtering orders. What would tell you it's ready to continue?
 topic: locators-waits
 roles: [manual-qa, automation, sdet]
 level: junior
 type: tooling
-oneLine: Wait for the specific result that allows the next step to run.
+oneLine: I wait for the specific result that lets the next step run.
 looksFor:
-  - Explains why a fixed delay can be too long and still fail.
-  - Uses a visible result tied to the submitted query.
-  - Investigates a persistent timeout before raising it.
-  - Distinguishes synchronization from deliberately testing time.
-trap: Increasing the sleep without seeing whether the order arrives or the app is failing.
+  - Explain why a fixed delay can be too long and still fail.
+  - Use a visible result tied to the submitted query.
+  - Investigate a timeout that keeps failing before raising it.
+  - Tell synchronization, which means waiting until the app is ready, apart from deliberately testing time.
+trap: Making the sleep longer without checking whether the order arrives or the app is failing.
 followUps:
-  - question: A104 returns in 200 milliseconds, but Search is meant to stay disabled for one second. Does waiting for the row check that rule?
-    answer: No. I'd check the disabled period separately, with a controllable clock if it reaches the timer the app uses. I'd measure elapsed time only when the actual dependency's timing is part of the requirement.
+  - question: Row A104 appears after 200 milliseconds. If Search must stay disabled for one second, does waiting for that row check the timing rule?
+    answer: No. I'd check the disabled period separately. If a clock that the test controls reaches the timer the app uses, I'd use that clock. I'd measure elapsed time only when the actual dependency's timing is part of the requirement.
 sources:
   - label: Playwright actionability and retrying assertions
     url: https://playwright.dev/docs/actionability
@@ -76,7 +76,9 @@ examples:
           }
 ---
 
-A fixed sleep leaves me waiting after a fast result and can still end before a slow one. I'd find the state the next step actually needs. In an order search that is the answer to the current filter, rather than just a table that may show old rows. I'd wait for that state with a bounded assertion or explicit wait.
+A fixed sleep pauses the test for a set time. After a fast result, it leaves me waiting. Before a slow result, it can still end too early. So I'd find the state the next step actually needs.
+
+In an order search, that state is the answer to the current filter. A table alone isn't enough, because it may still show old rows. I'd wait for that state with a bounded assertion or an explicit wait. Both check again and again until the state appears or a time limit runs out.
 
 If somebody suggests a longer sleep, I'd compare the failed attempt with a good one. If the search response never came back, waiting longer won't fix it. If the test read a previous result, we can wait for the right one.
 

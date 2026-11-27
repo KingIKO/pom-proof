@@ -4,16 +4,16 @@ topic: api
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: "Make a failed catalog assertion block the build even when the pipeline still needs to upload its test report."
+oneLine: "I'd make the build fail when the catalog smoke test, a quick check of basic behavior, fails. I'd still upload the test report."
 looksFor:
-  - "Runs an exported collection with a pinned command-line runner."
-  - "Supplies credentials without committing or printing them."
-  - "Publishes JUnit results and keeps a failed assertion fatal."
-  - "Explains when complex fixtures and setup belong in code."
-trap: "Publishing a report while suppressing the runner's nonzero exit code."
+  - "Export the collection and run it with an exact version of the command-line runner."
+  - "Supply credentials without saving them in Git or printing them."
+  - "Publish JUnit results without letting a failed check pass the job."
+  - "Explain when to move complex test data and setup into code."
+trap: "Publishing a test report but hiding the failure code the runner sent back."
 followUps:
-  - question: "Your team wants the full failure report. Should you remove --bail?"
-    answer: "Yes, if they want Newman to keep running after the first failed test. Postman's guide describes --bail as stopping the run and exiting with status 1. Newman's CLI source shows that a failed test already sets exit status 1 without the flag, unless exit-code suppression is enabled."
+  - question: "If the team wants the full failure report, would you remove --bail?"
+    answer: "I'd remove it if the team wants Newman to continue after the first failed check. Postman documents that --bail stops the run and exits with status 1. Newman's code still exits with status 1 for a failed check without that flag, unless the job suppresses failure codes."
 sources:
   - label: Postman guide, stopping a run on failure
     url: https://learning.postman.com/docs/reference/newman-cli/command-line-integration-with-newman/
@@ -39,10 +39,10 @@ examples:
           });
 ---
 
-For an existing Newman job I'd export the collection as v2.1 JSON, run it with a pinned version, and supply the test credential from the CI secret store. I'd keep the token out of the collection and exported environment. The job can pass it with `--env-var` through a masked secret variable and with command tracing disabled.
+For an existing Newman job, I'd export the Postman collection, a saved group of requests, as v2.1 JSON. I'd run it with a fixed Newman version. I'd get the test credential from the CI secret store. I'd keep it out of the saved collection and exported environment. I'd pass it with `--env-var` using a masked secret and turn off command tracing so the job doesn't print it.
 
-I'd keep Newman's failure exit code and publish JUnit XML even on failure. Newman's documentation points new projects to the Postman CLI. I'd move a growing suite into code if it needed reusable data builders or more control over setup and cleanup.
+I'd preserve Newman's failure exit code and publish the JUnit XML test report even when the run fails. Newman's docs point new projects to the Postman CLI. If the suite needs reusable code to build test data or more control over setup and cleanup, I'd move it into code.
 
 ### Example
 
-Attach the script to the local catalog request, which uses `{{catalogToken}}` for authorization. Run `newman run catalog.json -r cli,junit --reporter-junit-export catalog.xml` with `--env-var "catalogToken=$CATALOG_TOKEN"` from the job's secret environment. If `CI-NOTEBOOK` is unavailable, the assertion should fail the job.
+I'd attach the script to the local catalog request that uses `{{catalogToken}}` to authorize the call. I'd run `newman run catalog.json -r cli,junit --reporter-junit-export catalog.xml` and add `--env-var "catalogToken=$CATALOG_TOKEN"` using the job's secret environment. If `CI-NOTEBOOK` is unavailable, I'd expect the check to fail the job.

@@ -1,19 +1,19 @@
 ---
-title: Support and billing disagree about Plus access on June 30. Which plan-change scenario would you keep?
+title: "Support and billing disagree about Plus access on June 30. Which plan-change scenario would you keep?"
 topic: bdd
 roles: [sdet, senior]
 level: senior
 type: concept
-oneLine: Keep the example that settles when Plus access ends and move the plan selector check to a plain test.
+oneLine: "I'd keep the example that settles when Plus access ends. I'd move the plan selector check to a plain test."
 looksFor:
-  - Uses the July 1 renewal to settle a decision before implementation.
-  - Checks whether the people who own the downgrade policy use the example.
-  - Recognizes when a feature file has become a brittle click script.
-  - Preserves the selector assertion if it moves to a plain test.
-trap: Preserving every feature file because the runner can still execute it.
+  - "Use the July 1 renewal example to agree on the policy before coding."
+  - "Check whether the people who own the policy use the example."
+  - "Recognize when a feature file only repeats a series of clicks that changes with the layout."
+  - "If you move the plan selector to a plain test, keep the assertion that it opens."
+trap: "Keeping every written scenario just because the test runner can still run it."
 followUps:
-  - question: The July 1 example settles the access question, but moving the selector breaks its automation. What would you keep?
-    answer: I'd keep the July 1 example for the next policy discussion and repair or replace the automation that checks the cutoff. I'd give the selector its own test if we still need that behavior covered.
+  - question: "The July 1 example settles the policy, but moving the selector breaks the test. What would you keep?"
+    answer: "I'd keep the July 1 example for policy discussions. I'd repair or replace the check for when access ends. If we still need to check that the selector opens, I'd give it a separate test."
 sources:
   - label: Cucumber, discovery and formulation
     url: https://cucumber.io/docs/bdd/
@@ -35,18 +35,10 @@ examples:
               And the confirmation shows Basic starting on July 1
 ---
 
-I'd bring the July 1 example to support, billing, product and engineering before the next
-change. If they can use it to agree that a reader keeps Plus on June 30 and sees Basic start
-on July 1, that scenario has a reason to stay. I'd see whether the team comes back to it when
-the rule changes.
+Before the next change, I'd bring the July 1 example to support, billing, product, and engineering. I'd ask whether the example helps them agree that a reader keeps Plus on June 30 and gets Basic on July 1. If the example helps them reach that agreement, I'd keep the scenario. I'd watch whether the team returns to it when the policy changes.
 
-I'd open the feature file for the plan selector and see what it proves. If it only walks
-through controls, engineers can keep the useful assertion in a plain test. When QA writes
-feature files after coding and moving a button breaks their steps, keeping them in Gherkin
-does little to help people agree on the policy.
+I'd read the feature file for the plan selector, the control where a reader picks a plan. If it only lists clicks, I'd move the useful assertion, or check, into a plain test. Gherkin is the format for writing scenarios people can discuss. If QA writes them after coding and a moved button breaks them, that format does little to help the team agree on policy.
 
 ### Example
 
-Billing and support care whether a paid reader loses access immediately on a downgrade. The
-scenario captures the decision to keep access through the paid period. A separate test can
-check that the plan selector opens without making that click part of the policy.
+I'd ask billing and support whether a paid reader loses Plus the moment they downgrade. I'd record the decision to keep access through the paid period. I'd use a separate test to check that the plan selector opens.

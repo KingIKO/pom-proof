@@ -1,22 +1,19 @@
 ---
-title: A polished incident summary gets the delivery count wrong. How would you make that fail the evaluation?
+title: "An incident summary reads well but gives the wrong delivery count. How should the evaluation catch that?"
 topic: ai-testing
 roles: [sdet]
 level: senior
 type: concept
-oneLine: Make a wrong count fail on its own and reserve subjective scoring for how well the summary explains the incident.
+oneLine: "I'd make the wrong count fail by itself. I'd score how clearly the summary explains the incident separately."
 looksFor:
-  - Gives verifiable facts their own pass condition.
-  - Tells acceptable paraphrases from factual disagreement with the record.
-  - Tests a model grader with cases that expose length or order preferences.
-  - Uses a recorded set of cases and rubric to compare releases on equal terms.
-trap: Letting a model's single overall score hide an incorrect fact.
+  - "Check facts against the record and give them their own pass condition."
+  - "Accept different wording when it still matches the record."
+  - "Test whether the model grader favors longer answers or one position in a pair."
+  - "Save the cases and scoring rules so each release faces the same evaluation."
+trap: "Letting a single score from a model hide a wrong fact."
 followUps:
-  - question: Two summaries correctly say seven deliveries moved, but the grader prefers the one with extra wording. Would you trust that score?
-    answer: >-
-      I'd ask reviewers to judge whether the extra wording makes the cause or reschedule clearer.
-      I'd test the same facts at both lengths and swap the order of the pair before treating the
-      grader's preference as evidence.
+  - question: "Both summaries say seven deliveries moved, but the grader favors the longer one. Would you trust the score?"
+    answer: "I'd ask reviewers whether the extra words clarify the cause or the schedule change. I'd check the same facts at both lengths. I'd also swap the order before relying on the grader's preference."
 sources:
   - label: JSON Schema, object properties and required fields (accessed 2026-11-27)
     url: https://json-schema.org/understanding-json-schema/reference/object
@@ -28,17 +25,10 @@ sources:
     url: https://arxiv.org/abs/2306.05685
 ---
 
-I'd make delivery count a required field and compare it directly with the incident record.
-That check fails even if the narrative reads well. For the free-text summary, different wording
-is fine as long as it conveys the same facts the reviewer marked as necessary.
+I'd make delivery count a required field, so the response must include it. I'd compare its value directly with the incident record. If the count is wrong, the check fails even when the rest reads well. In the free-text summary, I'd accept different words if they convey every fact the reviewer marked as necessary.
 
-I'd use the rubric for decisions that aren't exact matches, like whether the cause is clear.
-I'd compare model grader decisions with human labels and sample both passes and failures.
-To see what a new prompt or model changed, I'd score both releases against the same recorded
-cases, references, and rubric.
+I'd use a rubric, a set of scoring rules, for judgments such as how clearly the summary gives the cause. I'd compare a model grader's decisions with people's scores on a sample of passes and failures. I'd score both releases with the same saved cases and rubric. I'd use the same reference answers, the expected answers I grade against.
 
 ### Example
 
-The source record says a van broke down and seven deliveries moved to the following day. I'd
-check the count against the record. A reviewer or calibrated grader can assess whether the
-summary makes the cause and schedule change clear without getting credit for extra wording.
+The record says a van broke down and seven deliveries moved to the following day. I'd check the count against the record. I'd ask a reviewer or a grader checked against human scores to judge how clearly the summary explains the cause and schedule change. I wouldn't award extra points for length.

@@ -1,21 +1,19 @@
 ---
-title: The delivery bot promised a ticket, but the support queue is empty. What should the tests prove?
+title: "The delivery bot promised a ticket, but the support queue is empty. What should the tests prove?"
 topic: ai-testing
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: Check that the promise corresponds to a ticket the signed-in customer actually owns.
+oneLine: "I'd check that the app saved the ticket in the right queue and that it belongs to the signed-in customer."
 looksFor:
-  - Separates the visible reply from evidence of a saved ticket and correct queue.
-  - Checks that the application enforces permissions even when model output varies.
-  - Uses support-reviewed cases to distinguish accurate promises from unsupported ones.
-  - Compares versions on the same cases and watches for missed handoffs after release.
-trap: Signing off because one well-worded delivery question got a good answer.
+  - "Check the saved ticket and its queue separately from the reply the customer sees."
+  - "Check that the app enforces permissions even when the model responds differently."
+  - "Use cases support has reviewed to tell backed-up promises apart from claims the app can't verify."
+  - "Compare versions on the same cases and watch for missed transfers to support after release."
+trap: "Approving a chatbot because it gave a good answer to one clear delivery question."
 followUps:
-  - question: What would you monitor after launch?
-    answer: >-
-      I'd track handoffs and customer reports, then review a privacy-approved sample for incorrect
-      advice and missed escalations. I'd turn confirmed cases into regression examples.
+  - question: "What would you watch for after release?"
+    answer: "I'd track transfers to support and customer reports. I'd review a sample approved for privacy to look for wrong advice or missed transfers. I'd turn confirmed cases into regression examples, test cases that catch the same problem if it returns."
 sources:
   - label: OpenAI, evaluation design and continuous evaluation (accessed 2026-11-27)
     url: https://developers.openai.com/api/docs/guides/evaluation-best-practices
@@ -27,18 +25,10 @@ sources:
     url: https://airc.nist.gov/airmf-resources/playbook/manage/
 ---
 
-I'd test sign-in on its own and stub the model's request to open a ticket. Then I'd check for one
-saved ticket in the right queue under the signed-in customer's account. A reply can be graded
-separately for policy accuracy and for claiming only actions the app actually completed.
+I'd test sign-in separately. I'd stub the model, meaning I'd supply a known request to open a ticket instead of waiting for the model to make one. I'd check that the app saves one ticket in the right queue under the signed-in customer's account. I'd score the reply separately for whether it follows policy and claims only things the app actually did.
 
-I'd work with support to grade a fixed set of conversations, group the results by case type, and
-include cases where private details must stay private or untrusted text must stay data. The app
-still owns permission checks. I'd use the cases to compare prompt or model changes and watch for
-missed handoffs in production.
+I'd ask support to grade a fixed set of conversations and group the results by case type. I'd include cases where private details must stay private. I'd also check that the app treats untrusted text as data instead of instructions. The app checks permissions even if the model changes what it says. I'd use the same cases to compare prompts or models and watch for missed transfers once the bot is live.
 
 ### Example
 
-In a synthetic conversation, the shipping record shows a parcel is late but gives no revised
-arrival date. A good reply acknowledges the delay without inventing a date. If the customer asks
-for a ticket after signing in, my integration test checks the new ticket's queue and confirms
-that it belongs to the signed-in account.
+I'd use a fictional conversation about a late parcel. If the shipping record gives no new date, the reply should acknowledge the delay without making one up. If the signed-in customer asks for a ticket, my integration test checks that the app saves it in the right queue under that account.
