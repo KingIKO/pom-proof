@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import { Worker } from 'node:worker_threads';
 import { parse as parseJava } from 'java-parser';
 import initSqlJs from 'sql.js';
 import ts from 'typescript';
@@ -191,30 +192,67 @@ type SqlIterator = { next(): IteratorResult<SqlStatement>; getRemainingSQL(): st
 type SqlDatabase = { iterateStatements(sql: string): SqlIterator; close(): void };
 let sqlite: { Database: new () => unknown } | undefined;
 
-/** Index just past the first top-level semicolon, skipping quotes and comments. */
-function statementEnd(sql: string) {
-  for (let index = 0; index < sql.length; index += 1) {
-    const char = sql[index];
-    const close = ({ "'": "'", '"': '"', '`': '`', '[': ']' } as Record<string, string>)[char];
-    if (close) index = sql.indexOf(close, index + 1);
-    else if (sql.startsWith('--', index)) index = sql.indexOf('\n', index);
-    else if (sql.startsWith('/*', index)) index = sql.indexOf('*/', index) + 1;
-    else if (char === ';') return index + 1;
-    if (index < 0) return sql.length;
+type SqlScan = { end: number; unclosed?: { what: string; at: number } };
+
+/**
+ * Where the first statement of `sql` ends: just past its first semicolon outside strings, quoted
+ * identifiers and comments, or at the end of input. A string, quoted identifier or block comment
+ * left open runs to the end of input and comes back as `unclosed`; a line comment may end the
+ * input. Every step moves the index forward, so the scan always stops, and `end` is at least 1
+ * for any non-empty input.
+ */
+function statementEnd(sql: string): SqlScan {
+  const quotes: Record<string, [string, string]> = {
+    "'": ["'", 'string'], '"': ['"', 'quoted identifier'], '`': ['`', 'quoted identifier'], '[': [']', 'quoted identifier'],
+  };
+  let index = 0;
+  while (index < sql.length) {
+    const block = sql.startsWith('/*', index);
+    const quote = quotes[sql[index]];
+    if (quote || block) {
+      const [close, what] = quote ?? ['*/', 'block comment'];
+      const found = sql.indexOf(close, index + (block ? 2 : 1));
+      if (found < 0) return { end: sql.length, unclosed: { what, at: index } };
+      index = found + close.length;
+    } else if (sql.startsWith('--', index)) {
+      const found = sql.indexOf('\n', index + 2);
+      if (found < 0) return { end: sql.length };
+      index = found + 1;
+    } else if (sql[index] === ';') {
+      return { end: index + 1 };
+    } else {
+      index += 1;
+    }
   }
-  return sql.length;
+  return { end: sql.length };
 }
 
-const lineOf = (text: string, index: number) => text.slice(0, index).split('\n').length;
+function lineOf(text: string, index: number) {
+  return text.slice(0, index).split('\n').length;
+}
+
+/**
+ * A string, quoted identifier or block comment that is never closed. SQLite rejects the first two
+ * but reads a block comment to the end of input, which would hide the rest of an example.
+ */
+function unclosedSql(code: string): string[] {
+  for (let offset = 0; offset < code.length;) {
+    const { end, unclosed } = statementEnd(code.slice(offset));
+    if (unclosed) return [`line ${lineOf(code, offset + unclosed.at)}: the ${unclosed.what} is not closed`];
+    offset += end;
+  }
+  return [];
+}
 
 /**
  * Prepares and runs each statement in an empty in-memory database, so tables a snippet creates
  * exist for its later statements. "No such table" or "no such column" counts as a pass for that
- * statement (the snippet assumes a schema), and checking continues with the next one.
+ * statement (the snippet assumes a schema), and checking continues with the next one. `engine` is
+ * passed in so the plants can run this in a worker thread.
  */
-function sqlProblems(code: string): string[] {
-  if (!sqlite) throw new Error('sql.js is not loaded');
-  const db = new sqlite.Database() as SqlDatabase;
+function sqliteProblems(code: string, engine: { Database: new () => unknown } | undefined): string[] {
+  if (!engine) throw new Error('sql.js is not loaded');
+  const db = new engine.Database() as SqlDatabase;
   try {
     let offset = 0;
     while (code.slice(offset).trim()) {
@@ -233,13 +271,19 @@ function sqlProblems(code: string): string[] {
         const start = code.length - rest.length + (rest.length - rest.trimStart().length);
         const message = String((error as Error).message ?? error);
         if (!/^no such (?:table|column)\b/i.test(message)) return [`statement at line ${lineOf(code, start)}: ${message}`];
-        offset = code.length - rest.length + statementEnd(rest);
+        // `rest` is a suffix of the text just tried and the scan of non-empty text returns at least 1,
+        // so the offset moves forward or reaches the end.
+        offset = code.length - rest.length + statementEnd(rest).end;
       }
     }
     return [];
   } finally {
     db.close();
   }
+}
+
+function sqlProblems(code: string, engine = sqlite): string[] {
+  return [...sqliteProblems(code, engine), ...unclosedSql(code)];
 }
 
 // ----- YAML and JSON -----
@@ -483,6 +527,36 @@ function requirementProblems(list: DiscoveredQuestion[], allowlist: Record<strin
 
 // ----- plants -----
 
+/**
+ * Evaluates `expression` in a worker thread that declares the given functions, with `workerData`
+ * set to `data`. Rejects after `ms` and stops the worker, so code that loops forever fails its
+ * test instead of blocking the run. The functions must use only globals and each other.
+ */
+function inWorker<T>(functions: Array<string | ((...args: never[]) => unknown)>, expression: string, data: unknown, ms = 4_000): Promise<T> {
+  const source = [
+    "const { parentPort, workerData } = require('node:worker_threads');",
+    ...functions.map(String),
+    `(async () => (${expression}))().then((value) => parentPort.postMessage({ value }), (error) => parentPort.postMessage({ error: String(error) }));`,
+  ].join('\n');
+  return new Promise<T>((resolve, reject) => {
+    const worker = new Worker(source, { eval: true, workerData: data });
+    const timer = setTimeout(() => {
+      void worker.terminate();
+      reject(new Error(`did not finish within ${ms} ms`));
+    }, ms);
+    worker.once('message', (message: { value?: T; error?: string }) => {
+      clearTimeout(timer);
+      void worker.terminate();
+      if (message.error !== undefined) reject(new Error(message.error));
+      else resolve(message.value as T);
+    });
+    worker.once('error', (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+  });
+}
+
 const planted = {
   ts: `import { expect, test } from '@playwright/test';\n\ntest('refund', async ({ page }) => {\n  await page.goto('/refunds');\n  await expect(page.getByRole('heading')).toBeVisible();\n});\n`,
   tsTypeError: `import { test } from '@playwright/test';\n\ntest('refund', async ({ page }) => {\n  await page.goto(42);\n});\n`,
@@ -650,6 +724,71 @@ describe('the example checks catch planted mistakes', () => {
       ['a syntax error after a statement on a missing table', 'SELECT id FROM refunds;\n\nSELECT FROM WHERE;\n', 'statement at line 3: near "FROM": syntax error'],
     ])('reports %s', (_name, code, message) => {
       expect(problemsFor('sql', code).join('\n')).toContain(message);
+    });
+
+    describe('text left open', () => {
+      // Every case runs in its own worker with a time limit, all started together, so a scan that
+      // never stops fails its own test instead of blocking the run.
+      // [case, text, what is left open (null for none), where it opens]
+      const scans: Array<[string, string, string | null, number]> = [
+        ['a block comment', 'SELECT 1 /* note', 'block comment', 9],
+        ['a block comment that only opens', '/*', 'block comment', 0],
+        ['a line comment', 'SELECT 1 -- note', null, 0],
+        ['a string', "SELECT 'open", 'string', 7],
+        ['a string after a doubled quote', "SELECT 'it''s", 'string', 11],
+        ['a double-quoted identifier', 'SELECT "open', 'quoted identifier', 7],
+        ['a backtick identifier', 'SELECT `open', 'quoted identifier', 7],
+        ['a bracketed identifier', 'SELECT [open', 'quoted identifier', 7],
+      ];
+      const closed: Array<[string, string, number]> = [
+        ['a comment marker inside a string', "SELECT '/*'; SELECT 2", 12],
+        ['a semicolon inside a block comment', 'SELECT 1 /* ; */; SELECT 2', 17],
+        ['a doubled quote inside a string', "SELECT 'it''s'; SELECT 2", 15],
+        ['a semicolon after a line comment', 'SELECT 1 -- a; b\n; SELECT 2', 18],
+      ];
+      const checks: Array<[string, string, string | null]> = [
+        ['a block comment after a missing table, the reported hang', 'SELECT id FROM refunds /* unclosed', 'line 1: the block comment is not closed'],
+        ['a block comment that hides later statements', 'SELECT 1;\n/* note\nSELECT 2;\n', 'line 2: the block comment is not closed'],
+        ['a string', "SELECT id FROM refunds WHERE note = 'open", 'line 1: the string is not closed'],
+        ['a string after a statement on a missing table', "SELECT id FROM refunds;\nSELECT 'open", 'line 2: the string is not closed'],
+        ['a double-quoted identifier', 'SELECT "id FROM refunds', 'line 1: the quoted identifier is not closed'],
+        ['a backtick identifier', 'SELECT `id FROM refunds', 'line 1: the quoted identifier is not closed'],
+        ['a bracketed identifier', 'SELECT [id FROM refunds', 'line 1: the quoted identifier is not closed'],
+        ['a line comment that ends the input, which is valid', 'SELECT id FROM refunds -- refunds this week', null],
+      ];
+      const sqlFunctions = [statementEnd, lineOf, unclosedSql, sqliteProblems, sqlProblems];
+      const sqlCall = "sqlProblems(workerData.code, await require(workerData.sqljs)({ locateFile: (file) => require('node:path').join(workerData.dist, file) }))";
+      const sqlPaths = { sqljs: join(root, 'node_modules', 'sql.js'), dist: join(root, 'node_modules', 'sql.js', 'dist') };
+      const runs = new Map<string, Promise<unknown>>();
+      const run = <T>(key: string) => runs.get(key) as Promise<T>;
+
+      beforeAll(() => {
+        const start = (key: string, promise: Promise<unknown>) => {
+          promise.catch(() => {}); // Awaited by its test; this only keeps an early rejection from being unhandled.
+          runs.set(key, promise);
+        };
+        for (const [name, sql] of [...scans, ...closed]) start(`scan:${name}`, inWorker([statementEnd], 'statementEnd(workerData)', sql));
+        for (const [name, code] of checks) start(`check:${name}`, inWorker(sqlFunctions, sqlCall, { code, ...sqlPaths }));
+      });
+
+      it.each(scans)('the scanner stops at the end of input for an unclosed %s', async (name, sql, what, at) => {
+        expect(await run<SqlScan>(`scan:${name}`)).toEqual({ end: sql.length, ...(what ? { unclosed: { what, at } } : {}) });
+      });
+
+      it.each(closed)('the scanner still ends a statement after %s', async (name, _sql, end) => {
+        expect(await run<SqlScan>(`scan:${name}`)).toEqual({ end });
+      });
+
+      it.each(checks)('the SQL check finishes on %s', async (name, _code, message) => {
+        const found = await run<string[]>(`check:${name}`);
+        if (message) expect(found.join('\n')).toContain(message);
+        else expect(found).toEqual([]);
+      });
+
+      it('the time limit turns a scan that never stops into a failure', async () => {
+        await expect(inWorker(['function statementEnd() { for (;;) {} }'], 'statementEnd()', null, 300))
+          .rejects.toThrow('did not finish within 300 ms');
+      });
     });
   });
 
