@@ -2,7 +2,11 @@
 problem: sql/pass-rate-per-release
 ---
 
-Count passed attempts in the numerator and executed attempts in the denominator. A left join from releases keeps the release even when the run table contributes no records. Each attempt counts on its own, so a failed run and its successful retry both contribute to the denominator.
+## What is going on
+
+The dashboard reports the share of executed attempts that passed. Retries count separately. A release with no executions needs a row with an undefined rate so it can be distinguished from a release whose attempts all failed.
+
+## The fix
 
 ```sql
 SELECT r.release_id,
@@ -14,8 +18,41 @@ LEFT JOIN test_runs t ON t.release_id = r.release_id
 GROUP BY r.release_id;
 ```
 
-The visible rates are 66.67 for R14 and 50 for R15. R16 has no rate. Counting run IDs in the denominator agrees on those rows because none is skipped. A release with one pass and one skip should show 100, but that denominator would produce 50. A release with only skips should return `NULL`, which `NULLIF` produces for a zero denominator.
+1. Start from `releases` and left join `test_runs` on `release_id`.
 
-In an interview, explain the difference between a zero rate and an undefined rate. Zero means the release executed tests and none passed. `NULL` means none executed. Multiplying by `100.0` before division keeps this calculation fractional in SQLite, where division of two integers truncates.
+   **Why:** R24 has no run rows in the altered data. An inner join would remove the release, but the dashboard needs to show that it has no rate.
 
-See [SQLite arithmetic expressions](https://www.sqlite.org/lang_expr.html) and [aggregate functions](https://www.sqlite.org/lang_aggfunc.html).
+2. Group by `r.release_id`.
+
+   **Why:** A release can have many attempts, including a failure and a successful retry of the same case. Grouping by release lets both runs count toward one release figure without mixing releases.
+
+3. Sum a `1` for each pass and zero for other outcomes.
+
+   **Why:** A failed run is an execution but contributes nothing to the numerator. R23 has a failed run and a skip, so its pass count is zero.
+
+4. Sum a `1` for each pass or failure in the denominator.
+
+   **Why:** Skipped runs and the left join's empty placeholder add nothing. R21 has three executed attempts even though the run table has four rows for it.
+
+5. Use `NULLIF(..., 0)` on the denominator.
+
+   **Why:** R22 has only skips, so its rate is undefined. `NULLIF` turns the zero denominator into `NULL` so the calculation returns `NULL`, distinct from R23's defined zero rate.
+
+6. Multiply by `100.0` before dividing, then round to two places.
+
+   **Why:** Two passes from three executions should yield 66.67 percent. Using a real operand before division preserves the fraction in SQLite, where integer division truncates.
+
+## Why the tempting answer fails
+
+Counting run IDs gives the same visible rates, 66.67 for R14 and 50 for R15, because no visible run is skipped. R16 still has no rate. In the altered data, R21 has two passes from three executions and one skip, so the decoy wrongly reports 50. With one pass and one skip it would likewise report 50 instead of 100. With only skips it reports zero instead of `NULL`.
+
+## What the interviewer listens for
+
+Explain why zero means there were executions with no passes and why `NULL` means there were no executions. Check both a skip-only release and a release without any run records.
+
+## Sources
+
+- [SQLite arithmetic expressions](https://www.sqlite.org/lang_expr.html)
+- [SQLite aggregate functions](https://www.sqlite.org/lang_aggfunc.html)
+- [SQLite `NULLIF` and `ROUND`](https://www.sqlite.org/lang_corefunc.html)
+- [SQLite outer joins and grouping](https://www.sqlite.org/lang_select.html)

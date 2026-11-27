@@ -2,7 +2,11 @@
 problem: sql/duplicate-user-emails
 ---
 
-Apply `LOWER` to the grouping key, then return that key and the number of user rows it represents. Remove `NULL` addresses before grouping because the check is about recorded addresses. Keep only counts greater than one.
+## What is going on
+
+The account import treats ASCII case variants of an email address as the same address. The report should find two accounts that share an address under that rule. Missing addresses tell us nothing about whether two accounts share one.
+
+## The fix
 
 ```sql
 SELECT LOWER(email) AS normalized_email, COUNT(*) AS user_count
@@ -13,8 +17,39 @@ HAVING COUNT(*) > 1
 ORDER BY normalized_email;
 ```
 
-The decoy lowercases the display value but groups by the raw column. Both queries find the duplicate `returns@example.test` on the visible seed, since its two copies use identical spelling and case. SQLite's default collation keeps upper- and lowercase variants in separate raw groups. Lowercasing the output after that decision cannot combine their counts. Grouping by the same expression being displayed makes the counting rule explicit.
+1. Filter out `NULL` email values before grouping.
 
-An interviewer may ask whether the check should also trim spaces or remove address suffixes. This contract only folds ASCII case; applying any other rule could merge records that the application treats as distinct. SQLite's built-in `LOWER` handles ASCII. [PostgreSQL's version](https://www.postgresql.org/docs/current/functions-string.html) follows the database locale, and [MySQL grouping](https://dev.mysql.com/doc/refman/8.4/en/case-sensitivity.html) can already ignore case depending on the column's collation. Match those settings to the required comparison before porting a data check.
+   **Why:** The two users without addresses would otherwise form a group of two, which would be mistaken for a shared address.
 
-See [SQLite `LOWER`](https://www.sqlite.org/lang_corefunc.html#lower) and [collation rules](https://www.sqlite.org/datatype3.html#collation).
+2. Group by `LOWER(email)` and display that same key.
+
+   **Why:** SQLite's built-in `LOWER` folds ASCII case. `Lee@example.test`, `lee@EXAMPLE.test`, and `LEE@example.test` must contribute to one count, including differences in the domain.
+
+3. Count user rows with `COUNT(*)`.
+
+   **Why:** Each of the three Lee users belongs to the same group. The report needs a count of three users, even when two users give their address with identical spelling.
+
+4. Keep groups with `HAVING COUNT(*) > 1`.
+
+   **Why:** A lone address, such as `Sami@example.test`, must stay out even if it resembles a duplicated one. The count exists at the group level, where `HAVING` can use it.
+
+5. Sort by `normalized_email`.
+
+   **Why:** Groups with different original spellings appear in a predictable order by the exact address the report displays.
+
+## Why the tempting answer fails
+
+The decoy groups by raw `email` and lowercases only for display. The two visible copies of `returns@example.test` have identical case, so the decoy finds them. SQLite's default collation keeps the altered `Lee` variants in separate groups, each too small to qualify. Lowercasing the output cannot combine counts already computed.
+
+## What the interviewer listens for
+
+Name the comparison rule before writing the query. Trimming spaces or removing suffixes could merge addresses the import treats as distinct. When porting, check the comparison rules: PostgreSQL's `LOWER` follows the database locale, and MySQL grouping can already ignore case depending on collation.
+
+## Sources
+
+- [SQLite `LOWER`](https://www.sqlite.org/lang_corefunc.html#lower)
+- [SQLite collation rules](https://www.sqlite.org/datatype3.html#collation)
+- [SQLite grouping and sorting](https://www.sqlite.org/lang_select.html)
+- [SQLite `COUNT`](https://www.sqlite.org/lang_aggfunc.html)
+- [PostgreSQL string functions](https://www.postgresql.org/docs/current/functions-string.html)
+- [MySQL case sensitivity](https://dev.mysql.com/doc/refman/8.4/en/case-sensitivity.html)
