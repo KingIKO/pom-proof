@@ -14,9 +14,13 @@ trap: "Writing a provider-owned snapshot of every response field and calling it 
 followUps:
   - question: "Can a passing contract replace integration tests?"
     answer: "No. I'd still exercise deployed concerns such as routing, credentials, and the flow that crosses multiple services."
+  - question: "The mobile app and warehouse tool release on different days. How would that affect a rename of a return status?"
+    answer: "I'd check the provider against both consumers' current contracts before deploying. If either still needs the old value, I'd keep it until that consumer can switch. If the consumers and provider ship together as one deployable, I'd start with a direct integration test."
 sources:
   - label: "Pact, consumer-driven contracts"
     url: https://docs.pact.io/
+  - label: Pact, when contract tests are a fit
+    url: https://docs.pact.io/getting_started/what_is_pact_good_for
 ---
 
 I'd start with a behavior the client actually uses. The consumer test exercises its code against a test double and captures the interaction that code depends on. The provider then runs verification with the relevant data state to show it can satisfy that interaction. I'd keep unrelated fields flexible so an addition doesn't break a client that ignores it. I still need other tests for business rules and deployed connections.

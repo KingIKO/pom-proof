@@ -481,8 +481,6 @@ const pending = 'pre-existing, to be extended in phase 5 content';
 
 /** Questions the rule applies to that may stay without an example, each with its reason. */
 const withoutExample: Record<string, string> = {
-  'api/playwright-request-fixture': pending,
-  'api/rest-assured-response-checks': pending,
   'automation-strategy/choose-browser-automation-tool': pending,
   'ci-git-docker/docker-for-repeatable-tests': pending,
   'ci-git-docker/git-merge-or-rebase': pending,

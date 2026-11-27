@@ -21,7 +21,7 @@ sources:
     url: https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2
 ---
 
-I look at what the client is asking the server to do. GET asks for a read. PUT typically sets the state of a resource, and DELETE asks to remove it. Repeating an identical request with any of those methods is meant to have the same effect as sending it once. POST has no general promise like that; two identical create requests may make two records.
+I look at what the client is asking the server to do. GET asks for a read. PUT typically sets the state of a resource, and DELETE asks to remove it. Repeating an identical request with any of those methods is meant to have the same effect as sending it once. POST has no general promise like that; two identical create requests may make two records. This tells me whether a client can automatically retry after a timeout with no response; a proxy must not automatically retry a non-idempotent request. For creates that must survive a retry, I'd test the API's [idempotency-key contract](/pom-proof/questions/api/idempotency-keys/).
 
 ### Example
 

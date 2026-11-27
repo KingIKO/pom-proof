@@ -14,6 +14,11 @@ trap: "Sending five invalid fields together and counting one validation error as
 followUps:
   - question: "When would you combine invalid fields?"
     answer: "When the client depends on receiving multiple error details together or the contract promises which error takes precedence."
+  - question: "Which categories would you cover before shipping a new write?"
+    answer: "I'd separate malformed bodies, wrong types, nulls or empty values, just-outside limits and oversized payloads. I'd add forbidden repeats and missing or invalid credentials. Each rejected case should assert its documented status and error, such as 413 for oversized content."
+sources:
+  - label: RFC 9110, HTTP client errors
+    url: https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5
 ---
 
 I start with data that can succeed, then change one field or one bit of setup per test. That helps me tell whether missing values, invalid values, or an incompatible state caused the rejection. I check the error details the client uses and verify the system was left in the expected state. If the operation sends a notification, I also check that no notification was queued on rejection.
