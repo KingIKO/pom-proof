@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { fullMarksText, jsSolution, locatorSource, tableRows, uiProblemPerKind, type ProblemOf } from '../support/answers';
 import { discoverProblems, type DiscoveredProblem } from '../support/problems';
 import { discoverQuestions, questionTitle } from '../support/questions';
-import { questionRow, reviewState } from '../support/review';
+import { expandQuestion, reviewState } from '../support/review';
 import { discoverTracks } from '../support/tracks';
 import { answerStructured, openWorkspace, replaceEditor, resultPanel } from '../support/workspace';
 
@@ -100,7 +100,9 @@ test('a question revealed and rated through the page shows on the list, its trac
   await page.goto('');
   await mainNav(page).getByRole('link', { name: 'Questions', exact: true }).click();
   await expect(reviewState(page, question)).toHaveText('New');
-  await questionRow(page, question).getByRole('link', { name: title, exact: true }).click();
+  // The bank shows the answer inline; "Open page" leads to the question page and its recall gate.
+  const card = await expandQuestion(page, question);
+  await card.getByRole('link', { name: 'Open page', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
 
   const oneLine = page.getByText(String(question.frontmatter.oneLine), { exact: true });

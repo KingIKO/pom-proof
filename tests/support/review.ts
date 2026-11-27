@@ -35,13 +35,27 @@ export async function rateByKeyboard(page: Page, question: DiscoveredQuestion, r
   await leaving;
 }
 
-/** The list row for one question, and its review state text. */
+/**
+ * The bank card for one question, found by its title heading. Titles are not links in the bank: the
+ * card's summary holds the heading, and "Open page" inside the expanded card links to the question page.
+ */
 export function questionRow(page: Page, question: DiscoveredQuestion) {
   return page.getByRole('list', { name: 'Questions' }).getByRole('listitem')
-    .filter({ has: page.getByRole('link', { name: questionTitle(question), exact: true }) });
+    .filter({ has: page.getByRole('heading', { level: 2, name: questionTitle(question), exact: true }) });
 }
 
 export const reviewState = (page: Page, question: DiscoveredQuestion) => questionRow(page, question).locator('[data-review-state]');
+
+/** Expands a bank card by its summary and waits for the inline answer's lead line. */
+export async function expandQuestion(page: Page, question: DiscoveredQuestion) {
+  const card = questionRow(page, question);
+  await expect(card).toHaveCount(1);
+  const oneLine = card.getByText(String(question.frontmatter.oneLine), { exact: true });
+  await expect(oneLine).toBeHidden();
+  await card.getByRole('heading', { level: 2, name: questionTitle(question), exact: true }).click();
+  await expect(oneLine).toBeVisible();
+  return card;
+}
 
 /** The stored review cards, read straight from the browser. */
 export function storedCards(page: Page): Promise<Record<string, { box: number; due: string; seen: number; last: string }>> {

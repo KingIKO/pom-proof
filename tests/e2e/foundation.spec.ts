@@ -4,6 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { discoverProblems, root } from '../support/problems';
 import { discoverQuestions } from '../support/questions';
+import { expandQuestion } from '../support/review';
 
 const prefix = '/pom-proof/';
 const problems = discoverProblems();
@@ -44,6 +45,19 @@ function observeRequests(page: Page) {
   };
 }
 
+/** The page's only h1 sits in the title band at the top of main, under a breadcrumb whose last entry is marked current. */
+async function expectTitleBand(page: Page) {
+  await expect(page.locator('h1'), 'one h1').toHaveCount(1);
+  const band = page.locator('main > .title-band');
+  await expect(band, 'a title band at the top of main').toHaveCount(1);
+  expect(await band.evaluate((element) => element === element.parentElement!.firstElementChild), 'the title band comes first in main').toBe(true);
+  await expect(band.locator('h1')).toBeVisible();
+  const crumbs = band.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('listitem');
+  await expect(crumbs.first()).toBeVisible();
+  expect(await crumbs.count(), 'breadcrumb entries').toBeGreaterThanOrEqual(2);
+  await expect(crumbs.last().locator('[aria-current="page"]')).toHaveCount(1);
+}
+
 test('every problem has a page and an editorial', () => {
   expect(problems.length).toBeGreaterThan(0);
   expect(editorials.sort()).toEqual(problems.map(({ slug }) => slug).sort());
@@ -60,6 +74,7 @@ for (const url of pages) {
     const response = await page.goto(url);
     expect(response?.status()).toBe(200);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expectTitleBand(page);
     await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveCount(4);
     await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
     network.check();
@@ -91,7 +106,8 @@ test('an editorial page links back to its exercise', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Back to exercise' })).toHaveAttribute('href', `${prefix}practice/${problem.kind}/${problem.slug}/`);
 });
 
-test('mobile dark theme navigation, question disclosure, and access checks', async ({ page }) => {
+// The site is light only; a dark system preference must still get the working light page.
+test('mobile navigation with a dark system preference, question disclosure, and access checks', async ({ page }) => {
   const network = observeRequests(page);
   await page.setViewportSize({ width: 375, height: 760 });
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
@@ -104,9 +120,13 @@ test('mobile dark theme navigation, question disclosure, and access checks', asy
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   const question = questions.find(({ id }) => id === 'playwright/independent-checkout-contexts');
   expect(question, 'the sample question').toBeDefined();
+  expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'the light canvas').toBe('rgb(245, 247, 252)');
   const oneLine = String(question!.frontmatter.oneLine);
   await page.getByRole('link', { name: 'Questions' }).click();
-  await page.getByRole('link', { name: String(question!.frontmatter.title), exact: true }).click();
+  const card = await expandQuestion(page, question!);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth), 'an expanded card fits 375px').toBe(375);
+  await card.getByRole('link', { name: 'Open page', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: String(question!.frontmatter.title) })).toBeVisible();
   await expect(page.getByText(oneLine)).toBeHidden();
   await page.getByText('Show answer').click();
   await expect(page.getByText(oneLine)).toBeVisible();
