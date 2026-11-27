@@ -43,7 +43,7 @@ reference:
 decoy: { by: expression, source: "page.getByRole('article').filter({ hasText: 'RC-602' }).getByRole('button', { name: 'Cancel', exact: true }).nth(0)" }
 ---
 
-Use a Playwright-style locator, an expression that finds an element, to find the right `Cancel` button. Match the visible delivery for receipt `RC-602` that is still pending, or waiting to go out. An earlier failed attempt for the same receipt can still have a `Cancel` button.
+Write a Playwright locator, code that starts with `page.` and finds an element, to find the right `Cancel` button. Match the visible delivery for receipt `RC-602` that is still pending, or waiting to go out. An earlier failed attempt for the same receipt can still have a `Cancel` button.
 
 The app stores a delivery status that tests can read. That value stays the same even when the displayed text changes language.
 

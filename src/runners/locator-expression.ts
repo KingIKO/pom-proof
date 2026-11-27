@@ -19,7 +19,7 @@ const playwrightExpression = /^page\s*\.\s*(?:[$\w]+\s*\(|$)/;
 export const locatorSyntaxLabel = {
   css: 'a CSS locator',
   xpath: 'an XPath locator',
-  playwright: 'a Playwright-style locator',
+  playwright: 'a Playwright locator',
 } satisfies Record<LocatorSyntax, string>;
 
 function unquote(literal: string) {

@@ -47,6 +47,6 @@ decoy: { by: expression, source: "page.locator('.actions > button:nth-child(2)')
 
 The support console lists orders `PP104` and `PP105`. In both rows the button shows `Refund`. The button for `PP104` has the accessible name `Refund order PP104`, the name a screen reader can read out. A new layout moves the buttons and may change row order.
 
-Use a Playwright-style locator, an expression that finds an element, to match only the refund button for `PP104`. It must work in every version of the console.
+Write a Playwright locator, code that starts with `page.` and finds an element, to match only the refund button for `PP104`. It must work in every version of the console.
 
 Only this exercise uses the `data-fixture-target` marker. The app does not include it.
