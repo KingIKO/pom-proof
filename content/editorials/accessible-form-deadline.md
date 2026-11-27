@@ -4,41 +4,41 @@ problem: scenario/accessible-form-deadline
 
 ## What is going on
 
-The validation summary changed on the only form people can submit. An error can be present in the markup while someone using a keyboard and screen reader still has no way to find or correct the field.
+The validation summary changed on the only form people can submit. The summary lists problems with the submitted values. The error can appear in the markup even when a keyboard and screen reader user cannot find the invalid field. That person also needs a way to correct it.
 
 ## The answer
 
-1. Confirm the supported screen reader and browser pairing and how an invalid submission should guide someone back to the field.
+1. Confirm how field recovery should work with the supported screen reader and browser pairing.
 
-   **Why:** The pairing sets the environment for the speech check. The recovery rule tells you what focus and announcements should make possible.
+   **Why:** The browser and screen reader pairing tells you where to check what the screen reader says. The expected recovery behavior tells you where focus should go. It also tells you what the user should hear to find the field.
 
-2. Spend six minutes on the full keyboard recovery path and nine on finding and correcting the error with the supported screen reader.
+2. Split testing time between full keyboard recovery and screen reader recovery.
 
-   **Why:** The keyboard run catches an unreachable field. The screen reader run catches a field someone can reach but cannot identify from what they hear.
+   **Why:** The six-minute keyboard run catches an unreachable field. The nine-minute screen reader run checks whether someone can find the error from what they hear and correct it. A field can pass the keyboard check and still fail the screen reader check.
 
-3. Use manual exploratory testing to listen to the actual announcement.
+3. Listen to the actual announcement in a manual exploratory test.
 
-   **Why:** An assertion about text in the markup cannot establish what the supported screen reader spoke.
+   **Why:** A markup check tells you which text the page contains. Only listening tells you what the supported screen reader actually says.
 
-4. Automate the keyboard focus regression in the UI. For example, drive `page.keyboard.press('Tab')` in Playwright TypeScript and assert focus.
+4. Add an automated UI test that checks keyboard focus.
 
-   **Why:** Repeating the actual keystroke detects a focus-order regression that checking for an enabled input would miss.
+   **Why:** A focus-order regression is a change that breaks the working order of keyboard focus. An enabled input can still be out of reach with Tab. For example, a Playwright TypeScript test can press Tab with `page.keyboard.press('Tab')` and check where focus lands.
 
-5. Stop release if the invalid submission traps focus in the summary.
+5. If the invalid submission traps focus in the summary, stop the release.
 
-   **Why:** Affected people cannot correct the form, and there is no alternate submission route.
+   **Why:** Affected people cannot reach the field to correct the form. This release has no other way to submit.
 
-6. Submit one known invalid value by keyboard, observe focus and the announcement, reach and correct the field, then resubmit and verify confirmation.
+6. Test the keyboard path from one known invalid value through observing focus and speech, correcting the field, and checking the resubmission confirmation.
 
-   **Why:** Observe before correcting so you know the user can discover the error without your prior knowledge of the fixture.
+   **Why:** Checking focus and the announcement before making a correction shows whether a user can discover the error without already knowing the test data. A successful keyboard resubmission then shows the user can reach and correct the field.
 
 ## Why the tempting answer fails
 
-The future marketing link cannot settle today's recovery behavior. Repeating pointer success across browsers never tests speech, and UI automation alone leaves that output unchecked. Correcting the value before observing focus and speech erases the error state you need to inspect.
+The future marketing link tells you nothing about how the form helps users recover today. Successful pointer submissions across browsers leave speech untested. UI automation alone also leaves speech unchecked. If you correct the value before checking focus and speech, you lose the error state you need to inspect.
 
 ## What the interviewer listens for
 
-Tie the deadline tradeoff to a task the user must finish. Name the coverage you left unrun when making the release decision.
+Explain which user task matters most for this release and how the deadline affects your plan. When you make the release decision, name the checks you did not run.
 
 ## Sources
 

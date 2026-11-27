@@ -4,16 +4,16 @@ topic: agile
 roles: [manual-qa, automation]
 level: junior
 type: concept
-oneLine: Raise risks before coding starts, prepare checks during development, and share what the team has verified.
+oneLine: I raise risks before coding starts and prepare checks during development. I share what the team has verified.
 looksFor:
-  - Ask for a concrete example of an unclear rule before development.
-  - Plan test data and accounts while the feature is being built.
-  - Pair with a developer on the first version that can be tested.
-  - Tell the team what passed and what is still blocked.
-trap: Waiting for a finished feature and treating quality as the tester's responsibility.
+  - Before development starts, ask for an example of an unclear rule.
+  - Plan the test data and accounts while a developer builds the feature.
+  - Test the first usable version with a developer.
+  - Tell the team what passed and which checks are still blocked.
+trap: Waiting until the feature is finished and leaving quality to the tester alone.
 followUps:
   - question: What can you do if there is no build yet?
-    answer: Set up the accounts and files you'll need, then agree with a developer on the expected result for the highest-risk case.
+    answer: I'd set up the accounts and files I need. I'd agree with a developer on what should happen in the highest-risk case.
 sources:
   - label: Scrum Guide on Scrum Team responsibilities
     url: https://scrumguides.org/scrum-guide.html#scrum-team
@@ -23,15 +23,12 @@ sources:
     url: https://scrumguides.org/scrum-guide.html#product-backlog
 ---
 
-I start by asking what the user should be able to do and what could go wrong. If an acceptance criterion says an upload should show an error, I ask what happens to the file the user already saved. I can get the test account and files ready while someone builds the change.
+I start by asking what the user should be able to do and what could go wrong. An acceptance criterion says what the feature must do. If it says an upload should show an error, I ask what happens to the file the user already saved. I can prepare the test account and files while a developer builds the change.
 
-Once there is something to test, I pair with a developer on the first pass and share findings while there is time to act on them. I tell the team which behavior I could verify and what is still blocked. Scrum puts verification within the team's work, so I can bring testing skills without being the only person who tests.
+When a version is ready to test, I check it with a developer. I share what we found while the team still has time to act. I tell the team what I could check and what is still blocked. In Scrum, checking the work belongs to the team. I bring testing skills and other team members can test too.
 
-Refinement is where my questions usually save the most rework. In planning I surface test
-dependencies and estimate effort. At the daily stand-up I raise blockers. At the review I
-share what we saw in the working increment, and at the retrospective I propose one change
-based on what slowed feedback.
+I usually prevent the most rework during backlog refinement, when the team clarifies upcoming work. In planning, I say what testing depends on and estimate the effort. At the daily stand-up, I say what is blocking the work. At the review, I share what we saw in the working increment, the part of the product we built. At the retrospective, I propose one change based on what slowed feedback.
 
 ### Example
 
-For profile photos, we agreed that a rejected upload should keep the current photo. I prepared a valid image and one over the allowed size. The first build removed the photo on rejection, so we fixed it and checked that the old image still appeared after reloading.
+For profile photos, we agreed that if an upload fails, the current photo should stay. I prepared a valid image and one that was too large. The first build removed the photo when it rejected the upload. We fixed it and checked that the old image still appeared after a reload.

@@ -4,16 +4,16 @@ topic: api
 roles: [manual-qa, automation, sdet]
 level: junior
 type: concept
-oneLine: "An identical request made several times has the same intended effect on the server as making it once."
+oneLine: "I call a method idempotent when repeating the same request has the same intended effect on the server as sending it once."
 looksFor:
-  - "Distinguishes intended effect from response equality."
-  - "Contrasts GET, PUT, and DELETE with ordinary POST."
-  - "Explains why a read-only method is also idempotent."
-  - "Checks the resulting resource instead of relying on the status alone."
-trap: "Failing a repeat DELETE just because it returns a different status the second time."
+  - "Tell the intended effect apart from the response the server sends back."
+  - "Compare GET, PUT, and DELETE with ordinary POST."
+  - "Explain why a method that only reads meets the same rule."
+  - "Check the resource itself as well as the status."
+trap: "Failing the test because a repeated DELETE returns a different status."
 followUps:
   - question: "Can two identical GET requests return different data?"
-    answer: "Yes. Another operation may have changed the resource between reads, even though the reads themselves requested no change."
+    answer: "Yes. I might see different data if another operation changed the resource between reads. The reads themselves ask for no change."
 sources:
   - label: "MDN, HTTP request methods"
     url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods
@@ -21,8 +21,10 @@ sources:
     url: https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2
 ---
 
-I look at what the client is asking the server to do. GET asks for a read. PUT typically sets the state of a resource, and DELETE asks to remove it. Repeating an identical request with any of those methods is meant to have the same effect as sending it once. POST has no general promise like that; two identical create requests may make two records. This tells me whether a client can automatically retry after a timeout with no response; a proxy must not automatically retry a non-idempotent request. For creates that must survive a retry, I'd test the API's [idempotency-key contract](/pom-proof/questions/api/idempotency-keys/).
+I look at what the client asks the server to do. `GET` asks to read a resource. `PUT` typically sets its state, and `DELETE` asks to remove it. I expect each identical repeat of those requests to have the same intended effect as sending it once. `POST` makes no such general promise.
+
+Two identical create requests may make two records. If a request times out without a response, I use idempotency to decide whether the client can retry automatically. A proxy must never automatically retry a non-idempotent request. If a create must survive a retry, I'd test the API's [idempotency-key contract](/pom-proof/questions/api/idempotency-keys/).
 
 ### Example
 
-On a saved-address API, the first DELETE may return `204` and the second `404`, depending on the contract. In my test I'd confirm the address remains absent and the customer's other saved addresses still exist. The status difference doesn't tell me that the second request did extra work.
+On a saved-address API, the first `DELETE` may return `204` and the second `404`, depending on the contract. I'd check that the address is still gone and that the customer's other saved addresses still exist. The status difference alone doesn't tell me whether the second request did any extra work.

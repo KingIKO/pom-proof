@@ -90,6 +90,10 @@ decoy:
     }
 ---
 
-A retry test needs the planned delay before each retry. The first delay is the smaller of `baseMs` and `capMs`. For each later retry, double the previous delay and cap it at `capMs`. Return the `retries` individual delays in order, rather than their cumulative timestamps. All arguments are nonnegative integers. The base and cap are safe integers and the fixture requests at most 100 retries. Zero retries gives an empty array. A zero base or cap gives zero on every retry.
+A retry test needs the delay before each retry. For the first delay, take the smaller of the starting delay `baseMs` and the maximum delay `capMs`. For each later retry, double the previous delay and stop at `capMs` if the result would go higher.
 
-`cappedRetryDelays(50, 1000, 4)` returns `[50,100,200,400]`. Leave the inputs unchanged.
+The `retries` argument is the number of delays to return. Return each delay on its own and in order. Cumulative timestamps, which add the delays up to each retry, are not the expected result.
+
+All arguments are whole numbers of zero or more. The base and cap are safe integers, which JavaScript can represent and compare exactly. The fixture, or test input, asks for at most 100 retries. If there are zero retries, return an empty array. If the base or cap is zero, use a delay of zero for every retry.
+
+For example, `cappedRetryDelays(50, 1000, 4)` returns `[50,100,200,400]`. Leave the inputs unchanged.

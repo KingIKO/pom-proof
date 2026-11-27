@@ -42,6 +42,8 @@ decoy:
     GROUP BY severity;
 ---
 
-The defect report compares average elapsed days to close across severities. `opened_at` and `closed_at` use UTC timestamps in `YYYY-MM-DD HH:MM:SS` format. An unclosed defect has a `NULL` close time. Exclude these defects and omit severities with no closed defects. Use a 24-hour day, include fractional days, and round the final average to two decimal places.
+The report compares how many days defects take to close, on average, for each severity. The `opened_at` and `closed_at` columns store UTC timestamps in `YYYY-MM-DD HH:MM:SS` format. A defect that is still open has a `NULL` close time.
 
-Return `severity`, `avg_days`, in that column order. Row order does not matter.
+Exclude open defects. Omit any severity with no closed defects. Use a 24-hour day and keep fractions of a day. Round the final average to two decimal places.
+
+Return `severity` first and `avg_days` second. The rows can appear in any order.

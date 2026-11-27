@@ -4,16 +4,16 @@ topic: sql
 roles: [manual-qa, automation, sdet]
 level: junior
 type: tooling
-oneLine: "Keep the raw signup rows visible and count matches by the address the mailing system treats as the same recipient."
+oneLine: "I keep the original signup rows and count addresses that the mailing system treats as the same recipient."
 looksFor:
-  - "Returns the IDs and raw addresses needed to investigate both sends."
-  - "Explains why an exact string comparison might miss Sam's duplicate."
-  - "Uses a window count to keep rows available for inspection."
-  - "Knows when a grouped report should filter with HAVING."
-trap: "Returning one normalized address, then assuming it identifies which two rows caused the sends."
+  - "Return the IDs and original addresses to investigate both sends."
+  - "Explain why comparing addresses character for character may miss Sam's duplicate."
+  - "Count matches with a window function so you can still inspect each row."
+  - "Explain when to use `HAVING` to filter a grouped report."
+trap: "Returning one normalized address and assuming it identifies the two rows that caused the sends."
 followUps:
   - question: "The query returns one signup ID, but two messages still went out. Where would you look next?"
-    answer: "I'd check the welcome job or delivery log for two sends tied to that ID. One stored signup can still be processed twice."
+    answer: "I'd look in the welcome job or the delivery log for two sends tied to that ID. The job can process one stored signup twice."
 sources:
   - label: SQLite grouping and HAVING
     url: https://www.sqlite.org/lang_select.html
@@ -39,10 +39,10 @@ examples:
           SELECT id, email, copies FROM counted WHERE copies > 1 ORDER BY id;
 ---
 
-For the bug report I want both signup IDs and the exact text the service received. I'd count rows with a window function partitioned by the address the mailing system considers equivalent. If the signup contract ignores case and outside spaces, I'd normalize only the comparison key and keep the originals in the output.
+For the bug report, I want both signup IDs and the exact address text the service received. I'd use a window function to count the rows for each equivalent address and still return each original row. If the signup rules ignore letter case and spaces at either end, I'd normalize only the comparison key. That means I put equivalent addresses in one form for comparison and keep the original text in the output.
 
-For a summary of affected addresses I'd group by that key and use `HAVING COUNT(*) > 1`. `WHERE` filters individual rows before that grouped count is known. SQLite's built-in lowercase conversion is ASCII-only. If the service uses PostgreSQL's locale rules, I'd match that behavior before drawing conclusions about other addresses.
+For a summary of affected addresses, I'd group by that key and use `HAVING COUNT(*) > 1` to keep groups with duplicates. `WHERE` filters individual rows before the query knows the count for each group. SQLite's built-in lowercasing works only on ASCII. If the service uses PostgreSQL's locale rules, I'd match those rules before drawing conclusions about other addresses.
 
 ### Example
 
-The fixture contains two spellings of Sam's address and one other signup. The query returns IDs 1 and 2 with two copies each.
+My test data contains two spellings of Sam's address and one other signup. I'd expect the query to return IDs 1 and 2, each with a count of two.

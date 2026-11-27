@@ -44,6 +44,6 @@ reference:
 decoy: { by: expression, source: "page.getByTestId('approve-timesheet').nth(0)" }
 ---
 
-Find the approval button for timesheet `T-291`. The app repeats the `approve-timesheet` test ID once per timesheet section and keeps the section name fixed. The button caption may be translated.
+Find the approval button for timesheet `T-291`. Each timesheet section has one button with the `approve-timesheet` test ID, an identifier used by tests. The app keeps the section name fixed. The button caption may change with the language.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

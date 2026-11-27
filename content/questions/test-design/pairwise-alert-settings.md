@@ -4,18 +4,18 @@ topic: test-design
 roles: [manual-qa, automation, sdet, senior]
 level: mid
 type: concept
-oneLine: Pick valid configurations that cover every feasible pair of values, then add cases for risky interactions involving more settings.
+oneLine: I pick valid configurations that cover every possible pair of values. I add tests for risky interactions that involve more settings.
 looksFor:
-  - Identifies what the parameters and representative values are.
-  - Handles unsupported combinations as constraints in the model.
-  - Explains that pairwise coverage is about a pair of values from two different parameters.
-  - Adds a targeted higher-order case and defines its expected delivery.
-trap: Testing each setting value once and treating that as coverage of every pair.
+  - Name each setting and the values that represent it in the tests.
+  - Record unsupported combinations as constraints.
+  - Explain that each pair contains values from two different settings.
+  - Add a case with more than two settings and say how its alert should arrive.
+trap: Checking each value once and assuming that covers every pair of values.
 followUps:
   - question: How would you generate a suite once the settings list grows?
-    answer: NIST's ACTS tool can generate a covering array from parameters and constraints. I'd check that the rows still cover the intended pairs after any edits and add the expected outcome for each row.
+    answer: I'd use NIST's ACTS tool to build a covering array, a set of rows that covers the pairs my constraints allow. If I edit the rows, I'd check that they still cover those pairs. I'd add the expected result for every row.
   - question: Which extra case would you add to the example?
-    answer: I'd add the French in-app daily digest if that path has its own template. Every pair appears in the four cases, but that exact combination doesn't.
+    answer: If the French in-app daily digest has its own template, I'd add a test for it. The four cases cover every pair. That specific combination is still missing.
 sources:
   - label: NIST SP 800-142, Practical Combinatorial Testing
     url: https://csrc.nist.gov/pubs/sp/800/142/final
@@ -25,11 +25,19 @@ sources:
     url: https://csrc.nist.gov/Projects/automated-combinatorial-testing-for-software/downloadable-tools
 ---
 
-I'd use it when we support a lot of combinations and need good coverage of settings that can interact. Pick the parameters and values, write down the combinations the product doesn't support, and build a suite where every feasible pair shows up in at least one test. I'd then decide what to check in each case. The rows tell me which settings to use; I still need the delivery rules to tell me what should happen.
-NIST found that most failures in the systems it studied involved just one or two inputs, so covering pairs can catch many of them without testing every combination.
+I'd use pairwise testing if the product supports many combinations of settings that can interact. Each pair combines values from two different settings. I list the settings and values first, then mark the combinations the product does not support. My suite includes every supported pair in at least one test. I use the delivery rules to decide what should happen for each row.
 
-Pairwise can miss a failure that needs a particular combination of more than two values. I'd add targeted cases for those if I know the product has a path that depends on them.
+NIST found that most failures in the systems it studied involved only one or two inputs. Pairwise tests can catch many of those failures without trying every combination.
+
+Pairwise testing can miss failures that need a specific combination of more than two values. If I know a product path depends on one of those combinations, I add a test for it.
 
 ### Example
 
-Say we support email or in-app, immediate or daily, and English or French in any combination. Email immediate in English, email daily in French, in-app immediate in French, and in-app daily in English cover every pair. For each case I'd trigger one alert and check the selected channel, delivery schedule, and language.
+Suppose any combination of channel, schedule, and language works. The channel can be email or in-app. The schedule can be immediate or daily, and the language can be English or French. I'd use these cases to cover every pair:
+
+- Immediate email in English
+- Daily email in French
+- Immediate in-app alert in French
+- Daily in-app alert in English
+
+For each case, I'd trigger one alert. I'd check its channel, delivery schedule, and language.

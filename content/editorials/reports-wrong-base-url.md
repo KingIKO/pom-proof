@@ -4,29 +4,29 @@ problem: diagnosis/reports-wrong-base-url
 
 ## What is going on
 
-The deploy step advertises preview build `b391`. CI instead receives the demo's `Request a demo` heading and build marker `demo-07`. Both sites serve HTML at `/reports/revenue`, so a successful response can still come from the wrong site.
+The deploy step reports preview build `b391`. The CI test sees the demo's `Request a demo` heading and its build marker, `demo-07`. Both sites serve HTML at `/reports/revenue`. A successful response can therefore come from either site.
 
 ## The answer
 
-1. Identify the CI `baseURL` as the reason the test opens another deployment.
+1. Check the `baseURL` setting in CI.
 
-   **Why:** Playwright resolves the relative path using `baseURL`. The initial request already points to `demo.example.test`, so the mismatch begins before any redirect or wait for the heading.
+   **Why:** Playwright uses `baseURL` to turn a relative path into a full URL. The first request points to `demo.example.test`. The test has opened the wrong deployment before any redirect or wait for the heading.
 
-2. Require the deploy step's preview URL and expected build marker in CI. Check the final origin and build marker in setup, and report any mismatch before the feature tests run. Keep a separate explicit local default if needed.
+2. Make setup check the final origin and build marker against the deploy step's required preview URL and build marker.
 
-   **Why:** A required input prevents a missing preview URL from quietly falling back to local or demo settings. The final check can also catch a redirect to another origin or a stale build served on the right host.
+   **Why:** If CI requires the preview URL, a missing URL stops the run before it can use local or demo settings. The origin is the URL's scheme, host, and port. The final origin can reveal a redirect, and the build marker can reveal an old build on the right host. Reporting a mismatch in setup keeps feature tests from running against the wrong build. If local runs need a default, an explicit, separate value keeps it out of CI.
 
-3. Confirm the first navigation went to the demo and the final origin and marker identify `demo-07`. Then change only `baseURL` and verify that the test reaches the preview and sees `b391`.
+3. Compare the first request, final origin, and build marker before and after correcting only `baseURL`.
 
-   **Why:** The first and final destinations distinguish bad configuration from a redirect. Correcting just the base URL tests the cause while leaving rendering and permissions unchanged.
+   **Why:** Before the change, the first request and final origin point to the demo, and the build marker reads `demo-07`. Those destinations show the problem starts in configuration, before any redirect. The rerun must reach the preview and show `b391`. Changing only the base URL tests the suspected cause while keeping rendering and permissions the same.
 
 ## Why the tempting answer fails
 
-The decoy names the configuration mistake and correctly inspects the first request. Hard-coding today's preview can pass once and send future jobs to an old deployment. HTTP 200 establishes only that a page responded, and waiting longer will not turn the demo page into the preview.
+The decoy names the configuration mistake and checks the first request correctly. A fixed preview address can pass today and send later jobs to an old deployment. HTTP 200 tells you only that a page responded. More time will leave the test on the demo page.
 
 ## What the interviewer listens for
 
-Show how to prove which deployment ran the test before treating a missing heading as a feature failure.
+Show how you would check which deployment the test opened. Do that before treating a missing heading as a feature failure.
 
 ## Sources
 

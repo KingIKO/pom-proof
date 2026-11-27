@@ -8,59 +8,59 @@ roles: [manual-qa, automation, senior]
 items:
   - id: severity
     type: single-choice
-    prompt: Which severity matches the demonstrated impact?
+    prompt: Which severity matches what happened to the user?
     choices:
-      - { id: s3, text: "S3, secondary path impaired or reliable workaround exists" }
-      - { id: s1, text: "S1, permanent loss or exposure of protected data" }
-      - { id: s4, text: "S4, cosmetic only" }
-      - { id: s2, text: "S2, required task blocked with no supported workaround" }
+      - { id: s3, text: "S3. A secondary path is impaired or a reliable workaround exists." }
+      - { id: s1, text: "S1. The app loses data permanently or exposes protected data." }
+      - { id: s4, text: "S4. Only the appearance of the app is affected." }
+      - { id: s2, text: "S2. A required task is blocked with no supported workaround." }
   - id: priority
     type: single-choice
-    prompt: Which fix priority should the ticket propose?
+    prompt: Which priority should the report recommend for the fix?
     choices:
-      - { id: p2, text: "P2, schedule after sign-off" }
-      - { id: p0, text: "P0, before today's sign-off" }
-      - { id: p3, text: "P3, backlog" }
+      - { id: p2, text: "P2. Schedule the fix after sign-off." }
+      - { id: p0, text: "P0. Fix it before today's sign-off." }
+      - { id: p3, text: "P3. Put it in the backlog." }
   - id: component
     type: single-choice
-    prompt: Which component should receive the report first?
+    prompt: Which part of the app should get the report first?
     choices:
-      - { id: eligibility, text: "Eligibility service" }
-      - { id: accounts, text: "Account sign-in" }
-      - { id: form, text: "Benefits form and validation summary" }
-      - { id: jobs, text: "Application processing queue" }
+      - { id: eligibility, text: "The service that checks eligibility" }
+      - { id: accounts, text: "The part that handles account sign-in" }
+      - { id: form, text: "The benefits form and its error summary" }
+      - { id: jobs, text: "The queue that processes applications" }
   - id: title
     type: single-choice
-    prompt: Which title makes the symptom easiest to find?
+    prompt: Which title makes the problem easiest to find in a search?
     choices:
-      - { id: vague, text: "Benefits form broken" }
-      - { id: blame, text: "Form developers broke the tab order again" }
-      - { id: long, text: "Staging build 284 shows a validation summary after leaving Postal code empty and Tab cannot reach the field in Edge 135 on Windows 11" }
-      - { id: precise, text: "Keyboard focus stays in the benefits form error summary" }
+      - { id: vague, text: "Something is wrong with the benefits application form" }
+      - { id: blame, text: "The benefits form developers broke the Tab order again" }
+      - { id: long, text: "Staging build 284 shows the error summary when Postal code is empty. In Edge 135 on Windows 11, Tab cannot reach that field." }
+      - { id: precise, text: "Tab keeps keyboard focus inside the benefits form error summary" }
   - id: steps
     type: ordering
-    prompt: Order the steps that produced the failure.
+    prompt: Put the steps that reproduce the problem in order.
     choices:
-      - { id: observe, text: "Press Tab repeatedly from the summary and observe where focus cycles." }
-      - { id: input, text: "Fill the other required fields and leave Postal code empty." }
-      - { id: open, text: "Open a fresh benefits application in the test account." }
-      - { id: submit, text: "Activate Submit with the keyboard to reveal the validation summary." }
+      - { id: observe, text: "From the summary, press Tab repeatedly and check where focus returns." }
+      - { id: input, text: "Leave Postal code blank and fill in the other required fields." }
+      - { id: open, text: "In the test account, open a new benefits application." }
+      - { id: submit, text: "Use the keyboard to press Submit and open the error summary." }
   - id: missing
     type: multi-select
-    prompt: What is still needed to make this report usable at sign-off?
+    prompt: What details are still missing for today's sign-off?
     choices:
-      - { id: os, text: "Operating system name" }
-      - { id: repeat, text: "Reproduction count across fresh applications" }
-      - { id: evidence, text: "The actual sequence of focused elements or a short recording" }
-      - { id: build, text: "Application build number" }
+      - { id: os, text: "The name of the operating system used" }
+      - { id: repeat, text: "How many new applications show the same issue" }
+      - { id: evidence, text: "The focus sequence or a short recording of it" }
+      - { id: build, text: "The build number of the app tested" }
   - id: expected
     type: single-choice
-    prompt: Which expected and actual result should be filed?
+    prompt: Which pair describes what should happen and what actually happens?
     choices:
-      - { id: save, text: "Expected successful submission without a postal code; actual the form marks it required." }
-      - { id: focus, text: "Expected keyboard access from the summary to the invalid field; actual Tab cycles inside the summary." }
-      - { id: speech, text: "Expected the summary to speak automatically; actual the screen reader crashes." }
-      - { id: service, text: "Expected the service to accept corrected data; actual it rejects all applications." }
+      - { id: save, text: "The form should submit without a postal code. Instead, it says the field is required." }
+      - { id: focus, text: "Tab should reach the invalid field from the error summary. Instead, Tab stays inside the summary." }
+      - { id: speech, text: "The screen reader should read the summary aloud automatically. Instead, the screen reader crashes." }
+      - { id: service, text: "The service should accept the form after a correction. Instead, the service rejects all applications." }
 reference:
   severity: s2
   priority: p0
@@ -81,6 +81,19 @@ decoy:
 
 > I left Postal code empty and submitted. Now Tab keeps taking me back to the same error summary.
 
-Staging build 284, Edge 135, Windows 11, keyboard-only, test account. A screenshot shows the summary and the Postal code field below it. No submit request reached the server. The supported keyboard path must reach the field after validation; pointer input is not a workaround for this audience. Evidence is from one attempt. The accessibility sign-off is today.
+The test used staging build 284, Edge 135 on Windows 11, a keyboard only, and a test account. The screenshot shows the validation summary, which lists the errors, with the Postal code field below it. No submit request reached the server.
 
-Severity: S1 permanent data loss or protected data exposed; S2 required task blocked with no supported workaround; S3 secondary path impaired or reliable workaround exists; S4 cosmetic only. Priority: P0 fix before today's sign-off; P2 schedule after sign-off; P3 backlog.
+After validation, the supported keyboard path must reach the field. For these users, a pointer does not count as a workaround. This evidence comes from one attempt. The accessibility sign-off is today.
+
+Severity describes the effect on the user:
+
+- S1: The app loses data permanently or exposes protected data.
+- S2: A required task is blocked with no supported workaround.
+- S3: A secondary path is impaired or a reliable workaround exists.
+- S4: Only appearance is affected.
+
+Priority says when to fix the issue:
+
+- P0: Fix it before today's sign-off.
+- P2: Schedule the fix after sign-off.
+- P3: Put it in the backlog.

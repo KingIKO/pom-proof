@@ -50,6 +50,6 @@ reference:
 decoy: { by: expression, source: "page.locator('#contact-891')" }
 ---
 
-Payment settings keep the billing address for receipts separate from the account email. Find the input labeled `Billing email` with a Playwright-style locator. The IDs may change together with the labels' `for` values.
+Payment settings keep two email addresses: the billing email for receipts and the account email. Use a Playwright-style locator, an expression that finds an element, to find the input labeled `Billing email`. The input IDs and the labels' matching `for` attributes may change together.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.
