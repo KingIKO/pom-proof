@@ -4,31 +4,33 @@ problem: code/password-rejection-reasons
 
 ## What is going on
 
-The sign-up fixture wants every failed rule from one attempt, in a prescribed order. It defines length in Unicode code points, then checks specific ASCII characters for the remaining rules. The two parts use different definitions on purpose.
+The sign-up check lists every rule a password fails, in a fixed order. It measures length in Unicode code points. A code point is a number the Unicode text standard assigns, such as the number for a letter. The other rules check for specific ASCII characters, including the English uppercase letters and the digits from zero through nine. The exercise uses these two definitions on purpose.
 
 ## The fix
 
-1. Start a result list. Iterate the password by code point before testing the minimum length.
+1. Check the minimum password length by counting code points.
 
-   **Why:** JavaScript string iteration combines the UTF-16 pieces of a supplementary code point. `supplementary-characters` contains `A1` and six Deseret letters, so it has eight code points and fails the limit. `exactly-nine` checks the last length that should fail. Python strings are already sequences of Unicode code points, so `len()` supplies that count there.
+   **Why:** JavaScript stores text in pieces called UTF-16 code units. A supplementary code point, such as a Deseret letter, takes two of those pieces. When you loop over the string, JavaScript reads both pieces together as one code point.
+
+   The `supplementary-characters` case holds `A1` and six Deseret letters. It has eight code points, so it fails the length rule. The `exactly-nine` case checks the longest length that should still fail. Python strings already store text as a sequence of code points, so `len()` gives that count directly.
 
    ```js
    const failures = [];
    if ([...password].length < 10) failures.push('too-short');
    ```
 
-2. Run both ASCII character checks independently and append their labels in the listed order.
+2. Record the result of each ASCII rule that fails, in the listed order.
 
-   **Why:** Returning at the first failure would hide actionable feedback in `empty-password`. In `unicode-digit-and-letter`, `É` and `١` do not satisfy the ASCII uppercase and digit rules. The explicit ranges keep the same policy across languages.
+   **Why:** If the code returned at the first failure, `empty-password` would hide feedback the user can act on. In `unicode-digit-and-letter`, `É` and `١` do not satisfy the ASCII uppercase and digit rules. The explicit ranges keep the same policy across programming languages.
 
    ```js
    if (/[A-Z]/.test(password) === false) failures.push('no-uppercase');
    if (/[0-9]/.test(password) === false) failures.push('no-digit');
    ```
 
-3. Append the final label only for a literal space, then return the list.
+3. If the password contains a literal space, add the final label before returning the list.
 
-   **Why:** `tabs-are-not-spaces` needs a tab to stay distinct from a space. Searching without trimming leaves the input untouched and lets `only-whitespace-fails` report its one violation. The empty password cannot trigger this last check.
+   **Why:** The `tabs-are-not-spaces` case needs a tab to count as different from a space. The code searches the full password without removing spaces from the ends. That lets `only-whitespace-fails` report its one violation. The empty password cannot trigger this last check. The function then returns the full list of labels.
 
    ```js
    if (password.includes(' ')) failures.push('has-space');
@@ -37,11 +39,11 @@ The sign-up fixture wants every failed rule from one attempt, in a prescribed or
 
 ## Why the tempting answer fails
 
-The shortcut checks JavaScript's `password.length`, which counts UTF-16 code units. `supplementary-characters` has 14 units, so the decoy omits `too-short` even though eight code points fall below the minimum. Its other checks already follow the fixture.
+The shortcut checks JavaScript's `password.length`, which counts UTF-16 code units instead of code points. `supplementary-characters` has 14 units, so the decoy leaves out `too-short`. Yet its eight code points fall below the minimum. The decoy's other checks already follow the fixture.
 
 ## What the interviewer listens for
 
-Name the unit being counted and the exact alphabet of each rule. Explain why the checks run independently and keep the policy limited to the fixture's requirements.
+Name the unit you count and the exact set of characters each rule accepts. Explain why the checks run independently. Keep the policy limited to what the fixture requires.
 
 ## Sources
 

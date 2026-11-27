@@ -4,25 +4,29 @@ problem: diagnosis/review-sleep-before-upload-status
 
 ## What is going on
 
-The fixture provides the browser and a valid PDF. The status element is already present at page load with text `Ready`. The app changes it to `Uploaded` only when the upload is complete and the filename already appears.
+The fixture, the reusable test setup, provides the browser and a valid PDF. The status element already reads `Ready` when the page loads. The app changes it to `Uploaded` only after the upload completes and the filename appears.
 
 ## The answer
 
-1. Mark line 8, the 1.5-second sleep, and line 10, the one-time status assertion. Leave the method signature unmarked as instructed; its unused `throws` clause can go when the sleep is removed.
+1. Mark the 1.5-second wait on line 8 and the one-time status check on line 10.
 
-   **Why:** Line 8 assumes completion at a fixed time, stalling fast uploads and still reading too early on slow runs. At line 10 the element lookup succeeds even while the text says `Ready`, so the test can fail despite the upload eventually completing.
+   Leave the method signature, the line declaring the test method, unmarked as instructed. Once you remove the wait, the unused `throws` clause can go too.
 
-2. Choose the guessed completion time as the synchronization flaw. Use a Selenium explicit wait that polls a fresh lookup of `upload-state` for exact text `Uploaded` within the test's normal timeout. Keep the filename assertion after the wait.
+   **Why:** Line 8 guesses when the upload will finish. Fast uploads have to wait, and slow uploads may still be running when the wait ends. Line 10 can find the status element while it still says `Ready`. The check may fail even though the upload finishes later.
 
-   **Why:** The text transition signals that the filename should already be visible. Waiting for that state keeps the eventual check on customer-visible behavior and avoids a second arbitrary delay.
+2. The test guesses when the background upload will finish. Find `upload-state` again on each wait check and look for the exact text `Uploaded`.
+
+   Use a Selenium explicit wait, which checks a condition repeatedly until it passes or time runs out. Use the test's normal timeout. Keep the filename check after the wait.
+
+   **Why:** The status text shows when the upload is complete. At that point, the filename should already be visible. The test can check what customers see without another fixed delay.
 
 ## Why the tempting answer fails
 
-The decoy names the timing issue but marks only the sleep. Removing it without changing the status read leaves an immediate snapshot. Waiting for element presence also lets the read see `Ready`, since the element exists from load. A longer sleep postpones the same race.
+The decoy correctly names the timing issue but marks only the fixed wait. If you remove the wait, the test still reads the status once, right away. Waiting for the element to exist can also return `Ready` because the element is there as soon as the page loads. A longer fixed wait still relies on a guess about which finishes first.
 
 ## What the interviewer listens for
 
-Name the observable state that proves completion. Check that the test passes when the upload reaches that state late and fails when it never reaches it.
+Name the visible status that proves the upload finished. Check that the test passes if the status changes late and fails if it never changes.
 
 ## Sources
 

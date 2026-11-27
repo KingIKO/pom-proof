@@ -4,22 +4,22 @@ problem: code/equal-json-responses
 
 ## What is going on
 
-The assertion compares parsed JSON values. Array positions describe a sequence, so moving an element can change the response. Object key order is irrelevant to this assertion, even inside objects nested in arrays.
+The assertion, the check that decides whether the test passes, compares two parsed JSON values. In an array, positions describe a sequence. So moving an element can change the response. In an object, key order does not matter to this assertion. That holds even for objects nested inside arrays.
 
 ## The fix
 
-1. In the recursive comparator, accept a strict match first.
+1. In the recursive comparison function, accept a strict match first.
 
-   **Why:** Strict equality handles equal primitives without converting types, so the number in `boolean-is-not-number` cannot equal the boolean next to it. Parsed `1` and `1.0` are the same numeric value. Recursing through the same helper applies these rules at every depth.
+   **Why:** Primitives are single values such as numbers, strings, booleans, and `null`. Strict equality, `===`, matches equal primitives without converting types, so the number in `boolean-is-not-number` cannot equal the boolean next to it. Parsed `1` and `1.0` are the same numeric value. The function is recursive, which means it calls itself for nested values. So these rules apply at every depth.
 
    ```js
    const same = (a, b) => {
      if (a === b) return true;
    ```
 
-2. Compare an array only with another array of the same length, then compare corresponding positions.
+2. Match an array only with another array of the same length, and then compare the values at each position.
 
-   **Why:** `different-array-order` would pass if we sorted both sides first, hiding a real ordering change. `array-is-not-object` prevents treating an index as an ordinary object key. Reading by index also keeps the caller's copies untouched for later assertions.
+   **Why:** If both sides were sorted first, `different-array-order` would pass and hide a real change in order. `array-is-not-object` makes sure an array index is never treated as an ordinary object key. Reading by index also leaves the caller's copies untouched for later assertions.
 
    ```js
      if (Array.isArray(a)) {
@@ -28,9 +28,9 @@ The assertion compares parsed JSON values. Array positions describe a sequence, 
      }
    ```
 
-3. Reject any remaining pair that is not two non-null objects. Compare key counts, then require each key and its matching value on the right.
+3. Accept any other pair only if both are non-null objects with equal key counts and each key has an equal value on the right.
 
-   **Why:** Counting prevents extra fields from slipping through, while presence distinguishes an omitted key from a key with `null` in `missing-key-and-null`. A lookup by key lets `different-key-order` pass at both nesting levels.
+   **Why:** Comparing the key counts stops extra fields from slipping through. Checking that each key is present tells an omitted key apart from a key set to `null`, as `missing-key-and-null` requires. Looking up each value by key lets `different-key-order` pass at both nesting levels.
 
    ```js
      if (a === null || b === null || typeof a !== 'object'
@@ -44,11 +44,11 @@ The assertion compares parsed JSON values. Array positions describe a sequence, 
 
 ## Why the tempting answer fails
 
-`JSON.stringify()` visits object keys in a defined order, but two objects can have different insertion orders. The decoy compares text, so `different-key-order` fails despite matching values. Sorting arrays to avoid order differences would introduce a separate error.
+The tempting answer compares the text from `JSON.stringify()`. That function visits object keys in a defined order. But two objects with equal values can have different insertion orders. So `different-key-order` fails even though the values match. Sorting arrays to avoid order differences would add a separate error.
 
 ## What the interviewer listens for
 
-Explain why both container type and position matter. In Python, ordinary equality treats `True` and `1` as equal, including in containers, so check for booleans at each level while allowing equal JSON numbers.
+Explain why both the container type, array or object, and the position matter. In Python, ordinary equality treats `True` and `1` as equal, including inside containers such as lists and dictionaries. So a Python version must check for booleans at each level. It must still let equal JSON numbers match.
 
 ## Sources
 

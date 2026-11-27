@@ -4,7 +4,7 @@ problem: sql/revenue-per-category
 
 ## What is going on
 
-The category is a current catalog attribute, while revenue reflects what was charged on each order line. Catalog prices can change after checkout. An order can also cover several categories, so the calculation starts from the line.
+The category is a current catalog attribute, meaning it comes from the product as it is listed today. Revenue reflects what was charged on each order line. Catalog prices can change after checkout. One order can also cover several categories, so the calculation starts from the order line.
 
 ## The fix
 
@@ -19,31 +19,31 @@ GROUP BY p.category;
 
 1. Inner join `order_lines` to `orders` by order ID.
 
-   **Why:** The status belongs to the order and applies to all its lines. Every line in this data has an order; the report has no rule for an unmatched line to contribute.
+   **Why:** An inner join keeps only the lines that have a matching order. The status belongs to the order and applies to all of its lines. Every line in this data has an order. The report has no rule for counting a line without one.
 
 2. Inner join `products` by the line's product ID.
 
-   **Why:** Lines from the same order can go to different categories. An existing product supplies the category for each line; there is no category-free line to preserve with a left join.
+   **Why:** Lines from the same order can belong to different categories. Each line's product supplies its category. A left join would also keep lines with no product. No such line exists here, so a left join has nothing extra to keep.
 
-3. Exclude cancelled order lines before grouping.
+3. Exclude lines from cancelled orders before grouping.
 
-   **Why:** The altered Storage category includes a completed line and a cancelled line. The completed amount should survive without the cancelled line adding anything. Lighting, with only a cancelled line there, disappears.
+   **Why:** In the altered data, the Storage category has a completed line and a cancelled line. The completed amount should remain, and the cancelled line should add nothing. Lighting has only a cancelled line in that data, so it disappears.
 
 4. Compute `quantity * unit_price_cents` using fields from the line.
 
-   **Why:** Line 101 charges 4,400 cents per unit for two units, even though the product now lists 5,500. The stored amount also preserves an agreed discount if that is why the prices differ.
+   **Why:** Line 101 charges 4,400 cents per unit for two units. The product now lists 5,500 cents. The price stored on the line is what the order was charged. It also keeps an agreed discount, if a discount is why the prices differ.
 
 5. Group by `p.category` and sum the line amounts.
 
-   **Why:** Several lines and products can contribute to Tools. Each eligible line must count, including repeated lines for one product, before the category appears as a single total.
+   **Why:** Several lines and products can add to Tools. Each eligible line must count, including repeated lines for one product. After that, the category appears as a single total.
 
 ## Why the tempting answer fails
 
-The decoy substitutes the catalog price for the saved price. All visible prices match, so both queries return 10,500 cents for Lighting and 2,250 for Hardware, with cancelled-only Storage absent. In the altered data the changed Tools prices make the decoy report 18,300 cents instead of the recorded 15,600.
+The decoy uses the current catalog price instead of the price saved on the line. All visible prices match, so both queries return 10,500 cents for Lighting and 2,250 for Hardware. Storage has only a cancelled line in that data, so neither query lists it. In the altered data, the Tools prices have changed. So the decoy reports 18,300 cents instead of the recorded 15,600.
 
 ## What the interviewer listens for
 
-Name what each row represents just before the sum. Test a repriced line with more than one unit and a cancelled line in a category that also has qualifying revenue.
+Say what one row stands for just before the query sums it. Test a repriced line with more than one unit. Also test a cancelled line in a category that has other revenue that counts.
 
 ## Sources
 

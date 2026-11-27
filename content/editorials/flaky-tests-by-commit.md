@@ -4,22 +4,22 @@ problem: code/flaky-tests-by-commit
 
 ## What is going on
 
-Flakiness here means conflicting results on the same commit. The report adds each test at the moment a row supplies the missing evidence. The first row with that name may arrive long before the row that proves it flaky.
+A flaky test gives different results when the code has not changed. In this report, a test is flaky when it both passed and failed on the same commit. A commit is one saved version of the code. The report adds a test name at the moment a row supplies the missing evidence. The first row for a test may arrive long before the row that proves it flaky.
 
 ## The fix
 
-1. Use a map keyed by test, with a second map under each test for its commits. Keep a separate result set.
+1. Create an evidence map keyed first by test and then by commit, plus a separate result set.
 
-   **Why:** The two keys keep exact names and commit IDs separate without needing to combine them into a string. `different-commits` depends on keeping observations apart. The result set has a different job: remember when a name first qualified, regardless of when its evidence map was first created.
+   **Why:** A map stores values under keys, and a set keeps each value only once. Two levels of keys keep exact test names and commit IDs apart without joining them into one string. `different-commits` depends on keeping observations from different commits apart. The result set has a separate job. It remembers when a name first qualified, no matter when its evidence map was created.
 
    ```js
    const evidence = new Map();
    const flaky = new Set();
    ```
 
-2. Walk the rows in arrival order, ignoring skips. Add the outcome to the set for this test and commit; add the test to the result when both executed outcomes are present.
+2. Walk the rows in arrival order and record each pass or fail under its test and commit.
 
-   **Why:** A set records distinct outcomes, so `repeated-passes` cannot look like mixed evidence. `skip-is-neutral` guards against using a skip as a second outcome. Either arrival order can establish the pair, as `passes-then-fails` shows. The row objects stay untouched because only the local collections change.
+   **Why:** A set records only distinct outcomes, so `repeated-passes` cannot look like mixed evidence. `skip-is-neutral` checks that a skip never counts as a second outcome. When one commit holds both a pass and a fail, the code adds the test to the result. Either arrival order proves the pair, as `passes-then-fails` shows. Only the local collections change, so the row objects stay untouched.
 
    ```js
    for (const { test, commit, outcome } of runs) {
@@ -33,9 +33,9 @@ Flakiness here means conflicting results on the same commit. The report adds eac
    }
    ```
 
-3. Return the names in result-set order.
+3. Return the names in the order they entered the result set.
 
-   **Why:** `proof-order` puts the first proven name ahead of an earlier observed one. Reinserting an already proven name does not move or duplicate it in `flaky-twice`.
+   **Why:** In `proof-order`, the first row belongs to `a`, but `状態` is proven flaky first. So the report lists `状態` ahead of the earlier observed `a`. A set keeps the order in which names were first added. Adding an already proven name again neither moves it nor adds a copy, as `flaky-twice` shows.
 
    ```js
    return [...flaky];
@@ -43,11 +43,11 @@ Flakiness here means conflicting results on the same commit. The report adds eac
 
 ## Why the tempting answer fails
 
-Grouping by name alone merges the pass on `c1` and failure on `c2` in `different-commits`. It can also label a test flaky after an ordinary fix, although each commit alone has a consistent result.
+The decoy, the tempting wrong answer, groups outcomes by test name alone. In `different-commits`, it merges the pass on `c1` with the failure on `c2`. It can also flag a test after an ordinary fix. Suppose a test fails on one commit and a fix makes it pass on the next. Each commit on its own has a consistent result, but the decoy still calls the test flaky.
 
 ## What the interviewer listens for
 
-Use two interleaved tests to show which row earns each report position. Two flags per pair can replace the outcome set if a skip sets neither flag.
+Use two tests whose rows are mixed together. Show which row earns each position in the report. You can replace the outcome set with two flags for each test and commit pair. That works only if a skip sets neither flag.
 
 ## Sources
 

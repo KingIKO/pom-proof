@@ -4,29 +4,33 @@ problem: test-design/shipping-service-matrix
 
 ## What is going on
 
-The quote first decides whether the parcel can ship. For an eligible parcel, weight sets the base price, express changes that price, and membership affects only standard service. Work out the expected fees before picking representative weights.
+The quote first decides whether the parcel can ship. For a parcel that can ship, weight sets the base price and express changes that price. Membership affects only standard service. Work out the expected fees before you pick representative weights. A mutant is a copy of the function with one planted mistake for the tests to catch.
 
 ## The answer
 
-1. At 5,000 grams, expect standard prices of 600 cents for a nonmember and 300 for a member. Expect 1,300 on express for each.
+1. Test all four combinations of membership and express at 5,000 grams.
 
-   **Why:** The light standard quote at the exact boundary catches the mutant that applies the heavy rate too early. Both express rows show that changing membership leaves its price alone and catch the mutant that discounts member express.
+   For standard shipping, expect 600 cents for a nonmember and 300 for a member. For express, expect 1,300 cents for each.
 
-2. Repeat the four decisions at 5,001 grams. Expect standard prices of 1,000 cents for a nonmember and 700 for a member, and 1,700 on express for each.
+   **Why:** The light standard quote at the exact boundary catches the mutant that applies the heavy rate too early. Both express rows show that membership leaves the express price alone. They catch the mutant that discounts express for members.
 
-   **Why:** The weight is immediately on the heavy side, so the decision table also serves as boundary value analysis for the price change. The heavy rows catch the mutants that omit the express surcharge or the standard member discount.
+2. Repeat the four combinations at 5,001 grams.
 
-3. Expect 1,000 cents for a 20,000-gram nonmember standard parcel and `-1` for a 20,001-gram member express parcel.
+   For standard shipping, expect 1,000 cents for a nonmember and 700 for a member. For express, expect 1,700 cents for each.
 
-   **Why:** The exact maximum catches a mutant that rejects the heaviest allowed parcel. Using membership and express above the limit shows that neither option can make an overweight parcel shippable.
+   **Why:** The heavy rows catch the mutants that omit the express surcharge or the standard member discount. A decision table lists the result for each combination of conditions. This weight is just over the cutoff, so the table also tests the price change with boundary value analysis. That method tests values at and next to a limit.
+
+3. Expect 1,000 cents for a 20,000-gram nonmember standard parcel. Expect `-1` for a 20,001-gram member express parcel.
+
+   **Why:** The exact maximum catches a mutant that rejects the heaviest allowed parcel. The overweight parcel shows that neither membership nor express can make it shippable.
 
 ## Why the tempting answer fails
 
-Light standard for both shoppers, heavy express for a nonmember, and an overweight parcel cover the broad rules. The heavy express example catches a missing surcharge, but skipping heavy member standard and member express misses both ways to misapply the discount. The overweight example is too far from the limit to reveal whether equality passes.
+The decoy, the tempting set of rows, covers the broad rules. It has light standard parcels for both shoppers, heavy express for a nonmember, and an overweight parcel. The heavy express row catches a missing surcharge. But the decoy skips heavy member standard and member express, so it misses both ways to apply the discount wrongly. Its overweight parcel is too far from the limit to show whether a weight equal to it passes.
 
 ## What the interviewer listens for
 
-Decide shippability before pricing. Then explain which options affect the quote and when they are irrelevant.
+Decide whether the parcel can ship before you work out a price. Then explain which options affect the quote and when they make no difference.
 
 ## Sources
 

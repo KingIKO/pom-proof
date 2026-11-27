@@ -4,13 +4,13 @@ problem: code/flatten-config-keys
 
 ## What is going on
 
-The audit needs dot-separated paths to leaf settings. An explicit empty overrides object is itself a setting to report. An empty root has no named settings, so it produces nothing. Arrays stay whole, even when they contain objects.
+The audit needs a dot-separated path to each leaf setting. A leaf is a value that the audit reports whole instead of opening it. An explicit empty overrides object is itself a setting, so the report includes it. An empty root object has no named settings, so it produces no paths. Arrays stay whole, even when they contain objects.
 
 ## The fix
 
-1. In a recursive visitor, iterate the current object's entries and extend the prefix with each key.
+1. Write a recursive visitor that reads the current object's entries and adds each key to the path prefix.
 
-   **Why:** The next key supplies exactly one new segment. Because the allowed key alphabet excludes dots, `distinct-prefixes` stays unambiguous with plain concatenation. Arbitrary JSON keys could require escaping or another path format. Reading entries and collecting paths separately keeps the configuration intact.
+   **Why:** A recursive visitor is a function that calls itself for each nested object. Each key adds exactly one new segment to the path. Keys can never contain dots, so plain joining keeps the paths in `distinct-prefixes` unambiguous. Arbitrary JSON keys might need escaping or another path format. The visitor only reads entries and collects paths in a separate array, so the configuration stays intact.
 
    ```js
    const paths = [];
@@ -19,9 +19,9 @@ The audit needs dot-separated paths to leaf settings. An explicit empty override
        const path = prefix ? prefix + '.' + key : key;
    ```
 
-2. Descend only into nonempty objects other than arrays. Save the path for every other value.
+2. Descend only into nonempty objects that are not arrays, and save the path for every other value.
 
-   **Why:** `array-is-a-leaf` requires a path for the whole array and another for `null`. In JavaScript, `typeof` alone would classify `null` and arrays as objects. Checking for children makes `empty-nested-object` keep `web.overrides`; the root is never treated as a member, so `empty-root` still emits no path.
+   **Why:** `array-is-a-leaf` needs one path for the whole array and another for `null`. In JavaScript, the `typeof` operator reports both `null` and arrays as objects. So `typeof` alone cannot tell them apart from nested objects. The check for child entries keeps `web.overrides` in `empty-nested-object`. The root is never a member of another object, so `empty-root` still produces no path.
 
    ```js
        if (value !== null && typeof value === 'object'
@@ -34,9 +34,9 @@ The audit needs dot-separated paths to leaf settings. An explicit empty override
    };
    ```
 
-3. Call the visitor with an empty root prefix and sort the collected paths.
+3. Call the visitor with an empty prefix for the root, then sort the collected paths.
 
-   **Why:** The report must stay stable when a writer reorders its keys. Default string sort gives the requested ASCII order for these paths; `numeric-keys` needs `10` before `2`, and `ordering` puts uppercase `A` before lowercase `a`.
+   **Why:** Sorting keeps the report the same when someone reorders the keys. The default string sort gives the requested ASCII order for these paths. It compares text one character at a time, so `numeric-keys` puts `10` before `2`. In `ordering`, uppercase `A` comes before lowercase `a`.
 
    ```js
    visit(config, '');
@@ -45,11 +45,13 @@ The audit needs dot-separated paths to leaf settings. An explicit empty override
 
 ## Why the tempting answer fails
 
-The shortcut descends into every object. In `empty-nested-object` there are no child entries under `web.overrides`, so the report loses that explicit setting. Recursing into arrays would likewise lose an empty array or produce unwanted numeric paths for a nonempty one; the actual shortcut correctly leaves arrays alone.
+The shortcut descends into every object, even an empty one. In `empty-nested-object`, `web.overrides` has no child entries. So the shortcut finds nothing to save there, and the report loses that explicit setting.
+
+Descending into arrays would cause a similar problem. It would lose an empty array or add unwanted numeric paths for a nonempty one. The shortcut itself correctly leaves arrays alone.
 
 ## What the interviewer listens for
 
-Contrast the empty root with an empty named object, then explain why the key alphabet makes dots safe as separators.
+Compare the empty root with an empty named object. Then explain why the allowed key characters make dots safe as separators.
 
 ## Sources
 

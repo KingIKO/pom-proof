@@ -4,41 +4,47 @@ problem: scenario/feature-flag-release-strategy
 
 ## What is going on
 
-An insurance portal puts a new quote formula behind a flag. Turning it off must restore the old formula for new quotes while preserving the prices people already have open.
+An insurance portal puts a new quote formula behind a feature flag. A feature flag is a switch that turns a feature on or off without a new release. Turning the flag off must bring back the old formula for new quotes. It must also keep the prices of quotes that people already have open.
 
 ## The answer
 
-1. Agree how cohort membership is assigned and how long it stays stable. Define the metrics, the stop owner, and the rules for in-flight quotes on disablement.
+1. Agree on the rules for running and stopping the pilot.
 
-   **Why:** If a second request can silently change someone's cohort or nobody knows who can stop the pilot, a passing first quote gives little confidence about expansion.
+   Decide how accounts join the cohort, the group that gets the new formula. Agree how long that membership stays stable. Define the metrics and the stop owner who can end the pilot. Decide what happens to in-flight quotes, the ones still open, when the flag is turned off.
 
-2. Spend seven minutes comparing quotes for included and excluded fixture accounts, including a second request. Spend nine disabling the flag with a pilot quote open and checking both its completion and new quotes.
+   **Why:** Suppose a second request can silently change someone's cohort. Then a passing first quote gives little confidence about expansion. The same is true if nobody knows who can stop the pilot.
 
-   **Why:** The first run detects leakage or unstable assignment. The second catches a flag that restores the old formula by repricing a quote a customer already saw.
+2. Spend seven minutes on cohort separation and nine minutes on turning the flag off.
 
-3. Compare the deployed, persisted cohort outcomes through the API.
+   Compare quotes for included and excluded fixture accounts, the prepared test accounts. Repeat the comparison on a second request. With a pilot quote still open, turn the flag off. Check how that quote completes and how the service prices new quotes.
 
-   **Why:** A calculation unit test does not establish which accounts the deployed service actually assigns to the new formula.
+   **Why:** Comparing the accounts catches pilot pricing outside the cohort or a change in who gets it. The flag-off run catches a switch that restores the old formula by repricing a quote a customer already saw.
 
-4. Verify the open quote through the UI, comparing the price displayed before disablement with its confirmation amount.
+3. Through the API, compare the cohort outcomes that the deployed service saved.
 
-   **Why:** Correct stored pricing does not prove the confirmation screen still shows the original amount.
+   **Why:** A unit test of the calculation does not establish which accounts the deployed service actually assigns to the new formula.
 
-5. Stop expansion if an excluded account receives pilot pricing.
+4. Through the UI, compare the open quote's price shown before the flag was turned off with its confirmation amount.
 
-   **Why:** The feature is already reaching customers outside the agreed cohort. An open quote keeping its price is expected.
+   **Why:** A correct stored price does not prove that the confirmation screen still shows the original amount.
 
-6. Set the criteria and stop owner, rehearse cohort separation and disablement in staging on the candidate, start a small pilot after the rehearsal passes, then judge the tagged pilot results against those criteria before expanding.
+5. If an excluded account receives pilot pricing, stop the expansion.
 
-   **Why:** The rehearsal proves recovery before exposing customers, and the tags let you base expansion on evidence from the current candidate.
+   **Why:** The feature is already reaching customers outside the agreed cohort. An open quote that keeps its price is expected.
+
+6. Run a small pilot with a staging rehearsal and a decision before expansion.
+
+   Set the criteria and the stop owner. On the candidate build in staging, the pre-release test environment, rehearse keeping the cohorts separate and turning the flag off. After the rehearsal passes, start the pilot. Before expanding, judge the tagged pilot results against the criteria.
+
+   **Why:** The rehearsal proves recovery before any customers are exposed. The tags mark which build produced each result. They let you base expansion on evidence from the current candidate.
 
 ## Why the tempting answer fails
 
-Approval of the announcement does not define the stop criteria or quote recovery policy. Repeating successful pilot quotes adds no rollback evidence. An API-only rollback check misses the displayed price, and starting the pilot before rehearsal leaves customers exposed before recovery has been tested.
+Approval of the announcement does not define the stop criteria or the quote recovery policy. Repeating successful pilot quotes adds no rollback evidence. Rollback means turning the change off again. An API-only rollback check misses the displayed price. Starting the pilot before the rehearsal leaves customers exposed before anyone has tested recovery.
 
 ## What the interviewer listens for
 
-Name the decision owner and give a measurable result for both categories of quote after disablement.
+Name the decision owner. Give a measurable result for both categories of quote, open and new, after the flag is turned off.
 
 ## Sources
 

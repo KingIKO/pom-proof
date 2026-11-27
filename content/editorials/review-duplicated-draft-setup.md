@@ -4,25 +4,27 @@ problem: diagnosis/review-duplicated-draft-setup
 
 ## What is going on
 
-Rename and archive both start from the details page for a fresh `April revenue` draft. The suite already supplies that exact state through the test-scoped `openedDraft` fixture. Read what the fixture guarantees before deciding which statements belong in the individual tests.
+The rename and archive tests both start on the details page for a fresh `April revenue` draft. The suite already provides that starting point through the `openedDraft` fixture, reusable setup that runs separately for each test. Because it is test-scoped, each test gets its own draft. Check what the fixture does before deciding what each test needs to do itself.
 
 ## The answer
 
-1. Mark lines 4 and 11, the draft seed calls, and lines 5 and 12, the visits to the draft details page. Leave the fixture parameter lines unmarked as instructed.
+1. Mark the repeated setup on lines 4, 5, 11 and 12. Leave the lines that request fixtures unmarked.
 
-   **Why:** Lines 4 and 11 duplicate the fixture's promise to create a fresh record; keeping them after adopting it could create an extra record. Lines 5 and 12 duplicate its promise to open that record. Keeping the visits can add another page load and another copy of the route to maintain.
+   **Why:** Lines 4 and 11 create a fresh draft. If you keep those calls after using the fixture, you may create an extra record. Lines 5 and 12 open the details page, which the fixture already does. Keeping those visits can add a page load and a second copy of the page address to maintain.
 
-2. Choose repeated setup already supplied by the test-scoped fixture. Request `openedDraft` in both tests, leaving the rename and archive actions and assertions in their respective bodies.
+2. The tests repeat draft creation and page visits that the test-scoped fixture already handles.
 
-   **Why:** A change to the common starting state then belongs in one place. Each test still gets a fresh record and shows its own user action and outcome.
+   Use `openedDraft` in both tests. Keep the rename and archive actions in their own tests, along with the assertions that check what happened.
+
+   **Why:** If the starting state changes, only the fixture needs to change. Each test still gets a fresh record and shows the user action it covers and the outcome it expects.
 
 ## Why the tempting answer fails
 
-The decoy names the maintenance problem correctly. Marking only lines 4 and 11 misses the fixture's navigation. Moving a draft to `beforeAll` would also remove repetition, but sharing that record could let archive break rename, depending on the order. The original separate seed calls already provide isolation; the evidence shows duplicate preparation.
+The decoy correctly points out that both tests repeat setup. Marking only lines 4 and 11 misses the repeated page visits. A `beforeAll` hook, which runs once before the group, would also remove repetition. If both tests share its draft and archive runs first, it could break rename. The separate setup calls already keep the drafts independent.
 
 ## What the interviewer listens for
 
-Explain the fixture's lifetime and exactly where its responsibility ends. Show that both tests can still run independently.
+Explain when the fixture runs and where its work ends. Show why either test can still run on its own.
 
 ## Sources
 

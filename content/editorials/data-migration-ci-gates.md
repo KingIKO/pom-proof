@@ -4,41 +4,47 @@ problem: scenario/data-migration-ci-gates
 
 ## What is going on
 
-The migration must preserve closed invoices and their settlement links after both a clean run and an interrupted run. A missing invoice can cancel out a duplicate in a count. Even matching IDs and amounts can hide a settlement linked to the wrong invoice.
+The migration must keep closed invoices and their settlement links intact. A settlement link ties a payment settlement to its invoice. Both must survive a clean run and a run that is interrupted and then resumed. In a count, a missing invoice can cancel out a duplicate. Even matching IDs and amounts can hide a settlement linked to the wrong invoice.
 
 ## The answer
 
-1. Agree which invoice IDs, amounts, and links must survive, where interruption and resume are supported, and which evidence CI must require.
+1. Agree which invoice IDs, amounts, and links must survive, at which points interruption and resume are supported, and which evidence CI must require.
 
-   **Why:** CI can report success without proving the migration can resume at a supported point or preserve the relationships billing depends on.
+   **Why:** CI, the automated build and test pipeline, can report success without proving two things. One is that the migration can resume at a supported point. The other is that it keeps the links between records that billing depends on.
 
-2. Spend ten minutes interrupting and resuming a fixture migration and checking IDs, sums, and links. Spend eight reconciling an uninterrupted run per invoice against the untouched snapshot.
+2. Spend ten minutes on an interrupted and resumed run and eight minutes on checking a clean run invoice by invoice.
 
-   **Why:** Resume can repeat or omit work even when the clean run works. Per-invoice reconciliation catches damaged relationships that counts and totals cannot.
+   Interrupt and resume a migration on fixture data, the prepared test data. Then check invoice IDs, sums, and links. In the clean run, compare each invoice's ID, amount, and links with the untouched snapshot of the old data.
 
-3. Put pure legacy amount conversion in a unit table.
+   **Why:** Resuming can repeat or skip work even when the clean run works. Checking each invoice catches damaged links that counts and totals cannot reveal.
 
-   **Why:** A failed row points straight to the conversion rule and gives fast feedback without running a migration.
+3. Test the pure conversion of legacy amounts, the amounts in the old format, with a unit table.
 
-4. Call the staging API to interrupt and resume the candidate, then read its status and stored results.
+   **Why:** A unit table lists fixed inputs and expected outputs. The conversion is pure, so its output depends only on its input. A failed row points straight to the conversion rule. It also gives fast feedback without running a migration.
 
-   **Why:** The control endpoint runs the actual resume path. Reading storage prevents a successful status from hiding incomplete or incorrect work.
+4. Test interruption and recovery of the candidate migration through the staging API.
 
-5. Block approval if a settlement now points to a different invoice, even if counts and amounts match.
+   Interrupt the migration and resume it. Then read its status and stored results.
 
-   **Why:** Billing would attribute the settlement to the wrong invoice.
+   **Why:** The control endpoint runs the actual resume path. Reading storage keeps a success status from hiding incomplete or incorrect work.
 
-6. Record expected evidence from the versioned legacy snapshot, run the candidate and interruption rehearsal on separate copies, reconcile both results, then approve only when the required checks ran and matched.
+5. If a settlement now points to a different invoice, block approval, even if counts and amounts match.
 
-   **Why:** Untouched data provides an independent baseline and separate copies prevent the runs from contaminating each other. On GitHub Actions, a skipped job can report success, so the gate must establish that the required test ran.
+   **Why:** Billing would assign the settlement to the wrong invoice.
+
+6. Base approval on both runs matching the expected evidence.
+
+   Record that evidence from the versioned legacy snapshot. Run the candidate and the interruption rehearsal on separate copies. An interruption rehearsal stops and resumes the migration on purpose. Reconcile both results against the evidence. Approve only when the required checks ran and matched.
+
+   **Why:** Untouched data gives an independent baseline that the candidate cannot change. Separate copies keep the two runs from contaminating each other. On GitHub Actions, a skipped job can report success. So the gate, the CI step that approves the candidate, must establish that the required test ran.
 
 ## Why the tempting answer fails
 
-Dashboard colors do not define a passing migration. Screenshots can miss swapped links. A UI test adds unrelated failure modes to the pure conversion and cannot replace control of the staging interruption or inspection of stored records. Approving before reconciliation lets the candidate pass without the checks that establish correctness.
+Dashboard colors do not define a passing migration. Screenshots can miss swapped links. A UI test adds unrelated ways to fail to the pure conversion check. It also cannot replace control of the staging interruption or inspection of stored records. If you approve before reconciliation, the candidate passes without the checks that establish it is correct.
 
 ## What the interviewer listens for
 
-State exactly what evidence CI needs before approval. Explain how the rehearsal can detect silent data corruption.
+State exactly what evidence CI needs before approval. Explain how the rehearsal can detect silent data corruption, damage that raises no error.
 
 ## Sources
 

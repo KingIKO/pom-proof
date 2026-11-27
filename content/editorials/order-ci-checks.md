@@ -4,13 +4,13 @@ problem: code/order-ci-checks
 
 ## What is going on
 
-The CI planner needs a complete schedule that obeys prerequisites. At each position it must take the alphabetically earliest ready ID, including a job whose final prerequisite just ran. If it cannot finish the schedule, it returns `null`.
+The continuous integration (CI) planner must build a complete schedule of automated jobs, where each job runs after its prerequisites. A prerequisite is a job that must finish before another job starts. At each position, the planner takes the ready ID that comes first alphabetically, in ASCII order. A job becomes ready when its final prerequisite runs, and it can win the very next position. If a cycle of jobs waiting on each other stops the schedule, the planner returns `null`.
 
 ## The fix
 
-1. Sort a new list of IDs. Build a map of remaining prerequisites and a reverse map from each prerequisite to the jobs waiting for it.
+1. Prepare a sorted list of IDs and two maps: one counts each job's remaining prerequisites, and one lists the jobs waiting on each prerequisite.
 
-   **Why:** The planner needs to update only the jobs affected by each completed job. Use one edge per distinct prerequisite so `duplicate-dependencies` counts exactly one wait and releases it exactly once. Sorting a separate ID list leaves the supplied jobs and their `needs` arrays intact.
+   **Why:** The second map lets the planner update only the jobs that depend on each finished job. Each distinct prerequisite counts as one link, called an edge. So `duplicate-dependencies` counts exactly one wait and releases it exactly once. Sorting a separate ID list leaves the supplied jobs and their `needs` arrays intact.
 
    ```js
    const ids = jobs.map(({ id }) => id).sort();
@@ -23,9 +23,9 @@ The CI planner needs a complete schedule that obeys prerequisites. At each posit
    }
    ```
 
-2. At each step, find the first sorted ID with zero remaining prerequisites. Remove its count and decrement each of its dependents.
+2. Schedule the first sorted ID with zero remaining prerequisites at each position, then lower the count of each job waiting on it.
 
-   **Why:** `wait-for-two` keeps a dependent blocked until both jobs are scheduled. Deleting the selected count prevents it from being picked again, and scanning from the beginning makes a newly ready earlier ID eligible in `earlier-id-just-became-ready`. If no eligible ID exists before the schedule is complete, the remaining jobs are blocked by a cycle. That includes `partial-cycle`, where an earlier job already ran.
+   **Why:** `wait-for-two` keeps `end` blocked until both `a` and `b` are scheduled. Deleting the chosen job's count stops the planner from picking it again. Each scan starts at the beginning of the sorted list, so `earlier-id-just-became-ready` can pick an earlier ID that just became ready. If no job is ready before the schedule is complete, a cycle blocks the remaining jobs. That holds in `partial-cycle` too, where an earlier job already ran.
 
    ```js
    const order = [];
@@ -43,11 +43,11 @@ The CI planner needs a complete schedule that obeys prerequisites. At each posit
 
 ## Why the tempting answer fails
 
-The shortcut sorts the initial ready jobs and then uses a first-in, first-out queue. `earlier-id-just-became-ready` starts `start` before `z`. Finishing `start` makes `a` ready, but the queue leaves `a` behind `z`. Both orders obey the dependencies; only `start, a, z` obeys the tie rule.
+The shortcut sorts the jobs that are ready at the start. Then it uses a first-in, first-out queue, which serves jobs in the order they joined. `earlier-id-just-became-ready` schedules `start` before `z`. Finishing `start` makes `a` ready, but the queue leaves `a` behind `z`. Both orders obey the dependencies, but only `start, a, z` follows the rule for choosing between ready jobs.
 
 ## What the interviewer listens for
 
-Each remaining count equals the number of unscheduled prerequisites. Scanning sorted IDs can take quadratic time in the number of jobs; a min-heap can pick the earliest ready ID without rescanning the whole list.
+Each remaining count equals the number of prerequisites that have not run yet. Scanning the sorted IDs can take quadratic time, which grows with the square of the number of jobs. A min-heap is a structure that always hands back its smallest item. It can pick the earliest ready ID without rescanning the whole list.
 
 ## Sources
 

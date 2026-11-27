@@ -4,22 +4,22 @@ problem: code/slowest-test-totals
 
 ## What is going on
 
-The CI report compares total time per test. Two runs can each be faster than another test's one run while costing more time together. Ranking the totals requires a rule for which name wins an equal-time cutoff.
+The continuous integration (CI) report shows results from automated test runs. It compares the total time spent on each test. Each of a test's two runs can be faster than another test's single run, while the two together cost more time. When equal totals meet at the cutoff, the report needs a rule for which name wins.
 
 ## The fix
 
-1. Sum run times into a map keyed by the exact name.
+1. Sum the run times into a map keyed by the exact test name.
 
-   **Why:** In `add-retries`, `cart` reaches 61 milliseconds across two runs and outranks `auth` at 52. Ranking individual rows would miss that. Exact keys keep `A` and `a` apart in `case-sensitive-ties`. The map and its totals stay separate from the caller's run records, so another report can still use the original order.
+   **Why:** In `add-retries`, `cart` reaches 61 milliseconds across two runs and outranks `auth` at 52. Ranking individual rows would miss that. Exact keys keep `A` and `a` apart in `case-sensitive-ties`. The map holds its totals apart from the caller's run records. So another report can still use the original order.
 
    ```js
    const totals = new Map();
    for (const { name, ms } of runs) totals.set(name, (totals.get(name) ?? 0) + ms);
    ```
 
-2. Build new report rows and sort by total descending, then by ASCII name ascending.
+2. Build new report rows and sort them by total from largest to smallest, then by name in ascending ASCII order.
 
-   **Why:** A comparison that only looks at duration treats equal totals as tied, so a stable sort keeps their previous order. That order depends on which CI shard reports first. The explicit name comparison gives `case-sensitive-ties` the required uppercase-before-lowercase order and sets the winner for `tie-at-cutoff`.
+   **Why:** A comparison that looks only at duration treats equal totals as tied. A stable sort keeps tied rows in their previous order. That order depends on which CI shard, one slice of the test run, reports first. The explicit name comparison gives `case-sensitive-ties` the required order, with uppercase before lowercase. It also decides the winner for `tie-at-cutoff`.
 
    ```js
    const ranked = Array.from(totals, ([name, totalMs]) => ({ name, totalMs }))
@@ -28,7 +28,7 @@ The CI report compares total time per test. Two runs can each be faster than ano
 
 3. Take at most `limit` rows from the sorted report.
 
-   **Why:** The cutoff must see the final tie order, or the right name might already be gone. Slicing also gives `zero-limit` an empty result and leaves the single row intact in `limit-exceeds-count`.
+   **Why:** If the cutoff runs before the tie order is final, the right name might already be gone. Slicing gives `zero-limit` an empty result. It also leaves the single row intact in `limit-exceeds-count`.
 
    ```js
    return ranked.slice(0, limit);
@@ -36,11 +36,11 @@ The CI report compares total time per test. Two runs can each be faster than ano
 
 ## Why the tempting answer fails
 
-The shortcut sums correctly but sorts by time alone. `tie-at-cutoff` puts `z` first with one run, then gives `a` the same total across two runs. With a limit of one, the decoy picks `z` instead of `a`. `case-sensitive-ties` catches the order error even without cutting off a row.
+The shortcut adds up the times correctly but sorts by time alone. `tie-at-cutoff` lists `z` first with one run. Then `a` reaches the same total across two runs. With a limit of one, the decoy picks `z` instead of `a`. `case-sensitive-ties` catches the order error even when no row is cut off.
 
 ## What the interviewer listens for
 
-State the direction of both sort keys. Show why the name tie-break belongs before slicing, using a test with two routes to the same total.
+State the direction of both sort keys. Then show why the name tie-break must come before slicing. Use a case where two tests reach the same total in different ways.
 
 ## Sources
 

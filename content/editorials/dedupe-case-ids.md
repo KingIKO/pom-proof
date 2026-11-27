@@ -4,21 +4,21 @@ problem: code/dedupe-case-ids
 
 ## What is going on
 
-Several suites put test IDs on a shared rerun queue. The queue says what should run first, so removing a repeat must leave the first nomination where it was. The strings are identifiers: case, whitespace, and the way a character is encoded all matter.
+Several test suites put test IDs on a shared rerun queue. The order of the queue says what should run first. So when you remove a repeat, the first nomination must stay where it was. The strings are identifiers, so each one must match exactly. Letter case, whitespace, and the way a character is encoded all matter.
 
 ## The fix
 
-1. Pass the original IDs to a `Set` without normalizing them.
+1. Pass the original IDs to a `Set` without normalizing them, which means without changing their case, spacing, or encoding.
 
-   **Why:** The set keeps each distinct string once and remembers insertion order. `repeats-at-end` leaves the earlier entries in place, and `unicode-and-case` keeps `É`, composed `é`, and the decomposed `e` with an accent separate. `space-and-empty` also keeps a space and an empty string as two valid IDs. In Python, a dictionary can supply the same combination of distinct keys and insertion order.
+   **Why:** A `Set` keeps each distinct string once and remembers the order it was added, so `repeats-at-end` leaves the earlier entries in place. `unicode-and-case` keeps three spellings apart: `É`, a composed `é` stored as one character, and a decomposed `e` followed by a separate accent. `space-and-empty` also keeps a space and an empty string as two valid IDs. In Python, a dictionary gives the same mix of distinct keys and insertion order.
 
    ```js
    const distinct = new Set(ids);
    ```
 
-2. Spread the set into a new array and return it in that order.
+2. Spread the set into a new array, and return it in that order.
 
-   **Why:** The caller expects a queue it can consume as an array. The spread follows the set's insertion order, so `queue-priority` still starts with `z-first`. It produces a fresh result without reordering or shortening the supplied queue, and an empty set naturally yields `[]` for `empty-queue`.
+   **Why:** The caller expects a queue it can read as an array. The spread syntax, `...`, copies the set's values in insertion order, so `queue-priority` still starts with `z-first`. The result is a new array, and the supplied queue is neither reordered nor shortened. An empty set gives `[]` for `empty-queue` with no extra code.
 
    ```js
    return [...distinct];
@@ -26,11 +26,13 @@ Several suites put test IDs on a shared rerun queue. The queue says what should 
 
 ## Why the tempting answer fails
 
-The extra sort can make a snapshot easier to read, and it passes when the nominations arrive alphabetically. `queue-priority` puts `z-first` before `a-second` and repeats `z-first` later. The decoy keeps the right IDs but runs `a-second` first. The same mistake could move a failing smoke test behind a cleanup test. `unicode-and-case` also exposes a changed order without any lost IDs; `space-and-empty` sees the empty string move ahead of the space.
+The tempting answer adds a sort. That can make a snapshot easier to read, and it passes when the nominations arrive in alphabetical order. `queue-priority` puts `z-first` before `a-second` and repeats `z-first` later. The sorted answer keeps the right IDs but runs `a-second` first.
+
+The same mistake could move a failing smoke test, a quick check of basic features, behind a cleanup test. `unicode-and-case` also shows a changed order, even though no ID is lost. In `space-and-empty`, the empty string moves ahead of the space.
 
 ## What the interviewer listens for
 
-Separate exact matching from order preservation. A queue with priority that conflicts with spelling and a queue with two identical empty IDs test different promises.
+Test exact matching and queue order separately. Use a queue whose priority order differs from alphabetical order to check that the earlier ID stays first. Use two identical empty IDs to check that the function keeps one copy of that ID.
 
 ## Sources
 

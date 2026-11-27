@@ -4,29 +4,33 @@ problem: diagnosis/notification-tests-share-account
 
 ## What is going on
 
-Invoice email starts off on the seeded workspace account. The settings test enables it; the delivery test issues an invoice and waits for mail. Even with different Playwright pages, both are signed in as `u7`, and the server reads that account's preference at dispatch.
+The workspace's test account starts with invoice email turned off. The settings test turns it on. The delivery test issues an invoice and waits for the email. The tests use separate Playwright pages, but both sign in as `u7`. At dispatch, when the server decides whether to send the email, it reads that account's setting.
 
 ## The answer
 
-1. Diagnose a missing precondition in the delivery test: it assumes another test already enabled email on the shared account.
+1. The delivery test relies on the settings test to turn on invoice email for their shared account.
 
-   **Why:** Running settings first happens to supply the precondition. Delivery on a fresh seed has no such setup, and in parallel its dispatch can read before settings enables email or after another test turns it off.
+   **Why:** When the settings test runs first, it happens to enable invoice email for delivery. A delivery test on a fresh workspace gets no such setup. When the tests run at the same time, dispatch may read the setting before the settings test turns email on. Dispatch can also read it after another test turns email off.
 
-2. Give each test its own account and inbox. Seed invoice email off for the switch test and on for delivery, and match the mail to the generated invoice ID.
+2. Set up a separate account and inbox for each test.
 
-   **Why:** The switch test can verify the change from off to on without supplying state for another test. Delivery can verify its own message without racing another account's preference write or passing on unrelated mail.
+   Start the switch test with invoice email off and the delivery test with it on. In the delivery test, match the message to the generated invoice ID.
 
-3. Trace the settings write and dispatch read to `u7` and confirm the read comes first in the failing run. Run delivery alone with email off, then with its own setup enabling email.
+   **Why:** Starting with email off lets the switch test cover the change to on. The delivery test can check its own message regardless of when another account's settings change. Matching the invoice ID keeps unrelated mail from passing the test.
 
-   **Why:** The timestamps explain the parallel failure, and changing the preference with no other worker present tests the same cause independently. Also run delivery beside a test that changes another account's preference to check the isolation.
+3. Use the trace to show that dispatch reads the setting for `u7` before the settings test saves it for the same account.
+
+   Run delivery alone with email off and confirm it fails. Turn email on in its own setup and confirm it passes. Then run delivery alongside a test that changes another account's setting to check that the accounts are independent.
+
+   **Why:** The timestamps explain why invoice email is off when dispatch reads the setting in the failing parallel run. Changing only that setting tests the same cause without another worker. The separate-account run shows whether the tests still affect each other.
 
 ## Why the tempting answer fails
 
-The decoy identifies the shared preference and keeps the useful audit trace. Running in the passing order preserves the dependency and leaves the delivery test unable to run alone. Different context IDs establish separate browser state; even fresh contexts can share the same server-side preference.
+The decoy correctly names the shared setting and uses the audit trace, the record of when the actions ran. Keeping the passing order still leaves delivery dependent on the settings test. Different browser context IDs show that the tests use separate browser sessions. Even fresh contexts can read the same account setting on the server.
 
 ## What the interviewer listens for
 
-Show where the dispatch reads its state and explain who owns that state for the entire test.
+Show which account dispatch reads and when it reads it. Explain how each test controls that account's setting from setup through delivery.
 
 ## Sources
 

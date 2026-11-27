@@ -4,29 +4,31 @@ problem: diagnosis/shipment-order-not-guaranteed
 
 ## What is going on
 
-The `Shipments loaded` marker is visible, and both labels in the response appear in the panel. The pass and fail traces differ in the order of `Warehouse pickup` and `Evening delivery`. The product requires every shipment once and leaves their order unspecified.
+The panel shows `Shipments loaded` only after the full list appears. Both labels in the response are visible. The traces, records of each run, show `Warehouse pickup` and `Evening delivery` in opposite orders. The product requires the panel to show every shipment once. It leaves the order up to the panel.
 
 ## The answer
 
-1. Identify the exact-order assertion as the cause of the reported failure.
+1. The assertion, the test's check of the list, requires a fixed order that the panel does not promise.
 
-   **Why:** The failing response and UI agree, and the loaded marker rules out a partial list in this trace. The comparison treats the reversed sequence as a defect even though neither shipment is missing.
+   **Why:** The response and the panel show the same two labels in the same order. The loaded marker rules out a partial list on this run. Compared with the passing trace, only the order differs.
 
-2. Keep the loaded-state check, then compare sorted copies of the full expected and displayed arrays using the same sort.
+2. Once the panel shows the loaded marker, compare sorted copies of the full expected and displayed arrays, or lists of labels.
 
-   **Why:** Sorting the copies removes the order dependency without mutating the originals or losing duplicate counts. With sets, expected `A, B` and actual `A, B, B` can become equal even though the panel shows an extra entry.
+   **Why:** Using the same sort on both copies makes matching lists equal in either display order. The original lists stay unchanged. The copies keep duplicates so you can still check how many times each shipment appears. A set keeps only one of each value. For example, sets treat expected `A, B` and displayed `A, B, B` as equal despite the extra entry.
 
-3. Verify that settled responses in both orders produce the corresponding complete lists. Check that the new assertion accepts both orders and fails a fixture that duplicates one label in place of the other.
+3. Check that two complete responses in opposite orders produce complete lists in those same orders.
 
-   **Why:** The reversed inputs test that a permitted variation passes. The duplicate fixture tests that the comparison still detects missing or repeated labels when the card count stays the same.
+   The new assertion should pass for both orders. It should fail if the test data repeats one label in place of the other.
+
+   **Why:** Both orders should pass because the product permits either. The repeated-label case keeps the same number of cards, so it shows whether the assertion still catches a missing or extra label.
 
 ## Why the tempting answer fails
 
-The decoy correctly identifies the order assumption and asks for both permutations. Sorting the product output changes what customers see to satisfy the test; require a particular sequence only if the product adds that rule. Counting two cards does not establish which shipments they represent. A retry just waits for the preferred order to recur.
+The decoy correctly identifies the order assumption and asks for both label orders. Sorting the output in the product changes what customers see just to pass the test. Require a specific order only if the product adds that rule. Counting two cards does not tell you which shipments they represent. Retrying just waits for the preferred order to appear again.
 
 ## What the interviewer listens for
 
-Separate readiness from membership and order. Show a failing case that has the right count and still violates the contract.
+Explain how you tell when the list is ready. Show that checking which shipments appear is separate from checking their order. Give a case with the right number of cards and the wrong labels.
 
 ## Sources
 

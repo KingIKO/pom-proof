@@ -4,41 +4,47 @@ problem: scenario/file-upload-visibility
 
 ## What is going on
 
-The upload service can accept a document for review while the download service must withhold it. Split services make the actual download response more informative than a status label.
+The upload service can accept a document for review while the download service must still withhold it. Because two separate services do this work, the actual download response tells you more than a status label.
 
 ## The answer
 
-1. Confirm accepted file types and the size boundary, who can download, and the exact pending download response.
+1. Confirm the accepted file types, the size boundary, who can download, and the exact download response while review is pending.
 
-   **Why:** An upload rejection would prevent you from ever reaching the pending state you meant to test. The download contract tells you what the accepted fixture must return in that state.
+   **Why:** If the upload is rejected, you never reach the pending state you meant to test. The download contract is the agreed response for each state. It tells you what the accepted fixture, your prepared test file, must return in the pending state.
 
-2. Spend five minutes holding review and checking that the owner cannot download the pending file. Spend seven approving it and checking owner success and second-tenant denial.
+2. Spend five minutes on the pending file and seven minutes on the approved file.
 
-   **Why:** The first check catches an early release of bytes. The second proves approval changes availability for the owner without granting it to another tenant.
+   Hold the review and confirm that the owner cannot download the pending file. After approving it, check that the owner can download it and a second tenant cannot. A tenant is one customer account with its own data.
 
-3. Inspect the pending response at the API and check for returned file bytes.
+   **Why:** The pending check catches the file's bytes, its actual content, being released early. The approved check proves approval opens the file to the owner without opening it to another tenant.
 
-   **Why:** A correct pending label can coexist with a response that already contains the document.
+3. At the API, inspect the pending response and check whether it returns any file bytes.
 
-4. Compare both approved-file responses at the API. Keep tenant data separate and compare the owner's bytes with the fixture.
+   **Why:** The pending label can be correct while the response already contains the document.
 
-   **Why:** A success status can hide an empty download, and an independent tenant checks actual access rather than a hidden button.
+4. Compare the approved-file responses for both tenants at the API.
 
-5. Block release if the endpoint returns pending bytes even to the owner.
+   Keep each tenant's data separate. Compare the file bytes the owner receives with the fixture.
 
-   **Why:** The owner-only rule does not waive the requirement to finish review before serving the document.
+   **Why:** A success status can hide an empty download. An independent tenant checks actual access, not just a hidden button.
 
-6. Upload a harmless fixture with review held, check pending download as the owner, release an approval, then check owner success and second-tenant denial.
+5. If the endpoint returns pending bytes even to the owner, block the release.
 
-   **Why:** Holding review makes the pending step deterministic. Reusing the document rules out differences between fixtures as the reason the response changes.
+   **Why:** The rule that only the owner may download does not waive the other requirement. Review must still finish before the service sends the document.
+
+6. Check download access before and after approving a harmless fixture upload.
+
+   Hold back the review after uploading. Try the pending download as the owner. Release the review with an approval. Then check that the owner can download the file and the second tenant cannot.
+
+   **Why:** Holding the review makes the pending step deterministic, meaning it behaves the same on every run. Reusing one document rules out differences between fixtures as the reason the response changes.
 
 ## Why the tempting answer fails
 
-Spinner copy leaves the download contract open. The icon sweep spends the budget for the pre-review check. A UI check cannot establish what bytes either tenant gets in either state. A separate Playwright smoke test can use `setInputFiles()` to check the pending label after attaching a fixture.
+The spinner's wording leaves the download contract open. Comparing icons spends the budget meant for the check before review. A UI check cannot establish which bytes either tenant gets in either state. A smoke test is a quick check of the main path. A separate Playwright smoke test can attach a fixture with `setInputFiles()` and then check the pending label.
 
 ## What the interviewer listens for
 
-Control the review decision and collect evidence from both download identities before recommending release.
+Control the review decision. Before you recommend release, collect evidence from both download identities, the owner and the second tenant.
 
 ## Sources
 

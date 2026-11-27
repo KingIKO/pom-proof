@@ -4,29 +4,31 @@ problem: diagnosis/banner-blocks-booking
 
 ## What is going on
 
-On the narrow layout, dismissing the banner starts its exit animation. The booking button is already displayed and enabled, which satisfies Selenium's Java `elementToBeClickable` condition. The actual WebDriver click still has to reach the button's in-view center.
+On the narrow layout, dismissing the welcome banner starts its exit animation. The booking button is already visible and enabled. That's all Selenium's Java condition `elementToBeClickable` checks. When WebDriver sends a browser click, the button's center within the visible page also has to be clear.
 
 ## The answer
 
-1. Identify the exiting banner as the element intercepting the booking click.
+1. The dismissed banner still covers the booking button's click point during its exit animation.
 
-   **Why:** The 51 ms error names the banner at `(280, 724)`, and the banner is removed at 293 ms. The button can be ready in its own right while another element still receives pointer input there.
+   **Why:** The error at 51 ms names the banner as the element covering `(280, 724)`. The app removes the banner at 293 ms. Until then, the banner can catch a click even though the button is visible and enabled.
 
-2. After dismissal, wait explicitly for `#welcome-banner` to leave the DOM. Then find the booking button and click it with WebDriver.
+2. After dismissal, wait for the banner to leave the DOM, the browser's tree of page elements.
 
-   **Why:** Removal marks the end of the overlay in this app. If a different version hides the banner instead, wait for that hidden state and verify it no longer intercepts pointer input. A JavaScript click can go through an overlay that still blocks a customer.
+   Wait on the selector `#welcome-banner`. Once the banner is gone, find the booking button and click it with WebDriver. If another version hides the banner instead, wait for it to be hidden and check that it no longer catches pointer input.
 
-3. Hit-test the reported coordinates just before failure and confirm they return the banner. Then add only the removal wait and check that a normal click reaches the button as the animation ends.
+   **Why:** In this app, removal means the banner can no longer cover the button. A JavaScript click can bypass a banner that still blocks a customer.
 
-   **Why:** The hit test identifies the receiver. Changing only the wait tests whether removing that receiver resolves the failure.
+3. Check that a hit test returns the banner just before failure. Add only the removal wait and check that a normal click reaches the button when the animation ends.
+
+   **Why:** A hit test at the reported coordinates shows which element would receive the click. Changing only the wait shows whether removing that element solves the problem.
 
 ## Why the tempting answer fails
 
-The decoy gets the cause and the hit test right. A sleep based on today's animation can fail whenever its timing changes. An enabled button can still be covered, so checking whether it is enabled adds no evidence about the click point. A missing booking POST alone could have several causes.
+The decoy correctly names the banner and uses the hit test. A fixed wait based on today's animation may fail if its timing changes. Checking that the button is enabled tells you nothing about what's covering the click point. A missing booking POST, the request that submits the booking, could have several causes.
 
 ## What the interviewer listens for
 
-Explain what being displayed and enabled proves, then name the separate evidence that shows where a real pointer click lands.
+Explain what the visibility and enabled checks prove. Name the evidence that shows where a real pointer click lands.
 
 ## Sources
 

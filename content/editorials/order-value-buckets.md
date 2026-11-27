@@ -4,7 +4,7 @@ problem: sql/order-value-buckets
 
 ## What is going on
 
-Every order needs a value label, including orders with no recorded total. The thresholds are in whole cents. Exactly 5,000 and exactly 20,000 start new bands.
+Every order needs a value label, even an order with no recorded total. The thresholds, the amounts where one band ends and the next begins, are in whole cents. An order of exactly 5,000 cents starts a new band. So does an order of exactly 20,000 cents.
 
 ## The fix
 
@@ -19,33 +19,33 @@ SELECT order_id,
 FROM orders;
 ```
 
-1. Select from `orders` without filtering and use one `CASE` expression per row.
+1. Label every row of `orders` with one `CASE` expression, without filtering.
 
-   **Why:** Two orders can share a total, including exactly 5,000 cents, and the report must label each ID. Grouping by total would lose individual orders.
+   **Why:** A `CASE` expression checks its conditions in order and returns the value of the first true one. Two orders can share a total, such as exactly 5,000 cents. The report must still label each order ID. Grouping by total would merge those orders and lose individual rows.
 
-2. Check `total_cents IS NULL` and return `unknown` first.
+2. Check `total_cents IS NULL` first and return `unknown`.
 
-   **Why:** A missing total makes the numeric conditions unknown, so without this branch it would fall all the way through to `high`. Zero is a recorded amount and goes to `small`.
+   **Why:** A missing total is `NULL`, and every numeric comparison with `NULL` gives unknown. Without this branch, the row would fall through every test and reach `high`. Zero is a recorded amount, so it goes to `small`.
 
 3. Test `total_cents < 5000` for `small`.
 
-   **Why:** At 4,999 cents the first numeric branch should match. At 5,000 cents it must let the row reach the next branch.
+   **Why:** At 4,999 cents, this first numeric branch should match. At 5,000 cents, it must not match, so the row moves on to the next branch.
 
 4. Test `total_cents < 20000` for `standard`.
 
-   **Why:** `CASE` picks the first true branch, so a known value reaching the second numeric test is already at least 5,000. The strict comparison keeps 19,999 in this band and excludes 20,000.
+   **Why:** `CASE` picks the first true branch. So a known total that reaches this second numeric test is already at least 5,000. The strict comparison, less than rather than less than or equal, keeps 19,999 in this band. It also leaves out 20,000.
 
 5. Use `ELSE` for `high`.
 
-   **Why:** A row that reached this point has a known total of at least 20,000. A separate comparison would repeat a fact the earlier branches already established.
+   **Why:** A row that reaches `ELSE` has a known total of at least 20,000. The earlier branches have already proved that. A separate comparison would only repeat it.
 
 ## Why the tempting answer fails
 
-The decoy makes both upper bounds inclusive. No visible order is exactly at either cutoff, so all of those labels agree. In the altered data, both 5,000-cent orders stop at `small`, and the 20,000-cent order stops at `standard`. All three belong in the next band.
+The decoy makes both upper bounds inclusive by using `<=` instead of `<`. No visible order sits exactly at either cutoff, so both queries give the same labels. In the altered data, both 5,000-cent orders stop at `small`. The 20,000-cent order stops at `standard`. All three belong in the next band up.
 
 ## What the interviewer listens for
 
-Test just below, exactly at, and just above each cutoff with integer cents. Compare a recorded zero with `NULL` so that boundary checks also cover the missing-value rule.
+Test just below, exactly at, and just above each cutoff, using integer cents. Also compare a recorded zero with `NULL`. That way, the boundary tests also cover the rule for missing values.
 
 ## Sources
 

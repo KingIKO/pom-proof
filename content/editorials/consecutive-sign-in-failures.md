@@ -4,7 +4,7 @@ problem: sql/consecutive-sign-in-failures
 
 ## What is going on
 
-A consecutive failure is a failed sign-in whose preceding sign-in also failed. The audit log interleaves people and actions, so the immediately preceding log row can tell the wrong story.
+A consecutive sign-in failure has another failed sign-in right before it for the same user. The audit log records actions from many users. The previous row in that log may show another user's attempt or a different action.
 
 ## The fix
 
@@ -21,33 +21,35 @@ WHERE outcome = 'failed' AND previous_outcome = 'failed'
 ORDER BY user_id, event_id;
 ```
 
-1. Filter the window input to `action = 'sign_in'`, keeping both outcomes.
+1. Keep all rows that match `action = 'sign_in'`.
 
-   **Why:** A profile save between two failures must leave the streak intact. A successful sign-in between them must break it, so that row needs to reach the window.
+   **Why:** A profile save between two failures leaves the streak intact. A successful sign-in between two failures breaks the streak. Both sign-in outcomes must reach the window function, which reads related rows without merging them.
 
-2. Partition `LAG(outcome)` by `user_id`.
+2. Partition `LAG(outcome)` by `user_id` so each user's rows stay separate.
 
-   **Why:** Adjacent failures in the log can belong to different users. Each user's first sign-in has no previous attempt, so its lagged value is `NULL`.
+   **Why:** Two neighboring failures in the log can belong to different users. The `LAG(outcome)` function reads the previous outcome within the same partition, or group of rows. For a user's first sign-in, it returns `NULL` because there is no previous attempt.
 
-3. Order the window by `occurred_at`, then `event_id`.
+3. Order the window from earliest to latest by `occurred_at`, with lower `event_id` values first at the same time.
 
-   **Why:** Events 105 and 106 share a timestamp in the altered data. The lower ID goes first, giving event 106 a failed predecessor.
+   **Why:** Events 105 and 106 share a timestamp, or recorded time, in the altered data. Event 105 has the lower ID, so its failure comes right before event 106.
 
-4. In the outer query, require both the current and previous outcomes to be `failed`.
+4. Require `failed` for both outcomes in the outer query, which reads the rows after sequencing.
 
-   **Why:** After three failures in a row, the first has no failed predecessor and both later attempts qualify. A success after a failure must stay out of the result.
+   **Why:** If a streak has three failures, the first has no failed attempt right before it. Both later attempts qualify. A success after a failure stays out because only the previous attempt failed.
 
 5. Sort the output by `user_id`, then `event_id`.
 
-   **Why:** The report lists each user's flagged IDs in ascending order. The window's ordering decides which attempt came before another; it leaves output order to this clause.
+   **Why:** The report lists each user's flagged IDs in ascending order, from lowest to highest. The window order tells `LAG` which attempt came first. The final sort controls the order readers see.
 
 ## Why the tempting answer fails
 
-The decoy discards successes before `LAG`. It still returns only event 14 on the visible data: the profile save does not count and the success follows the pair. In the altered data, dropping success 103 makes failed event 101 look like the predecessor of failed event 105. Event 105 should be the start of a new streak.
+The tempting query removes successes before `LAG` looks for the previous outcome. On the visible data, it still returns only event 14. The profile save does not count, and the success comes after the two failures.
+
+In the altered data, the query drops the success at event 103. It then treats failure 101 as the attempt right before failure 105. Event 105 should start a new streak.
 
 ## What the interviewer listens for
 
-Explain which rows are allowed to break a streak and which are invisible to it. The same `LAG` approach works in PostgreSQL and MySQL 8.
+Explain why a success breaks a streak and why actions other than sign-ins leave it alone. The same `LAG` approach works in PostgreSQL and MySQL 8.
 
 ## Sources
 

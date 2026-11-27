@@ -4,45 +4,51 @@ problem: bug-report/upload-cancel-stale-status
 
 ## What is going on
 
-The staging job returns `state=canceled`, and its log has no completion event. The screenshot taken after that response still shows 40 percent. Reloading shows Canceled, so the evidence distinguishes the stale row from the transfer itself.
+The staging job returns `state=canceled`. Its log has no completion event. The screenshot taken after that response still shows 40 percent. Reloading shows Canceled. So the evidence separates the stale row, which is out of date, from the transfer itself.
 
 ## The answer
 
 1. Set severity to S3 for misleading state with a supported recovery.
 
-   **Why:** The row makes a canceled transfer look active. Reloading the list shows the correct status, and nothing indicates that the file finished uploading.
+   **Why:** Severity describes how much harm the defect causes. The row makes a canceled transfer look active. Reloading the list shows the correct status. Nothing indicates that the file finished uploading.
 
 2. Set priority to P2, the next maintenance window.
 
-   **Why:** The policy puts staging issues with a practical workaround in that window. The evidence does not show a cancellation that customers cannot complete.
+   **Why:** Priority says how soon to fix the defect. The policy puts staging issues with a practical workaround in that window. The evidence does not show a cancellation that customers cannot complete.
 
 3. Start triage with the upload queue and status display.
 
-   **Why:** The row and service disagree until reload fetches the list again. This localizes the observed problem without identifying which callback or client state produced it.
+   **Why:** Triage is the first sorting of a defect to decide where to look. The row and the service disagree until a reload fetches the list again. This locates the observed problem. It does not identify which callback, the code that runs when a response arrives, or which client state produced it.
 
-4. Use the title “Upload row still shows progress after cancel succeeds.”
+4. Choose a title that names the progress label that stays on the upload row after a successful cancellation.
 
-   **Why:** It makes the post-response timing explicit without claiming the upload team forgot a particular step.
+   **Why:** The title makes clear that the problem appears after the response. It does not claim the upload team forgot a particular step.
 
-5. Open an empty upload queue and select the fixture PDF, wait until progress holds at 40 percent, activate Cancel on that row, then inspect it after the response arrives.
+5. Reproduce the stuck row after canceling the fixture PDF, a prepared test file.
 
-   **Why:** The hold gives a known state to cancel from. Inspecting before the response would test whether the UI changes while cancellation is still pending.
+   Start with an empty upload queue and select the file. When progress holds at 40 percent, activate Cancel on that row. After the response arrives, inspect the row.
 
-6. Request the browser version and operating system and the upload job ID from the cancel response.
+   **Why:** The hold gives a known state to cancel from. Inspecting before the response would test something else. It would test whether the UI changes while cancellation is still pending.
 
-   **Why:** The environment helps someone repeat the symptom, and the ID ties the response to the same storage and job events.
+6. Request what the engineer needs to repeat the test and find the upload job.
 
-7. Report that the row should show Canceled when the service confirms it, but remains at 40 percent until refresh.
+   Ask which browser version and operating system the reporter used. Ask for the upload job ID in the cancel response.
 
-   **Why:** Comparing the response with the rendered row captures the UI failure without claiming the server received the entire file.
+   **Why:** The environment helps someone repeat the symptom. The ID ties the response to the same storage and job events.
+
+7. Report what the row shows after the service confirms cancellation.
+
+   The row should show Canceled at that point. It stays at 40 percent until refresh.
+
+   **Why:** Comparing the response with the displayed row captures the UI failure. It does not claim that the server received the entire file.
 
 ## Why the tempting answer fails
 
-S2 treats the progress label as proof of blocked cancellation, and P1 ignores the supported reload. Keep the browser and OS request, but the 12 MB size and staging build 1102 are known; get the job ID instead. The component, title, steps and expected versus actual result fit.
+The decoy's S2 treats the progress label as proof that cancellation is blocked. Its P1 ignores the supported reload. Keep the request for the browser and OS. The 12 MB size and staging build 1102 are already known, so get the job ID instead. The decoy's component, title, steps and expected versus actual result fit.
 
 ## What the interviewer listens for
 
-Use the response and job log to tell an incomplete operation apart from a stale display. Make clear which observation occurred before reload.
+Use the response and job log to tell an incomplete operation apart from a stale display. Say clearly which observation came before the reload.
 
 ## Sources
 

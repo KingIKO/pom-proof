@@ -4,33 +4,39 @@ problem: bug-report/shipment-email-delayed
 
 ## What is going on
 
-Tracking is already visible in the app for each of three staging shipments. Their messages entered the queue at 10:00 UTC, and the mail provider accepted them at 10:22 UTC. Production impact and recipient inbox arrival time are unknown.
+For each of three staging shipments, tracking is already visible in the app. The queue holds messages that wait to be sent. These messages entered the queue at 10:00 UTC. The mail provider accepted them at 10:22 UTC. The production impact and the recipients' inbox arrival time are unknown.
 
 ## The answer
 
 1. Set severity to S3, a secondary channel is impaired while the primary channel works.
 
-   **Why:** Customers can still get tracking in the app, but the shipment email misses its service target.
+   **Why:** Severity describes how much harm the defect causes. Customers can still get tracking in the app. However, the shipment email misses its service target.
 
 2. Set priority to P1, the current sprint.
 
-   **Why:** Three test orders missed the target, so this meets the stated repeated-delay policy rather than the rule for one unconfirmed delay.
+   **Why:** Priority says how soon to fix the defect. Three test orders missed the target. So this meets the stated repeated-delay policy, not the rule for one unconfirmed delay.
 
 3. Start with the outbound notification queue.
 
-   **Why:** The measured delay begins at enqueue and ends at provider acceptance. The job history can show where time accumulated before that acceptance.
+   **Why:** The measured delay begins at enqueue, when the message enters the queue. It ends at provider acceptance. The job history can show where time built up before that acceptance.
 
-4. Use the title “Shipment email waits over 20 minutes before provider acceptance.”
+4. Choose a title that says more than 20 minutes pass before the provider accepts the shipment email.
 
-   **Why:** The symptom and measured endpoint are visible without guessing what the worker did. Keep the build, examples and times in the report.
+   Keep the build, examples and times in the report.
 
-5. Mark an email-enabled fixture order shipped, record enqueue and when tracking appears, capture the same email's provider-accepted event, then compute the interval against the five-minute target.
+   **Why:** A worker is the background process that picks up queued jobs. The title shows the symptom and the measured end point without guessing what the worker did.
 
-   **Why:** Pairing events for one shipment makes the duration reproducible and shows separately that the primary tracking path works.
+5. Measure the wait for provider acceptance on an email-enabled fixture order, a prepared test order.
 
-6. Request the test shipment, queue job and provider request IDs, plus the redacted job attempt history.
+   Mark that order as shipped. Record when the app queues the email and when tracking appears. Capture the provider's acceptance event for that same email. Calculate the interval and compare it with the five-minute target.
 
-   **Why:** Those IDs join the events across components. Attempts can distinguish time spent idle from time spent retrying unsuccessful sends.
+   **Why:** Pairing events for one shipment makes the duration reproducible. It also shows separately that the primary tracking path works.
+
+6. Request evidence that links the shipment to the provider and shows the job's attempts.
+
+   Ask for the test shipment, queue job and provider request IDs. Ask for the redacted history of job attempts, with private details removed.
+
+   **Why:** Those IDs join the events across components. The attempt history can separate time spent idle from time spent retrying unsuccessful sends.
 
 7. Record that acceptance should follow enqueue within five minutes, but took 22 minutes.
 
@@ -38,11 +44,13 @@ Tracking is already visible in the app for each of three staging shipments. Thei
 
 ## Why the tempting answer fails
 
-P2 discounts the repeated misses, and external delivery after acceptance is outside the measured interval. The long title packs timestamps into the headline. Keep the correlation IDs and request job history. The report already gives the number of test orders and the target. S3 and the reproducer fit; the inbox-arrival comparison does not.
+The decoy's P2 gives too little weight to the repeated misses. The decoy also routes to external delivery after acceptance, which is outside the measured interval. The long title packs timestamps into the headline.
+
+Keep the correlation IDs and request the job history. The report already gives the number of test orders and the target. The decoy's S3 and reproduction steps fit. Its inbox-arrival comparison does not.
 
 ## What the interviewer listens for
 
-Name the start and end events and compare only that interval to its target. Leave unmeasured delivery timing out of the conclusion.
+Name the start and end events. Compare only that interval with its target. Leave unmeasured delivery timing out of the conclusion.
 
 ## Sources
 

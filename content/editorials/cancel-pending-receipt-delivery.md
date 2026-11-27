@@ -4,7 +4,9 @@ problem: locator/cancel-pending-receipt-delivery
 
 ## What is going on
 
-A receipt may have multiple delivery attempts. A failed attempt can stay on the page with its own `Cancel` button while a new delivery for the same receipt is pending. The test needs the visible pending attempt for `RC-602`. A match on just the receipt code tells you which receipt you found, but leaves the attempt open.
+A receipt may have more than one delivery attempt. A failed attempt can stay on the page with its own `Cancel` button. At the same time, a new delivery of the same receipt can be pending, which means it is waiting to be sent. The test needs the visible pending attempt for `RC-602`. Matching only the receipt code tells you which receipt you found, but not which attempt.
+
+The fix is a locator, an expression that finds an element on the page. Its first part is a CSS selector, a pattern that matches elements by tag name and attributes. An attribute is a named value in an element's HTML tag.
 
 ## The fix
 
@@ -14,25 +16,27 @@ page.locator('article[data-delivery-state="pending"]')
   .getByRole('button', { name: 'Cancel', exact: true })
 ```
 
-1. Start with articles carrying `data-delivery-state="pending"`.
+1. Start with the `article` elements that have `data-delivery-state="pending"`.
 
-   **Why:** In `failed-attempt-retained`, the failed attempt and the pending attempt share the receipt code. The state attribute separates them before position becomes a factor. In `hidden-card-and-translated-status`, the schedule text changes language, so a check for `Queued for` would discard the valid card.
+   **Why:** In the `failed-attempt-retained` layout, the failed attempt and the pending attempt have the same receipt code. The state attribute tells them apart before their order on the page matters. In `hidden-card-and-translated-status`, the schedule text changes language. So a check for the text `Queued for` would drop the correct card.
 
 2. Keep the pending articles that contain `RC-602`.
 
-   **Why:** In `failed-attempt-retained`, `RC-711` is pending too. Testing the text within each article excludes that delivery even when it appears before the target.
+   **Why:** In `failed-attempt-retained`, `RC-711` is also pending. The filter checks the text inside each article separately. So it leaves out the `RC-711` delivery, even when that card comes before the target.
 
-3. Find the descendant button named exactly `Cancel`.
+3. Find the descendant button named exactly `Cancel`, at any depth inside the article.
 
-   **Why:** In `hidden-card-and-translated-status`, the CSS locator still matches the hidden pending article in the DOM. The role lookup excludes its hidden button by default. On the visible card, the name distinguishes `Cancel` from `Details` after the actions move into a wrapper.
+   **Why:** In `hidden-card-and-translated-status`, a hidden pending article is still in the DOM, the browser's tree of page elements. The CSS part of the locator still matches that hidden article. The role lookup, `getByRole`, skips hidden elements by default, so it leaves out that article's button. On the visible card, the buttons move into a wrapper, and the exact name still tells `Cancel` apart from `Details`.
 
 ## Why the tempting answer fails
 
-The first `Cancel` on an article mentioning `RC-602` works when only one attempt for that receipt is listed. In `failed-attempt-retained` and `hidden-card-and-translated-status`, the first visible match belongs to the earlier failed attempt. The receipt code is right in both layouts, so checking the code alone would miss the mistake.
+The tempting answer takes the first `Cancel` button in any article that mentions `RC-602`. That works when the page lists only one attempt for the receipt. In `failed-attempt-retained` and `hidden-card-and-translated-status`, the first visible match belongs to the earlier failed attempt. The receipt code is correct in both layouts. So a check of the code alone would miss the mistake.
 
 ## What the interviewer listens for
 
-Explain why state and receipt identity answer separate questions when a receipt can be retried. After cancellation, check that the pending attempt changed state and the failed attempt remains in history.
+When a receipt can be sent again, two separate questions matter. The receipt code tells you which receipt it is. The state tells you which attempt it is. Explain why the locator needs both.
+
+After you cancel, check that the pending attempt changed state. Also check that the failed attempt is still in the history.
 
 ## Sources
 

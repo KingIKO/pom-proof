@@ -4,7 +4,7 @@ problem: sql/slowest-test-per-suite
 
 ## What is going on
 
-The timing report lists the slowest measurements in each suite. One case can reach the same maximum in several attempts, and different cases can tie. Each qualifying run is evidence worth keeping.
+The timing report lists the slowest measured runs in each suite. A suite is a group of related test cases. One case can reach the same maximum time in several attempts. Different cases can also tie. Each run at the maximum is evidence worth keeping.
 
 ## The fix
 
@@ -22,31 +22,31 @@ ORDER BY suite, run_id;
 
 1. Inner join `test_cases` and `test_runs` on `case_id`.
 
-   **Why:** The case gives each run a suite. Cases without a run have no result to rank, so a left join is unnecessary. A case with multiple runs needs each run kept separate.
+   **Why:** An inner join keeps only rows that match in both tables. The case tells you which suite each run belongs to. A case without a run has no result to rank, so a left join is unnecessary. A case with several runs needs each run kept as its own row.
 
 2. Filter out `NULL` durations before ranking.
 
-   **Why:** The security suite in the altered data has no measurements. Giving its unmeasured run first place would manufacture a slowest result for the suite.
+   **Why:** A `NULL` duration means the run has no recorded time. In the altered data, the security suite has no measurements. If its unmeasured run took first place, the report would invent a slowest result for that suite.
 
-3. Partition by suite and apply `RANK()` ordered only by descending duration.
+3. Rank the runs in each suite with `RANK()`, ordered only by descending duration.
 
-   **Why:** Billing and returns both reach 5,800 ms, but they compete only within their own suites. Within returns, the three runs at that duration share first place. Using `run_id` in the window sort would split that tie.
+   **Why:** `PARTITION BY` splits the rows into one group per suite, and ranking starts over in each group. Billing and returns both reach 5,800 ms (milliseconds), but each competes only within its own suite. `RANK()` gives tied rows the same rank, so the three returns runs at that duration share first place. Adding `run_id` to the window sort would split that tie.
 
 4. Filter for `position = 1`.
 
-   **Why:** Both Print label runs at the maximum qualify, but its 2,600 ms run does not. Keeping every first-place row preserves repeated maxima from one case as well as ties across cases.
+   **Why:** Both Print label runs at the maximum qualify, but its 2,600 ms run does not. Keeping every first-place row keeps repeated maximums from one case. It also keeps ties between different cases.
 
 5. Sort by suite, then run ID.
 
-   **Why:** Run IDs settle the display order within a suite without changing which runs shared first place.
+   **Why:** Within a suite, run IDs set the display order. Sorting does not change which runs shared first place.
 
 ## Why the tempting answer fails
 
-`ROW_NUMBER()` with a run ID tie-break suits a report that wants one winner. It agrees on the visible rows because payments and delivery each have a unique slowest run, and search has no measurement. In the altered returns suite, it keeps run 101 but drops runs 102 and 103, even though all three reach the same maximum.
+`ROW_NUMBER()` numbers the rows without ties, and the decoy breaks ties by run ID. That fits a report that wants one winner per suite. It agrees with the reference on the visible rows. Payments and delivery each have a unique slowest run, and search has no measurement. In the altered returns suite, it keeps run 101 but drops runs 102 and 103, though all three reach the same maximum.
 
 ## What the interviewer listens for
 
-Explain why runs are ranked individually. Test a maximum shared by repeated runs of one case and by a run from another case.
+Explain why the query ranks each run on its own. Test a maximum shared by repeated runs of one case and by a run from another case.
 
 ## Sources
 
