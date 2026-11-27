@@ -1,12 +1,24 @@
 ---
 import { getCollection } from 'astro:content';
 import QuestionsList from '../../components/questions/QuestionsList.astro';
+import { questionListUrl, questionRoles, withParams } from '../../components/questions/questions';
+import TitleBand from '../../components/shell/TitleBand.astro';
 import Base from '../../layouts/Base.astro';
+import '../../styles/questions.css';
 
 const questions = (await getCollection('questions')).sort((a, b) =>
   a.data.title.localeCompare(b.data.title, 'en') || a.id.localeCompare(b.id, 'en'));
 ---
-<Base title="Questions" section="questions">
-  <h1>Questions</h1>
+<Base title="Interview questions" section="questions" wide>
+  <TitleBand slot="title-band" title="Interview questions"
+    breadcrumbs={[{ label: 'POM Proof', href: '/' }, { label: 'Questions' }]}>
+    <span slot="meta" class="num">{questions.length} questions</span>
+    <nav slot="tabs" class="tabs question-role-tabs" aria-label="Question roles" data-bank-control hidden>
+      <a href={questionListUrl} data-role-filter="" aria-current="true">All <span class="num">{questions.length}</span></a>
+      {Object.entries(questionRoles).map(([id, label]) => (
+        <a href={withParams(questionListUrl, new URLSearchParams({ role: id }))} data-role-filter={id}>{label}</a>
+      ))}
+    </nav>
+  </TitleBand>
   <QuestionsList questions={questions} />
 </Base>

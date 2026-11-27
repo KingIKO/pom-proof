@@ -31,6 +31,19 @@ export const questionTypes = {
   tooling: 'Tooling',
 } satisfies Record<Question['type'], string>;
 
+export const questionRoles = {
+  'manual-qa': 'Manual QA',
+  automation: 'Automation',
+  sdet: 'SDET',
+  senior: 'Senior',
+} satisfies Record<Question['roles'][number], string>;
+
+export const ratings = [
+  { key: '1', id: 'missed', label: 'Missed' },
+  { key: '2', id: 'shaky', label: 'Shaky' },
+  { key: '3', id: 'solid', label: 'Solid' },
+] as const;
+
 export const filterNames = ['q', 'topic', 'role', 'level', 'type'] as const;
 export const questionListUrl = url('/questions/');
 
