@@ -1,5 +1,5 @@
 ---
-title: "Count words in failure notes"
+title: "Count how often each word appears in failure notes"
 kind: code
 topic: reporting
 difficulty: medium
@@ -96,6 +96,8 @@ decoy:
     }
 ---
 
-A dashboard counts words in a batch of test failure notes. A word is a maximal run of ASCII letters or digits. Every other character is a separator, including underscores and non-ASCII letters. Compare words case-insensitively and return `[[word, count], ...]` with lowercase words. Sort by descending count, then ascending ASCII text order of the words. If the notes contain no words, return an empty array.
+The dashboard counts words in test failure notes. For this exercise, group consecutive letters `A` to `Z` or `a` to `z` and digits `0` to `9` into one word. Every other character separates words, including underscores and letters outside ASCII.
 
-`countFailureWords("Retry, timeout retry.")` returns `[["retry",2],["timeout",1]]`. Leave the inputs unchanged.
+Ignore letter case when you count. Return `[[word, count], ...]` with each word in lowercase. Put the highest counts first. If counts tie, sort by the ASCII number for each character, lowest first. If the notes have no words, return an empty array.
+
+For example, `countFailureWords("Retry, timeout retry.")` returns `[["retry",2],["timeout",1]]`. Leave the inputs unchanged.

@@ -27,8 +27,8 @@ items:
     prompt: "What is the most serious problem in this change?"
     choices:
       - { id: assertion, text: "The test checks too many order states after the click." }
-      - { id: data, text: "The fixture creates two records where the test needs one." }
-      - { id: locator, text: "The test chooses the order by position and the action by a generated CSS class." }
+      - { id: data, text: "The fixture creates two records when the test needs only one." }
+      - { id: locator, text: "The test picks the order by its position and the action by a generated CSS class." }
       - { id: race, text: "The test clicks the dialog before Playwright can find it." }
 reference:
   review: [l06, l07]
@@ -38,4 +38,6 @@ decoy:
   category: locator
 ---
 
-The `refundPair` fixture creates two paid orders with distinct IDs. The PR must refund `target` and leave `other` paid. The table can reorder the rows, the action has the accessible name `Request refund`, and the build generates its CSS class.
+A fixture is a helper that Playwright sets up and passes to the test. The `refundPair` fixture creates two paid orders with different IDs. The test in the pull request (PR) must refund `target` and leave `other` paid. The table can change the order of its rows.
+
+The refund action has the accessible name `Request refund`. An accessible name is the label that assistive tools can read for an element. The build generates the action's CSS class, a label used to apply styles.

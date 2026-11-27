@@ -1,5 +1,5 @@
 ---
-title: "Detect overlapping test lab bookings"
+title: "Check if two test lab bookings overlap"
 kind: code
 topic: scheduling
 difficulty: medium
@@ -94,6 +94,8 @@ decoy:
     }
 ---
 
-A test lab has one room. Each booking is a `[start, end]` pair on the same integer clock, with `0 <= start < end` and both values in the safe integer range. A booking starts at `start` and releases the room at `end`, so a booking ending at 20 can be followed immediately by one starting at 20. The pairs are in no particular order. Return `true` if any two bookings overlap and `false` otherwise. Empty and single-booking schedules cannot overlap.
+A test lab has one room. Each booking gives a `[start, end]` pair. Both times are whole numbers on the same clock and follow `0 <= start < end`. Both times fit the safe integer range, where JavaScript can store each integer exactly. The input may list bookings in any order.
 
-`detectBookingOverlap([[20,50],[10,21],[60,70]])` returns `true`. Leave the inputs unchanged.
+A booking starts at `start` and frees the room at `end`. For example, a booking can start at 20 as soon as another ends at 20. If any two bookings overlap, return `true`. Otherwise, return `false`. An empty schedule or a schedule with one booking cannot overlap.
+
+For example, `detectBookingOverlap([[20,50],[10,21],[60,70]])` returns `true`. Leave the inputs unchanged.

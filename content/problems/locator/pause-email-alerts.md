@@ -1,5 +1,5 @@
 ---
-title: Find the pause action for email alerts
+title: Find the button that pauses email alerts
 kind: locator
 syntax: css
 topic: playwright
@@ -41,6 +41,6 @@ reference: { by: css, selector: '[data-channel="email"] button[name="pause-chann
 decoy: { by: css, selector: 'li:nth-child(1) > button:nth-of-type(1)' }
 ---
 
-Use CSS to find the button that pauses email delivery. Each channel has its own Pause and Edit actions. The app uses stable `data-channel` and button `name` values to route actions, including on translated screens.
+Use a CSS selector, a pattern that matches page elements, to find the button that pauses email delivery. Each channel, or way to send alerts, has its own Pause and Edit actions. The app uses `data-channel` to identify the channel and the button's `name` to identify the action. Those values stay the same when the screen is translated.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

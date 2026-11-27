@@ -1,5 +1,5 @@
 ---
-title: Calculate running paid spend per customer
+title: Track how much each customer has spent after each paid order
 kind: sql
 topic: reporting
 difficulty: hard
@@ -46,6 +46,8 @@ decoy:
     ORDER BY customer_id, placed_at, order_id;
 ---
 
-For each paid order, calculate that customer's cumulative paid spend through that order. The sequence within each customer is `placed_at` ascending, then `order_id` ascending for equal timestamps. Timestamps are UTC text in `YYYY-MM-DD HH:MM:SS` format. Exclude pending and cancelled orders from both the running total and the result.
+For each customer, put paid orders in time order, earliest `placed_at` first. If times match, put the smaller `order_id` first. The timestamps store UTC time as `YYYY-MM-DD HH:MM:SS`.
 
-Return `customer_id`, `order_id`, `placed_at`, `running_paid_cents`, in that column order. Sort by `customer_id` ascending, then `placed_at` ascending, then `order_id` ascending.
+For each paid order, show the customer's running total. That total includes the current order and that customer's earlier paid orders. Leave pending and cancelled orders out of both the total and the results.
+
+Return `customer_id`, `order_id`, `placed_at`, and `running_paid_cents` in that order. Sort by `customer_id`, then `placed_at`, then `order_id`, all in ascending order.

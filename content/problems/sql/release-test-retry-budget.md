@@ -1,5 +1,5 @@
 ---
-title: Flag test cases with at least three executed attempts
+title: Find release tests that ran at least three times
 kind: sql
 topic: aggregation
 difficulty: medium
@@ -43,6 +43,6 @@ decoy:
     HAVING COUNT(*) >= 3;
 ---
 
-Find test cases that used at least three executed attempts in a single release. The first executed run counts as an attempt. Either a pass or a failure counts; a skipped run does not. Count attempts separately for each release and case.
+Count executed attempts separately for each release and test case. A run counts as an executed attempt if it passed or failed. Count the first such run as well as any retries that passed or failed. Skip runs marked as skipped. If a release and case pair has at least three executed attempts, report it.
 
-Return `release_id`, `case_id`, `executed_attempts`, in that column order. Row order does not matter.
+Return `release_id`, `case_id`, and `executed_attempts` in that order. Rows can appear in any order.

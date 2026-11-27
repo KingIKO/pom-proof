@@ -1,5 +1,5 @@
 ---
-title: Find the booking cancellation confirmation
+title: Find Confirm in the visible booking cancellation dialog
 kind: locator
 topic: playwright
 difficulty: medium
@@ -42,6 +42,6 @@ reference:
 decoy: { by: expression, source: "page.getByRole('button', { name: 'Confirm', exact: true }).nth(0)" }
 ---
 
-Find the `Confirm` button inside the visible `Cancel booking BK-281?` dialog. Notification settings can have their own confirmation button, and a hidden draft may remain in the DOM.
+Find the `Confirm` button in the visible panel named `Cancel booking BK-281?`. The panel is a dialog, a part of the page that asks the user to respond. Notification settings can have their own confirmation button. A hidden draft may stay in the DOM, the page structure the browser uses.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

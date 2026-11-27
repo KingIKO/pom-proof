@@ -1,5 +1,5 @@
 ---
-title: "Find the first failing build"
+title: "Find where the build history starts failing"
 kind: code
 topic: ci
 difficulty: easy
@@ -102,6 +102,8 @@ decoy:
     }
 ---
 
-A build history is already ordered from oldest to newest. Each boolean says whether that build failed. Once a build fails, every later build in this particular history fails. Find the zero-based index of the first failure or return `-1` if there is none. Use binary search so the work grows logarithmically with history length. An empty history has no failure.
+The build history lists builds from oldest to newest. Each entry is a boolean: `true` means the build failed, and `false` means it did not. In this history, every build after the first failure also fails.
 
-`firstFailingBuild([false,false,false,true,true])` returns `3`. Leave the inputs unchanged.
+Return the first failure's index, its position counting from zero. If no build failed, or if the history is empty, return `-1`. Use binary search, which cuts the search area in half at each step. That keeps the work growing logarithmically: roughly one extra step when the history doubles.
+
+For example, `firstFailingBuild([false,false,false,true,true])` returns `3`. Leave the inputs unchanged.

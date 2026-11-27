@@ -1,5 +1,5 @@
 ---
-title: "List password rule failures"
+title: "List the rules a password breaks"
 kind: code
 topic: validation
 difficulty: easy
@@ -96,15 +96,17 @@ decoy:
     }
 ---
 
-A sign-up test double uses a local password policy. Return an array containing every applicable failure label in this order:
+A sign-up test double, a stand-in for the real sign-up flow, has its own password rules. Return an array with one label for each rule the password breaks. Use the order in the table.
 
-| Label | When to include it |
+A Unicode code point is one numbered unit of text. For the length rule, count code points even if several combine to look like one character.
+
+| Label | Include it if the password |
 | --- | --- |
-| `too-short` | Fewer than 10 Unicode code points |
-| `no-uppercase` | No ASCII letter from `A` through `Z` |
-| `no-digit` | No ASCII digit from `0` through `9` |
-| `has-space` | Contains the literal ASCII space |
+| `too-short` | Has fewer than 10 Unicode code points |
+| `no-uppercase` | Has no ASCII letter from `A` through `Z` |
+| `no-digit` | Has no ASCII digit from `0` through `9` |
+| `has-space` | Has an ordinary ASCII space |
 
-An empty password fails the first three rules. Tabs and other whitespace do not trigger `has-space`. A password that satisfies all rules returns an empty array.
+An empty password breaks the first three rules. Tabs and other whitespace do not count toward `has-space`. If the password meets every rule, return an empty array.
 
-`passwordRejectionReasons("small word")` returns `["no-uppercase","no-digit","has-space"]`. Leave the inputs unchanged.
+For example, `passwordRejectionReasons("small word")` returns `["no-uppercase","no-digit","has-space"]`. Leave the inputs unchanged.

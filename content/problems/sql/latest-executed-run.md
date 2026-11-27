@@ -1,5 +1,5 @@
 ---
-title: Find tests whose latest run failed
+title: Find tests that failed the last time they ran
 kind: sql
 topic: reporting
 difficulty: medium
@@ -44,6 +44,8 @@ decoy:
     ORDER BY cases.name;
 ---
 
-A Playwright results dashboard needs a list of tests that currently fail. Write one SQLite query against `cases(id, name)` and `runs(seq, case_id, outcome)`. Larger `seq` values happened later. An outcome is `passed`, `failed`, or `skipped`.
+A Playwright results dashboard needs a list of tests that currently fail. Write one query, a request for data from a SQLite database, using `cases(id, name)` and `runs(seq, case_id, outcome)`. The `seq` column shows run order. Higher values mean later runs. Each outcome is `passed`, `failed`, or `skipped`.
 
-For each case, ignore skipped entries and consider the most recent remaining run. Return a single column `name` for the failed cases, in ascending name order. Cases with no executed run must be absent. The query is checked against two datasets.
+For each test case, ignore skipped runs and look at the latest run left. If no run is left, leave out that case. Include only cases where the last run failed.
+
+Return only the `name` column and sort in ascending name order. The grader checks the query against two sets of data.

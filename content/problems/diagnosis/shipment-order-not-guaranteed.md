@@ -8,28 +8,28 @@ roles: [automation, sdet]
 items:
   - id: cause
     type: single-choice
-    prompt: Why does the reported assertion fail?
+    prompt: Why does the assertion in the log fail?
     choices:
-      - { id: hydration, text: The assertion checks while the panel still contains a partial list. }
-      - { id: duplicate, text: The shipment list displays a duplicate label and drops another label. }
+      - { id: hydration, text: The assertion runs while the panel still shows only part of the list. }
+      - { id: duplicate, text: The shipment list shows one label twice and leaves out another label. }
       - { id: expected-order, text: The assertion assumes an order that the panel does not promise. }
       - { id: request, text: The second response is missing the Evening delivery shipment. }
   - id: fix
     type: single-choice
     prompt: What should the test assert after the panel has loaded?
     choices:
-      - { id: assert-first, text: Assert only the first label and accept whichever of the expected values appears there. }
-      - { id: any-order, text: "Compare sorted copies of the full expected and displayed label arrays, preserving duplicates." }
-      - { id: retry, text: Retry on a mismatch until the expected order appears. }
-      - { id: product-sort, text: Add alphabetical sorting to the product so the test's expected order can stay fixed. }
+      - { id: assert-first, text: "Check only the first label, and accept either expected value in that position." }
+      - { id: any-order, text: "Compare sorted copies of both full label arrays without dropping duplicates." }
+      - { id: retry, text: "When the labels do not match, retry until the expected order appears." }
+      - { id: product-sort, text: Make the product sort the labels alphabetically so the test's expected order can stay fixed. }
   - id: evidence
     type: multi-select
-    prompt: Which observations would justify the assertion change and test its limits?
+    prompt: Which observations would support the new assertion and test its limits?
     choices:
-      - { id: permute, text: Two settled responses with the same labels in reverse order produce correspondingly reordered lists with no missing entries. }
-      - { id: count, text: Both versions of the panel contain two shipment cards. }
-      - { id: test-negatives, text: The new assertion passes both orders and fails a fixture that duplicates one label in place of the other. }
-      - { id: no-warn, text: The browser console has no warnings during rendering. }
+      - { id: permute, text: "Two complete responses list the same labels in opposite orders. The two displayed lists follow those orders without missing labels." }
+      - { id: count, text: "The panel displays its shipment cards after each response. Both versions show two shipment cards." }
+      - { id: test-negatives, text: "The new assertion passes for both orders. It fails if the test data repeats one label instead of the other." }
+      - { id: no-warn, text: "The shipment cards appear in the panel. The browser console shows no warnings as they appear." }
 reference:
   cause: expected-order
   fix: any-order
@@ -40,7 +40,9 @@ decoy:
   evidence: [permute, count]
 ---
 
-The order details panel must display every shipment once. The contract does not specify the display order. `Shipments loaded` appears only once the full list is rendered.
+The order details panel must show every shipment once. The contract, or agreed rule for what the panel must do, does not specify the display order. The `Shipments loaded` text appears only after the panel shows the full list.
+
+An assertion checks a result against what the test expects. An array is an ordered list of values. The browser console shows messages from the browser and page.
 
 ```ts
 await page.goto('/orders/o21');

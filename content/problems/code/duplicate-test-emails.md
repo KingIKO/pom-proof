@@ -1,5 +1,5 @@
 ---
-title: "Find duplicate test emails"
+title: "Find repeated email addresses in test data"
 kind: code
 topic: test-data
 difficulty: easy
@@ -100,6 +100,8 @@ decoy:
     }
 ---
 
-A fixture loader checks account aliases before seeding a test database. Each entry is a nonempty ASCII email with no whitespace. For this fixture only, compare the whole address after lowercasing it. Return each repeated address once, in lowercase, ordered by the position where its second occurrence appears. Preserve dots and plus tags. Return an empty array if nothing repeats.
+A loader checks account email aliases, other addresses an account can use, before it fills a test database. Each entry is a nonempty email address written in ASCII, with no spaces, tabs, or other whitespace. For this set of test data only, convert the whole address to lowercase before comparing it. Keep dots and plus tags, the parts after a plus sign before the `@`.
 
-`duplicateTestEmails(["Sam@example.test","sam@example.test","lee@example.test"])` returns `["sam@example.test"]`. Leave the inputs unchanged.
+Return each repeated address once, in lowercase. Order addresses by where each address appears for the second time. If none repeat, return an empty array.
+
+For example, `duplicateTestEmails(["Sam@example.test","sam@example.test","lee@example.test"])` returns `["sam@example.test"]`. Leave the inputs unchanged.

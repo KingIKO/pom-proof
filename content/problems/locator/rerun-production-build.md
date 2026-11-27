@@ -1,5 +1,5 @@
 ---
-title: Find the rerun action for a production build
+title: Find the Rerun button for the production build
 kind: locator
 syntax: playwright
 topic: playwright
@@ -50,6 +50,8 @@ reference:
 decoy: { by: expression, source: "page.getByRole('row').filter({ hasText: 'Production' }).getByRole('button', { name: 'Rerun', exact: true }).nth(0)" }
 ---
 
-Use a Playwright-style expression to find `Rerun` for production build `BLD-813` under `Release checks`. Staging can show the same build number, and the rollback drill can show an identical row for practice. Keep all three parts of the build's identity in the locator.
+Use a Playwright-style locator, an expression that finds an element, to find `Rerun` for build `BLD-813`. Match the production build, the one for the live app. Find it under `Release checks`.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Staging, the test environment, can show the same build number. The rollback drill, a practice run for switching to an earlier version, can show an identical row. Make the locator match the section, environment, and build number.
+
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

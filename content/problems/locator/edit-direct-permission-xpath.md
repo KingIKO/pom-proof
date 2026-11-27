@@ -1,5 +1,5 @@
 ---
-title: Find the edit action for a direct permission
+title: Find Edit for a permission granted directly
 kind: locator
 syntax: xpath
 topic: playwright
@@ -45,6 +45,8 @@ reference: { by: xpath, selector: "//table[@data-role-source='direct']//td[@data
 decoy: { by: xpath, selector: "(//td[normalize-space(.)='Morgan Ives']/ancestor::tr[1]//button[normalize-space(.)='Edit'])[1]" }
 ---
 
-Use XPath to find `Edit` for the direct grant in the `Morgan Ives` name cell's row. Morgan can also have inherited access. Name and action columns may trade places, and the name can be split across inline elements. The table's `data-role-source` value identifies how the grant was made.
+Use XPath, a language for finding elements in a page, to find `Edit` in the right row for `Morgan Ives`. The row must contain the cell with that name and show a direct grant, a permission given to Morgan individually. Morgan can also have inherited access, permission obtained through another role or group.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+The `data-role-source` value says how Morgan got the permission. The name and action columns may swap places. The name may be split across smaller elements inside the cell.
+
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

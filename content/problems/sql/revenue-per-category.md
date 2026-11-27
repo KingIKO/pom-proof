@@ -1,5 +1,5 @@
 ---
-title: Calculate category revenue excluding cancelled orders
+title: Add up sales by category without cancelled orders
 kind: sql
 topic: reporting
 difficulty: medium
@@ -54,6 +54,8 @@ decoy:
     GROUP BY p.category;
 ---
 
-Reconcile the storefront's category revenue report. Each non-cancelled order line contributes its quantity multiplied by the unit price stored on that line. Use the product to look up the current category. Include only categories with at least one non-cancelled line. All prices use the same currency.
+Check the storefront's category revenue report against its orders. Leave out lines from cancelled orders. For each other line, multiply the quantity by the unit price, the price for one item stored on that line. All prices use the same currency.
 
-Return `category`, `revenue_cents`, in that column order. Row order does not matter.
+Look up the product's current category and add the line's amount to it. If no lines count toward a category, leave that category out.
+
+Return `category` first and `revenue_cents` second. Rows can appear in any order.

@@ -1,5 +1,5 @@
 ---
-title: Find order lines with broken import links
+title: Find imported lines with no matching order or product
 kind: sql
 topic: data-integrity
 difficulty: medium
@@ -45,6 +45,6 @@ decoy:
     ORDER BY l.line_id;
 ---
 
-Before a checkout import applies foreign keys, inspect the staged order lines. Include a line if either its order or its product is missing. A reference counts as missing if its ID is `NULL` or it points to a row that does not exist. Return numeric flags, `1` for a missing link and `0` for a valid link.
+Check the order lines waiting to be imported. Do this before the import applies foreign keys, which enforce links to rows in other tables. If a line's order or its product is missing, include the line. A link is missing if its ID is `NULL` or if no row has that ID.
 
-Return `line_id`, `missing_order`, `missing_product`, in that column order. Sort by `line_id` ascending.
+For each link, return `1` if it is missing or `0` if it is valid. Return `line_id`, `missing_order`, and `missing_product` in that order. Sort by `line_id` in ascending order.

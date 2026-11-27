@@ -1,5 +1,5 @@
 ---
-title: Find the print action for a package label
+title: Find the button that prints a package's shipping label
 kind: locator
 syntax: css
 topic: playwright
@@ -39,6 +39,6 @@ reference: { by: css, selector: 'tr[data-package-id="PK-241"] button[data-action
 decoy: { by: css, selector: 'tbody tr:first-child td:nth-of-type(2) > button:first-child' }
 ---
 
-Use CSS to find the button that prints the shipping label for package `PK-241`. A packing slip may also have a Print button. The app keeps the package ID and action code on the row and button, respectively.
+Use a CSS selector, a pattern that matches page elements, to find the button that prints the shipping label for package `PK-241`. A packing slip may also have a Print button. The app stores the package ID on the row. It stores the action code, which identifies what the button does, on the button.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

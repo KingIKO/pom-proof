@@ -1,5 +1,5 @@
 ---
-title: "Find the first latency breach"
+title: "Find the first request over the time limit"
 kind: code
 topic: reporting
 difficulty: easy
@@ -67,6 +67,10 @@ decoy:
     }
 ---
 
-A smoke test records durations in request order. Find the first request whose duration is strictly greater than its latency budget. Return its zero-based index, or `-1` if no request breaches the budget. The budget and durations are nonnegative integer milliseconds in the safe integer range. An exact match for the budget is acceptable.
+A smoke test, a quick check of basic behavior, records how long each request takes. It records durations in request order. The latency budget is the time limit for a request.
 
-`firstLatencyBreach([45,70,20], 50)` returns `1`. Leave the inputs unchanged.
+Return the position of the first request that takes longer than the limit. Count positions from zero. An exact match for the budget is acceptable. If no request goes over the budget, return `-1`.
+
+The budget and durations are whole milliseconds of zero or more. They fit the safe integer range, where JavaScript can store each integer exactly.
+
+For example, `firstLatencyBreach([45,70,20], 50)` returns `1`. Leave the inputs unchanged.

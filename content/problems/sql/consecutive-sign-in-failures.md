@@ -1,5 +1,5 @@
 ---
-title: Find consecutive sign-in failures
+title: Find failed sign-ins that follow another failure
 kind: sql
 topic: reporting
 difficulty: hard
@@ -55,6 +55,8 @@ decoy:
     ORDER BY user_id, event_id;
 ---
 
-For each user, order only their `sign_in` attempts by `occurred_at` ascending, then `event_id` ascending for equal timestamps. Timestamps use `YYYY-MM-DD HH:MM:SS` in UTC. Flag every failed attempt whose immediately previous sign-in attempt for that user also failed. A success breaks the streak. Other actions have no effect on it.
+For each user, look only at `sign_in` attempts. Put the attempts in time order, earliest `occurred_at` first. If times match, put the smaller `event_id` first. The timestamps store UTC time as `YYYY-MM-DD HH:MM:SS`.
 
-Return `user_id`, `event_id`, in that column order. Sort the result by `user_id` ascending, then `event_id` ascending.
+If a sign-in failed right after another failed sign-in for that user, report the later attempt. A successful sign-in breaks the streak. Other actions do not affect it.
+
+Return `user_id` first and `event_id` second. Sort by `user_id` from smallest to largest, then by `event_id` from smallest to largest.

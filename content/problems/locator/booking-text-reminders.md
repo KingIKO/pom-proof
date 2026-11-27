@@ -1,5 +1,5 @@
 ---
-title: Find the text reminder checkbox
+title: Find the checkbox for booking text reminders
 kind: locator
 topic: playwright
 difficulty: easy
@@ -35,6 +35,6 @@ reference:
 decoy: { by: expression, source: "page.getByRole('checkbox').nth(0)" }
 ---
 
-A booking form offers separate email and text reminders. Find the checkbox users toggle to receive `Text reminders`. Return the input rather than the label around it.
+The booking form lets users choose email reminders and text reminders separately. Find the checkbox input for `Text reminders`. Match the input itself and leave out the label around it.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

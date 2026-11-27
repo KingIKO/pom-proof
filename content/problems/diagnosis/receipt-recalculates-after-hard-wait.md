@@ -10,26 +10,26 @@ items:
     type: single-choice
     prompt: What caused this failure?
     choices:
-      - { id: selector, text: The test reads a different total with the same test ID. }
-      - { id: snapshot, text: The test takes a text snapshot before the update renders. }
+      - { id: selector, text: The test reads a different total that has the same test ID. }
+      - { id: snapshot, text: The test takes a text snapshot before the page shows the update. }
       - { id: shipping, text: The server calculates the wrong amount for two items. }
       - { id: click, text: The click never reaches the quantity button. }
   - id: fix
     type: single-choice
     prompt: Which change keeps the check meaningful?
     choices:
-      - { id: delay, text: Increase the fixed wait to two seconds before reading the total. }
-      - { id: retry, text: Add a test retry without changing the assertion. }
-      - { id: response, text: Check only that the pricing request returns 200. }
-      - { id: visible-total, text: Remove the fixed wait and assert the expected text directly on the total locator. }
+      - { id: delay, text: "Before reading the total, raise the fixed wait to two seconds." }
+      - { id: retry, text: Retry the test on failure and leave the existing assertion as it is. }
+      - { id: response, text: Check only that the pricing request returns a response with status 200. }
+      - { id: visible-total, text: Replace the fixed wait with a text assertion on the total's locator. }
   - id: evidence
     type: multi-select
     prompt: Which observations would confirm the diagnosis?
     choices:
-      - { id: same-node, text: The same total changes to $28.00 after the failing snapshot. }
-      - { id: status-only, text: The pricing response has status 200. }
-      - { id: delayed-price, text: "With the price update delayed past 300 ms, the locator assertion passes when the text changes." }
-      - { id: green, text: An unchanged rerun passes without a trace. }
+      - { id: same-node, text: "After the text snapshot fails the check, the same total changes to $28.00." }
+      - { id: status-only, text: The pricing service responds to the request from the browser with HTTP status 200. }
+      - { id: delayed-price, text: "With the price update held past 300 ms, the locator check passes when the text changes." }
+      - { id: green, text: The test passes on another run with no changes and no recorded browser trace. }
 reference:
   cause: snapshot
   fix: visible-total
@@ -40,7 +40,7 @@ decoy:
   evidence: [same-node, green]
 ---
 
-A seeded cart has one $14 item. The test checks that increasing the quantity updates the receipt total on screen.
+A seeded cart, created before the test runs, has one $14 item. The test checks that raising the quantity updates the receipt total on screen. The `textContent()` call reads the element's text once, like a snapshot. A locator is Playwright's description of how to find an element on the page.
 
 ```ts
 await page.goto('/cart');

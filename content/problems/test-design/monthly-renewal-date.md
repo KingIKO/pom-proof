@@ -1,5 +1,5 @@
 ---
-title: Check subscription renewals across short months
+title: Check renewal dates when months have different lengths
 kind: test-design
 topic: date-testing
 difficulty: hard
@@ -7,9 +7,9 @@ minutes: 15
 roles: [manual-qa, automation, sdet, senior]
 exportName: nextRenewalDate
 params:
-  - { name: year, type: number, label: Current billing year }
-  - { name: month, type: number, label: Current billing month }
-  - { name: billingDay, type: number, label: Original billing day }
+  - { name: year, type: number, label: Year of current bill }
+  - { name: month, type: number, label: Month of current bill }
+  - { name: billingDay, type: number, label: Billing day before any adjustment }
 implementation: |
   function lastDay(year, month) {
     if (month === 2) {
@@ -26,7 +26,7 @@ implementation: |
   }
 mutants:
   - name: carries-shortened-billing-day
-    teaches: Move from a short billing month to a month with room for the original billing day.
+    teaches: Start in a short month. Move to a month that has the original billing day.
     implementation: |
       function lastDay(year, month) {
         if (month === 2) {
@@ -42,7 +42,7 @@ mutants:
         return `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       }
   - name: overlooks-april-length
-    teaches: Try a billing day past the end of April as the next billing month.
+    teaches: Make April the next billing month. Use a billing day higher than April's last day.
     implementation: |
       function lastDay(year, month) {
         if (month === 2) {
@@ -58,7 +58,7 @@ mutants:
         return `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       }
   - name: ignores-leap-days
-    teaches: Use a late billing day in January of a leap year.
+    teaches: Start in January of a leap year and choose a billing day near the end of January.
     implementation: |
       function lastDay(year, month) {
         if (month === 2) return 28;
@@ -71,7 +71,7 @@ mutants:
         return `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       }
   - name: treats-all-multiples-of-four-as-leap
-    teaches: Renew into February of a century year that is not a leap year.
+    teaches: Renew into February of a year divisible by 100 that is not a leap year.
     implementation: |
       function lastDay(year, month) {
         if (month === 2) return year % 4 === 0 ? 29 : 28;
@@ -84,7 +84,7 @@ mutants:
         return `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       }
   - name: excludes-all-century-years
-    teaches: Renew into February of a century year that still qualifies as a leap year.
+    teaches: Renew into February of a year divisible by 100 that is also a leap year.
     implementation: |
       function lastDay(year, month) {
         if (month === 2) {
@@ -100,7 +100,7 @@ mutants:
         return `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       }
   - name: keeps-year-in-december
-    teaches: Start in the last month of the year and assert the year as well as the day.
+    teaches: Start in December. Check both the year and day in the next billing date.
     implementation: |
       function lastDay(year, month) {
         if (month === 2) {
@@ -146,10 +146,11 @@ decoy:
     - { args: [2025, 12, 15], expected: '2026-01-15' }
 ---
 
-`nextRenewalDate(year, month, billingDay)` returns the next monthly billing date as a `YYYY-MM-DD` string, with a two-digit month and day. Inputs are whole numbers: the current billing year from 1900 through 2099, the current month from 1 through 12, and the original billing day from 1 through 31.
+The `nextRenewalDate(year, month, billingDay)` function returns the next monthly billing date as text in `YYYY-MM-DD` format. The month and day each use two digits. The current billing year is a whole number from 1900 through 2099. The current month is a whole number from 1 through 12. The original billing day is a whole number from 1 through 31.
 
-- Move to the next calendar month. December moves to January of the following year.
-- Use the original billing day if it exists in the next month. Otherwise use that month's last day. A short month never changes the original billing day.
-- Use the Gregorian calendar. April, June, September and November have 30 days. February has 28 days, or 29 in a leap year. A year divisible by 4 is a leap year unless divisible by 100, in which case it must also be divisible by 400. All other months have 31 days.
+- Move to the next calendar month. For December, move to January of the following year.
+- If the next month has the original billing day, use it. Otherwise use the last day of that month. Keep the original billing day for future months.
+- Use the Gregorian calendar, the standard calendar with January through December. April, June, September and November have 30 days. February has 28 days, or 29 in a leap year. All other months have 31 days.
+- If a year is divisible by 100, it is a leap year only if it is also divisible by 400. For other years, any year divisible by 4 is a leap year.
 
-Enter test rows or write a JavaScript `export function test(nextRenewalDate)` that throws on an unexpected result.
+Enter test rows or write the JavaScript function `export function test(nextRenewalDate)`. If the date differs from what you expected, throw an error.

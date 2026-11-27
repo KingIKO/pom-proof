@@ -1,5 +1,5 @@
 ---
-title: Find the failed import retry button
+title: Find the button that retries a failed inventory import
 kind: locator
 syntax: xpath
 topic: playwright
@@ -36,6 +36,6 @@ reference: { by: xpath, selector: "//button[text()='Retry import']" }
 decoy: { by: xpath, selector: '/html/body/main/section/footer/button[1]' }
 ---
 
-Use XPath to find the `Retry import` button in the inventory import failure panel. Its caption remains a direct text node inside the button.
+Use XPath, a language for finding elements in a page, to find the `Retry import` button in the panel for a failed inventory import. The caption stays as text directly inside the button. The app does not put that text inside another element within the button.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

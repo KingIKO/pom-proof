@@ -1,5 +1,5 @@
 ---
-title: Find tests that failed and later passed in the same release
+title: Find release tests that pass after a failure
 kind: sql
 topic: reporting
 difficulty: hard
@@ -56,6 +56,6 @@ decoy:
     ORDER BY f.release_id, f.case_id;
 ---
 
-For this report, flag a test case in a release if at least one failure is followed by a pass for the same case in the same release. Larger `run_id` values are later. The failure and pass do not have to be adjacent. Return one row per qualifying release and case, even if several retries qualify. A pass followed only by failures does not qualify.
+Look at runs for the same test case in the same release. A larger `run_id` means a later run. If any run failed and a later run passed, flag the case for that release. Other runs can come between that failure and pass. A pass followed only by failures does not count.
 
-Return `release_id`, `case_id`, `case_title`, in that column order. Sort by `release_id` ascending, then `case_id` ascending.
+Return one row per qualifying release and case, even if several retries meet the rule. Return `release_id`, `case_id`, and `case_title` in that order. Sort by `release_id`, then `case_id`, both in ascending order.

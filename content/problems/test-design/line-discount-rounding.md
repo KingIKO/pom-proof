@@ -1,5 +1,5 @@
 ---
-title: Check how checkout rounds a line discount
+title: Check how checkout rounds the discount on a cart line
 kind: test-design
 topic: rounding
 difficulty: medium
@@ -7,9 +7,9 @@ minutes: 10
 roles: [manual-qa, automation, sdet]
 exportName: discountedLineCents
 params:
-  - { name: unitCents, type: number, label: Unit price (cents) }
-  - { name: quantity, type: number, label: Quantity }
-  - { name: percent, type: number, label: Discount percentage }
+  - { name: unitCents, type: number, label: Price per unit (cents) }
+  - { name: quantity, type: number, label: Number of units }
+  - { name: percent, type: number, label: Discount percent }
 implementation: |
   export function discountedLineCents(unitCents, quantity, percent) {
     const subtotal = unitCents * quantity;
@@ -18,7 +18,7 @@ implementation: |
   }
 mutants:
   - name: rounds-ties-down
-    teaches: Choose a subtotal and percentage whose exact discount ends in half a cent.
+    teaches: Pick a subtotal and percentage that give a discount ending in exactly half a cent.
     implementation: |
       export function discountedLineCents(unitCents, quantity, percent) {
         const subtotal = unitCents * quantity;
@@ -26,7 +26,7 @@ mutants:
         return subtotal - discount;
       }
   - name: always-drops-fraction
-    teaches: Use a non-tie discount whose fraction is above half a cent.
+    teaches: Use a discount with a fraction of a cent greater than half a cent.
     implementation: |
       export function discountedLineCents(unitCents, quantity, percent) {
         const subtotal = unitCents * quantity;
@@ -34,7 +34,7 @@ mutants:
         return subtotal - discount;
       }
   - name: always-rounds-up
-    teaches: Use a nonzero discount fraction below half a cent.
+    teaches: Use a discount with a fraction of a cent greater than zero but less than half a cent.
     implementation: |
       export function discountedLineCents(unitCents, quantity, percent) {
         const subtotal = unitCents * quantity;
@@ -42,7 +42,7 @@ mutants:
         return subtotal - discount;
       }
   - name: rounds-each-unit
-    teaches: Use multiple units where rounding each unit would change the total.
+    teaches: Use several units where rounding them one at a time would change the total.
     implementation: |
       export function discountedLineCents(unitCents, quantity, percent) {
         const subtotal = unitCents * quantity;
@@ -50,7 +50,7 @@ mutants:
         return subtotal - discount;
       }
   - name: treats-zero-as-unset
-    teaches: Pass an explicit zero discount with a nonzero subtotal.
+    teaches: Set the discount to zero and use a subtotal greater than zero.
     implementation: |
       export function discountedLineCents(unitCents, quantity, percent) {
         const subtotal = unitCents * quantity;
@@ -87,8 +87,10 @@ decoy:
     - { args: [500, 1, 50], expected: 250 }
 ---
 
-`discountedLineCents(unitCents, quantity, percent)` returns what the customer pays for one cart line in integer cents. All inputs are whole numbers: unit price from 0 through 100,000 cents, quantity from 1 through 99, and discount from 0 through 100 percent inclusive. A discount of 0 means no discount.
+The `discountedLineCents(unitCents, quantity, percent)` function returns what the customer pays for one cart line in whole cents. One cart line can hold several units of the same item. All inputs are whole numbers. The unit price is 0 through 100,000 cents. The quantity is 1 through 99.
 
-Multiply the unit price by the quantity first. Calculate the discount on that line subtotal and round the discount to the nearest cent, with an exact half cent rounded up. Subtract the rounded discount from the subtotal. Apply rounding once per line.
+The discount ranges from 0 through 100 percent, including both ends. A discount of 0 leaves the price unchanged.
 
-Enter test rows or write a JavaScript `export function test(discountedLineCents)` that throws on an unexpected result.
+Multiply the unit price by the quantity to get the line subtotal. Calculate the discount on that subtotal. Round the discount to the nearest cent. If the fraction is exactly half a cent, round up. Subtract the rounded discount from the subtotal.
+
+Round only once per cart line. Enter test rows or write the JavaScript function `export function test(discountedLineCents)`. If the result differs from what you expected, throw an error.

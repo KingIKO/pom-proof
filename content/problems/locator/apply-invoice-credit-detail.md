@@ -1,5 +1,5 @@
 ---
-title: Find the apply action in an invoice credit detail row
+title: Find the Apply credit action for an invoice credit
 kind: locator
 syntax: xpath
 topic: playwright
@@ -45,6 +45,8 @@ reference: { by: xpath, selector: "//tr[@data-row='credit-summary'][th[normalize
 decoy: { by: xpath, selector: "(//tr[@data-row='credit-detail']//button[normalize-space(.)='Apply credit'])[1]" }
 ---
 
-Use XPath to find `Apply credit` for `CR-47`. The credit code is in the summary row. Its controls are in a separate detail row immediately after it. Other expanded credits can have identical controls, and the table can reorder whole credit groups.
+Use XPath, a language for finding elements in a page, to find `Apply credit` for credit `CR-47`. The summary row shows the credit code. The buttons for that credit are in a separate detail row right after its summary row.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Other credits with details open can have identical buttons. The table can move a credit's summary and detail rows together.
+
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

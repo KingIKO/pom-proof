@@ -1,5 +1,5 @@
 ---
-title: Find planned tests without an executed run
+title: Find planned release tests that never ran
 kind: sql
 topic: joins
 difficulty: hard
@@ -54,6 +54,6 @@ decoy:
     );
 ---
 
-Compare the release test plan with recorded runs. `release_cases` lists the planned release and case pairs. Return each planned pair that has no passed or failed run for that same pair. A pair with only skipped runs still qualifies. An unplanned pair never qualifies.
+The `release_cases` table lists which test cases the team planned to run for each release. Compare each planned release and case pair with its recorded runs. If none of those runs passed or failed, include the pair. A pair with only skipped runs still counts. Leave out any pair that was not planned.
 
-Return `release_id`, `case_id`, in that column order. Row order does not matter.
+Return `release_id` first and `case_id` second. Rows can appear in any order.

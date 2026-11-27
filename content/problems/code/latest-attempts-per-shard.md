@@ -1,5 +1,5 @@
 ---
-title: "Pick the latest attempt per shard"
+title: "Find the latest attempt for each test shard"
 kind: code
 topic: ci
 difficulty: medium
@@ -96,6 +96,10 @@ decoy:
     }
 ---
 
-A CI service receives an ordered delivery of `{shard, attempt, status}` events, possibly out of attempt order. Return one whole event per exact shard name. Prefer the greatest attempt number; when two events for a shard have that number, prefer the event delivered later in the input. Return chosen events in the order their shards first appeared. Attempt numbers are nonnegative safe integers. An empty stream returns an empty array.
+A continuous integration (CI) service runs automated checks. It receives `{shard, attempt, status}` events in delivery order, which may differ from attempt order. A shard is one group of tests. Match shard names exactly.
 
-`latestAttemptsPerShard([{"shard":"b","attempt":1,"status":"run"},{"shard":"a","attempt":1,"status":"pass"},{"shard":"b","attempt":2,"status":"pass"}])` returns `[{"shard":"b","attempt":2,"status":"pass"},{"shard":"a","attempt":1,"status":"pass"}]`. Leave the inputs unchanged.
+For each shard, return the whole event with the highest attempt number. If events for that shard tie at the highest number, choose the last one delivered. List the chosen events in the order their shard names first appeared.
+
+Attempt numbers are whole numbers of zero or more. They fit the safe integer range, where JavaScript can store each integer exactly. If there are no events, return an empty array.
+
+For example, `latestAttemptsPerShard([{"shard":"b","attempt":1,"status":"run"},{"shard":"a","attempt":1,"status":"pass"},{"shard":"b","attempt":2,"status":"pass"}])` returns `[{"shard":"b","attempt":2,"status":"pass"},{"shard":"a","attempt":1,"status":"pass"}]`. Leave the inputs unchanged.

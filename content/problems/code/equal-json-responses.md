@@ -1,5 +1,5 @@
 ---
-title: "Compare parsed JSON responses"
+title: "Check whether two parsed JSON responses are equal"
 kind: code
 topic: api
 difficulty: medium
@@ -111,6 +111,12 @@ decoy:
     }
 ---
 
-Return whether two parsed JSON responses have equal values. Match objects by their exact keys and compare each matching value recursively, ignoring key order. Arrays must have the same length and equal values at every position. Primitives compare by JSON type and value: `null` equals only `null`, booleans differ from numbers, and strings compare exactly. JSON numbers compare by numeric value, so `1` and `1.0` are equal. Integers in the fixtures are within the safe integer range. A missing key is different from a key with value `null`.
+The inputs are two already parsed JSON values. Each can be an object, an array, or a primitive value such as a string or number. Return whether the values are equal.
 
-`equalJsonResponses({"state":"paid","items":[1,2]}, {"state":"paid","items":[1,2]})` returns `true`. Leave the inputs unchanged.
+For objects, match keys by exact spelling and ignore key order. Apply these same rules to each matching value, including any nested data. A missing key differs from a key with value `null`. For arrays, require the same length and equal values at every position.
+
+Compare primitive values, the values other than objects and arrays, by JSON type and value. The value `null` equals only `null`. Booleans, meaning `true` and `false`, differ from numbers. Match strings exactly.
+
+Compare numbers by value, so `1` and `1.0` are equal. Integers in the test inputs fit the safe integer range, where JavaScript can store each integer exactly.
+
+For example, `equalJsonResponses({"state":"paid","items":[1,2]}, {"state":"paid","items":[1,2]})` returns `true`. Leave the inputs unchanged.

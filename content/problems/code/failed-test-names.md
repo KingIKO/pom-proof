@@ -1,5 +1,5 @@
 ---
-title: "Extract failed test names"
+title: "List failed test names from a log"
 kind: code
 topic: reporting
 difficulty: easy
@@ -84,6 +84,8 @@ decoy:
     }
 ---
 
-A runner emits one log line per array entry. Collect the names from lines starting with the exact prefix `FAIL ` (including its single ASCII space). The entire nonempty remainder is the name, and spaces and case in that name are significant. Ignore all other lines, including a bare prefix with no name. Return each name once, ordered by its first failing line. Return an empty array if nothing qualifies.
+A test runner writes one log line per array entry. Use only lines that start with the exact prefix `FAIL `, including its single ASCII space. After the prefix, take the entire rest of the line as the test name. Keep any spaces and letter case in the name. If the prefix has no name after it, ignore the line.
 
-`failedTestNames(["PASS load","FAIL cart","SKIP profile","FAIL tax","FAIL cart"])` returns `["cart","tax"]`. Leave the inputs unchanged.
+Return each name once, in the order it first appears on a failing line. If no lines qualify, return an empty array.
+
+For example, `failedTestNames(["PASS load","FAIL cart","SKIP profile","FAIL tax","FAIL cart"])` returns `["cart","tax"]`. Leave the inputs unchanged.

@@ -1,5 +1,5 @@
 ---
-title: Classify test retries
+title: Turn test attempts into one result
 kind: code
 topic: reporting
 difficulty: easy
@@ -74,13 +74,15 @@ decoy:
     }
 ---
 
-A helper groups attempts for one test into a single row of a QA report. Implement `classifyRun(attempts)` in JavaScript, TypeScript, or Python. The input is an array of outcomes in execution order: `passed`, `failed`, or `skipped`.
+The QA report needs one result for all attempts at the same test. Write the `classifyRun(attempts)` function in JavaScript, TypeScript, or Python. It gets an array of results in the order the attempts happened. Each result is `passed`, `failed`, or `skipped`.
 
-| Condition after ignoring skips | Return |
+Ignore skipped attempts before you choose the result. A `flaky` result means the test failed at least once and passed on its last attempt that ran.
+
+| After you ignore skips | Return |
 | --- | --- |
-| No attempts remain | `not-run` |
+| No attempts are left | `not-run` |
 | The last attempt failed | `failed` |
-| The last attempt passed after any failure | `flaky` |
+| The last attempt passed after at least one failure | `flaky` |
 | The last attempt passed with no failures | `passed` |
 
-For example, `["passed", "failed", "skipped"]` returns `"failed"`. Keep the input array unchanged.
+For example, given `["passed", "failed", "skipped"]`, return `"failed"`. Leave the input array unchanged.

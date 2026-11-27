@@ -1,5 +1,5 @@
 ---
-title: Locate the right refund button
+title: Find a specific order's refund button
 kind: locator
 syntax: playwright
 topic: playwright
@@ -45,6 +45,8 @@ reference:
 decoy: { by: expression, source: "page.locator('.actions > button:nth-child(2)')" }
 ---
 
-The support console lists orders `PP104` and `PP105`. Each row has a button whose visible text is `Refund`. The button for `PP104` has the accessible name `Refund order PP104`. A layout revision moves actions and may reorder the rows.
+The support console lists orders `PP104` and `PP105`. In both rows the button shows `Refund`. The button for `PP104` has the accessible name `Refund order PP104`, the name a screen reader can read out. A new layout moves the buttons and may change row order.
 
-Choose a Playwright-style locator that finds only the refund button for `PP104` in every version of the console. The fixture target marker belongs to the exercise and is not exposed by the application.
+Use a Playwright-style locator, an expression that finds an element, to match only the refund button for `PP104`. It must work in every version of the console.
+
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

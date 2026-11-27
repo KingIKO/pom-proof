@@ -27,12 +27,12 @@ items:
       - { id: l15, text: "});" }
   - id: category
     type: single-choice
-    prompt: "Which problem violates the suite's setup convention?"
+    prompt: "Which problem breaks the suite's rule for setup?"
     choices:
-      - { id: shared, text: "Both tests mutate the same report on the server." }
-      - { id: repeat, text: "The tests repeat draft seed and navigation steps already provided by a test-scoped fixture." }
-      - { id: no-assert, text: "The tests perform mutations without asserting their effects." }
-      - { id: hidden, text: "The suite hides the user actions inside a helper." }
+      - { id: shared, text: "Both tests change the same report on the server." }
+      - { id: repeat, text: "The tests repeat draft setup and navigation that a test-scoped fixture already provides." }
+      - { id: no-assert, text: "The tests change data without checking what those changes did." }
+      - { id: hidden, text: "The suite hides the user's actions inside a helper function." }
 reference:
   review: [l04, l05, l11, l12]
   category: repeat
@@ -41,4 +41,6 @@ decoy:
   category: repeat
 ---
 
-The suite already has a test-scoped `openedDraft` fixture for this exact start state: it creates a fresh `April revenue` draft and opens its details page. The team uses it for unrelated actions that begin there. `reports.seed` otherwise creates a fresh ID per call and handles cleanup. Mark the duplicate setup statements, leaving fixture parameter changes unmarked.
+A fixture is a helper that Playwright sets up and passes to a test. A test-scoped fixture is set up again for each test. The suite already has a test-scoped `openedDraft` fixture for this exact starting state. It creates a fresh `April revenue` draft and opens the draft's details page. The team uses it for unrelated actions that start from that page.
+
+Apart from the repetition, `reports.seed` gives each test its own record. It creates a fresh ID on each call and handles cleanup. Mark the statements that repeat setup. Do not mark the lines where only the fixture parameters would change.

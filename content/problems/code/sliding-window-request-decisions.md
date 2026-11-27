@@ -1,5 +1,5 @@
 ---
-title: "Apply a sliding request quota"
+title: "Decide which requests fit the rolling limit"
 kind: code
 topic: scheduling
 difficulty: hard
@@ -123,8 +123,12 @@ decoy:
     }
 ---
 
-Replay a recorded request stream against a test quota. Each row is `{client, at}`. Timestamps are nonnegative safe integer milliseconds, nondecreasing in input order. Match client names exactly. At time `at`, count that client's earlier accepted requests whose times are strictly greater than `at - windowMs`. Earlier rows at the same timestamp count. Accept the current request only if that count is below `limit`. A rejected request never uses quota.
+Replay recorded requests against a test quota, the most requests a client can make in a set span of time. The span moves with each request, so it is called a sliding window. Each `{client, at}` row gives a client name and a time. Times go from earliest to latest and can repeat. Match client names exactly.
 
-Return one boolean per row in input order, using `true` for accepted. The window is a positive safe integer. The limit is a nonnegative safe integer; zero rejects every request. Aim for work linear in the number of requests by removing expired history without rescanning it.
+For the current request at time `at`, count earlier accepted requests from that client with times greater than `at - windowMs`. Include earlier rows at the same time. If the count is below `limit`, accept the request. Otherwise, reject it. Rejected requests never count toward the quota.
 
-`slidingWindowRequestDecisions([{"client":"a","at":0},{"client":"a","at":2},{"client":"a","at":3}], 10, 2)` returns `[true,true,false]`. Leave the inputs unchanged.
+Times are whole milliseconds of zero or more. The window is a positive whole number. The limit is a whole number of zero or more. All these values fit the safe integer range, where JavaScript can store each integer exactly. A limit of zero rejects every request.
+
+Return one boolean per row in input order: `true` if accepted, `false` if rejected. Aim for work that grows in direct proportion to the number of requests. Remove requests that fall outside the window without scanning the history again.
+
+For example, `slidingWindowRequestDecisions([{"client":"a","at":0},{"client":"a","at":2},{"client":"a","at":3}], 10, 2)` returns `[true,true,false]`. Leave the inputs unchanged.

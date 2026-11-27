@@ -24,12 +24,12 @@ items:
       - { id: l12, text: "});" }
   - id: category
     type: single-choice
-    prompt: "What is the largest problem with this check's scope?"
+    prompt: "What is the biggest problem with what this check covers?"
     choices:
-      - { id: waits, text: "The fixed delay may be too short for the provider to render." }
-      - { id: control, text: "The handoff check depends on page content the vendor owns instead of stopping at the controlled redirect." }
-      - { id: action, text: "The test uses a Playwright button click for the redirect." }
-      - { id: url, text: "The test verifies the precise redirect destination." }
+      - { id: waits, text: "The fixed delay may be too short for the provider's page to appear." }
+      - { id: control, text: "The handoff check depends on the vendor's page content instead of stopping at the redirect the team controls." }
+      - { id: action, text: "The test starts the redirect with a Playwright button click." }
+      - { id: url, text: "The test checks the exact destination of the redirect." }
 reference:
   review: [l09, l10, l11]
   category: control
@@ -38,4 +38,6 @@ decoy:
   category: waits
 ---
 
-This check verifies only that the merchant redirects to the session URL it received. The fixture already supplies a known URL on a provider-owned origin and serves a local stub at exactly that URL. The stub has no vendor form by design. Provider UI is outside the merchant team's scope and the precise destination is already asserted.
+This check verifies only that the merchant redirects to the session URL it received. That redirect is the handoff from the merchant to the payment provider. The fixture already supplies a known URL on an origin that the provider owns. An origin is a URL's scheme, host and port. The fixture also serves a local stub, a stand-in page, at exactly that URL.
+
+The stub has no vendor form, by design. The provider's UI is outside the merchant team's scope. The test already asserts the exact destination.

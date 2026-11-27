@@ -1,5 +1,5 @@
 ---
-title: "Summarize response time percentiles"
+title: "Find the 50th and 95th response time percentiles"
 kind: code
 topic: reporting
 difficulty: medium
@@ -84,6 +84,10 @@ decoy:
     }
 ---
 
-A load test reports p50 and p95 using the nearest-rank rule. Sort a copy of the samples by ascending value. For percentile `p` and `n` nonempty samples, select the one-based position `ceil(p * n / 100)`. Keep duplicates and do not interpolate between values. Return an object with keys `p50` and `p95`. For no samples, set both values to `null`. Samples are nonnegative safe integer milliseconds.
+A load test measures how long requests take when the system is busy. It reports `p50` and `p95`, the response times at the 50th and 95th percentiles. The nearest-rank rule picks a value from the sorted list of recorded times.
 
-`summarizeResponsePercentiles([10,10,10,300,300])` returns `{"p50":10,"p95":300}`. Leave the inputs unchanged.
+Sort a copy of the samples from smallest to largest. Keep repeated values. If there are `n` samples, use `ceil(p * n / 100)` for percentile `p`. This formula rounds up to a position, counting the first sample as position 1. Use the value at that position without estimating between values.
+
+Return an object with keys `p50` and `p95`. If there are no samples, set both values to `null`. Samples are whole milliseconds of zero or more. They fit the safe integer range, where JavaScript can store each integer exactly.
+
+For example, `summarizeResponsePercentiles([10,10,10,300,300])` returns `{"p50":10,"p95":300}`. Leave the inputs unchanged.

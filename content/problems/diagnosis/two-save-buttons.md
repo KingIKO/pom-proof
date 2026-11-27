@@ -11,25 +11,25 @@ items:
     prompt: Why does the click fail on desktop?
     choices:
       - { id: preflight, text: The browser blocks the shipping save request. }
-      - { id: stable, text: The main Save button moves while Playwright waits for its position to stabilize. }
-      - { id: dual, text: The page-level locator matches both Save buttons and the click needs one target. }
+      - { id: stable, text: The main Save button moves while Playwright waits for it to stop moving. }
+      - { id: dual, text: "The page-level locator matches both Save buttons, but the click needs exactly one." }
       - { id: wording, text: Neither button has the exact accessible name Save. }
   - id: fix
     type: single-choice
-    prompt: How should the test select the shipping action?
+    prompt: How should the test select the shipping Save button?
     choices:
-      - { id: first, text: Use the first matching Save button and rely on the current DOM order. }
+      - { id: first, text: "Use the first matching Save button, and rely on the current DOM order." }
       - { id: scope, text: "Find the Shipping address group by role and name, then find its Save button." }
-      - { id: settle, text: Wait for the desktop layout to settle before using the page-level locator. }
-      - { id: retry, text: Retry the same click on a strictness error. }
+      - { id: settle, text: "Wait for the desktop layout to stop changing, then use the page-level locator." }
+      - { id: retry, text: "If a strict mode error occurs, retry the same click." }
   - id: evidence
     type: multi-select
-    prompt: Which checks establish that the scoped fix targets shipping?
+    prompt: Which checks show that the scoped fix targets the shipping button?
     choices:
-      - { id: count, text: The unscoped locator reaches both buttons and the scoped locator reaches one inside Shipping address. }
-      - { id: desktop, text: The desktop screenshot shows the Shipping address group first. }
-      - { id: visible, text: The selected Save button is visible in the desktop viewport. }
-      - { id: outgoing, text: "After swapping the two groups in a layout variant, the scoped click still submits the shipping update." }
+      - { id: count, text: The page locator finds both buttons while the scoped locator finds only the one in Shipping address. }
+      - { id: desktop, text: "In the screenshot of the desktop layout, the Shipping address group appears before the other group." }
+      - { id: visible, text: "On desktop, the Save button selected by the test is visible in the browser viewport." }
+      - { id: outgoing, text: "In a layout with the groups swapped, the scoped click still submits the shipping update." }
 reference:
   cause: dual
   fix: scope
@@ -40,7 +40,9 @@ decoy:
   evidence: [desktop, visible]
 ---
 
-On desktop, the settings page puts the Shipping address and Billing address groups side by side. Each has a visible button named `Save`. On mobile, the inactive group is hidden. The test edits shipping.
+On desktop, the settings page puts the Shipping address and Billing address groups side by side. Each group has a visible button named `Save`. On mobile, the inactive group is hidden. The test edits the shipping address.
+
+A locator is Playwright's description of how to find elements. A scoped locator searches only inside another element. In strict mode, an action fails when its locator matches more than one element. The viewport is the visible area of the browser window. The DOM is the browser's tree of page elements.
 
 ```ts
 await page.goto('/settings/addresses');

@@ -1,5 +1,5 @@
 ---
-title: Find the delivery region field
+title: Find Region in the delivery address form
 kind: locator
 topic: playwright
 difficulty: medium
@@ -41,6 +41,6 @@ reference:
 decoy: { by: expression, source: "page.getByLabel('Region', { exact: true }).nth(0)" }
 ---
 
-A checkout form has delivery and billing addresses. Find the input labeled `Region` in the `Delivery address` group. The other address has its own `Region` label, and the delivery form can also show `Region code`.
+The checkout form has separate groups for delivery and billing addresses. Find the input labeled `Region` in the group named `Delivery address`. The billing address also has a `Region` label. The delivery group can also show `Region code`.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

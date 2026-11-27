@@ -1,5 +1,5 @@
 ---
-title: Calculate the pass rate by release
+title: Find the percentage of attempts that passed in each release
 kind: sql
 topic: reporting
 difficulty: medium
@@ -46,6 +46,8 @@ decoy:
     GROUP BY r.release_id;
 ---
 
-A release dashboard reports the percentage of **executed attempts** that passed. Each passed or failed run is an executed attempt, including retries. Skipped runs do not count. Report a numeric percentage from 0 to 100, rounded to two decimal places. Include every release, returning `NULL` for the percentage if it has no executed attempts.
+The release dashboard shows the percentage of **executed attempts** that passed. An executed attempt is any run that passed or failed, including a retry. Skipped runs do not count. Include every release in the report.
 
-Return `release_id`, `pass_rate_pct`, in that column order. Row order does not matter.
+If a release has no executed attempts, return `NULL` for the percentage. Otherwise, return the percentage as a number from 0 to 100. Round it to two decimal places.
+
+Return `release_id` first and `pass_rate_pct` second. Rows can appear in any order.

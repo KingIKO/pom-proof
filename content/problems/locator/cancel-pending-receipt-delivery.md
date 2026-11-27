@@ -1,5 +1,5 @@
 ---
-title: Find the cancel action for a pending receipt delivery
+title: Find the Cancel button for a pending receipt delivery
 kind: locator
 syntax: playwright
 topic: playwright
@@ -43,6 +43,8 @@ reference:
 decoy: { by: expression, source: "page.getByRole('article').filter({ hasText: 'RC-602' }).getByRole('button', { name: 'Cancel', exact: true }).nth(0)" }
 ---
 
-Use a Playwright-style expression to find `Cancel` for the visible pending delivery of receipt `RC-602`. An older failed attempt for the same receipt can still have a `Cancel` button. The app keeps the machine-readable delivery state even when the caption changes language.
+Use a Playwright-style locator, an expression that finds an element, to find the right `Cancel` button. Match the visible delivery for receipt `RC-602` that is still pending, or waiting to go out. An earlier failed attempt for the same receipt can still have a `Cancel` button.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+The app stores a delivery status that tests can read. That value stays the same even when the displayed text changes language.
+
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

@@ -1,5 +1,5 @@
 ---
-title: Check discount code eligibility
+title: Check when discount codes apply
 kind: test-design
 topic: equivalence-partitioning
 difficulty: easy
@@ -7,8 +7,8 @@ minutes: 8
 roles: [manual-qa, automation]
 exportName: cartDiscount
 params:
-  - { name: code, type: string, label: Discount code }
-  - { name: firstOrder, type: boolean, label: First order }
+  - { name: code, type: string, label: Code entered }
+  - { name: firstOrder, type: boolean, label: Shopper’s first order }
 implementation: |
   export function cartDiscount(code, firstOrder) {
     const normalized = code.replace(/^ +| +$/g, '').replace(/[a-z]/g, (letter) => letter.toUpperCase());
@@ -18,7 +18,7 @@ implementation: |
   }
 mutants:
   - name: compares-exact-case
-    teaches: Try a recognized code with mixed case and no extra spaces.
+    teaches: Use both uppercase and lowercase letters in a known code. Leave out any extra spaces.
     implementation: |
       export function cartDiscount(code, firstOrder) {
         const normalized = code.replace(/^ +| +$/g, '');
@@ -27,7 +27,7 @@ mutants:
         return 0;
       }
   - name: retains-outer-spaces
-    teaches: Put ordinary spaces around a recognized code.
+    teaches: Add ordinary spaces at both ends of a known code.
     implementation: |
       export function cartDiscount(code, firstOrder) {
         const normalized = code.replace(/[a-z]/g, (letter) => letter.toUpperCase());
@@ -36,7 +36,7 @@ mutants:
         return 0;
       }
   - name: allows-repeat-use
-    teaches: Try the first-order code on a returning shopper.
+    teaches: Use the first-order code for a shopper who has ordered before.
     implementation: |
       export function cartDiscount(code, firstOrder) {
         const normalized = code.replace(/^ +| +$/g, '').replace(/[a-z]/g, (letter) => letter.toUpperCase());
@@ -45,7 +45,7 @@ mutants:
         return 0;
       }
   - name: omits-open-code
-    teaches: Try the public code on a shopper who is not placing a first order.
+    teaches: Use the public code for a shopper who has ordered before.
     implementation: |
       export function cartDiscount(code, firstOrder) {
         const normalized = code.replace(/^ +| +$/g, '').replace(/[a-z]/g, (letter) => letter.toUpperCase());
@@ -53,7 +53,7 @@ mutants:
         return 0;
       }
   - name: removes-internal-spaces
-    teaches: Insert a space inside an otherwise recognized code.
+    teaches: Add a space inside a known code.
     implementation: |
       export function cartDiscount(code, firstOrder) {
         const normalized = code.replace(/ /g, '').replace(/[a-z]/g, (letter) => letter.toUpperCase());
@@ -92,12 +92,12 @@ decoy:
     - { args: [MISSING, false], expected: 0 }
 ---
 
-Checkout calls `cartDiscount(code, firstOrder)` with the entered code and whether this is the shopper's first order. The function returns a whole-number percentage, so `10` means 10 percent.
+Checkout passes the entered code and whether this is the shopper's first order to the `cartDiscount(code, firstOrder)` function. The function returns a percentage as a whole number. For example, `10` means 10 percent.
 
-Ignore ordinary ASCII spaces at the start and end of the code and ignore the case of ASCII letters. Internal spaces and other characters are significant.
+ASCII is the basic set of characters that includes plain English letters and the ordinary space. Ignore ASCII spaces at either end of the code. Treat uppercase and lowercase ASCII letters the same. Spaces inside the code and other characters still affect the match.
 
-- `FIRST10` gives 10 percent on a first order and 0 otherwise.
-- `SAVE5` gives 5 percent on any order.
-- An empty or unrecognized code gives 0.
+- If this is the shopper's first order, `FIRST10` gives 10 percent. For any later order, it gives 0.
+- Use `SAVE5` to get 5 percent on any order.
+- If the code is empty or unknown, the discount is 0.
 
-Enter test rows or write a JavaScript `export function test(cartDiscount)` that throws on an unexpected result.
+Enter test rows or write the JavaScript function `export function test(cartDiscount)`. If the result differs from what you expected, throw an error.

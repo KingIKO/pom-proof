@@ -1,5 +1,5 @@
 ---
-title: Find the live reservation action for a training slot
+title: Find Reserve seat for the training session users can book
 kind: locator
 syntax: xpath
 topic: playwright
@@ -52,6 +52,8 @@ decoy:
   selector: "(//article[.//h3[normalize-space(.)='Packing basics']]//button[@aria-label='Reserve seat'])[1]"
 ---
 
-Use XPath to find the enabled `Reserve seat` button for the visible `Packing basics` session starting at `14:30`. Match the start time on the card, not a time mentioned in the description. The app hides duplicate cards with `hidden` on the article and marks unavailable buttons with `disabled` on the button.
+Use XPath, a language for finding elements in a page, to find the `Reserve seat` button users can click. Find it on the visible card for the `Packing basics` session that starts at `14:30`. Match the start time on the card. Ignore any time in the description.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+The card is an article element. The app puts `hidden` on the article to hide a duplicate card. If a button is unavailable, the app puts `disabled` on that button.
+
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

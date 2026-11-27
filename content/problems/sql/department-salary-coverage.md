@@ -1,5 +1,5 @@
 ---
-title: Count recorded salaries by department
+title: Count employees with a recorded salary in each department
 kind: sql
 topic: aggregation
 difficulty: easy
@@ -34,6 +34,8 @@ decoy:
     GROUP BY d.department_id;
 ---
 
-A payroll import check needs the number of assigned employees with a recorded salary in each department. Count zero as a recorded amount and skip `NULL` salaries. Include departments with no employees or no recorded salaries, with a count of zero.
+Check the payroll import by counting employees with a recorded salary in each department. Count only employees assigned to that department. A salary of zero counts. A salary of `NULL` means no salary was recorded.
 
-Return `department_id`, `salaries_recorded`, in that column order. Row order does not matter.
+If a department has no employees or no recorded salaries, return a count of zero for it.
+
+Return `department_id` first and `salaries_recorded` second. Rows can appear in any order.

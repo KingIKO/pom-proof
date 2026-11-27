@@ -1,5 +1,5 @@
 ---
-title: Test an API rate limit window
+title: Test how an API limits writes over time
 kind: scenario
 topic: api-testing
 difficulty: medium
@@ -8,53 +8,53 @@ roles: [automation, sdet]
 items:
   - id: clarify
     type: multi-select
-    prompt: Which details do you need to write the rate limit boundary checks?
+    prompt: Which details do you need before you write checks at the rate limit boundary?
     choices:
-      - { id: key, text: "Which identity and operation share a counter?" }
-      - { id: docs, text: "Which heading should the help center use for its limits page?" }
-      - { id: format, text: "Should a response example use numbered callouts?" }
-      - { id: window, text: "Exactly when does the counter reset and what value should Retry-After report?" }
+      - { id: key, text: "Which caller identity and which operations count against the same counter?" }
+      - { id: docs, text: "Which heading should the help center use for its page about limits?" }
+      - { id: format, text: "Should a sample response on the docs page use numbered callouts?" }
+      - { id: window, text: "When exactly does the counter reset, and what value should Retry-After report?" }
   - id: risk
     type: budgeted-pick
-    prompt: Spend up to 11 minutes on counter isolation and recovery.
+    prompt: You have up to 11 minutes. Choose checks that show each tenant's counter stays separate and that writes recover after the reset.
     budget: 11
     choices:
-      - { id: baseline, cost: 5, text: "Run a normal write from both tenants with almost-empty counters." }
-      - { id: recovery, cost: 6, text: "Exhaust one tenant's quota and check the rejected write, retry time, and reset boundary." }
-      - { id: isolation, cost: 5, text: "With the first tenant exhausted, prove a second tenant can still write." }
-      - { id: copy, cost: 3, text: "Compare documentation examples with current response wording." }
+      - { id: baseline, cost: 5, text: "Send one normal write from each of the two tenants while both of their counters are nearly empty." }
+      - { id: recovery, cost: 6, text: "After using up one tenant's quota, check the rejected write, retry time, and reset boundary." }
+      - { id: isolation, cost: 5, text: "While the first tenant's quota is used up, show that a second tenant can still write." }
+      - { id: copy, cost: 3, text: "Compare the wording in the documentation examples with the wording that current responses actually use." }
   - id: layer
     type: single-choice
-    prompt: Which layer first proves the deployed service rejects the over-quota write and recovers after the reset?
+    prompt: Which kind of test first shows that the deployed service rejects the over-quota write and accepts writes again after the reset?
     choices:
-      - { id: ui, text: "UI" }
-      - { id: unit, text: "Unit" }
-      - { id: manual, text: "Manual exploratory" }
-      - { id: api, text: "API" }
+      - { id: ui, text: "An automated UI test" }
+      - { id: unit, text: "A unit test" }
+      - { id: manual, text: "A manual exploratory test" }
+      - { id: api, text: "An API test" }
   - id: isolation-layer
     type: single-choice
-    prompt: Which layer first proves that the deployed counters for two fixture tenants remain independent?
+    prompt: Which kind of test first shows that two fixture tenants keep separate counters on the deployed service?
     choices:
-      - { id: manual, text: "Manual exploratory" }
-      - { id: unit, text: "Unit" }
-      - { id: api, text: "API" }
-      - { id: ui, text: "UI" }
+      - { id: manual, text: "A manual exploratory test" }
+      - { id: unit, text: "A unit test" }
+      - { id: api, text: "An API test" }
+      - { id: ui, text: "An automated UI test" }
   - id: stop
     type: single-choice
-    prompt: Which outcome stops rollout?
+    prompt: Which result should stop the rollout?
     choices:
-      - { id: body, text: "The error body uses the documented reason string." }
-      - { id: mutation, text: "A write returns 429 and still creates a record." }
-      - { id: tenants, text: "A second tenant remains under quota and can write." }
-      - { id: header, text: "The response includes a valid Retry-After value as promised." }
+      - { id: body, text: "The body of the error response uses the documented reason text." }
+      - { id: mutation, text: "A write gets a 429 response but still creates a record." }
+      - { id: tenants, text: "A second tenant stays under its quota and can still write." }
+      - { id: header, text: "The response includes a valid Retry-After value, as promised." }
   - id: order
     type: ordering
-    prompt: Order the boundary check with a fresh tenant and a fixed test clock.
+    prompt: Put the steps of the boundary check in order. Use a fresh tenant and a fixed test clock.
     choices:
-      - { id: reset, text: "Advance the clock to the reset boundary and confirm one new write succeeds." }
-      - { id: blocked, text: "Attempt the next write before reset and check 429 with no new record." }
-      - { id: seed, text: "Set the staging clock and create a fixture tenant with a fresh counter." }
-      - { id: limit, text: "Make exactly the allowed number of successful writes in the same window." }
+      - { id: reset, text: "Move the clock to the reset boundary and check that one new write succeeds." }
+      - { id: blocked, text: "Before the reset, check that one more write returns 429 and creates no record." }
+      - { id: seed, text: "Set the staging clock and create a fixture tenant whose counter starts empty." }
+      - { id: limit, text: "In one window, make exactly the allowed number of successful writes." }
 reference:
   clarify: [key, window]
   risk: [recovery, isolation]
@@ -71,6 +71,6 @@ decoy:
   order: [seed, limit, blocked, reset]
 ---
 
-A public-facing write API introduces a fixed-window quota per tenant. A request beyond quota must return HTTP 429 and the documented `Retry-After` value without creating a record. Another tenant's counter is independent.
+A public write API adds a fixed-window quota for each tenant. A tenant is one customer account, and the quota caps its writes in each fixed time window. When a request goes over the quota, the API must return HTTP 429 and the documented `Retry-After` value. That value tells the caller when to try again. The rejected request must not create a record.
 
-The ticket omits how operations are grouped and the exact reset rules. Use isolated staging tenants and a controllable clock once the team confirms those details.
+Each tenant has its own counter, and other tenants' writes do not change it. The ticket leaves out which operations share a counter and the exact reset rules. Once the team confirms those details, use separate fixture tenants in staging. A fixture tenant is a test tenant set up only for these checks. Also use a test clock that you can move.

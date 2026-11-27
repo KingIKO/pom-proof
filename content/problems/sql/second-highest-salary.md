@@ -1,5 +1,5 @@
 ---
-title: Find employees on the second-highest salary
+title: Find everyone paid the next salary below the highest
 kind: sql
 topic: ranking
 difficulty: medium
@@ -41,6 +41,6 @@ decoy:
     LIMIT 1 OFFSET 1;
 ---
 
-A payroll export has a row for each employee. Missing salaries are `NULL`. Find every employee paid the second-highest **distinct** known salary. If fewer than two distinct salaries are known, return no rows.
+The payroll export has a row for each employee. A salary of `NULL` means the amount is unknown. When ranking known salaries, count each **distinct** amount once, even if several employees earn it. If there are fewer than two different amounts, return no rows. Otherwise, report every employee who earns the second-highest amount.
 
-Return `employee_id`, `employee_name`, `salary_cents`, in that column order. Sort by `employee_id` ascending.
+Return `employee_id`, `employee_name`, and `salary_cents` in that order. Sort by `employee_id` in ascending order.

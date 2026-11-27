@@ -1,5 +1,5 @@
 ---
-title: "Plan CI checks in dependency order"
+title: "Put CI jobs after the jobs they need"
 kind: code
 topic: ci
 difficulty: hard
@@ -155,8 +155,10 @@ decoy:
     }
 ---
 
-A CI planner receives `{id, needs}` records. Job IDs are unique nonempty ASCII strings, and every prerequisite names an existing job. A prerequisite can appear more than once in a `needs` list; duplicates have no extra effect.
+A continuous integration (CI) planner orders jobs that run automated checks. Each `{id, needs}` record names a job and its prerequisites, the jobs that must run first. Job IDs are unique, nonempty ASCII strings. Each prerequisite names an existing job. If a job appears more than once in a `needs` list, count it once.
 
-Return a list of job IDs in execution order. Each job must appear after every prerequisite. Whenever multiple remaining jobs are ready, choose the ID that comes first in ascending ASCII text order, including jobs that just became ready. If any cycle prevents completing the plan, return `null` instead of a partial order. No jobs means an empty list.
+Return job IDs in the order the jobs can run. A job is ready once every prerequisite is in the list. If more than one job is ready, choose the ID that sorts first in ASCII text order. Use the ASCII number for each character, and include jobs that just became ready.
 
-`orderCiChecks([{"id":"test","needs":["build"]},{"id":"build","needs":["lint"]},{"id":"lint","needs":[]}])` returns `["lint","build","test"]`. Leave the inputs unchanged.
+If jobs depend on one another in a loop, they form a cycle. If any cycle blocks the plan, return `null` rather than a partial list. If there are no jobs, return an empty list.
+
+For example, `orderCiChecks([{"id":"test","needs":["build"]},{"id":"build","needs":["lint"]},{"id":"lint","needs":[]}])` returns `["lint","build","test"]`. Leave the inputs unchanged.

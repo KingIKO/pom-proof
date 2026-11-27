@@ -1,5 +1,5 @@
 ---
-title: Check the manager directory for active employees
+title: List each active employee and their manager
 kind: sql
 topic: joins
 difficulty: easy
@@ -36,6 +36,6 @@ decoy:
     ORDER BY e.employee_id;
 ---
 
-The staff directory needs one row per active employee and the name of their direct manager. Use the manager's name even if the manager is inactive. If the employee has no manager, return `NULL` for the manager's name.
+The staff directory needs one row for each active employee. Include the name of their direct manager, the person they report to. If the manager is inactive, still include their name. If the employee has no manager, return `NULL` for the name.
 
-Return `employee_id`, `employee_name`, `manager_name`, in that column order. Sort by `employee_id` ascending.
+Return `employee_id`, `employee_name`, and `manager_name` in that order. Sort by `employee_id` in ascending order.

@@ -1,5 +1,5 @@
 ---
-title: "Find the second highest duration"
+title: "Find the second longest time without counting repeats"
 kind: code
 topic: reporting
 difficulty: easy
@@ -103,6 +103,8 @@ decoy:
     }
 ---
 
-A performance report needs the second highest distinct duration. The input contains nonnegative safe integers in milliseconds (at most 9,007,199,254,740,991). Return the second highest value, ignoring repeated values. Return `null` when there are fewer than two distinct durations.
+A performance report needs the second highest time. Treat repeated times as one value. If there are fewer than two different times, return `null`.
 
-`secondHighestDuration([11,90,24,42])` returns `42`. Leave the inputs unchanged.
+The input uses whole milliseconds of zero or more. Each duration is a safe integer, meaning JavaScript can store it exactly. These durations are at most 9,007,199,254,740,991 milliseconds.
+
+For example, `secondHighestDuration([11,90,24,42])` returns `42`. Leave the inputs unchanged.
