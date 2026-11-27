@@ -4,41 +4,47 @@ problem: scenario/role-change-permissions
 
 ## What is going on
 
-Once an admin receives confirmation of the downgrade, the existing editor's next save must fail while reading still works. Permission in one workspace grants no rights in another.
+An admin downgrades an editor. Once the admin receives confirmation of the downgrade, the next save from that existing editor must fail, while reading still works. Permission in one workspace grants no rights in another.
 
 ## The answer
 
-1. Confirm the permission matrix for reads and writes and when changed permissions apply to other edit operations in an existing session.
+1. Confirm the permission matrix, the table of which reads and writes each role may do.
 
-   **Why:** A new viewer session and an open editor session can behave differently. You need an agreed cutoff to tell a stale permission from a write that was still allowed.
+   For other edit operations, ask when the changed permissions take effect in an existing session.
 
-2. Spend seven minutes downgrading an active editor, checking denial on the next save, and confirming reading still works. Spend five checking that an editor in one fixture workspace has no rights in the other.
+   **Why:** A session is one signed-in period of use. A new viewer session and an open editor session can behave differently. A stale permission is an old right that the system has not removed yet. You need an agreed cutoff to tell a stale permission from a write that was still allowed.
 
-   **Why:** The downgrade catches stale session permissions. The workspace check catches a role evaluated without the workspace it belongs to.
+2. Spend seven minutes on downgrading an active editor and five minutes on isolation between workspaces.
 
-3. Use the API to verify the old session is denied and the document stays unchanged.
+   After downgrading the editor, check that the next save is denied and reading still works. Confirm that an editor in one fixture workspace, a prepared test workspace, has no rights in the other.
 
-   **Why:** A refusal can come after a write, so persisted state is stronger evidence than a message or status alone.
+   **Why:** The downgrade catches stale session permissions. The other check catches a role evaluated without the workspace it belongs to.
 
-4. Use the API to verify the deployed service denies a fixture editor from another workspace.
+3. Use the API to verify that the old session is denied and the document stays unchanged.
 
-   **Why:** The local role helper could be right even if the deployed service supplies the wrong workspace or caches an earlier permission.
+   **Why:** A refusal can come after a write. So the persisted, or stored, state is stronger evidence than a message or status alone.
 
-5. Stop rollout if the first save after the confirmed downgrade changes the stored document.
+4. Use the API to verify that the deployed service denies a fixture editor from another workspace.
 
-   **Why:** An unauthorized change has already persisted. A lingering Save button with a documented refusal is a UI follow-up under this release gate.
+   **Why:** The local role helper, the function that checks a role, could be right on its own. The deployed service could still supply the wrong workspace or reuse a cached, saved copy of an earlier permission.
 
-6. Establish the baseline with a valid editor save, downgrade the member in the admin session and await confirmation, then try the original member session's next save. Check denial and read the stored document independently through an authorized session.
+5. If the first save after the confirmed downgrade changes the stored document, stop the rollout.
 
-   **Why:** Keeping the same session exposes stale privileges. The baseline makes a write-before-denial visible.
+   **Why:** An unauthorized change has already persisted. A Save button can linger on screen and still get the documented refusal. Under this release gate, that is a UI follow-up.
+
+6. Check the first save from the original editor session after a confirmed downgrade.
+
+   Make a valid editor save to set the baseline, the stored state you compare against. In the admin session, downgrade the member and wait for confirmation. Try the next save from the original member session. Check that it is denied. Read the stored document separately through an authorized session.
+
+   **Why:** Keeping the same session exposes stale privileges. The baseline shows whether a write happened before the denial.
 
 ## Why the tempting answer fails
 
-The selector label cannot establish permission timing. A fresh editor's menu can pass while the old session still writes. The UI alone cannot establish the absence of a stored change, and the unit helper cannot prove workspace isolation in deployment. Blocking on a stale button misses the actual stop condition: a persisted unauthorized change.
+The selector label cannot establish when permissions take effect. A fresh editor's menu can pass while the old session still writes. The UI alone cannot establish the absence of a stored change. The unit helper cannot prove workspace isolation in deployment. Blocking on a stale button misses the actual stop condition, an unauthorized change that persisted.
 
 ## What the interviewer listens for
 
-Bring evidence of the denied request and its lack of side effect.
+Bring evidence of the denied request and of its lack of side effect.
 
 ## Sources
 

@@ -4,25 +4,29 @@ problem: diagnosis/review-payment-provider-ui
 
 ## What is going on
 
-The merchant must send the customer to the exact hosted session URL it received. The fixture supplies that URL on a provider-owned origin and serves a local stub there. The stub deliberately leaves out the payment form.
+The merchant must send the customer to the exact session URL it received from the payment provider. The test fixture, reusable test setup, supplies a known URL on the provider's origin. The origin is the part of the address that identifies where the page is served, before its path. The fixture serves a local stub at that URL, a stand-in page that leaves out the payment form on purpose.
 
 ## The answer
 
-1. Mark line 9, the 800 ms sleep, and lines 10 and 11, the `PayGate Express` form locator and `Card number` assertion.
+1. Mark the fixed wait on line 9 and the checks of provider content on lines 10 and 11.
 
-   **Why:** Line 9 spends time waiting for a form the stub never renders. Lines 10 and 11 require a vendor form name and field label that the merchant does not own. Either label could change without breaking the handoff.
+   **Why:** The 800 ms wait gives the form time to appear, but the stub never displays it. The locator on line 10 is a rule for finding the `PayGate Express` form. The assertion on line 11 checks for a visible field called `Card number`. The provider owns both labels. Either could change without breaking the merchant's redirect to hosted checkout.
 
-2. Choose the vendor UI dependency as the scope problem. End this test at the exact URL assertion on line 8.
+2. The handoff test depends on page content that the payment provider owns.
 
-   **Why:** Line 8 proves the merchant reaches the expected session under a controlled response. If the merchant owns behavior after payment, cover it separately with a controlled callback or return response. Use a provider sandbox if a real integration check is needed, and assert the agreed behavior of that integration.
+   End the handoff test at the exact URL check on line 8.
+
+   If the merchant owns behavior after payment, test it separately with a controlled callback or return response. A callback is a message the provider sends back after payment. If you need to test the real connection between the two systems, use the provider's sandbox, a test environment. Check the behavior both systems agree to provide.
+
+   **Why:** With the response set by the fixture, line 8 proves the merchant reaches the expected session. A separate sandbox check can test what both systems have agreed to do without making the merchant's redirect test depend on the provider's page.
 
 ## Why the tempting answer fails
 
-The decoy marks only the sleep and says the main issue is rendering speed. That misses both lines that depend on vendor content. An 800 ms wait, a longer wait and a locator assertion would all be waiting for a field deliberately absent from the stub. They would also make the handoff test answer a question about another team's page.
+The decoy treats this as a slow page and marks only the fixed wait. It misses both lines that depend on content the provider owns. If you wait 800 ms or longer, the field still won't appear in the stub. A locator assertion, a check that waits for an element to meet a condition, won't help either. All of those approaches make the handoff test check another team's page.
 
 ## What the interviewer listens for
 
-Draw the line between merchant behavior and provider behavior. State what the URL assertion proves and what a separate sandbox check would add.
+Explain which behavior the merchant owns and which the provider owns. Say what the URL check proves and what a separate sandbox test could prove.
 
 ## Sources
 

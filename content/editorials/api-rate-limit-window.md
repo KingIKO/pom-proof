@@ -4,41 +4,47 @@ problem: scenario/api-rate-limit-window
 
 ## What is going on
 
-A fixed-window write quota has to act on the right tenant and operation. This product also requires a documented `Retry-After` value on HTTP 429. The HTTP specification itself makes that header optional for 429.
+A fixed-window write quota counts each tenant's writes and resets the count at set times. A tenant is one customer account with its own data. The quota has to count the right tenant and the right operation.
+
+HTTP 429 is the status code for too many requests. This product also requires a documented `Retry-After` value on HTTP 429. That header tells the client how long to wait before it tries again. The HTTP specification itself makes the header optional for 429.
 
 ## The answer
 
 1. Ask which operations share a counter, what identifies a tenant, exactly when the window resets, and what `Retry-After` should report.
 
-   **Why:** Until you know which requests increment the same counter and when it becomes fresh, you cannot predict which request should be rejected.
+   **Why:** You need to know which requests add to the same counter. You also need to know when that counter starts fresh. Until you know both, you cannot predict which request the service should reject.
 
-2. Spend six minutes exhausting one tenant's quota and checking denial, the retry time, and reset. Spend five minutes checking that a second tenant can write while the first is still exhausted.
+2. Spend six minutes on recovery for one tenant and five minutes on isolation, meaning each tenant keeps its own counter.
 
-   **Why:** The first check catches a quota that fails to deny or recover at the boundary. The second creates the one condition under which a shared counter would wrongly deny a tenant that has room.
+   Use up one tenant's quota, then check the rejected write, retry time, and reset. While the first tenant is blocked, check that a second tenant can still write.
 
-3. Use the API to check the deployed service's denial and subsequent recovery.
+   **Why:** The first check catches a quota that fails to deny or recover at the boundary. A shared counter could wrongly block a second tenant whose own quota has room.
 
-   **Why:** The response and stored records together show whether the deployed write path honors the decision.
+3. Use the API to check that the deployed service rejects the extra write and then recovers.
 
-4. Use the API to check isolation between the fixture tenants.
+   **Why:** The response shows what the service decided. Together with the stored records, it shows whether the deployed write path follows that decision.
 
-   **Why:** A unit test can validate counter-key construction while the deployed service still calls it with the wrong identity.
+4. Use the API to check isolation between the fixture tenants, the test tenants set up for this check.
 
-5. Stop rollout if a request returns 429 and still creates a record.
+   **Why:** A unit test checks one piece of code on its own. It can confirm that the code builds the counter key, the value that names a request's counter, correctly. The deployed service can still call that code with the wrong tenant identity.
 
-   **Why:** The quota has failed to prevent the write, even though the response makes it look enforced.
+5. If a request returns 429 and still creates a record, stop the rollout to users.
 
-6. Fix the staging clock and create a fresh tenant, make exactly the allowed writes, check 429 and no new record on the next write, then advance to reset and verify a successful write.
+   **Why:** The response makes the quota look enforced. The write still happened, so the quota failed to prevent it.
 
-   **Why:** Freezing the clock keeps setup and denial in the same window. Moving it only afterward isolates reset as the reason the next write succeeds.
+6. Reproduce the quota limit and recovery with the clock under test control.
+
+   In staging, the pre-release test environment, freeze the clock and create a fresh tenant. Make exactly the allowed writes. Check that the next write gets 429 and creates no record. Then move the clock to the reset and confirm that a write succeeds.
+
+   **Why:** A frozen clock keeps the setup writes and the rejected write in the same window. You move the clock only after the rejection. That way, the reset is the only reason the next write can succeed.
 
 ## Why the tempting answer fails
 
-The help center heading cannot tell you how operations are counted. Writing once from each tenant under quota would pass even if they shared a counter. A unit isolation check would miss a deployed identity mix-up.
+The help center heading cannot tell you how the service counts operations. One write from each tenant under quota would pass even if the tenants shared a counter. A unit check of isolation would miss a mix-up of tenant identity in the deployed service.
 
 ## What the interviewer listens for
 
-Name what you check in storage after a denied response. Make the tenant comparison while the first tenant is still blocked.
+Name what you check in storage after a rejected response. Compare the two tenants while the first tenant is still blocked.
 
 ## Sources
 

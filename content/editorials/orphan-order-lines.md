@@ -4,7 +4,7 @@ problem: sql/orphan-order-lines
 
 ## What is going on
 
-The staging import can contain a line with a broken order link, a broken product link, or both. A link can be broken even if the line supplies an ID. The report must keep each affected line and tell the importer which link needs repair.
+The staging import holds order lines before the import applies foreign keys. A foreign key requires a supplied ID to point to an existing row. A staged line can have a broken order link, a broken product link, or both. A link can be broken even when the line supplies an ID. The report must keep each affected line and tell the importer which link needs repair.
 
 ## The fix
 
@@ -21,31 +21,31 @@ ORDER BY l.line_id;
 
 1. Start from `order_lines` and left join `orders` on `order_id`.
 
-   **Why:** Line 103 points to a nonexistent order. An inner join would remove the very line the import check needs to report.
+   **Why:** A left join keeps every order line, even when no order matches. Line 103 points to an order that does not exist. An inner join keeps only matched rows, so it would remove that line. Line 103 is exactly the line the import check needs to report.
 
-2. Left join `products` using the line's `product_id`.
+2. Left join `products` on the line's `product_id`.
 
-   **Why:** The two lookups are independent. Line 103 still has a valid product, and line 102 still has a valid order. Each side must be checked even if the other fails.
+   **Why:** The order lookup and the product lookup do not depend on each other. Line 103 still has a valid product, and line 102 still has a valid order. The query must check each side even when the other side fails.
 
-3. Set each numeric flag by testing the corresponding joined primary key for `NULL`.
+3. Set each numeric flag by checking whether the joined primary key is `NULL`.
 
-   **Why:** On the order side, both line 103's nonexistent ID and line 105's blank ID produce no matched key. Testing only the staging value for `NULL` would miss line 103.
+   **Why:** The primary key here is the ID column that identifies each row in a table. When a left join finds no match, the joined key is `NULL`, which means no value. On the order side, line 103 has an ID that does not exist, and line 105 has a blank ID. Neither line finds a matching key. A `NULL` test on the staging value alone would miss line 103.
 
-4. Use `OR` to keep rows with either joined key missing.
+4. Use `OR` to keep rows where either joined key is missing.
 
-   **Why:** A broken link needs attention even when the other link is valid. A line whose two links work must stay out of the exception report.
+   **Why:** A broken link needs attention even when the other link is valid. A line with two working links must stay out of the exception report, the list of lines that need repair.
 
 5. Sort by `l.line_id`.
 
-   **Why:** Missing parent IDs provide no consistent sorting key. The staging line ID lets an importer find each reported row in order.
+   **Why:** Each line points to two parent rows, its order and its product. When a parent is missing, its joined ID is `NULL`, so it gives no consistent sort order. The staging line ID lets the importer find each reported row in order.
 
 ## Why the tempting answer fails
 
-The decoy uses `AND`. Line 33 is the only visible orphan and has two broken links, so it passes that narrower test. In the altered data, line 102 has a valid order and a missing product. `AND` drops it, whereas the report should include it with flags `0` and `1`.
+The decoy uses `AND`, so it keeps only lines where both links are broken. Line 33 is the only visible orphan, meaning a line with a missing parent. It has two broken links, so it passes that narrower test. In the altered data, line 102 has a valid order and a missing product. `AND` drops that line, but the report should include it with flags `0` and `1`.
 
 ## What the interviewer listens for
 
-Walk through all four combinations of matched and missing parents. Include missing links with both populated and empty staging IDs.
+Walk through all four combinations of matched and missing parents. Include missing links where the staging ID is filled in and where it is empty.
 
 ## Sources
 

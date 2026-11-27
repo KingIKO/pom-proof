@@ -4,21 +4,21 @@ problem: code/redact-log-card-field
 
 ## What is going on
 
-The processor fixture uses a specific token format for synthetic card numbers. The redactor must mask every valid `card=` field while preserving the rest of the line exactly. This is a test of a known format; a detector for arbitrary production logs has a different job.
+The payment processor's test log stores made-up card numbers in a specific token format. A token is a piece of the line between ordinary spaces. The redactor must hide all but the last four digits of every valid `card=` field. It must keep the rest of the line exactly as it was. This tests one known format, and a detector for any production log has a different job.
 
 ## The fix
 
-1. Split on one literal ASCII space and plan to join the result with the same delimiter.
+1. Split the line on one literal ASCII space, and plan to join the result with the same character.
 
-   **Why:** `split(' ')` keeps empty pieces for repeated spaces and for spaces at either end. They let `spacing-preserved` recover every original separator. A tab stays inside its token in `punctuation-and-case`; splitting on general whitespace could turn it into a separator and match a field the fixture says to leave alone.
+   **Why:** `split(' ')` keeps an empty piece for each repeated space and for spaces at either end. Those empty pieces let `spacing-preserved` restore every original separator. In `punctuation-and-case`, a tab stays inside its token. Splitting on any whitespace would treat the tab as a separator. Then the code could match a field that the fixture says to leave alone.
 
    ```js
    const tokens = line.split(' ');
    ```
 
-2. Check each whole token for `card=` followed by 13 to 19 ASCII digits. Rebuild each match with one asterisk per hidden digit.
+2. Mask each whole token that is `card=` followed by 13 to 19 ASCII digits, using one asterisk per hidden digit.
 
-   **Why:** Anchoring preserves `other-label` and rejects the punctuation, uppercase label, and non-ASCII digits in `punctuation-and-case`. The permitted lengths include both values in `length-endpoints`, while `outside-range` must stay unchanged. Subtracting nine accounts for the five-character label and four visible digits. Mapping every token catches `same-field-twice`, and rejoining leaves the original input intact.
+   **Why:** The `^` and `$` anchors make the pattern match the whole token, not just part of it. So `other-label` stays unchanged, and the pattern rejects the punctuation, uppercase label, and non-ASCII digits in `punctuation-and-case`. Both lengths in `length-endpoints` are allowed, while `outside-range` must stay unchanged. The code subtracts nine for the five-character label and the four visible digits. Mapping every token catches `same-field-twice`, and joining builds a new string, so the input stays intact.
 
    ```js
    return tokens.map((token) => {
@@ -29,11 +29,11 @@ The processor fixture uses a specific token format for synthetic card numbers. T
 
 ## Why the tempting answer fails
 
-Assuming 16 digits works for `single-field`, so a smoke test with a familiar fixture number would pass. `length-endpoints` uses an exact field with 13 digits and another with 19. The decoy leaves both values visible because it never matches those lengths. Testing those endpoints together checks that each field gets the mask length its own value requires.
+The decoy assumes every card number has 16 digits, which works for `single-field`. A smoke test, a quick basic check, that uses a familiar fixture number would therefore pass. `length-endpoints` has one exact field with 13 digits and another with 19. The decoy never matches those lengths, so it leaves both values visible. Testing both endpoints together checks that each field gets the mask length its own value needs.
 
 ## What the interviewer listens for
 
-Bound the privacy claim to this token grammar. Include both supported endpoints and a row with two valid fields, since a single match cannot show whether scanning continues.
+Limit the privacy claim to this token format. Include both supported endpoints, 13 and 19 digits, and a row with two valid fields. A single match cannot show whether the scan continues after it.
 
 ## Sources
 

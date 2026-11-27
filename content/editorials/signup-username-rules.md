@@ -4,29 +4,33 @@ problem: test-design/signup-username-rules
 
 ## What is going on
 
-The signup validator checks the name as entered before looking at availability. Start from an allowed name and isolate the rule that changes its result.
+The signup validator checks the name exactly as entered, before it looks at whether the name is available. Start from an allowed name. Then change one thing, so that a single rule decides the result. A mutant is a copy of the function with one planted mistake for the tests to catch.
 
 ## The answer
 
-1. Use only lowercase ASCII letters for the length pairs. Reject `sam`, accept `mira`, accept `abcdefghijklmnop`, and reject `abcdefghijklmnopq`.
+1. Test the two length pairs with names made only of lowercase ASCII letters.
 
-   **Why:** With case and punctuation out of the picture, `mira` catches the mutant that excludes the minimum. The 17-letter row catches one that admits an overlength name.
+   Reject `sam` and accept `mira`. Accept `abcdefghijklmnop` and reject `abcdefghijklmnopq`. ASCII is the basic character set with the English alphabet and digits.
 
-2. Reject `7mira` and `miRa7`. Also reject `" mira"` without trimming, and `mirá7` with its non-ASCII letter.
+   **Why:** `mira` catches the mutant that excludes the minimum length. The 17-letter row catches the one that admits a name that is too long. Lowercase letters keep case and punctuation from interfering with the length checks.
 
-   **Why:** The digit is legal later, so `7mira` catches the mutant that allows a leading digit. A valid opening letter in `miRa7` catches a different mutant that permits uppercase later. The other rejections distinguish the as-entered and ASCII requirements from case alone.
+2. Reject `7mira`, `miRa7`, `" mira"`, and `mirá7`.
 
-3. Accept `mira_7`, reject `mi__ra` for adjacent underscores, and reject `mira_` for an underscore at the end.
+   Keep the leading space in `" mira"` and the non-ASCII letter in `mirá7`.
 
-   **Why:** One negative row catches the mutant that permits adjacent underscores and the other catches the mutant that permits the final underscore. Two underscores at the end would let either intact check hide the other missing check.
+   **Why:** `7mira` catches the mutant that allows a leading digit, since a digit is legal later in a name. `miRa7` starts with a valid letter, so it catches a different mutant that permits uppercase later. The other two rejections separate the as-entered and ASCII rules from letter case alone.
+
+3. Accept `mira_7`, and reject `mi__ra` and `mira_`.
+
+   **Why:** `mi__ra` catches the mutant that permits adjacent underscores. `mira_` catches the mutant that permits a final underscore. If one name had two underscores at the end, either check that still worked would hide the other missing check.
 
 ## Why the tempting answer fails
 
-`mira` catches an excluded minimum and `mira_7` checks a valid digit and underscore. `Mira7` fails at the opening letter even when uppercase is incorrectly allowed later. `mira-7` checks an illegal character and misses both underscore rules as well as the maximum length.
+In the decoy, the tempting set of rows, `mira` catches an excluded minimum and `mira_7` checks a valid digit and underscore. `Mira7` fails at the opening letter, even when the code wrongly allows uppercase later. `mira-7` checks one illegal character. It misses both underscore rules as well as the maximum length.
 
 ## What the interviewer listens for
 
-Explain what each equivalence partition or boundary value adds. Use allowed controls and rejected cases that break one constraint at a time.
+An equivalence partition is a group of inputs that the validator should treat the same way. A boundary value sits at the edge of a limit. Explain what each partition or boundary value adds. Use allowed names as controls, and use rejected names that each break one rule.
 
 ## Sources
 

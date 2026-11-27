@@ -4,25 +4,31 @@ problem: diagnosis/review-password-in-login-test
 
 ## What is going on
 
-The reports reader is a limited test account. The scenario treats the password literal as a working CI credential, even though the displayed value is fictional. The team documents the fixture email as a non-secret, and the test is meant to exercise sign-in through the UI.
+The reports reader is a test account limited to reading reports. The password literal is a password written directly in the source. The example value is fictional. In the scenario, the automated CI runs use it to sign in.
+
+The team documents the account email as non-secret test data. The test checks sign-in through the page.
 
 ## The answer
 
-1. Mark line 3, the password literal, and keep the fixture name on line 2.
+1. Mark the password on line 3. Leave the fixture name, the email for the test account, unmarked on line 2.
 
-   **Why:** A repository reader can recover a committed password from the source or its history. Moving the literal to another source file would leave the same exposure. The address identifies the account, and team policy already makes it available without granting access.
+   **Why:** Anyone who can read the repository can read a password committed to the source or saved in its history. Moving it to another source file leaves it exposed. Team policy already shares the email address, and the address alone grants no access.
 
-2. Block the merge for storing a password in test source. Have CI pass it from its secret store through the credential fixture or a required environment variable. Fail setup clearly if it is missing and never print its value.
+2. Block the merge because the test stores a working account password in source code.
 
-   **Why:** The test needs a credential at runtime, and the repository need not distribute it. If a real password already reached a commit or test artifact, revoke or rotate it and check where copies spread. Removing the current line leaves earlier copies intact.
+   Have CI supply it from its secret store through the credential fixture, reusable test setup for signing in. Another option is a required environment variable, a setting CI passes to the test process. If the password is missing, fail setup with a clear message. Never print the password.
+
+   If a real password reached a commit or a saved test artifact, revoke it or replace it. Check where else copies may have spread.
+
+   **Why:** The test only needs the password when it runs. The secret store supplies it without distributing it in source or logs. Deleting the current line leaves earlier copies intact.
 
 ## Why the tempting answer fails
 
-The decoy correctly classifies the secret and marks line 3, but also marks the approved account identifier on line 2. Keep UI sign-in and the post-submit URL and heading checks: replacing sign-in with a preauthenticated page would skip the feature being tested. The account can stay limited to reports access.
+The decoy correctly treats the password on line 3 as secret. It also incorrectly marks the approved email on line 2. Keep the page sign-in and the checks for the URL and heading after the form submits. If the page starts with the user already signed in, the test skips the flow it is supposed to check. The account can stay limited to reports access.
 
 ## What the interviewer listens for
 
-Explain how local and CI runs obtain the credential without committing it, and what to do if it already escaped into history or artifacts.
+Explain how local runs and CI runs get the password without committing it. Say what you would do if the password is already in source history or saved test output.
 
 ## Sources
 

@@ -4,22 +4,22 @@ problem: code/missing-sequence-ids
 
 ## What is going on
 
-The collector knows the first and last IDs reserved for a run. The receipt list can arrive out of order, repeat captures, or include other runs. The question is which reserved IDs are absent rather than whether the receipt list looks tidy.
+The collector reserves a block of capture IDs for each run, and it knows the first and last ID of that reservation. The receipt list can arrive out of order, repeat captures, or include IDs from other runs. The question is which reserved IDs never arrived. Whether the receipt list looks tidy does not matter.
 
 ## The fix
 
 1. Put the received IDs into a set and start an empty result array.
 
-   **Why:** Membership is all the scan needs. Multiple copies of a receipt in `one-gap` add no evidence, and `out-of-range-ids` can stay in the set because the scan never asks about them. Keeping a separate set also lets the collector preserve receipt order for other investigations.
+   **Why:** A set answers one question quickly: is this value present? That membership check is all the scan needs. In `one-gap`, extra copies of a receipt add no evidence. The extra IDs in `out-of-range-ids` can stay in the set, because the scan never asks about them. A separate set also leaves the receipt list in its original order for other investigations.
 
    ```js
    const received = new Set(ids);
    const missing = [];
    ```
 
-2. Walk the reservation in ascending order, including both endpoints. Append any ID absent from the set.
+2. Walk the reservation in ascending order, including both endpoints, and append each ID that is absent from the set.
 
-   **Why:** `single-missing-id` has equal bounds and still requires one membership check. `no-reservation` has reversed bounds and naturally performs none. If the receipt list is empty, `empty-list` must return every reserved value, including the last. Traversing the reservation directly gives sorted results even when the receipts are jumbled. It also finds a gap before the first received ID without needing a separate pass.
+   **Why:** In `single-missing-id`, the two bounds are equal, so the loop still makes one check. In `no-reservation`, `first` is greater than `last`, so the loop makes no checks at all. When the receipt list is empty, `empty-list` must return every reserved value, including the last. Walking the reservation itself gives sorted results, even when the receipts are jumbled. It also finds a gap before the first received ID without a separate pass.
 
    ```js
    for (let id = first; id <= last; id++) {
@@ -30,11 +30,11 @@ The collector knows the first and last IDs reserved for a run. The receipt list 
 
 ## Why the tempting answer fails
 
-An exclusive upper bound is common for array indices. This contract includes `last`, so the shortcut loses 22 in `missing-last` and skips the only iteration of `single-missing-id`. It also misses the last element of `empty-list` and skips the maximum safe integer in `safe-integer-limit`.
+The shortcut stops before `last`. That kind of limit is called an exclusive upper bound, and it is common for array indices. This problem includes `last`, so the shortcut loses 22 in `missing-last`. It also skips the only check in `single-missing-id`. It misses the last value of `empty-list` and the maximum safe integer in `safe-integer-limit`.
 
 ## What the interviewer listens for
 
-Name both endpoints before choosing a loop and distinguish empty receipts from an empty reservation. The work is building the set once and checking each reserved ID; the bounded reservation length matters more than the absolute size of an ID.
+Name both endpoints before you choose a loop. Tell an empty receipt list apart from an empty reservation. The work is building the set once and then checking each reserved ID. So the reservation length, which is at most 200 IDs, matters more than how large an ID is.
 
 ## Sources
 

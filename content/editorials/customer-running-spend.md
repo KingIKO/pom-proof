@@ -4,7 +4,7 @@ problem: sql/customer-running-spend
 
 ## What is going on
 
-Each paid order gets its customer's running spend as of that order. A single total per customer would lose the order-by-order increases, and two orders placed in the same second still have separate running totals.
+The report shows the running total for each paid order. That total adds what the customer paid for this order and all earlier paid orders. A single total per customer would hide how their spend changes after each order. Two orders placed in the same second still get separate running totals.
 
 ## The fix
 
@@ -19,33 +19,35 @@ WHERE status = 'paid'
 ORDER BY customer_id, placed_at, order_id;
 ```
 
-1. Filter to `status = 'paid'` before calculating the window.
+1. Keep only rows that match `status = 'paid'` before you add up orders.
 
-   **Why:** A pending order for 9,000 cents at the same timestamp as paid orders would inflate later totals if it entered the sum, even if the report hid its own row.
+   **Why:** The altered data includes a pending order for 9,000 cents at the same recorded time as paid orders. If the sum includes that order, later totals will be too high. Hiding the pending order's row would leave the totals wrong.
 
-2. Partition `SUM(total_cents)` by `customer_id`.
+2. Partition `SUM(total_cents)` by `customer_id` so each customer has a separate group of rows.
 
-   **Why:** Two customers can pay at the same time, and neither balance should include the other customer's order. The window keeps one output row per paid order.
+   **Why:** Two customers can pay at the same time. A customer's running total must exclude orders paid by anyone else. The window function adds values from related rows and still returns one row per paid order.
 
-3. Order each customer's window by `placed_at`, then `order_id`.
+3. Order each customer's window by `placed_at`, with lower `order_id` values first when the times match.
 
-   **Why:** Order 111 was placed before order 103 despite its greater ID. For orders 103 and 107, the timestamp ties, so 103 comes first and receives its own increment before 107 contributes.
+   **Why:** The customer placed order 111 before order 103, even though 111 has the higher ID. Orders 103 and 107 share a timestamp, or recorded time. Order 103 comes first and gets its own total before order 107 adds to it.
 
 4. Specify `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`.
 
-   **Why:** The sum starts at the customer's first paid order and stops at the current row. The explicit frame states that rule directly. The unique order ID makes the full sort key unique here, so there are no peers even under the default frame.
+   **Why:** The frame tells SQL which rows to sum for the current order. It starts with the customer's first paid order and stops at the current row. Stating the frame makes those limits clear. Peers are rows with the same values in all the sorting columns. Here the order ID is unique, so even the default frame would have no peers to include.
 
-5. Sort the result by customer, timestamp, and order ID.
+5. Sort the result by customer, then by timestamp and order ID within each customer.
 
-   **Why:** Each customer's orders read in the sequence used for the calculation. Sorting the displayed rows cannot fix a running total that already included a later order.
+   **Why:** Readers see each customer's orders in the same order the sum follows. If a total already includes a later order by mistake, sorting the displayed rows cannot fix it.
 
 ## Why the tempting answer fails
 
-The decoy orders the window by timestamp alone. The simultaneous visible payments belong to different customers, so there are no peers within a partition. In the altered rows, order 103 should show 1,600 cents. The default `RANGE` frame includes same-time order 107 as a peer and gives both 4,700.
+The tempting query orders the window by timestamp alone. The visible payments at the same time belong to different customers, so they are in separate partitions and do not count as peers.
+
+In the altered data, order 103 should show 1,600 cents. With only the timestamp to sort by, the default `RANGE` frame treats order 107 as a peer. It gives both orders 4,700 cents.
 
 ## What the interviewer listens for
 
-Explain what the sort keys decide and which rows the frame sums. MySQL 8 and PostgreSQL support the same syntax and also use a peer-inclusive default for an ordered window.
+Explain how the sorting columns decide which order comes first. Name the rows that the frame adds together. MySQL 8 and PostgreSQL support the same syntax. Both include peers by default when the window specifies an order.
 
 ## Sources
 

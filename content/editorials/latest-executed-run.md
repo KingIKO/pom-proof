@@ -4,7 +4,7 @@ problem: sql/latest-executed-run
 
 ## What is going on
 
-The results dashboard needs to show tests whose latest executed run failed. A later skip says nothing about whether a test recovered. A later pass does, so the query needs both passed and failed runs when it decides which execution was latest.
+The dashboard needs tests whose latest executed run failed. An executed run is one that passed or failed. A later skip leaves the last executed result unchanged. A later pass means the latest run did not fail, so keep passes in the set of runs the query can choose from.
 
 ## The fix
 
@@ -19,35 +19,37 @@ WHERE ranked.position = 1 AND ranked.outcome = 'failed'
 ORDER BY cases.name;
 ```
 
-1. Exclude skipped runs from the rows that enter the window.
+1. Exclude skipped runs before you rank the results.
 
-   **Why:** `void order` has a failure followed by a skip. The skip must never take the top position. A case with only a skip, such as `print invoice`, has no eligible row at all.
+   **Why:** The `void order` case has a failure followed by a skip. The skip must never take first position. If a case has only a skip, as in `print invoice`, it has no executed run to rank.
 
-2. Partition `ROW_NUMBER()` by `case_id` and order by `seq DESC`.
+2. Rank each case's runs newest first with `ROW_NUMBER()`, partitioned by `case_id` and ordered by `seq DESC`.
 
-   **Why:** One case's latest run says nothing about another's. The largest sequence value is the newest in each partition, and `seq` is unique, so the order needs no tie-break.
+   **Why:** Each partition is a separate group containing one case's runs. The `ROW_NUMBER()` function numbers the runs in that group in the chosen order. The largest sequence value belongs to the newest run. The `seq` column has unique values, so there are no ties to break.
 
-3. Inner join the ranked rows to `cases` by the case key.
+3. Use an inner join on the case ID to get the name from `cases`.
 
-   **Why:** The dashboard needs each qualifying case's name. Cases with no executed row, such as `tracking` in the sample, should not reappear as empty entries.
+   **Why:** The dashboard needs each qualifying case's name. An inner join keeps only rows that match. A case with no executed run, such as `tracking` in the sample, has no ranked row to match. The dashboard should not display an empty entry for that case.
 
 4. Keep position one only if the outcome is `failed`.
 
-   **Why:** `amend order` failed before it passed. Filtering to failures before ranking would make that old failure look current.
+   **Why:** The `amend order` case failed before it passed. If you filter out passes before ranking, the older failure looks like the latest result.
 
-5. Return the name and order by `cases.name`.
+5. Sort the returned names by `cases.name`.
 
-   **Why:** The window uses sequence to choose the latest result. The dashboard instead lists the selected case names alphabetically.
+   **Why:** The window, which reads each case's runs in sequence order, helps choose its latest result. The dashboard lists the chosen case names alphabetically.
 
 ## Why the tempting answer fails
 
-The decoy ranks skips along with executions. It already fails on the visible sample: skips occupy position one for both `checkout` and `pickup`, so the decoy returns no rows. In the altered data it returns `switch address`, which ends in a failure, but misses `void order`, which ends in a skip after a failure.
+The tempting query ranks skips along with executed runs. In the visible sample, skips take first position for both `checkout` and `pickup`. The query returns no rows.
 
-The reference returns `checkout` and `pickup` in the sample. Their failures are the latest executed runs for those cases.
+In the altered data, the query returns `switch address` because its last run failed. It misses `void order` because that case ends in a skip after a failure.
+
+The correct query returns `checkout` and `pickup` in the sample. In each case, the failure is the latest executed run.
 
 ## What the interviewer listens for
 
-Explain why skipping is an input filter and failure is a filter on the chosen run. Check both a skip after a failure and a pass after a failure.
+Explain why the query removes skips before it ranks runs. Show why it checks for failure only after it picks the latest executed run. Test a skip after a failure and a pass after a failure.
 
 ## Sources
 

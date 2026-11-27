@@ -4,41 +4,47 @@ problem: scenario/checkout-discount-totals
 
 ## What is going on
 
-The checkout change introduces a minimum eligible subtotal and a second kind of discount. The calculation can be right on its own while payment or order storage uses a different amount.
+The checkout change adds a minimum eligible subtotal. That is the smallest total of eligible items that earns the order discount. The change also adds a second kind of discount next to item discounts. The calculation can be right on its own while payment or order storage uses a different amount.
 
 ## The answer
 
 1. Ask which items count, whether the exact minimum qualifies, how item and order discounts combine, and when rounding happens.
 
-   **Why:** A result for a `19.99` cart could reflect excluded items rather than the boundary you meant to test. The rounding rule also determines the expected quote.
+   **Why:** A result for a `19.99` cart could come from excluded items instead of the boundary you meant to test. The rounding rule also sets the expected quote, the total the customer sees before paying.
 
-2. Spend four minutes comparing carts one cent below and exactly at the minimum. Spend six tracing the quote, authorization, and stored total for a rounding-sensitive eligible cart.
+2. Spend four minutes on the minimum boundary and six minutes on rounding through payment.
 
-   **Why:** The adjacent carts catch a misplaced cutoff. The second check catches a cent discrepancy that a whole-cent discount could hide.
+   Compare a cart one cent below the minimum with a cart exactly at it. For an eligible cart whose total depends on rounding, compare its quote, its payment authorization (the approved charge amount), and its stored total.
 
-3. Use a unit table with explicit expected amounts for the pure calculator.
+   **Why:** The neighboring carts catch a cutoff in the wrong place. The rounding check catches a one-cent difference that a whole-cent discount could hide.
 
-   **Why:** Fixing the inputs and checking the returned amounts isolates the eligibility and rounding rules from checkout behavior.
+3. Test the pure calculator with a unit table that lists the expected amount for each case.
 
-4. Use an API integration check to compare the deployed service's quote, sandbox authorization, and saved order.
+   **Why:** A unit table gives one piece of code fixed inputs and checks the returned amounts. The calculator is pure, so its result depends only on those inputs. That separates the eligibility and rounding rules from checkout behavior.
 
-   **Why:** A UI label can be correct even when the payment request or stored order uses a different amount.
+4. Use an API integration check to compare the deployed service's quote, the sandbox authorization, and the saved order.
 
-5. Stop rollout if payment authorizes more than the confirmed total.
+   The sandbox is a test payment account that moves no real money.
 
-   **Why:** The customer agreed to the quote and could be charged more.
+   **Why:** A UI label can be correct even when the payment request or the stored order uses a different amount.
 
-6. Create a cart with known eligible and excluded lines, apply the code and record the quote, submit and capture the sandbox authorization, then read the confirmed order and reconcile all amounts.
+5. If payment authorizes more than the confirmed total, stop the rollout.
 
-   **Why:** Recording the quote before submission preserves what the customer agreed to. Recomputing it afterward could reproduce the same error as the authorization.
+   **Why:** The customer agreed to the quote. They could be charged more than that.
+
+6. Check that all amounts agree for a cart with known eligible and excluded lines.
+
+   Create the cart and apply the code. Record the quote before submitting the cart. Record the sandbox authorization after submission. Read the confirmed order and reconcile the amounts, meaning check that they agree.
+
+   **Why:** You record the quote before you submit, so you keep what the customer agreed to. If you recomputed the quote afterward, you could repeat the same error as the authorization.
 
 ## Why the tempting answer fails
 
-Badge placement does not resolve rounding. Comparing expired and mistyped code messages is a useful follow-up, but it cannot catch an incorrect authorization. The UI is an indirect way to check the pure calculator and cannot by itself establish the sandbox authorization and stored amounts.
+Where the badge sits does not settle the rounding rule. Comparing the messages for expired and mistyped codes is a useful follow-up. It cannot catch a wrong authorization, though. The UI checks the pure calculator only indirectly. On its own, it cannot establish the sandbox authorization or the stored amounts.
 
 ## What the interviewer listens for
 
-Name the source of truth at each checkpoint and explain which rule your boundary value analysis isolates.
+At each checkpoint, name the source of truth, the record you trust for the correct amount. Boundary value analysis tests values at and just around a limit. Explain which rule your boundary value analysis isolates.
 
 ## Sources
 

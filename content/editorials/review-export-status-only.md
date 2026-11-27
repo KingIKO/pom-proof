@@ -4,25 +4,27 @@ problem: diagnosis/review-export-status-only
 
 ## What is going on
 
-The endpoint returns a JSON `columns` field. Orders, refunds and returns have different expected column lists, and the team also needs a separate CI result for each preset. The URL and authentication fixtures already supply the setup this check needs.
+The export endpoint is the URL the test calls for each preset. Its response has a `columns` field in JSON, a text format for data. Orders, refunds and returns each have their own expected column list. The team needs a separate result for each preset when the automated CI jobs run the tests. The fixtures, reusable test setup, already supply the base URL and request headers that prove the test is signed in.
 
 ## The answer
 
-1. Mark line 8, which loops over the presets inside one test, and line 12, which asserts only the HTTP status.
+1. Mark the loop on line 8 and the status check on line 12.
 
-   **Why:** At line 8, the first failed assertion stops the function and leaves CI with no result for the remaining presets. At line 12, every response could return the same wrong column list and still pass with status 200.
+   **Why:** Line 8 loops over all the presets inside one test. The first failed assertion, or check, stops the test, so CI gets no result for later presets. Line 12 checks only the HTTP status, the code that reports whether the request succeeded. Every preset could return 200 with the same wrong column list and still pass.
 
-2. Choose the status-only assertion as the cause of the false green. Give each preset a named `pytest.mark.parametrize` case. Check status 200, parse the JSON and compare `body['columns']` with `list(columns)`.
+2. The status-only assertion can pass even when the columns are wrong.
 
-   **Why:** Separate cases give CI an outcome for each preset. List equality checks the values in order, and keeping the status check prevents an error response with a matching JSON shape from looking successful.
+   Give each preset its own named case using `pytest.mark.parametrize`, which runs the same test once per set of inputs. Check for status 200. Read the JSON response and compare `body['columns']` with `list(columns)`.
+
+   **Why:** Separate cases give CI one result per preset, even if another case fails. The status check keeps an error response with matching JSON from passing. The list comparison checks both the values and their order.
 
 ## Why the tempting answer fails
 
-The decoy correctly names the ignored column list and marks line 12. Leaving line 8 unmarked misses the separate reporting requirement. Adding a body assertion inside the loop improves what the check can detect but still stops at the first failure. Parametrizing the old assertion alone reports every status and still misses wrong columns in successful responses.
+The decoy correctly marks line 12 because it ignores the columns. It skips line 8, so CI still cannot report the presets separately. If you check the response body inside the loop, you can catch wrong columns. The test still stops at the first failure. If you split the old status check into separate cases, CI reports every preset but still misses wrong columns in successful responses.
 
 ## What the interviewer listens for
 
-Describe a run with two broken presets, one of which returns the right values in the wrong order. Both failures should be reported and the unbroken preset should still pass.
+Describe a run with two broken presets. One returns the right column names in the wrong order. CI should report both failures and still show a pass for the preset that works.
 
 ## Sources
 

@@ -4,7 +4,7 @@ problem: sql/department-salary-coverage
 
 ## What is going on
 
-The payroll import check measures how many assigned employees have a salary on record. An empty department and a staffed department with no known salaries both need a row with a zero count. A recorded salary of zero still contributes to coverage.
+The payroll import check counts assigned employees with a recorded salary in each department. If a department has no employees, it still needs a row with a count of zero. The same rule applies if none of its employees have a recorded salary. A salary of zero counts as recorded.
 
 ## The fix
 
@@ -15,25 +15,27 @@ LEFT JOIN employees e ON e.department_id = d.department_id
 GROUP BY d.department_id;
 ```
 
-1. Start from `departments` and `LEFT JOIN` employees on `department_id`.
+1. Join `departments` to `employees` with a `LEFT JOIN` on `department_id`.
 
-   **Why:** An inner join would erase Payroll, which has no employees in the altered data. An unassigned employee with a `NULL` department ID cannot match a department, even if their salary is known.
+   **Why:** A `LEFT JOIN` keeps a department even when no employee matches it. An inner join keeps only matches, so it would omit Payroll, which has no employees in the altered data. If an employee's department ID is `NULL`, the value for missing information, they have no department to match. A recorded salary does not change that.
 
 2. Group by `d.department_id`.
 
-   **Why:** One department can have several employee rows, but the report gives one count for that department. Using the key also keeps different departments separate if they share a name.
+   **Why:** A department can match several employee rows. Grouping by the department ID puts all those rows together so the report can return one count. If departments share a name, their IDs still keep them separate.
 
 3. Select `COUNT(e.salary_cents)` for each department.
 
-   **Why:** `COUNT` on the salary column ignores `NULL` from both an employee with an unknown salary and a department with no employee match. Mobile's recorded zero counts, and two employees with the same known amount still count twice.
+   **Why:** The salary column holds `NULL` when an employee has no recorded salary. It also holds `NULL` in the row for a department with no employee match. `COUNT` on the salary column skips both. Mobile's recorded zero counts. Two employees with the same recorded amount still count twice.
 
 ## Why the tempting answer fails
 
-The decoy uses `COUNT(*)`. On the visible rows, Billing has one employee, Returns has two, and Dispatch has one, and all four salaries are present. In the altered data it counts Platform's one unknown salary and also counts the placeholder row for empty Payroll. Both counts should be zero. Counting `employee_id` would fix Payroll only; Platform would still be counted as one.
+The tempting query uses `COUNT(*)` to count every row after the join. In the visible data, Billing and Dispatch have one employee each. Returns has two. All four salaries are present, so counting rows gives the right counts.
+
+In the altered data, the query counts Platform's one employee even though the salary is unknown. It also counts the row that the left join keeps for empty Payroll. Both counts should be zero. Counting `employee_id` would fix Payroll only. Platform would still have a count of one.
 
 ## What the interviewer listens for
 
-Distinguish the number of joined rows, the number of employees, and the number of recorded salaries. Test an empty department and a staffed department with only unknown salaries, then check that zero and a repeated amount are recorded values.
+Explain how counting every joined row differs from counting employees or recorded salaries. Test a department with no employees and one with only unknown salaries. Check that a salary of zero and a repeated salary both count as recorded values.
 
 ## Sources
 

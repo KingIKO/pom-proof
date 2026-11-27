@@ -4,7 +4,9 @@ problem: locator/find-backup-status
 
 ## What is going on
 
-The backup dashboard lists a status beside each job. The exercise asks for the status element with the full caption `Waiting for storage`. Another job may have a longer message starting with those words, so the wording matters. Spacing and inline formatting can change without changing what the status says. An extra approval requirement, on the other hand, is a different status even if the two messages start alike.
+The backup dashboard shows a status beside each job. The exercise asks for the status element whose full caption is `Waiting for storage`. The exact wording matters, because another job may show a longer message that starts with the same words. Spacing and inline formatting can change while the status still says the same thing. An extra approval requirement makes a different status, even if the two messages start alike.
+
+The fix uses XPath, a language that finds elements in the page markup by their type, position or text. Its `normalize-space` function tidies the whitespace in a piece of text. It trims spaces from both ends and turns each run of spaces between words into one space.
 
 ## The fix
 
@@ -12,21 +14,23 @@ The backup dashboard lists a status beside each job. The exercise asks for the s
 //span[normalize-space(.)='Waiting for storage']
 ```
 
-1. Search for `span` elements without specifying a row position.
+1. Search for `span` elements without naming a row position.
 
-   **Why:** In `changed-sort-and-spacing`, Billing moves above Warehouse, but the status is still a span. Searching for the element type allows its position to change and gives the text test the element it needs to examine.
+   **Why:** A `span` is a plain inline HTML element, and each status here sits in one. In `changed-sort-and-spacing`, Billing moves above Warehouse, but the status is still a span. A search by element type keeps working when the position changes. It also gives the text check the element it needs to examine.
 
 2. Compare `normalize-space(.)` with the exact caption `Waiting for storage`.
 
-   **Why:** In `changed-sort-and-spacing`, normalization trims the ends and collapses the extra whitespace between words. In `nested-status-caption`, the dot refers to the span, whose string value includes `storage` inside `strong`. Equality still excludes `Waiting for storage approval`.
+   **Why:** In `changed-sort-and-spacing`, normalization trims the ends and collapses the extra spaces between words. The dot (`.`) means the span itself. Its string value is all the text inside it, including text in child elements. In `nested-status-caption`, that text includes `storage` inside `strong`. The equals test still rules out `Waiting for storage approval`.
 
 ## Why the tempting answer fails
 
-`//ul/li[1]/span` works while Warehouse is first. In `changed-sort-and-spacing`, it points to Billing's `Complete` status. In `nested-status-caption`, it points to Analytics's longer waiting message. Changing the positional shortcut to a raw equality test against a single direct text node would solve the sorting dependency but would still miss the caption when whitespace changes or a word moves into another element.
+`//ul/li[1]/span` picks the span in the first list item. It works while Warehouse is first. In `changed-sort-and-spacing`, it points to Billing's `Complete` status. In `nested-status-caption`, it points to Analytics's longer waiting message.
+
+You could drop the position and test a single direct text node for an exact match instead. A text node is one run of text directly inside an element. That change would remove the dependence on sort order. It would still miss the caption when the whitespace changes. It would also miss the caption when a word moves into another element.
 
 ## What the interviewer listens for
 
-Explain that whitespace normalization tolerates formatting changes and equality still requires the same wording. If two jobs could show the same status, scope to the named job before checking its caption, since either span could satisfy the XPath on its own.
+Explain that whitespace normalization tolerates formatting changes. The equals test still requires the same wording. Two jobs might show the same status. In that case, either span could match the XPath on its own. So narrow the search to the named job first, then check its caption.
 
 ## Sources
 

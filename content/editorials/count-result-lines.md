@@ -4,30 +4,30 @@ problem: code/count-result-lines
 
 ## What is going on
 
-The importer counts exact report tags after stripping a specific kind of padding. An unexpected tag can reveal that the report producer changed its output. The helper should ignore an unknown value instead of quietly turning it into a valid one.
+A report importer reads one short tag per entry, such as `PASS`. It strips one specific kind of padding, plain ASCII spaces at either end, and then counts exact tags. An unexpected tag can show that the tool producing the report changed its output. So the helper should ignore an unknown value. It should not quietly turn that value into a valid one.
 
 ## The fix
 
-1. Initialize the result with all three counters set to zero.
+1. Start the result with all three counters set to zero.
 
-   **Why:** The caller can read a fixed set of fields even for `empty-file` and `unknown-tags`. Building keys only when a tag appears would omit fields, and `only-skips` would leave two of them missing.
+   **Why:** The caller can then read the same fixed set of fields every time, even for `empty-file` and `unknown-tags`. If you added a key only when its tag appeared, some fields would be missing. In `only-skips`, two of them would be missing.
 
    ```js
    const counts = { passed: 0, failed: 0, skipped: 0 };
    ```
 
-2. Strip runs of literal ASCII spaces only at the start or end of each entry.
+2. Remove runs of literal ASCII spaces, and only at the start or end of each entry.
 
-   **Why:** The anchors restrict removal to the allowed padding. `padded-spaces` tests both ends; `tabs-are-data` and `unicode-spacing` need their other characters intact so those malformed tags remain distinguishable. Deriving a local tag preserves the original lines for whoever needs to diagnose them.
+   **Why:** In the pattern, the anchors `^` and `$` mark the start and end of the entry, so removal stays limited to the allowed padding. `padded-spaces` tests both ends. `tabs-are-data` and `unicode-spacing` need their other characters kept, so those malformed tags can still be told apart. The cleaned tag goes into a new local variable. The original lines stay as they were for whoever needs to diagnose them.
 
    ```js
    for (const line of lines) {
      const tag = line.replace(/^ +| +$/g, '');
    ```
 
-3. Inside the scan, increment only the counter whose exact uppercase tag matches, then return the counters after all entries.
+3. In the same loop, add one only to the counter whose exact uppercase tag matches, and return the counters after the last entry.
 
-   **Why:** Exact comparisons reject `FAILED` and do not promote `pass` from `lowercase`. A blank becomes an empty string and falls through the same comparisons, so it needs no separate rule.
+   **Why:** Exact comparisons reject `FAILED`. They also leave `pass` from `lowercase` uncounted instead of promoting it to `PASS`. A blank entry becomes an empty string and fails all three comparisons, so it needs no separate rule.
 
    ```js
      if (tag === 'PASS') counts.passed++;
@@ -39,11 +39,11 @@ The importer counts exact report tags after stripping a specific kind of padding
 
 ## Why the tempting answer fails
 
-`trim()` removes whitespace beyond ASCII spaces, so `tabs-are-data` and `unicode-spacing` end up counting invalid entries. Uppercasing also turns all three tags in `lowercase` into valid results. Treating those entries as regular outcomes can hide a change in the report writer.
+The tempting answer uses `trim()`, which removes other whitespace as well as ASCII spaces. So `tabs-are-data` and `unicode-spacing` end up counting invalid entries. Its uppercasing also turns all three tags in `lowercase` into valid results. Counting those entries as normal outcomes can hide a change in the report writer.
 
 ## What the interviewer listens for
 
-Explain which normalization the importer permits and which changes would alter the meaning of a record. Pair a space-padded tag with a tab-padded tag, and show the zero-valued result for an empty file.
+Explain which normalization the importer permits, meaning which cleanup of a tag is allowed. Then explain which changes would alter what a record means. In your tests, pair a tag padded with spaces and a tag padded with a tab. Also show the all-zero result for an empty file.
 
 ## Sources
 

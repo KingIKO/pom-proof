@@ -4,41 +4,45 @@ problem: scenario/password-reset-links
 
 ## What is going on
 
-The reset service changes how it stores and consumes links. A used or expired link must leave the account unchanged. An error page cannot tell you whether a password was written before the error.
+The reset service changes how it stores and consumes links. A link is consumed when someone uses it to reset a password. A used or expired link must leave the account unchanged. An error page cannot tell you whether a password was written before the error.
 
 ## The answer
 
 1. Ask whether a new request invalidates older unused links, how long a link lasts, and when the clock starts.
 
-   **Why:** Both rules can invalidate links, and a test needs to know which one caused a particular denial.
+   **Why:** Both rules can invalidate links. A test needs to know which rule caused a particular denial.
 
-2. Spend five minutes resetting once and checking that reuse cannot change the password again. Spend six advancing the staging clock past expiry and checking that a separate link leaves the password unchanged.
+2. Spend five minutes on link reuse and six minutes on expiry.
 
-   **Why:** One check detects a consumed link staying valid. The unused link isolates expiry from prior use, which could otherwise explain the same denial.
+   Complete a reset and check that using the link again cannot change the password. Move the clock in staging, the pre-release test environment, past expiry. Check that a separate, unused link leaves the password unchanged.
+
+   **Why:** The reuse check detects a consumed link that stays valid. The unused link isolates expiry from prior use, which could otherwise explain the same denial.
 
 3. Use an API integration test for consumption and reuse.
 
-   **Why:** The request exercises both stored link state and the account write. A refusal on screen could hide an incorrect write.
+   **Why:** The request exercises both the stored link state and the account write. A refusal on screen could hide an incorrect password write.
 
 4. Use a small unit table for the pure time comparison, with inputs before, at, and after expiry.
 
-   **Why:** The table isolates the exact comparison. The staging clock check separately proves that the service respects that calculation.
+   **Why:** The comparison is pure, so its result depends only on the times you give it. The table isolates that exact comparison. The staging clock check separately proves that the service respects the calculation.
 
-5. Stop release if a consumed link changes the password again.
+5. If a consumed link changes the password again, stop the release.
 
-   **Why:** Anyone who still has that supposedly spent link could change access to the account again.
+   **Why:** Anyone who still has that link, which should be spent, could change access to the account again.
 
-6. Request a link for an isolated account, set the first replacement with that link, submit the same link with a different candidate, then verify the first replacement still works and the second does not.
+6. Check that a used reset link cannot change the password again.
 
-   **Why:** The first reset establishes a consumed link and a known good password. A different candidate makes an unintended second write observable.
+   Request a link for an isolated account. Use it to set the first replacement password. Submit the same link with a different candidate password. Then verify that the first replacement still works and the second does not.
+
+   **Why:** The first reset establishes a consumed link and a known good password. Because the second candidate is different, you can observe an unintended second write.
 
 ## Why the tempting answer fails
 
-The sender label helps readers recognize the email but does not define link acceptance. A mail delivery sweep spends the expiry budget without testing expiry. A UI refusal cannot prove persisted consumption, and a broad API check is less direct than a unit table for the pure comparison.
+The sender label helps readers recognize the email. It does not define which links the service accepts. A mail delivery sweep spends the expiry budget without testing expiry. A refusal in the UI cannot prove that the service saved the link as consumed. A broad API check is less direct than a unit table for the pure comparison.
 
 ## What the interviewer listens for
 
-Name the account state you assert after a rejected attempt and explain how you isolate reuse from expiry.
+Name the account state you assert after a rejected attempt. Explain how you isolate reuse from expiry as the cause.
 
 ## Sources
 

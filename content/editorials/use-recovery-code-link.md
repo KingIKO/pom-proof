@@ -4,7 +4,9 @@ problem: locator/use-recovery-code-link
 
 ## What is going on
 
-The sign-in screen links to a form for entering a recovery code. It can also link to instructions and to a different recovery flow for a new device. The task is to open the entry form. The links share some wording, so the test needs the full name of the choice the user would follow.
+The sign-in screen links to a form where the user enters a recovery code. It can also link to instructions and to a different recovery flow for a new device. The task is to open the entry form. The links share some wording. So the test needs the full name of the choice the user would follow.
+
+The fix uses Playwright's `getByRole` locator, an expression that finds page elements. It finds an element by its role, such as link, and by its accessible name. The accessible name is what assistive technology, such as a screen reader, announces for the element.
 
 ## The fix
 
@@ -14,17 +16,21 @@ page.getByRole('link', { name: 'Use a recovery code', exact: true })
 
 1. Find the link with the exact accessible name `Use a recovery code`.
 
-   **Why:** In `help-link-added`, the entry link's caption moves inside a span, but the full accessible name still distinguishes the link from the help article. In `new-layout-and-route`, the target moves to a new URL under `/auth/recovery`. Its name still identifies the same choice without tying the test to the route prefix or the navigation's layout.
+   **Why:** In `help-link-added`, the entry link's caption moves inside a span. The full accessible name still tells the link apart from the help article. In `new-layout-and-route`, the target moves to a new URL under `/auth/recovery`. The name still identifies the same choice. The test does not depend on the route prefix, the start of the URL path, or on the layout of the navigation.
 
-The role asks for an action that takes the user somewhere. The exact name supplies the intent of that action, so longer names that happen to contain the same words stay out of the result.
+The link role asks for an element that takes the user somewhere. The exact name states what that link is for. So longer names that happen to contain the same words stay out of the result.
 
 ## Why the tempting answer fails
 
-Without `exact: true`, Playwright matches a string name by substring. That yields one link on the original page, but `help-link-added` adds `How to use a recovery code`, and `new-layout-and-route` adds `Use a recovery code on a new device`. Both variants leave the decoy with two matches. Selecting one by position would hide the ambiguity.
+Without `exact: true`, Playwright matches a string name as a substring, meaning any part of the name. That finds one link on the original page. `help-link-added` adds `How to use a recovery code`. `new-layout-and-route` adds `Use a recovery code on a new device`. In both variants, the decoy finds two matches.
+
+Picking one of them by position would hide the ambiguity, the fact that more than one link matches.
 
 ## What the interviewer listens for
 
-After following the link, check that the recovery code entry form is ready so the destination can change URL without losing the intended behavior. If link captions are localized, use the expected caption for the locale under test or agree on a stable test ID.
+After following the link, check that the recovery code entry form is ready. With that check, the destination can change its URL and the test still confirms the intended behavior.
+
+Link captions might be localized, meaning translated for each locale. A locale is a language and region setting. In that case, use the expected caption for the locale under test. Or agree on a stable test ID, an attribute the app adds so tests can find the element.
 
 ## Sources
 
