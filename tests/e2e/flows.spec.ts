@@ -123,16 +123,25 @@ test('a solve marks the problem Solved in the list and a miss marks it Attempted
 
 // The plan: the Editorial tab opens after the first submission or an explicit "Show editorial".
 test.describe('editorial access', () => {
-  const body = readFileSync(join(root, 'content', 'editorials', `${bugReport.slug}.md`), 'utf8').split(/^---\r?$/m)[2] ?? '';
-  const sentence = body.trim().split(/\r?\n/).at(-1)!.split('. ')[0].trim();
+  // The first sentence under "What the interviewer listens for", with its Markdown markup removed.
+  const editorial = readFileSync(join(root, 'content', 'editorials', `${bugReport.slug}.md`), 'utf8');
+  const listensFor = /^## What the interviewer listens for[ \t]*\r?\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(editorial)?.[1] ?? '';
+  const sentence = (listensFor.trim().split(/\r?\n[ \t]*\r?\n/)[0] ?? '')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/`|\*\*/g, '').replace(/\s+/g, ' ')
+    .split('. ')[0].trim();
+  // Astro's Markdown renders straight quotes as curly ones.
+  const sentencePattern = new RegExp(sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/'/g, "['‘’]").replace(/"/g, '["“”]'));
+  const hasSentence = () => expect(sentence.length, `${bugReport.slug}.md has a sentence under "## What the interviewer listens for"`)
+    .toBeGreaterThan(20);
   const pane = (page: Page) => page.getByRole('group', { name: 'Reading pane' });
   const showEditorial = (page: Page) => pane(page).getByRole('button', { name: 'Show editorial', exact: true });
   const editorialTab = (page: Page) => pane(page).getByRole('button', { name: 'Editorial', exact: true });
   const problemHeading = (page: Page) => page.getByRole('heading', { level: 2, name: 'Problem' });
 
   test('a fresh page hides the editorial content and Show editorial reveals it on demand', async ({ page }) => {
-    expect(sentence.length, 'the editorial has text to look for').toBeGreaterThan(20);
-    const editorialText = page.getByText(sentence, { exact: false });
+    hasSentence();
+    const editorialText = page.getByText(sentencePattern);
     await openWorkspace(page, bugReport);
     await expect(problemHeading(page)).toBeVisible();
     await expect(editorialText).toBeHidden();
@@ -149,7 +158,8 @@ test.describe('editorial access', () => {
   });
 
   test('after a submission the editorial is offered directly and still is after a reload', async ({ page }) => {
-    const editorialText = page.getByText(sentence, { exact: false });
+    hasSentence();
+    const editorialText = page.getByText(sentencePattern);
     await solveBugReport(page);
     await expect(editorialTab(page)).toBeVisible();
     await expect(showEditorial(page)).toHaveCount(0);

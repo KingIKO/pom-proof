@@ -2,12 +2,33 @@
 problem: test-design/signup-username-rules
 ---
 
-Start with a name that satisfies every rule, then change one detail in each row. `mira` passes at the minimum length. `7mira` is long enough and contains only allowed characters, yet fails because a digit starts the name. `miRa7` keeps its valid first letter, so a rejection tests the case rule for the rest of the string.
+## What is going on
 
-Treat underscore placement as two separate rules. Compare a passing name such as `mira_7` with `mi__ra`, which has adjacent underscores, and `mira_`, which ends in one. Putting two underscores at the end would exercise both violations. Either check could reject that input even if the other check had gone missing.
+The signup validator checks the name as entered before looking at availability. Start from an allowed name and isolate the rule that changes its result.
 
-The weaker answer gives useful coverage for a valid name with a digit and underscore, and it catches an excluded minimum. Its uppercase example starts with an uppercase letter, so the first-character check rejects it even when uppercase characters are incorrectly allowed later. A hyphen case misses both underscore rules.
+## The answer
 
-An interviewer listens for an allowed and a disallowed example for each constraint. Keep the length checks on names that use only letters so a failure at the limit cannot be attributed to punctuation or case.
+1. Use only lowercase ASCII letters for the length pairs. Reject `sam`, accept `mira`, accept `abcdefghijklmnop`, and reject `abcdefghijklmnopq`.
 
-Sources: [ISTQB CTFL Syllabus v4.0.1, sections 4.2.1 and 4.2.2](https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf) and [MDN, regular expression character classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Character_class).
+   **Why:** With case and punctuation out of the picture, `mira` catches the mutant that excludes the minimum. The 17-letter row catches one that admits an overlength name.
+
+2. Reject `7mira` and `miRa7`. Also reject `" mira"` without trimming, and `mirá7` with its non-ASCII letter.
+
+   **Why:** The digit is legal later, so `7mira` catches the mutant that allows a leading digit. A valid opening letter in `miRa7` catches a different mutant that permits uppercase later. The other rejections distinguish the as-entered and ASCII requirements from case alone.
+
+3. Accept `mira_7`, reject `mi__ra` for adjacent underscores, and reject `mira_` for an underscore at the end.
+
+   **Why:** One negative row catches the mutant that permits adjacent underscores and the other catches the mutant that permits the final underscore. Two underscores at the end would let either intact check hide the other missing check.
+
+## Why the tempting answer fails
+
+`mira` catches an excluded minimum and `mira_7` checks a valid digit and underscore. `Mira7` fails at the opening letter even when uppercase is incorrectly allowed later. `mira-7` checks an illegal character and misses both underscore rules as well as the maximum length.
+
+## What the interviewer listens for
+
+Explain what each equivalence partition or boundary value adds. Use allowed controls and rejected cases that break one constraint at a time.
+
+## Sources
+
+- [ISTQB CTFL Syllabus v4.0.1, sections 4.2.1 and 4.2.2](https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf)
+- [MDN, regular expression character classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Character_class)

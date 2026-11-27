@@ -2,10 +2,48 @@
 problem: bug-report/search-count-mismatches-filter
 ---
 
-Give the search UI team the first look. The unfiltered count is 19, and the filtered response and visible rows agree on seven. The heading remains at the earlier count after the filtered response. That points to a visible summary defect without proving which part of the UI produced it.
+## What is going on
 
-Open the blank search page, run the fixture query without filters, then select In stock. Wait for the filtered result before comparing the API response and list with the heading. The wait matters because a snapshot taken while the request is pending could show the old count by design. Ask for the fixture version and correlation ID, which link the screenshot to repeatable data and the same response. The query and selected filter are already in the ticket.
+Searching for `camp cups` returns 19 matches before filtering. With **In stock** selected, the API reports `total=7` and the settled list shows those seven records. The heading still shows 19.
 
-Use S3 and P1 under the listed rules. The decoy treats the number as decoration, but customers can act on it even when every matching record is present.
+## The answer
 
-See [Playwright on testing user-visible behavior](https://playwright.dev/docs/best-practices). An interviewer wants the exact disagreement among the UI elements and the returned data.
+1. Give the defect severity S3, a misleading count with the correct records still available.
+
+   **Why:** Customers can make decisions based on the heading even when they can retrieve every matching result.
+
+2. Assign P1, in the current search release.
+
+   **Why:** The search policy treats misleading totals as a required correction for this release. The returned records are correct, so the rollout stop does not apply.
+
+3. Start with the search results and filter summary UI.
+
+   **Why:** The API total and visible list agree, and only the heading differs. That narrows the investigation without proving which piece of the UI leaves it stale.
+
+4. Use the title “Search result count stays unfiltered after selecting In stock.”
+
+   **Why:** The title names the symptom and the trigger. Keep the query, browser, build and exact values in the report body.
+
+5. Open the empty search page, run the fixture search unfiltered and note its count, select In stock and wait for the filtered response, then compare the response and list with the heading.
+
+   **Why:** An old count can be normal while the request is pending. The settled screenshot shows the response and list have already advanced.
+
+6. Ask for the catalog fixture version and request correlation ID.
+
+   **Why:** The fixture version makes the data repeatable. The ID ties that screenshot to the specific filtered response.
+
+7. Record that the heading should show seven after filtering, but shows 19 while the list and API show seven.
+
+   **Why:** Reporting all the observed values separates a stale count from an incorrect filtered result set.
+
+## Why the tempting answer fails
+
+S4 and P3 treat an incorrect number as decoration. Sending the ticket to the API ignores the correct filtered response. Keep the correlation ID request; the query and filter are already supplied, so ask for the fixture version instead. The decoy's title, steps and comparison still fit.
+
+## What the interviewer listens for
+
+Show exactly what disagrees when the page is settled, and why the response narrows where investigation should start.
+
+## Sources
+
+- [Playwright: testing user-visible behavior](https://playwright.dev/docs/best-practices)

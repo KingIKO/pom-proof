@@ -9,6 +9,8 @@ const workspaces = onePerKind();
 const pages = [
   { name: 'practice list', url: '' },
   ...workspaces.map((problem) => ({ name: `${problem.kind} workspace`, url: problem.path })),
+  // The model editorial for the "why" format: numbered steps with indented Why paragraphs and a source list.
+  { name: 'editorial page', url: 'editorials/renewal-crosses-midnight/' },
   { name: 'progress', url: 'progress/' },
   { name: 'questions list', url: 'questions/' },
   { name: 'question page', url: 'questions/playwright/independent-checkout-contexts/' },

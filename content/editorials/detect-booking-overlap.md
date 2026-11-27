@@ -2,10 +2,42 @@
 problem: code/detect-booking-overlap
 ---
 
-Sort a copy of the bookings by start time. Then compare the next start with the end seen most recently. If the next booking begins before that end, there is an overlap. Since the function returns at the first conflict, the bookings it continues past have disjoint times and strictly increasing ends. That is why storing the last end is enough here.
+## What is going on
 
-The shortcut uses less than or equal. That treats a booking that starts exactly when the room is released as a conflict, even though the room is never occupied by both bookings at the same time. If those time ranges were closed at both ends, the shortcut would be correct. Name the interval convention before writing the comparison.
+The lab has one room, and the release time is available to the next booking. Think of a slot as `[start, end)`, with the start included and the end excluded. The bookings can arrive in any order, so the original neighbors tell you little about who uses the room next.
 
-In an interview, use unsorted input to show why a single pass over the original order is insufficient. Check touching bookings alongside bookings that share a start time and still overlap. They differ by only a small change in values, which makes the boundary easy to explain.
+## The fix
 
-[Related reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
+1. Sort a shallow copy by numeric start time.
+
+   **Why:** In `overlap-out-of-order`, the booking starting at 10 arrives after the one starting at 20. Sorting makes the scan follow the clock. JavaScript's `sort()` changes the array it is called on, so copy the outer array first to preserve the delivery order. The pairs themselves only get read.
+
+   ```js
+   const ordered = [...bookings].sort(([a], [b]) => a - b);
+   ```
+
+2. Start with an end time of zero. For each booking, report a conflict if it starts before the previous end; otherwise record its end and keep going.
+
+   **Why:** Starts cannot be negative, so the first booking cannot conflict with the sentinel. Once a booking passes the check, its end is later than its start and therefore later than the previous end. That is why the last end suffices without tracking every booking. `nested-booking` and `identical-slots` fail immediately; `one-slot` and `no-bookings` never reach a conflict.
+
+   ```js
+   let latestEnd = 0;
+   for (const [start, end] of ordered) {
+     if (start < latestEnd) return true;
+     latestEnd = end;
+   }
+   return false;
+   ```
+
+## Why the tempting answer fails
+
+The shortcut also sorts a copy, but uses `<=`. It would fit intervals closed at both ends. Here `touching-boundary` and `safe-integer-boundary` release the room at exactly the next start, so the shortcut reports a conflict when there is none.
+
+## What the interviewer listens for
+
+Name the interval convention before choosing the comparison. Contrast bookings sharing a start with bookings sharing only a release and start, then explain why the scan can forget earlier ends after a clean step.
+
+## Sources
+
+- [MDN: Array.sort()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
+- [MDN: Less than operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Less_than)

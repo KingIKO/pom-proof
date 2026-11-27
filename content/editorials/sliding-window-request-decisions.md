@@ -2,10 +2,57 @@
 problem: code/sliding-window-request-decisions
 ---
 
-Maintain one queue per client. The entries are accepted timestamps in order, and the head points to the oldest timestamp still under consideration. Advance the head while an entry is at or before the expiry boundary. The unexpired queue length determines whether the next request is accepted. Append its time only when it is accepted.
+## What is going on
 
-The shortcut records every arrival. It agrees with the rules up to the first rejection, but that rejected arrival can then make another request wait longer. For a limit of one and a ten-millisecond window, accept at time zero, reject at nine, and accept again at ten. That trace distinguishes the two interpretations.
+A quota decision depends on recent accepted requests from the same client. The left edge of the window is exclusive. Rows with the same timestamp still arrive one at a time, and a rejected row does not take a slot away from a later request.
 
-In an interview, explain why moving the head never loses a timestamp you will need later. The input times never move backward, so expiration is permanent. Each accepted entry is passed at most once, which keeps the total work linear. This array-and-head implementation retains older entries in memory. A production version that needs bounded live history could use a queue that discards them.
+## The fix
 
-[Related reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)
+1. Keep per-client queues in a map. Each queue stores accepted timestamps and a head index. Use a separate array for decisions.
+
+   **Why:** `clients-are-independent` lets one client accept while another has used its quota. Each client's timestamps arrive in order, so expired entries form a prefix that a head index can skip. Local queues and decisions leave the input trace unchanged.
+
+   ```js
+   const history = new Map();
+   const decisions = [];
+   ```
+
+2. For each row, advance that client's head past everything at or before `at - windowMs`.
+
+   **Why:** `expiration-at-boundary` should free the slot at the exact boundary. Nondecreasing input times mean anything expired will stay expired. Each accepted timestamp is passed at most once, so this walk uses linear total work without filtering the entire live queue for each request.
+
+   ```js
+   for (const { client, at } of requests) {
+     const queue = history.get(client) ?? { times: [], head: 0 };
+     const expires = at - windowMs;
+     while (queue.head < queue.times.length && queue.times[queue.head] <= expires) {
+       queue.head++;
+     }
+   ```
+
+3. Compare the number of live timestamps with the limit. Store the timestamp only on acceptance and append the decision either way.
+
+   **Why:** `same-timestamp` needs earlier accepted rows at that time to count. `unicode-and-zero-limit` requires every request to fail because even zero live entries is not below zero. Only recording an acceptance lets the third request recover in `rejection-does-not-delay-recovery`.
+
+   ```js
+     const accept = queue.times.length - queue.head < limit;
+     if (accept) queue.times.push(at);
+     decisions.push(accept);
+     history.set(client, queue);
+   }
+   return decisions;
+   ```
+
+## Why the tempting answer fails
+
+The shortcut filters its history but records every arrival. `rejection-does-not-delay-recovery` accepts at zero, rejects at nine, and should accept at ten. The wrongly stored nine blocks the last request. `safe-integer-boundary` catches the same error near the upper timestamp limit. Filtering the live history every time also repeats work.
+
+## What the interviewer listens for
+
+Explain why moving the head cannot discard future evidence. The array keeps expired entries in memory; a production queue that needs bounded live history could discard them.
+
+## Sources
+
+- [MDN: Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)
+- [MDN: Array.filter()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
+- [MDN: Less than or equal operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Less_than_or_equal)

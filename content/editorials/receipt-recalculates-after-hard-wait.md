@@ -2,12 +2,32 @@
 problem: diagnosis/receipt-recalculates-after-hard-wait
 ---
 
-The click works. The trace shows a change to quantity two, the correct server calculation, and the correct final receipt. The test reads the receipt at 305 ms and passes a string into `expect`. The matcher can only compare that string. Nothing tells it to read the page again when the receipt changes.
+## What is going on
 
-Drop the sleep and use `await expect(page.getByTestId('receipt-total')).toHaveText('$28.00')`. Playwright can read the target again until the text matches or the assertion times out. This keeps the check on what the customer sees, so a correct API response with a broken render still fails the test.
+The cart starts with one $14 item. The quantity click works: the request sends quantity two, the server calculates 2800 cents, and the receipt eventually shows $28.00. The failed assertion runs between the click and that render.
 
-A two-second sleep might make the next run pass. It also adds two seconds when pricing is fast, and the failure returns if the update takes longer. A blind retry makes the original failure harder to interpret.
+## The answer
 
-In an interview, point to the two reads of the same receipt and explain how to delay the response past 300 ms in a controlled run. A successful request alone does not show that the browser ever rendered the new amount.
+1. Diagnose a text snapshot taken before the receipt updates.
 
-[Playwright: auto-retrying assertions](https://playwright.dev/docs/test-assertions#auto-retrying-assertions)
+   **Why:** The locator finds one total and reads `$14.00` at 305 ms. The pricing response arrives at 484 ms. Once `expect` receives a string, the matcher compares that value and has no way to read the total again.
+
+2. Remove the fixed wait and use `await expect(page.getByTestId('receipt-total')).toHaveText('$28.00')`.
+
+   **Why:** Playwright can reevaluate a locator assertion until the expected text appears or the assertion times out. Keeping the check on the receipt means a 200 with a correct calculation still fails if the new total never renders.
+
+3. Confirm that the same total changes to `$28.00` after the failed read. Then deliberately delay pricing past 300 ms and check that the locator assertion passes when the text changes.
+
+   **Why:** The later read distinguishes delayed rendering from a wrong selector or a total that never updates. The delayed run shows the corrected assertion follows the visible change rather than the original timer.
+
+## Why the tempting answer fails
+
+The decoy correctly identifies the snapshot and keeps the useful later observation. A two-second sleep adds delay to fast runs and still fails if pricing takes longer. A green unchanged rerun without a trace only shows that timing differed enough to pass. Blind retries make the original failure harder to interpret.
+
+## What the interviewer listens for
+
+Explain what the trace proves about the click and price calculation, then identify the one check that proves the customer saw the updated total.
+
+## Sources
+
+- [Playwright: auto-retrying assertions](https://playwright.dev/docs/test-assertions#auto-retrying-assertions)

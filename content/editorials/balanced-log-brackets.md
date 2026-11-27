@@ -2,10 +2,52 @@
 problem: code/balanced-log-brackets
 ---
 
-Use a stack of opening brackets. The newest opening bracket is the only one a closing bracket may match. If there is no opening bracket to pop, or the popped symbol has a different type, the fragment fails immediately. At the end, any leftover opening bracket also means failure.
+## What is going on
 
-Counting each bracket type separately looks reasonable. It can catch missing brackets and even rule out closing before opening within one type. But in `([)]`, both individual counts look fine. The parenthesis closes while a square bracket is still waiting, which the stack catches.
+A log fragment can contain three bracket types, and each close has to match the most recent opening bracket still waiting. This is a nesting check. A fragment may have the right number of each symbol and still be crossed.
 
-Say how you will handle non-bracket characters. In this exercise they carry no meaning, so a quote does not turn bracket matching off. That differs from a parser for source code, where quoted strings may need their own state. A concise interview explanation includes the invariant: the stack holds exactly the opening brackets that still need closes, in their original order. The scan takes linear time and uses space proportional to nesting depth.
+## The fix
 
-[Related reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop)
+1. Start an empty stack and map each closing bracket to its expected opener.
+
+   **Why:** The only eligible opener is the newest one. An array lets you push and pop at that end, and a lookup gives all three closing symbols the same matching rule. The `nested-context` case needs to remember a different opener at each level.
+
+   ```js
+   const stack = [];
+   const opening = new Map([[')', '('], [']', '['], ['}', '{']]);
+   ```
+
+2. Scan the fragment, pushing openers and rejecting a close that cannot match the top. Let everything else pass through the loop.
+
+   **Why:** A mismatch is already final; a later character cannot change what was open at that point. `pop()` returns `undefined` on an empty stack, so the same comparison rejects `closing-first`. Quotes carry no parser state here, which is why `quotes-still-count` still sees its bracket. Only the local stack changes.
+
+   ```js
+   for (const char of fragment) {
+     if ('([{'.includes(char)) stack.push(char);
+     else if (opening.has(char) && stack.pop() !== opening.get(char)) {
+       return false;
+     }
+   }
+   ```
+
+3. Accept exactly when the stack is empty.
+
+   **Why:** `missing-close` reaches the end with an unfinished group. In `empty-fragment` and `nothing-to-match`, there was never anything to close.
+
+   ```js
+   return stack.length === 0;
+   ```
+
+## Why the tempting answer fails
+
+Separate counters can catch missing brackets and closes before opens within a single type. `crossed-pairs` gives them `([)]`: both counts come out even, but `)` arrives while `[` is still waiting.
+
+## What the interviewer listens for
+
+Say what is on the stack after each character: exactly the unmatched openers in their original order. Explain why a source-code parser might track quotes, then account for one linear scan and space proportional to maximum nesting depth.
+
+## Sources
+
+- [MDN: Array.pop()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop)
+- [MDN: Array.push()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push)
+- [MDN: Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)

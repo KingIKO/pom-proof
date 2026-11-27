@@ -2,14 +2,31 @@
 problem: locator/export-ledger-csv
 ---
 
+## What is going on
+
+The ledger can export the same records in several formats. The original CSV and PDF controls both say `Export`, so the accessible button name alone cannot tell the test which file it would get. The toolbar's generated class gives no information about format, either. The app exposes a separate test ID for each format.
+
+## The fix
+
 ```ts
 page.getByTestId('ledger-export-csv')
 ```
 
-The app exposes a test ID for each export format, so the locator can ask for CSV directly. The two original controls both say `Export`. Their accessible names alone do not tell the test which output to expect, and the toolbar's generated class gives no information about format.
+1. Find the control with the test ID `ledger-export-csv`.
 
-Selecting the first button called `Export` works in the original toolbar. It starts a PDF download when formats switch places. In the translated version it finds no button with the exact name `Export`, and the new spreadsheet button leads the toolbar as well. The test ID stays on the CSV action in each layout and survives both markup and copy changes.
+   **Why:** In `pdf-first`, the order changes and the `Export` captions remain identical, but the test IDs stay attached to their own formats. In `separate-format-groups`, XLSX comes first, the controls gain separate wrappers, and their shared caption becomes `Exporter`. The CSV hook still names the format without depending on which button leads the toolbar, how it is nested, or what its caption says.
 
-Tell the interviewer why you chose a test ID here: the app supplies it as an explicit testing contract where the visible text is shared. In a real product, distinct accessible names such as `Export CSV` and `Export PDF` would also make the controls easier to distinguish. The test ID identifies an element for a test, so it does not address that accessibility gap by itself.
+That hook is an explicit contract in this app. It gives the test a way to request the CSV action even when the information visible on the buttons is the same.
 
-Sources: [Playwright locators](https://playwright.dev/docs/locators) and [Playwright best practices](https://playwright.dev/docs/best-practices).
+## Why the tempting answer fails
+
+The first button named exactly `Export` works only while CSV is first and the caption stays in English. In `pdf-first`, the decoy still finds one button and would start a PDF download. In `separate-format-groups`, it finds no button with that exact name. Updating the caption alone would still put XLSX first. A test that checks only whether a download started would miss a switch to the wrong format.
+
+## What the interviewer listens for
+
+Explain why the test ID resolves an ambiguity left by the shared caption. Distinct accessible names such as `Export CSV` and `Export PDF` would help users distinguish the actions, too; a test ID alone leaves that accessibility gap in place.
+
+## Sources
+
+- [Playwright locators](https://playwright.dev/docs/locators)
+- [Playwright best practices](https://playwright.dev/docs/best-practices)

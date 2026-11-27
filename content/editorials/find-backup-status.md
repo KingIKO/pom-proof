@@ -2,14 +2,35 @@
 problem: locator/find-backup-status
 ---
 
+## What is going on
+
+The backup dashboard lists a status beside each job. The exercise asks for the status element with the full caption `Waiting for storage`. Another job may have a longer message starting with those words, so the wording matters. Spacing and inline formatting can change without changing what the status says. An extra approval requirement, on the other hand, is a different status even if the two messages start alike.
+
+## The fix
+
 ```xpath
 //span[normalize-space(.)='Waiting for storage']
 ```
 
-The expression compares the text of the entire status span after trimming the ends and collapsing ordinary whitespace runs. The dot refers to the span itself. Its string value includes descendant text, so the comparison still works when `storage` sits inside a `strong` element. Exact equality keeps `Waiting for storage approval` out of the result.
+1. Search for `span` elements without specifying a row position.
 
-`//ul/li[1]/span` points to the right status before the list sorts. With Billing at the top, it finds `Complete`. In the new component it can also pick a longer waiting message from the first row. A raw comparison with a single direct text node would avoid the row-position mistake and still fail once extra spaces or inner markup are introduced.
+   **Why:** In `changed-sort-and-spacing`, Billing moves above Warehouse, but the status is still a span. Searching for the element type allows its position to change and gives the text test the element it needs to examine.
 
-An interviewer is listening for the difference between normalizing whitespace and loosening the wording. The XPath accepts spacing differences; it still requires the same caption. If two jobs could have identical waiting statuses, scope to the named job before checking its status. The exact caption alone would then describe both spans.
+2. Compare `normalize-space(.)` with the exact caption `Waiting for storage`.
 
-Sources: [Playwright locators](https://playwright.dev/docs/locators) and [Playwright best practices](https://playwright.dev/docs/best-practices). See [MDN normalize-space](https://developer.mozilla.org/en-US/docs/Web/XML/XPath/Reference/Functions/normalize-space) for the XPath function.
+   **Why:** In `changed-sort-and-spacing`, normalization trims the ends and collapses the extra whitespace between words. In `nested-status-caption`, the dot refers to the span, whose string value includes `storage` inside `strong`. Equality still excludes `Waiting for storage approval`.
+
+## Why the tempting answer fails
+
+`//ul/li[1]/span` works while Warehouse is first. In `changed-sort-and-spacing`, it points to Billing's `Complete` status. In `nested-status-caption`, it points to Analytics's longer waiting message. Changing the positional shortcut to a raw equality test against a single direct text node would solve the sorting dependency but would still miss the caption when whitespace changes or a word moves into another element.
+
+## What the interviewer listens for
+
+Explain that whitespace normalization tolerates formatting changes and equality still requires the same wording. If two jobs could show the same status, scope to the named job before checking its caption, since either span could satisfy the XPath on its own.
+
+## Sources
+
+- [Playwright locators](https://playwright.dev/docs/locators)
+- [Playwright best practices](https://playwright.dev/docs/best-practices)
+- [MDN XPath normalize-space](https://developer.mozilla.org/en-US/docs/Web/XML/XPath/Reference/Functions/normalize-space)
+- [XPath element string values](https://www.w3.org/TR/xpath-10/#element-nodes)

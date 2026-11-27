@@ -2,10 +2,45 @@
 problem: scenario/file-upload-visibility
 ---
 
-Confirm the server's acceptance rules and the exact download contract first. An upload may be accepted for review even though the file still cannot be served. A status label alone cannot distinguish a denied download from a temporary file response that already contains bytes.
+## What is going on
 
-Use the held review to check pending denial, then approve the same fixture and compare the two tenant identities. That five-plus-seven-minute pairing tests the state change and the access rule without needing a broad device pass. At the API, assert the response and whether file bytes were returned. Once approved, compare the owner's downloaded bytes with the fixture to catch an empty success response. Keep the second tenant's test data separate.
+The upload service can accept a document for review while the download service must withhold it. Split services make the actual download response more informative than a status label.
 
-The decoy's icon sweep might find a visible defect but spends the only time to check downloads before review. A separate Playwright UI smoke check can attach the fixture with `setInputFiles()` and check that the pending state is shown. See [Playwright's file input actions](https://playwright.dev/docs/input#upload-files) and [OWASP's file upload guidance](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html).
+## The answer
 
-Returning pending bytes to the owner violates the stated release condition even if the status text reads correctly. The interviewer is looking for a controlled review decision and evidence at the download boundary.
+1. Confirm accepted file types and the size boundary, who can download, and the exact pending download response.
+
+   **Why:** An upload rejection would prevent you from ever reaching the pending state you meant to test. The download contract tells you what the accepted fixture must return in that state.
+
+2. Spend five minutes holding review and checking that the owner cannot download the pending file. Spend seven approving it and checking owner success and second-tenant denial.
+
+   **Why:** The first check catches an early release of bytes. The second proves approval changes availability for the owner without granting it to another tenant.
+
+3. Inspect the pending response at the API and check for returned file bytes.
+
+   **Why:** A correct pending label can coexist with a response that already contains the document.
+
+4. Compare both approved-file responses at the API. Keep tenant data separate and compare the owner's bytes with the fixture.
+
+   **Why:** A success status can hide an empty download, and an independent tenant checks actual access rather than a hidden button.
+
+5. Block release if the endpoint returns pending bytes even to the owner.
+
+   **Why:** The owner-only rule does not waive the requirement to finish review before serving the document.
+
+6. Upload a harmless fixture with review held, check pending download as the owner, release an approval, then check owner success and second-tenant denial.
+
+   **Why:** Holding review makes the pending step deterministic. Reusing the document rules out differences between fixtures as the reason the response changes.
+
+## Why the tempting answer fails
+
+Spinner copy leaves the download contract open. The icon sweep spends the budget for the pre-review check. A UI check cannot establish what bytes either tenant gets in either state. A separate Playwright smoke test can use `setInputFiles()` to check the pending label after attaching a fixture.
+
+## What the interviewer listens for
+
+Control the review decision and collect evidence from both download identities before recommending release.
+
+## Sources
+
+- [Playwright's file input actions](https://playwright.dev/docs/input#upload-files)
+- [OWASP's file upload guidance](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html)
