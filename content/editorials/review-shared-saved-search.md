@@ -2,12 +2,29 @@
 problem: diagnosis/review-shared-saved-search
 ---
 
-Mark lines 3, 6 and 12. The module variable makes a value available outside the test that creates it. The sharing test writes that value, and the removal test reads it as though the record belonged to its own setup. Run removal by itself and neither the ID nor the record is available.
+## What is going on
 
-Have the removal test create its own search through the fixture and use the returned ID locally. The sharing test can keep its existing local `id`. Each test then owns a separate record and fixture cleanup has the right lifetime. Run each alone and run both together to check that their outcomes are independent.
+Both tests start on authenticated pages. Sharing creates a saved search through `searches`, a fixture that cleans up the record when that test ends. Removal tries to open the saved search without creating one of its own.
 
-A candidate may flag the variable declaration and the later navigation while leaving the assignment unmarked. The assignment is the handoff that creates the dependency. Serial execution is also tempting, but the fixture removes the first test's search after that test ends. A new test context cannot make a deleted database record reappear.
+## The answer
 
-An interviewer will look for who owns the record and when cleanup runs. The answer should make the removal test self-contained.
+1. Mark line 3, the module-level `searchId` declaration, line 6, the assignment from the sharing test, and line 12, the navigation that reads it. Leave the test declarations unmarked.
 
-[Playwright: test fixtures](https://playwright.dev/docs/test-fixtures) · [Playwright: test isolation](https://playwright.dev/docs/best-practices#make-tests-as-isolated-as-possible)
+   **Why:** Line 3 lets a value escape the scope of the test that owns it. Line 6 puts the first test's record ID in that shared variable. Line 12 then assumes the value was assigned and the record still exists, neither of which holds when running removal alone.
+
+2. Choose dependence on an earlier test's record ID as the isolation bug. Have removal create its own search through the fixture and use the returned ID locally. Keep sharing's existing local `id`.
+
+   **Why:** Giving each test its own record ties cleanup to the test using it. Each test can run by itself or beside the other without borrowing a valid ID or racing a cleanup.
+
+## Why the tempting answer fails
+
+The decoy names the right isolation problem and marks lines 3 and 12, but omits the assignment on line 6, where the dependency is handed off. Serial execution cannot preserve a record the fixture deletes after sharing. A new browser context cannot make that database record reappear either.
+
+## What the interviewer listens for
+
+Name the record's owner and when cleanup runs. Verify the fix by running each test alone and both tests together.
+
+## Sources
+
+- [Playwright: test fixtures](https://playwright.dev/docs/test-fixtures)
+- [Playwright: test isolation](https://playwright.dev/docs/best-practices#make-tests-as-isolated-as-possible)

@@ -2,12 +2,30 @@
 problem: diagnosis/review-export-status-only
 ---
 
-Mark lines 8 and 12. Line 12 would pass even if the endpoint returned the same incorrect column list for every preset. Line 8 puts all three cases in one test. An assertion in that loop stops the function at the first failure, which leaves CI with no result for the remaining presets.
+## What is going on
 
-Use `pytest.mark.parametrize` to give each preset a named case. In each case, check status 200, parse the JSON and compare `body['columns']` to `list(columns)`. List equality checks the specified order as well as the values. Keep the status check so a failure response with JSON cannot accidentally satisfy the test.
+The endpoint returns a JSON `columns` field. Orders, refunds and returns have different expected column lists, and the team also needs a separate CI result for each preset. The URL and authentication fixtures already supply the setup this check needs.
 
-Adding a body assertion inside the existing loop improves correctness but leaves reporting incomplete. Conversely, parametrizing the current test gives a separate result for every status while still missing a column regression. The more serious issue is the false green when every payload is wrong.
+## The answer
 
-An interviewer will value a check with two broken presets: both should be reported, and the unbroken case should still pass.
+1. Mark line 8, which loops over the presets inside one test, and line 12, which asserts only the HTTP status.
 
-[pytest: parametrization](https://docs.pytest.org/en/stable/how-to/parametrize.html) · [Requests: response status and JSON](https://requests.readthedocs.io/en/latest/user/quickstart/)
+   **Why:** At line 8, the first failed assertion stops the function and leaves CI with no result for the remaining presets. At line 12, every response could return the same wrong column list and still pass with status 200.
+
+2. Choose the status-only assertion as the cause of the false green. Give each preset a named `pytest.mark.parametrize` case. Check status 200, parse the JSON and compare `body['columns']` with `list(columns)`.
+
+   **Why:** Separate cases give CI an outcome for each preset. List equality checks the values in order, and keeping the status check prevents an error response with a matching JSON shape from looking successful.
+
+## Why the tempting answer fails
+
+The decoy correctly names the ignored column list and marks line 12. Leaving line 8 unmarked misses the separate reporting requirement. Adding a body assertion inside the loop improves what the check can detect but still stops at the first failure. Parametrizing the old assertion alone reports every status and still misses wrong columns in successful responses.
+
+## What the interviewer listens for
+
+Describe a run with two broken presets, one of which returns the right values in the wrong order. Both failures should be reported and the unbroken preset should still pass.
+
+## Sources
+
+- [pytest: parametrization](https://docs.pytest.org/en/stable/how-to/parametrize.html)
+- [Requests: response status and JSON](https://requests.readthedocs.io/en/latest/user/quickstart/)
+- [Python: sequence comparisons](https://docs.python.org/3/library/stdtypes.html#comparisons)

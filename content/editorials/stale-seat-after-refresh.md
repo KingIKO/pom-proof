@@ -2,10 +2,32 @@
 problem: diagnosis/stale-seat-after-refresh
 ---
 
-The wait for map version 43 succeeds. By the time it succeeds, the node Selenium found in version 42 has been replaced. Both nodes can have the same `data-seat` value, but the `WebElement` in `b12` still identifies the old node. Selenium reports that reference as stale when the test tries to use it.
+## What is going on
 
-Keep the `By` for B12. Wait for the refreshed version, then look up the seat in that map and click the fresh element. If the actual app can replace the map again, handle a stale reference by making a new lookup in the correct map and rechecking which seat it represents. Repeating the command on the original element cannot restore it.
+The test must reserve B12 from the refreshed map. The version 43 wait succeeds, and the response still lists B12 as available. The click is sent on reference `9f7a`, which the test saved from version 42.
 
-The trap is to see an exception after an asynchronous update and add a sleep. Here, waiting longer only leaves the old handle stale for longer. An interviewer will want to hear the difference between a locator and a saved element, and how a DOM capture and a successful fresh lookup would establish that B12 still exists.
+## The answer
 
-[Selenium: stale element references](https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/#staleelementreferenceexception)
+1. Identify the saved `WebElement` as a reference to a node removed during refresh.
+
+   **Why:** Refresh replaces the map children. The new B12 can have the same `data-seat` value while the saved reference still identifies the disconnected node. Using that reference causes Selenium to report it as stale.
+
+2. Keep the `By` for B12. Wait for version 43, then find the seat in that refreshed map and click the fresh element. If the map can be replaced again, look up the seat again in the appropriate loaded map and recheck its identity.
+
+   **Why:** The stable ID describes which seat to find, and each lookup obtains a reference to the node present at that point. Retrying the click on the original reference cannot restore its node.
+
+3. Confirm a fresh lookup in version 43 returns a different reference and clicks successfully. Capture the old node disconnected and the new node under the same seat ID.
+
+   **Why:** The new click establishes B12 is actionable after refresh; the DOM evidence shows exactly what changed between lookups.
+
+## Why the tempting answer fails
+
+The decoy names the stale reference and correctly asks for a DOM capture. Sleeping before clicking the saved element leaves the same reference stale. Finding B12 in both responses only shows the business ID survived. It cannot show that the browser kept the same node.
+
+## What the interviewer listens for
+
+Explain why a locator can find the right seat after refresh even though a saved element for that same seat can no longer be used.
+
+## Sources
+
+- [Selenium: stale element references](https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/#staleelementreferenceexception)
