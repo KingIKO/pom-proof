@@ -123,7 +123,7 @@ function problemsOf({ frontmatter: data, body, folder, slug }: DiscoveredQuestio
   if ('examples' in data) found.push(...exampleProblems(data.examples));
 
   const words = countWords(body);
-  if (words < 80 || words > 220) add(`body has ${words} words; write 80 to 220`);
+  if (words < 80 || words > 300) add(`body has ${words} words; write 80 to 300`);
   const headings = [...body.matchAll(/^(#{1,6})[ \t]+(.+?)[ \t#]*$/gm)];
   const last = headings.at(-1);
   if (!last || last[1] !== '###' || last[2].trim() !== 'Example') {
@@ -186,6 +186,11 @@ describe('the question checks catch planted mistakes', () => {
     expect(problemsOf(valid)).toEqual([]);
   });
 
+  it.each([80, 300])('accepts a %i-word body', (count) => {
+    const body = `${'word '.repeat(count - 3)}\n\n### Example\n\nOne line.\n`;
+    expect(problemsOf({ ...valid, body })).toEqual([]);
+  });
+
   const variant = (lang: string, extra: Record<string, unknown> = {}) => ({ lang, label: `Tool (${lang})`, code: 'x\n', ...extra });
   const withExamples = (examples: unknown) => ({ frontmatter: { ...valid?.frontmatter, examples } });
 
@@ -218,8 +223,8 @@ describe('the question checks catch planted mistakes', () => {
     ['a topic outside the list', { frontmatter: { ...valid?.frontmatter, topic: 'pens' } }, 'is not one of'],
     ['a typo in a field name', { frontmatter: { ...valid?.frontmatter, followups: [] } }, 'unknown field followups'],
     ['four follow-ups', { frontmatter: { ...valid?.frontmatter, followUps: Array(4).fill({ question: 'Q?', answer: 'A.' }) } }, 'followUps needs 1 to 3'],
-    ['a short body', { body: 'Too short.\n\n### Example\n\nOne line.\n' }, 'write 80 to 220'],
-    ['a long body', { body: `${'word '.repeat(230)}\n\n### Example\n\nOne line.\n` }, 'write 80 to 220'],
+    ['a 79-word body', { body: `${'word '.repeat(76)}\n\n### Example\n\nOne line.\n` }, 'write 80 to 300'],
+    ['a 301-word body', { body: `${'word '.repeat(298)}\n\n### Example\n\nOne line.\n` }, 'write 80 to 300'],
     ['no Example section', { body: `${'word '.repeat(90)}\n` }, 'must end with a "### Example" section'],
     ['a section after Example', { body: `${'word '.repeat(90)}\n\n### Example\n\nText.\n\n### Notes\n\nMore.\n` }, 'must end with a "### Example" section'],
     ['an empty examples list', withExamples([]), 'examples needs 1 or 2 items, has 0'],

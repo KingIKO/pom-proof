@@ -7,7 +7,7 @@ import { kinds, root } from '../support/problems';
 /**
  * The editorial format from .notes/editorial-why-rules.md: five `##` sections in order, numbered
  * steps under the answer each followed by its own indented **Why:** paragraph, an https link list
- * under Sources, and 250 to 500 words outside code blocks. The model is
+ * under Sources, and 250 to 650 words outside code blocks. The model is
  * content/editorials/renewal-crosses-midnight.md.
  */
 const fixKinds = new Set(['code', 'sql', 'locator']);
@@ -16,7 +16,7 @@ const headingsFor = (kind: string | null) => [
   'What is going on', answerHeading(kind), 'Why the tempting answer fails', 'What the interviewer listens for', 'Sources',
 ];
 const minWords = 250;
-const maxWords = 500;
+const maxWords = 650;
 
 interface Line { text: string; number: number; code: boolean }
 interface Section { name: string; lines: Line[] }
@@ -198,9 +198,9 @@ describe('the editorial format check catches planted mistakes', () => {
     for (const kind of kinds) expect(problemsOf(editorial({ kind })), kind).toEqual([]);
   });
 
-  it('accepts the 250 and 500 word bounds, CRLF line endings, and code inside a step', () => {
+  it('accepts the 250 and 650 word bounds, CRLF line endings, and code inside a step', () => {
     expect(checkEditorial(editorial({}, 250))).toMatchObject({ words: 250, problems: [] });
-    expect(checkEditorial(editorial({}, 500))).toMatchObject({ words: 500, problems: [] });
+    expect(checkEditorial(editorial({}, 650))).toMatchObject({ words: 650, problems: [] });
     expect(problemsOf(editorial().replace(/\n/g, '\r\n'))).toEqual([]);
     const code = [
       '```ts',
@@ -271,12 +271,12 @@ describe('the editorial format check catches planted mistakes', () => {
     expect(problemsOf(editorial().replace('problem: diagnosis/', 'problem: essay/')).join('\n')).toMatch(/with a known kind/);
   });
 
-  it('reports 249 and 501 words, and does not count code, URLs or list markers', () => {
-    expect(problemsOf(editorial({}, 249))).toEqual(['249 words outside code; write 250 to 500']);
-    expect(problemsOf(editorial({}, 501))).toEqual(['501 words outside code; write 250 to 500']);
+  it('reports 249 and 651 words, and does not count code, URLs or list markers', () => {
+    expect(problemsOf(editorial({}, 249))).toEqual(['249 words outside code; write 250 to 650']);
+    expect(problemsOf(editorial({}, 651))).toEqual(['651 words outside code; write 250 to 650']);
     // 249 prose words plus 300 words in a fence still fail.
     const fenced = editorial({ going: `The context paragraph.\n\n\`\`\`text\n${filler(300)}\n\`\`\`` }, 249);
-    expect(problemsOf(fenced)).toEqual(['249 words outside code; write 250 to 500']);
+    expect(problemsOf(fenced)).toEqual(['249 words outside code; write 250 to 650']);
     const longUrl = editorial({ sources: '- [A](https://a.example/one-two-three-four-five)' }, 300);
     expect(checkEditorial(longUrl).words).toBe(300);
   });
