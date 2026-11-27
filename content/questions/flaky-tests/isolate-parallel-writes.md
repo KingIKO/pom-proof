@@ -14,6 +14,8 @@ trap: Setting the entire suite to one worker and leaving the shared state proble
 followUps:
   - question: What if one test needs a truly shared resource?
     answer: I'd control access to that resource for the dependent tests, or allocate a dedicated copy, and leave unrelated tests parallel.
+  - question: The edit-address check passes only after the reset-address check. How would you prove what it borrows?
+    answer: I'd run each check alone, then run the pair in both orders and compare the starting address. I'd repeat the broader run with a recorded shuffle seed. If the edit case needs a value left by Reset, I'd give Edit its own setup and require it to pass on its own.
 sources:
   - label: Playwright test isolation
     url: https://playwright.dev/docs/browser-contexts

@@ -14,6 +14,8 @@ trap: Skipping the test indefinitely without documenting what coverage disappear
 followUps:
   - question: What earns a quarantined check its place back?
     answer: I'd require a fix tied to the cause, clean repeat runs under the failing conditions, and evidence the check catches the original bad outcome.
+  - question: The CSV download check was quarantined yesterday. Another team wants to make a new PDF download check required today. What would you do before the release?
+    answer: I'd run the PDF check repeatedly beside the other downloads on the same CI workers before making it required. I'd use the quarantine log to see which failures recur most and compare the release risk they leave uncovered. If the CSV cleanup collision is frequent and leaves a gap for this release, I'd repair it first.
 ---
 
 I quarantine a test when the evidence points to the test or environment and the noise is making people ignore the merge gate. If the intermittent behavior can harm a customer, I treat it as product risk and bring it to whoever owns the release decision.

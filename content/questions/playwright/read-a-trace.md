@@ -19,6 +19,23 @@ sources:
     url: https://playwright.dev/docs/trace-viewer
   - label: Playwright trace configuration
     url: https://playwright.dev/docs/trace-viewer-intro
+  - label: Playwright trace retention options
+    url: https://playwright.dev/docs/api/class-testoptions#test-options-trace
+examples:
+  - title: Retain the failed export attempt
+    variants:
+      - lang: ts
+        label: Playwright Test (TypeScript)
+        code: |
+          import { expect, test } from '@playwright/test';
+
+          test.use({ trace: 'retain-on-failure' });
+
+          test('offers the generated export for download', async ({ page }) => {
+            await page.goto('http://localhost:3000/reports/sample');
+            await page.getByRole('button', { name: 'Generate' }).click();
+            await expect(page.getByRole('link', { name: 'Download report' })).toBeVisible();
+          });
 ---
 
 I open the trace at the failing step and read backward to the first unexpected state. The action log tells me what Playwright was trying to do. The DOM snapshot shows which page it was operating on, and the network view can tell me whether a dependency responded as expected. These clues together beat guessing from the last line of the stack.
@@ -28,3 +45,5 @@ I'd check which attempt produced the trace. Recording only the first retry can l
 ### Example
 
 If Download never appeared, I'd inspect the preceding Generate click and its network response. A failed export call gives me a better lead than the missing button in the final snapshot.
+
+The local report fixture should produce a download link after generation. A failed attempt keeps a trace. I can open its `trace.zip` with `npx playwright show-trace` and inspect what happened between the click and assertion.
