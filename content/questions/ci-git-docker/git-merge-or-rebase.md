@@ -19,6 +19,24 @@ sources:
     url: https://git-scm.com/docs/git-merge
   - label: Git rebasing
     url: https://git-scm.com/docs/git-rebase
+  - label: Git switch and create branch
+    url: https://git-scm.com/docs/git-switch
+  - label: Git fetch
+    url: https://git-scm.com/docs/git-fetch
+  - label: Git log graph and options
+    url: https://git-scm.com/docs/git-log
+examples:
+  - title: Compare merge and rebase on two local copies
+    variants:
+      - lang: bash
+        label: Git CLI (Bash)
+        code: |
+          git fetch origin
+          git switch -c settings-merge settings-tests
+          git merge origin/main
+          git switch -c settings-rebase settings-tests
+          git rebase origin/main
+          git log --graph --oneline settings-merge settings-rebase origin/main
 ---
 
 If I merge the target branch into my feature branch, the original commits stay in its history. If the branches diverged, a normal merge can create a new commit that joins them. Rebasing my branch onto the target replays my changes from that new base, so the replayed commits have different IDs.
@@ -27,4 +45,4 @@ On my own branch I'd rebase if that's the team's convention. On a shared branch,
 
 ### Example
 
-If the target branch renamed an account setting while my branch added a test for that screen, I'd bring in the change and then run the settings spec even if Git reports no conflict.
+Say the clean local `settings-tests` branch adds a test for a renamed preference and has diverged from `origin/main`. I use two new branches so both start from the same tip. If both integrations proceed without conflicts, the graph shows a merge with both histories and a rebase with the test commit replayed. I'd run the preference spec on the branch I plan to submit.

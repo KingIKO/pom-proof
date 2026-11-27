@@ -21,6 +21,46 @@ sources:
     url: https://docs.github.com/en/actions/reference/security/secure-use
   - label: Playwright authentication state
     url: https://playwright.dev/docs/auth
+  - label: GitHub Actions push filters
+    url: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushbranchesbranches-ignore
+  - label: GitHub Actions deployment environment protections
+    url: https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments
+  - label: GitHub Actions checkout
+    url: https://github.com/actions/checkout/tree/v7
+  - label: GitHub Actions Node setup
+    url: https://github.com/actions/setup-node/tree/v7
+  - label: npm test scripts
+    url: https://docs.npmjs.com/cli/v11/commands/npm-run
+examples:
+  - title: Supply a staging token only to the integration step
+    variants:
+      - lang: yaml
+        label: GitHub Actions (YAML)
+        code: |
+          name: Staging sign-in check
+          on:
+            push:
+              branches: [main]
+          permissions:
+            contents: read
+          jobs:
+            sign-in:
+              runs-on: ubuntu-latest
+              environment: staging
+              steps:
+                - uses: actions/checkout@v7
+                  with:
+                    persist-credentials: false
+                - uses: actions/setup-node@v7
+                  with:
+                    node-version: '24'
+                - run: npm ci
+                - run: |
+                    test -n "$TEST_API_TOKEN"
+                    npm run test:staging
+                  shell: bash
+                  env:
+                    TEST_API_TOKEN: ${{ secrets.STAGING_QA_TOKEN }}
 ---
 
 I put test credentials in the CI secret store and scope them to the job and environment that need them. I use a dedicated nonproduction account with the least access needed and arrange rotation. I also check what the tests upload. A trace or saved sign-in state can contain credentials even if the console masks the secret value.
@@ -29,4 +69,4 @@ I keep untrusted pull request code away from jobs that have access to the creden
 
 ### Example
 
-I can test a mocked application on external contributions and use a protected staging job for a synthetic sign-in. The staging job never uploads the saved session file.
+I run mocked checks on external contributions. On protected `main`, this separate workflow uses the `staging` environment's scoped secret for a synthetic sign-in script that reads `TEST_API_TOKEN`. A missing secret should fail the step before the script runs. The job never uploads the saved session file.
