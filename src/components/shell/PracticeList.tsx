@@ -188,6 +188,7 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
   const [markedRow, setMarkedRow] = useState<string | null>(null);
   const hashHandled = useRef(false);
   const earlierList = useRef<PracticeContext | null>(null);
+  const published = useRef<Omit<PracticeContext, 'v'> | null>(null);
 
   // The list stored when the learner left, read before this page replaces it, so a row that has
   // since left the list (now solved under an Unattempted filter, say) can point to its neighbour.
@@ -270,12 +271,23 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
   // Other pages follow this list: Previous, Next, the position line, the way back and Continue.
   useEffect(() => {
     if (!currentFilters) return;
-    writePracticeContext({
+    published.current = {
       query: filterQuery(currentFilters),
       label: filterLabel(currentFilters),
       items: visible.map(({ id, title }) => [id, title]),
-    });
+    };
+    writePracticeContext(published.current);
   }, [currentFilters, visibleIds]);
+
+  // A page restored from the back-forward cache shows the list it had, while another page may have
+  // stored a different one since. Store this page's list again so links follow what is on screen.
+  useEffect(() => {
+    const republish = (event: PageTransitionEvent) => {
+      if (event.persisted && published.current) writePracticeContext(published.current);
+    };
+    window.addEventListener('pageshow', republish);
+    return () => window.removeEventListener('pageshow', republish);
+  }, []);
 
   // A link back from a problem names its row in the hash: bring that row to the middle and mark it.
   // When that row has left the list, use the next one from the earlier list still shown, or the one before.
