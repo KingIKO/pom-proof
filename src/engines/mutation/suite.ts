@@ -49,7 +49,7 @@ async function failedRows(fn: Candidate, rows: TableAnswer['rows']): Promise<num
 }
 
 const describe = (error: unknown) => error instanceof Error ? error.message : String(error);
-const falsePositive = 'This row fails on the real function, so it would report a bug that is not there';
+const falsePositive = 'This row fails on the real function. The test would report a bug that is not there.';
 
 export async function gradeSuite(request: MutationRequest, load: LoadFunction): Promise<GradeResult<'test-design'>> {
   const { answer, exportName, implementation, mutants, params } = request;

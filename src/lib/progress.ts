@@ -30,22 +30,22 @@ function decode(json: string): Decoded {
   try {
     value = JSON.parse(json);
   } catch {
-    return failure('The file is not valid JSON; choose a POM Proof export.');
+    return failure('The file is not valid JSON, the format POM Proof uses for exports. Choose a POM Proof export.');
   }
   if (!value || typeof value !== 'object' || !('version' in value)) {
-    return failure('The file has no progress version; choose a POM Proof export.');
+    return failure('The file does not say which progress format it uses. Choose a POM Proof export.');
   }
   if (value.version !== 1) {
-    return failure('This progress version is unsupported; choose a version 1 export.');
+    return failure('This file uses an unsupported progress format. Choose a version 1 export.');
   }
   if (!('attempts' in value) || !Array.isArray(value.attempts)) {
-    return failure('The progress file has no attempts list; choose a POM Proof export.');
+    return failure('The file is missing a list of attempts. Choose a POM Proof export.');
   }
 
   const attempts: ProgressAttempt[] = [];
   for (const [index, attempt] of value.attempts.entries()) {
     if (!attempt || typeof attempt !== 'object') {
-      return failure(`Attempt ${index + 1} is invalid; choose a POM Proof export.`);
+      return failure(`Attempt ${index + 1} has the wrong format. Choose a POM Proof export.`);
     }
     const { problemId, completedAt, score } = attempt;
     if (
@@ -59,7 +59,7 @@ function decode(json: string): Decoded {
   }
   const review = 'review' in value ? decodeReview(value.review) : undefined;
   if ('review' in value && review === undefined) {
-    return failure('The review data is invalid; choose a POM Proof export.');
+    return failure('The review data is invalid. Choose a POM Proof export.');
   }
   return { ok: true, snapshot: { version: 1, attempts }, review };
 }
@@ -107,7 +107,7 @@ export const createProgressStore: CreateProgressStore = (storage) => {
           }
         }
       } catch {
-        return failure('Progress could not be saved; check this browser’s storage settings and try again.');
+        return failure('Progress could not be saved. Check your browser’s storage settings and try again.');
       }
       return { ok: true, snapshot: decoded.snapshot };
     },

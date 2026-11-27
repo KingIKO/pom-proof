@@ -81,7 +81,7 @@ export default function Locator({ problem }: { problem: Problem<'locator'> }) {
 
   const details = result?.status === 'graded' ? result.details : undefined;
   const misses = details?.fixtures.filter(({ matchedTarget }) => !matchedTarget).map(({ name, matches }) =>
-    `Breaks on ${name}: matched ${matches} ${matches === 1 ? 'element' : 'elements'}.`);
+    `${name}: your locator found ${matches} ${matches === 1 ? 'element' : 'elements'}. It must find exactly the elements the problem asks for.`);
 
   return <div class="locator-workspace">
     <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
@@ -90,7 +90,7 @@ export default function Locator({ problem }: { problem: Problem<'locator'> }) {
         <input id="locator-expression" class="input code-font" type="text" value={source}
           aria-describedby="locator-formats" spellcheck={false} autoComplete="off" autoCapitalize="off"
           onInput={(event) => setSource(event.currentTarget.value)} />
-        <p class="muted" id="locator-formats">{problem.syntax
+        <p class="muted" id="locator-formats">A locator tells a test how to find a page element. {problem.syntax
           ? <>Use {locatorSyntaxLabel[problem.syntax]}{problem.syntax === 'xpath' && <>, such as <code>xpath=//button</code></>}.</>
           : <>Use CSS, XPath, or a Playwright-style locator such as <code>page.getByRole('button')</code>.</>}
         </p>

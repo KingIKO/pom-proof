@@ -13,7 +13,7 @@ const kinds = Object.keys(kindLabel) as Kind[];
 const difficulties = Object.keys(difficultyLabel) as CatalogProblem['difficulty'][];
 const dateFormat = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' });
 const scoreFormat = new Intl.NumberFormat('en', { style: 'percent', maximumFractionDigits: 2 });
-const storageMessage = 'Progress could not be saved; check the browser’s storage settings and try again.';
+const storageMessage = 'Progress could not be saved. Check your browser’s storage settings and try again.';
 
 export default function ProgressDashboard({ problems, questionIds }: { problems: CatalogProblem[]; questionIds: string[] }) {
   const snapshot = useStudySnapshot();
@@ -34,7 +34,7 @@ export default function ProgressDashboard({ problems, questionIds }: { problems:
       window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
       setMessage('Progress exported.');
     } catch {
-      setMessage('Progress could not be exported; check the browser’s storage settings and try again.');
+      setMessage('Could not export progress. Check your browser’s storage settings and try again.');
     }
   }
 
@@ -43,7 +43,7 @@ export default function ProgressDashboard({ problems, questionIds }: { problems:
     try {
       json = await file.text();
     } catch {
-      setMessage('The file could not be read; choose another file.');
+      setMessage('Could not read the file. Choose another file.');
       return;
     }
     try {
@@ -124,14 +124,14 @@ export default function ProgressDashboard({ problems, questionIds }: { problems:
                 }} />
               <button class="button danger" type="button" disabled={!loaded} onClick={() => resetDialog.current?.showModal()}>Reset</button>
             </div>
-            <p class="muted">Progress is stored in this browser. Import replaces attempts and any question ratings included in the file.</p>
+            <p class="muted">This browser saves your progress. Importing a file replaces your attempts. If the file includes question ratings, it replaces those too.</p>
             <p class="progress-message" role="status">{message}</p>
           </section>
         </div>
       </div>
       <dialog ref={resetDialog} class="reset-dialog" aria-labelledby="reset-title" aria-describedby="reset-description">
         <h2 id="reset-title">Reset progress?</h2>
-        <p id="reset-description">This deletes all attempts and question ratings in this browser. Exported files are kept.</p>
+        <p id="reset-description">Reset deletes all attempts and question ratings in this browser. It does not delete exported files.</p>
         <div class="progress-actions">
           <button class="button outline" type="button" autoFocus onClick={() => resetDialog.current?.close()}>Keep progress</button>
           <button class="button danger" type="button" onClick={resetProgress}>Reset progress</button>

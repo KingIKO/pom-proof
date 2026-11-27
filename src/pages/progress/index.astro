@@ -11,6 +11,6 @@ const problems = entries.map(catalogProblem);
 const questionIds = questions.map(({ id }) => id);
 ---
 <Base title="Progress" section="progress" wide>
-  <TitleBand slot="title-band" title="Progress" meta="Practice results and question review" />
+  <TitleBand slot="title-band" title="Progress" meta="Practice scores and question reviews" />
   <ProgressDashboard client:load problems={problems} questionIds={questionIds} />
 </Base>

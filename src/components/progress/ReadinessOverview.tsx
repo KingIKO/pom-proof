@@ -25,8 +25,10 @@ export function RoundReadiness({ rounds, questions, loaded }: Pick<Readiness, 'r
       <header class="progress-section-heading">
         <h2 id="readiness-heading">Round readiness</h2>
         <p id="readiness-method" class="prose muted">
-          Problem rounds average the best score for each problem, counting unattempted problems as zero.
-          A full score counts as solved. For interview questions, readiness is the share of cards at box 2 or higher.
+          Each problem round shows the average of your best scores for its problems.
+          If you have not tried a problem, it counts as zero. A full score counts as solved.
+          Review boxes set when questions come up again.
+          For interview questions, readiness is the percentage of questions at box 2 or higher.
         </p>
       </header>
       <table class="readiness-table" aria-label="Readiness by round" aria-describedby="readiness-method">
@@ -62,10 +64,10 @@ export function WeakTopics({ needsPractice, unattempted, hasProblems, loaded }: 
       {loaded && (
         <>
           {needsPractice.length === 0 ? (
-            <p class="muted">{hasProblems ? 'No weak topics among attempted problems.' : 'No topics yet'}</p>
+            <p class="muted">{hasProblems ? 'No topics need more practice based on the problems you’ve tried.' : 'No topics yet'}</p>
           ) : (
             <>
-              <p class="prose muted">Lowest average best scores first, using only attempted problems.</p>
+              <p class="prose muted">Topics with the lowest scores appear first. Each score averages your best scores on problems you’ve tried in that topic.</p>
               <ul class="weak-topics" role="list">
                 {needsPractice.map(({ topic, averageBest, attempted, total }) => (
                   <li key={topic}>

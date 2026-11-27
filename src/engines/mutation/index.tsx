@@ -133,7 +133,7 @@ export default function Mutation({ problem }: { problem: Problem<'test-design'> 
         <label><input type="radio" name="mutation-mode" checked={mode === 'code'} onChange={() => setMode('code')} /> Code</label>
       </fieldset>}
       {mode === 'table' && params ? <div class="mutation-table-card" ref={rowsPanel} data-card>
-        <p id="expected-format" class="muted">Enter each expected result as JSON, such as <code>450</code>, <code>true</code>, or <code>"free"</code>.</p>
+        <p id="expected-format" class="muted">Enter each expected result as a JSON value. For example, enter <code>450</code> for a number, <code>true</code> for a true or false value, or <code>"free"</code> for text.</p>
         <div class="mutation-table-scroll">
           <table aria-label="Test rows">
             <thead><tr>
@@ -159,9 +159,9 @@ export default function Mutation({ problem }: { problem: Problem<'test-design'> 
         </div>
         <button class="button outline" type="button" data-add-row onClick={addRow}>Add row</button>
       </div> : Editor ? <>
-        <p class="muted">Throw an error when an assertion fails.</p>
+        <p class="muted">An assertion checks that the result is what you expect. If an assertion fails, throw an error to make the test fail.</p>
         <Editor label="Test function" language="js" value={source} onChange={setSource} onRun={() => void submit()} />
-      </> : <p class="muted" role="status">{editor === 'unavailable' ? 'Unable to load the editor; reload the page.' : 'Loading editor…'}</p>}
+      </> : <p class="muted" role="status">{editor === 'unavailable' ? 'Could not load the editor. Reload the page.' : 'Loading editor…'}</p>}
       <div class="engine-actions">
         <button class="button primary" type="submit" disabled={busy || (mode === 'code' && !Editor)}>{busy ? 'Checking…' : 'Submit'}</button>
       </div>

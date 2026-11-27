@@ -11,7 +11,7 @@ interface Props {
 const { id, answer } = Astro.props;
 ---
 
-<p class="question-recall-prompt muted"><strong>Think first.</strong> Say your answer out loud before reading the example.</p>
+<p class="question-recall-prompt muted"><strong>Say your answer out loud.</strong> Then read the example.</p>
 <details class="question-recall-card" data-card data-answer data-id={id}>
   <summary aria-keyshortcuts="Space">
     <span class="question-show-label">Show answer</span>
@@ -59,7 +59,7 @@ const { id, answer } = Astro.props;
         rate(id, rating);
       } catch {
         if (error) {
-          error.textContent = 'Rating could not be saved; check this browser’s storage settings and try again.';
+          error.textContent = 'The browser could not save your rating. Check its storage settings and try again.';
           error.hidden = false;
         }
         return;

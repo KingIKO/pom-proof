@@ -146,7 +146,7 @@ function Controls({ item, name, value, reference, onChange, code }: {
       {item.type === 'budgeted-pick' && (
         <p id={`${name}-budget`} class="structured-budget" role="status">
           Spent {spent} of {item.budget}
-          {spent !== null && spent > item.budget && '. Remove a pick to stay within budget.'}
+          {spent !== null && spent > item.budget && '. Remove a choice to stay within budget.'}
         </p>
       )}
       <ul class="structured-options" role="list">

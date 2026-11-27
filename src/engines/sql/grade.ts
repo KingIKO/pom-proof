@@ -1,7 +1,7 @@
 import type { Answer, GradeResult, Grader, Problem } from '../../lib/contracts';
 import { hasOutputOrder, sameRows, SqlTimeoutError, type SqlRunner, type SqlTable } from '../../runners/sql';
 
-export const hiddenDatasetMiss = 'Your query matches the visible data but not a second dataset with different rows. Check for hard-coded values or a missing join condition.';
+export const hiddenDatasetMiss = 'Your query returned the right rows for the visible data. It did not pass on a second set of data with different rows. Check for hard-coded values, such as numbers copied from the visible data. Also check for a missing join condition, the rule for matching rows between tables.';
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : String(error);
 
 export async function checkSql(

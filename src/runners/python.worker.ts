@@ -167,7 +167,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<PythonCommand>) =
     const request = { ...data.request, exportName: pythonName(data.request.exportName) };
     const encoded = evaluate(JSON.stringify(request));
     if (encoded == null) {
-      reply({ type: 'run-error', message: 'The solution changed the Python runner state; remove the change and try again.' });
+      reply({ type: 'run-error', message: 'Your solution changed the Python setup used to run the checks. Remove that change and try again.' });
       return;
     }
     const result = JSON.parse(encoded) as CodeReply;

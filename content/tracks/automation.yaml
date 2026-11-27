@@ -1,9 +1,9 @@
 title: QA automation
 role: automation
-summary: Practice choosing what to automate, finding the right elements, and maintaining browser tests that give useful failure evidence.
+summary: Choose which checks to run automatically. Practice finding the right page elements and keeping browser tests useful when they fail.
 sections:
   - title: "Week 1: Choose checks and write small helpers"
-    note: Pick the lowest test layer that can catch the bug, then write small helpers with clear inputs and outputs.
+    note: Test at the smallest level that can catch the bug, such as a single function. Write small helper functions that make clear what they take in and return.
     problems:
       - code/count-result-lines
       - code/failed-test-names
@@ -19,7 +19,7 @@ sections:
       - fundamentals/smoke-sanity-regression
       - agile/qa-throughout-the-sprint
   - title: "Week 2: Accessible locators and assertions"
-    note: Find controls by their accessible role, name, or label and assert the state that matters.
+    note: A locator tells the test which control to find. Use the role, name, or label available to assistive tools like screen readers. Write an assertion that checks for the result you expect.
     problems:
       - locator/billing-email-field
       - locator/booking-text-reminders
@@ -38,8 +38,8 @@ sections:
       - locators-waits/playwright-click-actionability
       - playwright/web-first-assertions
       - selenium/manage-browser-drivers
-  - title: "Week 3: Scope locators and diagnose timing"
-    note: Find the right row, panel, or dialog before locating its control, then wait for the application state that proves the action worked.
+  - title: "Week 3: Narrow locator searches and find the cause of timing problems"
+    note: Find the right row, panel, or dialog first. Limit the locator's search to that area. Wait until the app shows that the action worked.
     problems:
       - diagnosis/review-positional-refund-locators
       - diagnosis/review-sleep-before-upload-status
@@ -59,7 +59,7 @@ sections:
       - playwright/read-a-trace
       - flaky-tests/first-flake-investigation
   - title: "Week 4: Fixtures, test data, and service checks"
-    note: Give each test its own data and prove what the application stored, returned, or retried.
+    note: A fixture sets up what a test needs. Give each test its own data. Check what the app saved or sent back. If it tried an operation again, check which one.
     problems:
       - code/duplicate-test-emails
       - code/verify-status-transitions
@@ -81,7 +81,7 @@ sections:
       - api/bad-request-vs-unprocessable
       - playwright/independent-checkout-contexts
   - title: "Week 5: Review test code and debug CI failures"
-    note: Reproduce a CI failure with its run evidence, then isolate the cause before changing retries or timeouts.
+    note: Continuous integration (CI) runs checks automatically as code changes. Use the evidence from a CI run to make the same failure happen again. Find the cause before changing how often the test retries or how long it waits.
     problems:
       - diagnosis/reports-wrong-base-url
       - diagnosis/review-password-in-login-test
@@ -100,8 +100,8 @@ sections:
       - flaky-tests/retries-as-evidence
       - behavioral/learn-a-tool-under-deadline
       - selenium/grid-4-when-and-why
-  - title: "Week 6: Resilient selectors and flaky suites"
-    note: Keep checks working when a new row or dialog appears, then explain which failures a suite should block.
+  - title: "Week 6: Keep selectors working and handle flaky tests"
+    note: A selector tells a test which page element to find. Make sure the check still works if a new row or dialog appears. A flaky test can pass or fail without a code change. Explain when a failure should stop the next step.
     problems:
       - locator/find-statement-delivery-summary
       - locator/edit-saved-address-xpath

@@ -57,7 +57,7 @@ export function grade(problem: Problem<StructuredKind>, answer: Answer<Structure
     return invalid('Answers must be supplied for each item');
   }
   const unknownItem = Object.keys(value).find((id) => !problem.items.some((item) => item.id === id));
-  if (unknownItem !== undefined) return invalid(`Unknown item “${unknownItem}”; use the items on this page`);
+  if (unknownItem !== undefined) return invalid(`Unknown item “${unknownItem}”. Use the items shown on this page.`);
 
   const items: { id: string; passed: boolean; note?: string }[] = [];
   let total = 0;
@@ -78,7 +78,7 @@ export function grade(problem: Problem<StructuredKind>, answer: Answer<Structure
       picks = Array.from(selection);
     }
     const unknown = picks.findIndex((id) => !labels.has(id));
-    if (unknown !== -1) return invalid(`Unknown option “${picks[unknown]}” for “${item.prompt}”; choose a listed option`);
+    if (unknown !== -1) return invalid(`Unknown option “${picks[unknown]}” for “${item.prompt}”. Choose an option from the list.`);
     if (new Set(picks).size !== picks.length) return invalid(`List each option once: ${item.prompt}`);
     if (item.type === 'ordering' && picks.length !== choices.length) {
       return invalid(`Order every option: ${item.prompt}`);
@@ -86,7 +86,7 @@ export function grade(problem: Problem<StructuredKind>, answer: Answer<Structure
     if (item.type === 'budgeted-pick') {
       const spent = budgetSpent(item, picks);
       if (spent > item.budget) {
-        return invalid(`Spent ${spent} of ${item.budget} for “${item.prompt}”; remove a pick and submit again`);
+        return invalid(`Spent ${spent} of ${item.budget} for “${item.prompt}”. Remove a choice and submit again.`);
       }
     }
 

@@ -1,9 +1,9 @@
 title: SDET
 role: sdet
-summary: Practice writing test infrastructure, reasoning about service failures, and verifying release decisions with SQL and CI evidence.
+summary: SDET stands for software development engineer in test. Practice building tools that run and support tests. Work out what happens when services fail. Check release decisions against database queries (SQL) and automatic build and test runs (CI).
 sections:
   - title: "Week 1: Coding fundamentals for test data"
-    note: Practice arrays, sets, strings, and small functions before designing checks that combine several sources of data.
+    note: Practice with arrays (ordered lists), sets (groups of unique values), strings (text), and small functions. Then design checks that combine data from several sources.
     problems:
       - code/classify-test-retries
       - code/balanced-log-brackets
@@ -17,8 +17,8 @@ sections:
       - fundamentals/test-pyramid
       - fundamentals/early-testing-shift-left
       - automation-strategy/explain-your-framework
-  - title: "Week 2: Browser fixtures and parallel isolation"
-    note: Keep state and test data independent when sessions run together, then prove which control a test acts on.
+  - title: "Week 2: Set up browser tests that can run together"
+    note: Browser fixtures set up what browser tests need. When sessions run at the same time, keep each session's data and state separate. Then show exactly which control the test uses.
     problems:
       - locator/pick-available-service-slot
       - locator/print-package-label
@@ -32,7 +32,7 @@ sections:
       - flaky-tests/isolate-parallel-writes
       - ci-git-docker/parallelize-across-ci-jobs
   - title: "Week 3: SQL for audit trails and test reporting"
-    note: Compare counts, rankings, and latest rows, including ties and records that have no matching execution.
+    note: An audit trail records what happened and when. Compare counts and rankings, then find the latest rows. Include ties and records with no matching test run.
     problems:
       - sql/highest-salary-per-department
       - sql/second-highest-salary
@@ -49,7 +49,7 @@ sections:
       - ci-git-docker/reports-and-failure-artifacts
       - flaky-tests/measure-first-attempt-flake
   - title: "Week 4: Service contracts and retries"
-    note: Follow state through missing or repeated responses, and check what a client can assume when a dependency fails.
+    note: A service contract says how a service handles requests. If a response is missing or repeats, check what changed in the service. If another system the service depends on fails, check what the client that sent the request can still count on.
     problems:
       - scenario/api-rate-limit-window
       - code/compare-monitor-urls
@@ -67,8 +67,8 @@ sections:
       - api/consumer-driven-contracts
       - playwright/mock-a-failing-request
       - test-design/test-payment-timeout
-  - title: "Week 5: Code and CI for test infrastructure"
-    note: Turn test configuration and results into inputs for the next CI step, then decide which checks need to finish first.
+  - title: "Week 5: Use code to set up CI checks"
+    note: Pass test settings and results to the next step in continuous integration (CI). Decide which checks need to finish first.
     problems:
       - code/flatten-config-keys
       - code/build-test-matrix
@@ -84,7 +84,7 @@ sections:
       - ci-git-docker/secrets-for-test-jobs
       - leadership/balance-feedback-speed-and-coverage
   - title: "Week 6: Release controls and recovery"
-    note: Decide what must pass before rollout, then explain how to tell whether a rollback restored the intended state.
+    note: Decide which checks must pass before the team rolls out the release to users. A rollback returns the system to an earlier version or state. Explain how to tell if the rollback put the system back in the state you expected.
     problems:
       - locator/rerun-production-build
       - locator/reserve-live-training-slot

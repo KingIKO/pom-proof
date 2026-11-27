@@ -3,7 +3,7 @@ import type { CodeReply } from './code-evaluate';
 import type { PythonCommand, PythonMessage, PythonRequest } from './python-contract';
 
 const loadTimeoutMs = 60_000;
-const loadError = 'Unable to load Python; check the connection and try again.';
+const loadError = 'Could not load Python. Check your internet connection and try again.';
 const runTimeout = 'Stopped after 2 seconds. Look for a loop that never ends.';
 let worker: Worker | undefined;
 let queue = Promise.resolve();

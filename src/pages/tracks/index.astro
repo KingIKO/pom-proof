@@ -11,6 +11,6 @@ const tracks = (await orderedTracks()).map(({ id, title, summary, sections }) =>
 }));
 ---
 <Base title="Tracks" section="tracks" wide>
-  <TitleBand slot="title-band" title="Tracks" meta="Choose a role and work through its rounds in order." />
+  <TitleBand slot="title-band" title="Tracks" meta="Choose a role. Then work through the weeks in order." />
   <TracksList client:load tracks={tracks} />
 </Base>
