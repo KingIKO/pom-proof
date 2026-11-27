@@ -85,6 +85,24 @@ describe('structured grader', () => {
     expect(itemOf(result, 'stop').passed).toBe(false);
   });
 
+  it('names the selected and correct options for a wrong single choice', () => {
+    expect(itemOf(run({ stop: 'no' }), 'stop').note).toBe('Your answer: Slow render. Correct answer: Double booking.');
+    expect(itemOf(run({}), 'stop').note).toBeUndefined();
+  });
+
+  it('keeps existing punctuation on single-choice labels', () => {
+    const punctuated: Problem<'scenario'> = {
+      ...problem,
+      items: [{
+        id: 'stop', type: 'single-choice', prompt: 'Which result stops rollout?',
+        choices: [{ id: 'yes', text: 'Double booking.' }, { id: 'no', text: 'Slow render.' }],
+      }],
+      reference: { stop: 'yes' },
+    };
+    const result = grade(punctuated, { kind: 'scenario', value: { stop: 'no' } });
+    expect(itemOf(result, 'stop').note).toBe('Your answer: Slow render. Correct answer: Double booking.');
+  });
+
   describe('multi-select penalties', () => {
     it.each([
       { picks: ['a', 'b'], score: 1 },
@@ -99,10 +117,9 @@ describe('structured grader', () => {
       expect(itemOf(result, 'evidence').passed).toBe(score === 1);
     });
 
-    it('names missed and extra picks', () => {
+    it('separates unselected correct options from incorrect picks', () => {
       const note = itemOf(run({ evidence: ['a', 'c'] }), 'evidence').note;
-      expect(note).toContain('Missed: Ledger entry');
-      expect(note).toContain('Extra: Customer screenshot');
+      expect(note).toBe('Also correct: Ledger entry. Not correct: Customer screenshot.');
     });
 
     it('never goes below zero for one item', () => {
@@ -124,7 +141,7 @@ describe('structured grader', () => {
     });
 
     it('names the first pair out of order', () => {
-      expect(itemOf(run({ steps: ['second', 'first', 'third'] }), 'steps').note).toMatch(/Stub.*before.*Trigger/);
+      expect(itemOf(run({ steps: ['second', 'first', 'third'] }), 'steps').note).toBe('Put “Stub” before “Trigger”.');
     });
 
     it('rejects an order that leaves an option out', () => {
@@ -139,7 +156,12 @@ describe('structured grader', () => {
     });
 
     it('accepts picks that spend the whole budget', () => {
-      expect(run({ smoke: ['concurrent', 'browse'] })).toMatchObject({ status: 'graded' });
+      const result = run({ smoke: ['concurrent', 'browse'] });
+      expect(itemOf(result, 'smoke')).toMatchObject({
+        passed: false,
+        note: 'Also correct: Cancel and rebook. Not correct: Browse hours.',
+      });
+      expect(scoreOf(result)).toBeCloseTo(4 / 5);
     });
 
     it('treats an over-budget answer as invalid instead of scoring it', () => {
@@ -150,8 +172,11 @@ describe('structured grader', () => {
   });
 
   it('grades line marking against the line ids', () => {
-    const result = run({ claims: ['l2'] });
-    expect(itemOf(result, 'claims')).toMatchObject({ passed: false, note: expect.stringContaining('Missed: All customers') });
+    const result = run({ claims: ['l1', 'l2'] });
+    expect(itemOf(result, 'claims')).toMatchObject({
+      passed: false,
+      note: 'Also correct: All customers. Not correct: Build 421.',
+    });
   });
 
   describe('invalid answers', () => {

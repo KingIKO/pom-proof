@@ -24,9 +24,15 @@ function toggle(picks: string[], id: string) {
   return picks.includes(id) ? picks.filter((pick) => pick !== id) : [...picks, id];
 }
 
-function Ordering({ item, picks, onChange }: {
+function optionFeedback(correct: boolean, picked: boolean) {
+  if (correct) return { status: 'pass', label: picked ? 'Your answer, correct' : 'Correct answer' };
+  if (picked) return { status: 'fail', label: 'Your answer' };
+}
+
+function Ordering({ item, picks, reference, onChange }: {
   item: Extract<Item, { type: 'ordering' }>;
   picks: string[];
+  reference?: string[];
   onChange: Update;
 }) {
   const id = useId();
@@ -59,7 +65,10 @@ function Ordering({ item, picks, onChange }: {
       <ol class="structured-order">
         {picks.map((pick, index) => (
           <li key={pick}>
-            <span>{choices.get(pick)}</span>
+            <span>
+              {choices.get(pick)}
+              {reference && <span class="structured-feedback">Correct position: {reference.indexOf(pick) + 1}</span>}
+            </span>
             <div class="structured-moves">
               <button
                 class="button outline"
@@ -90,32 +99,43 @@ function Ordering({ item, picks, onChange }: {
   );
 }
 
-function Controls({ item, name, value, onChange, code }: {
+function Controls({ item, name, value, reference, onChange, code }: {
   item: Item;
   name: string;
   value: Values[string] | undefined;
+  reference?: Values[string];
   onChange: Update;
   code?: MarkedCode[string];
 }) {
   const picks = Array.isArray(value) ? value : [];
-  if (item.type === 'ordering') return <Ordering item={item} picks={picks} onChange={onChange} />;
+  const expected = Array.isArray(reference) ? reference : reference === undefined ? undefined : [reference];
+  if (item.type === 'ordering') return <Ordering item={item} picks={picks} reference={expected} onChange={onChange} />;
   if (item.type === 'line-marking') {
     return (
-      <ol class="structured-code" aria-label="Numbered lines">
-        {item.lines.map((line, index) => (
-          <li key={line.id}>
-            <button
-              class="button structured-line"
-              type="button"
-              aria-pressed={picks.includes(line.id)}
-              onClick={() => onChange(toggle(picks, line.id))}
-            >
-              <span class="structured-line-number"><span class="visually-hidden">Line </span>{index + 1}</span>{' '}
-              <code>{code?.[index].map(([text, color], token) =>
-                color ? <span key={token} style={{ color }}>{text}</span> : text) ?? line.text}</code>
-            </button>
-          </li>
-        ))}
+      <ol class="structured-code" role="list" aria-label="Numbered lines">
+        {item.lines.map((line, index) => {
+          const picked = picks.includes(line.id);
+          const feedback = expected && optionFeedback(expected.includes(line.id), picked);
+          const tokens = feedback ? undefined : code?.[index];
+          return (
+            <li key={line.id}>
+              <button
+                class="button structured-line"
+                type="button"
+                aria-pressed={picked}
+                data-feedback={feedback?.status}
+                onClick={() => onChange(toggle(picks, line.id))}
+              >
+                <span class="structured-line-number"><span class="visually-hidden">Line </span>{index + 1}</span>{' '}
+                <span>
+                  <code>{tokens?.map(([text, color], token) =>
+                    color ? <span key={token} style={{ color }}>{text}</span> : text) ?? line.text}</code>
+                  {feedback && <span class="structured-feedback">{feedback.label}</span>}
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ol>
     );
   }
@@ -129,46 +149,31 @@ function Controls({ item, name, value, onChange, code }: {
           {spent !== null && spent > item.budget && '. Remove a pick to stay within budget.'}
         </p>
       )}
-      <ul class="structured-options">
-        {item.choices.map((choice) => (
-          <li key={choice.id}>
-            <label class="structured-option">
-              <input
-                type={single ? 'radio' : 'checkbox'}
-                name={name}
-                value={choice.id}
-                checked={single ? value === choice.id : picks.includes(choice.id)}
-                onChange={() => onChange(single ? choice.id : toggle(picks, choice.id))}
-              />
-              <span>
-                {choice.text}
-                {'cost' in choice && <span class="muted"> ({choice.cost})</span>}
-              </span>
-            </label>
-          </li>
-        ))}
+      <ul class="structured-options" role="list">
+        {item.choices.map((choice) => {
+          const picked = single ? value === choice.id : picks.includes(choice.id);
+          const feedback = expected && optionFeedback(expected.includes(choice.id), picked);
+          return (
+            <li key={choice.id}>
+              <label class="structured-option" data-feedback={feedback?.status}>
+                <input
+                  type={single ? 'radio' : 'checkbox'}
+                  name={name}
+                  value={choice.id}
+                  checked={picked}
+                  onChange={() => onChange(single ? choice.id : toggle(picks, choice.id))}
+                />
+                <span>
+                  {choice.text}
+                  {'cost' in choice && <span class="muted"> ({choice.cost})</span>}
+                  {feedback && <span class="structured-feedback">{feedback.label}</span>}
+                </span>
+              </label>
+            </li>
+          );
+        })}
       </ul>
     </>
-  );
-}
-
-function RightAnswer({ item, value }: { item: Item; value: Values[string] }) {
-  const options = item.type === 'line-marking' ? item.lines : item.choices;
-  if (typeof value === 'string') {
-    return <p><strong>Right answer:</strong> {options.find(({ id }) => id === value)?.text}</p>;
-  }
-  const entries = value.map((id) => {
-    const index = options.findIndex((option) => option.id === id);
-    const text = options[index].text;
-    return <li key={id}>{item.type === 'line-marking' ? <>Line {index + 1}: <code>{text}</code></> : text}</li>;
-  });
-  return (
-    <div class="structured-key">
-      <strong>Right answer:</strong>
-      {entries.length === 0 ? ' No selections'
-        : item.type === 'ordering' ? <ol>{entries}</ol>
-          : <ul>{entries}</ul>}
-    </div>
   );
 }
 
@@ -244,6 +249,7 @@ export default function Structured({ problem, markedCode }: { problem: Structure
       <div class="structured-items" ref={itemsRef} key={attempt}>
         {problem.items.map((item) => {
           const name = `${id}-${item.id}`;
+          const reference = graded ? problem.reference[item.id] : undefined;
           return (
             <div key={item.id} class="structured-item" data-card>
               <fieldset disabled={!ready || graded} aria-describedby={item.type === 'budgeted-pick' ? `${name}-budget` : undefined}>
@@ -252,10 +258,13 @@ export default function Structured({ problem, markedCode }: { problem: Structure
                   item={item}
                   name={name}
                   value={values[item.id]}
+                  reference={reference}
                   onChange={(value) => update(item.id, value)}
                   code={markedCode[item.id]}
                 />
-                {graded && <RightAnswer item={item} value={problem.reference[item.id]} />}
+                {Array.isArray(reference) && reference.length === 0 && (
+                  <p class="structured-feedback">Correct answer: no selections</p>
+                )}
               </fieldset>
             </div>
           );

@@ -8,7 +8,13 @@
 .structured-scratch p { margin-block: var(--space-4) var(--space-8); font-size: var(--type-14); }
 .structured-scratch textarea { display: block; resize: vertical; }
 
-.structured-options, .structured-code { margin: 0; padding: 0; list-style: none; }
+.structured-options, .structured-code {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 .structured-budget { margin-block: 0 var(--space-8); color: var(--text2); font-size: var(--type-14); }
 
 .structured-option {
@@ -18,6 +24,7 @@
   gap: var(--space-12);
   min-block-size: 2.75rem;
   padding: var(--space-8);
+  border: 1px solid transparent;
   border-radius: var(--radius-control);
   font-size: var(--type-14);
 }
@@ -52,9 +59,27 @@
   text-align: start;
 }
 .structured-line-number { color: var(--text2); text-align: end; }
-.structured-code code, .structured-key code { font-size: inherit; white-space: pre-wrap; }
-.structured-code .structured-line:disabled { background: transparent; border-color: transparent; color: var(--text); }
+.structured-code code { font-size: inherit; white-space: pre-wrap; }
+.structured-code .structured-line:disabled:not([data-feedback]) { background: transparent; border-color: transparent; color: var(--text); }
 .structured-code .structured-line:hover:not(:disabled, [aria-pressed="true"]) { background: var(--surface); }
-.structured-code .structured-line[aria-pressed="true"] { background: var(--codeSelection); border-color: var(--primary); color: var(--badgeText); }
-.structured-key { margin-block-start: var(--space-8); }
-.structured-key :is(ol, ul) { margin-block: var(--space-4) 0; }
+.structured-code .structured-line[aria-pressed="true"]:not([data-feedback]) { background: var(--codeSelection); border-color: var(--primary); color: var(--badgeText); }
+
+.structured-workspace [data-feedback="pass"] {
+  --feedback-color: var(--pass);
+  --feedback-tint: var(--passTint);
+}
+.structured-workspace [data-feedback="fail"] {
+  --feedback-color: var(--fail);
+  --feedback-tint: var(--failTint);
+}
+.structured-option[data-feedback], .structured-code .structured-line[data-feedback] {
+  border-color: var(--feedback-color);
+  background: var(--feedback-tint);
+  color: var(--text);
+}
+.structured-feedback {
+  display: block;
+  margin-block: var(--space-4) 0;
+  color: var(--feedback-color, var(--text2));
+  font: var(--weight-bold) var(--type-13)/1.35 var(--font-body);
+}
