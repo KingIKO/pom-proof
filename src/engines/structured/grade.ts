@@ -8,6 +8,7 @@ export function budgetSpent(item: Extract<StructuredItem, { type: 'budgeted-pick
 
 function scoreOrdering(picks: string[], reference: string[], labels: Map<string, string>) {
   const positions = reference.map((id) => picks.indexOf(id));
+  const step = (index: number) => labels.get(reference[index])?.replace(/\.$/, '');
   const pairs = reference.length * (reference.length - 1) / 2;
   let inversions = 0;
   let note: string | undefined;
@@ -15,23 +16,32 @@ function scoreOrdering(picks: string[], reference: string[], labels: Map<string,
     for (let right = left + 1; right < positions.length; right++) {
       if (positions[left] > positions[right]) {
         inversions++;
-        note ??= `Order: place “${labels.get(reference[left])}” before “${labels.get(reference[right])}”`;
+        note ??= `Put “${step(left)}” before “${step(right)}”.`;
       }
     }
   }
   return { score: (pairs - inversions) / pairs, note };
 }
 
-function scorePicks(picks: string[], reference: string[], labels: Map<string, string>) {
+function sentence(text: string) {
+  return /[.!?]$/.test(text) ? text : `${text}.`;
+}
+
+function scorePicks(type: StructuredItem['type'], picks: string[], reference: string[], labels: Map<string, string>) {
   const missed = reference.filter((id) => !picks.includes(id));
   const extra = picks.filter((id) => !reference.includes(id));
   const correct = reference.length - missed.length;
   const score = reference.length === 0
     ? Number(extra.length === 0)
     : Math.max(0, (correct - extra.length) / reference.length);
+  if (type === 'single-choice') {
+    const note = score === 1 ? undefined
+      : `${sentence(`Your answer: ${labels.get(picks[0])}`)} ${sentence(`Correct answer: ${labels.get(reference[0])}`)}`;
+    return { score, note };
+  }
   const notes: string[] = [];
-  if (missed.length) notes.push(`Missed: ${missed.map((id) => labels.get(id)).join(' / ')}`);
-  if (extra.length) notes.push(`Extra: ${extra.map((id) => labels.get(id)).join(' / ')}`);
+  if (missed.length) notes.push(sentence(`Also correct: ${missed.map((id) => labels.get(id)).join(' / ')}`));
+  if (extra.length) notes.push(sentence(`Not correct: ${extra.map((id) => labels.get(id)).join(' / ')}`));
   return { score, note: notes.join(' ') };
 }
 
@@ -82,7 +92,7 @@ export function grade(problem: Problem<StructuredKind>, answer: Answer<Structure
 
     const { score, note } = item.type === 'ordering'
       ? scoreOrdering(picks, reference, labels)
-      : scorePicks(picks, reference, labels);
+      : scorePicks(item.type, picks, reference, labels);
     total += score;
     items.push({ id: item.id, passed: score === 1, ...(note ? { note } : {}) });
   }
