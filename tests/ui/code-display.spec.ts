@@ -143,14 +143,62 @@ test('content has questions with code examples', () => {
   expect(withExamples.length, 'questions with examples').toBeGreaterThan(0);
 });
 
+/** Every variant in content, keyed `<question id>#<example index>:<lang>`. */
+const allVariants = withExamples.flatMap((question) => questionExamples(question).flatMap((example, index) =>
+  example.variants.map(({ lang }) => `${question.id}#${index}:${lang}`)));
+
+/** Each example on the page: the variant it shows, whether its box is visible, its sideways overflow and width. */
+const exampleBoxes = (page: Page) => page.evaluate(async () => {
+  await document.fonts.ready;
+  return [...document.querySelectorAll('[data-question-id]')].flatMap((row) => [...row.querySelectorAll('[data-code-example]')].map((figure, index) => {
+    const box = figure.querySelector<HTMLElement>('pre[data-example-code]');
+    return {
+      key: `${row.getAttribute('data-question-id')}#${index}:${box?.dataset.exampleCode}`,
+      visible: Boolean(box?.checkVisibility()),
+      overflow: box ? box.scrollWidth - box.clientWidth : 0,
+      width: box?.clientWidth ?? 0,
+    };
+  }));
+});
+
 for (const width of [1280, 1440]) {
-  test(`example code boxes do not scroll sideways at ${width}px in the bank card and on the question page`, async ({ page }) => {
+  // The bank card is the narrowest home for an example (868px against 908px on the question page at
+  // both widths, measured 2026-11-27), so every variant is checked there; one question page checks
+  // that its box is no narrower and that its variants fit too.
+  test(`every example variant fits without sideways scroll in the bank at ${width}px, and the question page box is no narrower`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    for (const question of withExamples) {
-      for (const where of ['card', 'page'] as const) {
-        await test.step(`${question.id} ${where}`, async () => expectExamplesFit(await openExamples(page, question, where), question));
+    await page.goto('questions/');
+    await page.evaluate(() => document.querySelectorAll<HTMLDetailsElement>('[data-question-id]:has([data-code-example]) details.question-card')
+      .forEach((card) => { card.open = true; }));
+
+    const seen = new Set<string>();
+    const problems: string[] = [];
+    const bankWidth = new Map<string, number>();
+    const record = async (state: string) => {
+      for (const { key, visible, overflow, width: boxWidth } of await exampleBoxes(page)) {
+        seen.add(key);
+        bankWidth.set(key.split(':')[0], boxWidth);
+        if (!visible) problems.push(`${key} is hidden (${state})`);
+        else if (overflow > 0) problems.push(`${key} scrolls sideways by ${overflow}px (${state})`);
       }
+    };
+    await record('first variants');
+    // Pressing a language switches every example that has it, so one press per language shows them all.
+    for (const lang of Object.keys(languageNames)) {
+      const button = page.locator(`[data-example-lang="${lang}"]`).first();
+      if (!(await button.count())) continue;
+      await button.click();
+      await expect(button).toHaveAttribute('aria-pressed', 'true');
+      await record(`${lang} pressed`);
     }
+    expect(problems, 'example boxes in the bank').toEqual([]);
+    expect(allVariants.filter((key) => !seen.has(key)), 'variants never shown in the bank').toEqual([]);
+
+    const question = withExamples.find((candidate) => questionExamples(candidate).some(({ variants }) => variants.length > 1)) ?? withExamples[0];
+    const scope = await openExamples(page, question, 'page');
+    await expectExamplesFit(scope, question);
+    const pageWidth = await scope.locator('pre[data-example-code]').first().evaluate((box) => box.clientWidth);
+    expect(pageWidth, `${question.id}: the question page box against the bank card box`).toBeGreaterThanOrEqual(bankWidth.get(`${question.id}#0`) ?? Infinity);
   });
 }
 

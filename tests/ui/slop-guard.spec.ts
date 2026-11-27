@@ -24,6 +24,15 @@ declare global {
 
 const prefix = '/pom-proof/';
 
+/** The topic with the fewest questions, at least three, for the bank's focus walk. */
+function walkTopic() {
+  const counts = new Map<string, number>();
+  for (const { folder } of discoverQuestions()) counts.set(folder, (counts.get(folder) ?? 0) + 1);
+  const [topic] = [...counts].filter(([, count]) => count >= 3).sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))[0] ?? [];
+  if (!topic) throw new Error('no topic with three or more questions for the bank focus walk');
+  return topic;
+}
+
 /**
  * Every route under src/pages, with the sample URLs that stand for it. A new dynamic route
  * without samples fails the run, so a new page type cannot skip the guard.
@@ -35,9 +44,14 @@ function pageSamples() {
   const routes = readdirSync(pages, { recursive: true, encoding: 'utf8' })
     .filter((file) => /\.(astro|md|mdx|html)$/.test(file))
     .map((file) => file.split(sep).join('/').replace(/\.\w+$/, '').replace(/(^|\/)index$/, ''));
-  return routes.map((route) => {
+  return routes.map((route): { route: string; urls: string[]; status: number; walk?: string } => {
     if (!route.includes('[')) {
       if (route === '404') return { route, urls: ['this-page-does-not-exist/'], status: 404 };
+      // Every bank card is the same component, and walking all of them took the test past its 30 s
+      // timeout once the bank reached 294 questions (2026-11-27). The focus walk uses the bank's own
+      // topic filter: every control outside the list plus one topic's cards. The at-rest scan still
+      // reads the whole bank, and the expanded-card tests walk a card's insides.
+      if (route === 'questions') return { route, urls: ['questions/'], status: 200, walk: `questions/?topic=${walkTopic()}` };
       return { route, urls: [route ? `${route}/` : ''], status: 200 };
     }
     if (route === 'practice/[kind]/[id]') return { route, urls: onePerKind().map(({ path }) => path), status: 200 };
@@ -491,7 +505,7 @@ test('every page route has a sample for the guard', () => {
   expect(samples.filter(({ urls }) => urls.length === 0).map(({ route }) => route), 'routes with no sample URL').toEqual([]);
 });
 
-for (const { route, urls, status } of samples) {
+for (const { route, urls, status, walk } of samples) {
   for (const url of urls) {
     test(`/${url} (${route || 'index'}) has no slop`, async ({ page }) => {
       const fonts = await settle(page, url, status);
@@ -501,7 +515,10 @@ for (const { route, urls, status } of samples) {
         expect(fontsOffBase(fonts, page.url()), `font requests outside ${prefix}`).toEqual([]);
       });
       await test.step('at rest', async () => expect(grouped(await scan(page)), 'at rest').toEqual([]));
-      await test.step('focus states', async () => expect(grouped(await scanFocusStates(page)), 'focus states').toEqual([]));
+      await test.step(walk ? `focus states on /${walk}` : 'focus states', async () => {
+        if (walk) await settle(page, walk, status);
+        expect(grouped(await scanFocusStates(page)), 'focus states').toEqual([]);
+      });
     });
   }
 }
