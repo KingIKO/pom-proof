@@ -12,10 +12,20 @@ looksFor:
   - Show what new evidence could change the recommendation.
 trap: Treating the severity rating as the place the ticket must take in the queue.
 followUps:
-  - question: What could change the priority while the defect stays the same?
-    answer: A customer rollout moves up and puts the affected feature in use this week. The defect can cause the same harm, but we need to address it sooner.
-  - question: What if you don't know how many customers are affected?
-    answer: I'd describe the impact I reproduced, make clear that reach is unknown, and ask for usage or support data before treating the priority as settled.
+  - question: How do reach and rollout timing affect priority?
+    answer: >-
+      Moving up a rollout can make the same defect urgent. If reach is unknown, I'd state what I
+      reproduced and ask for usage or support data before treating the priority as settled.
+  - question: Teams gave the same archive bug different ratings. What should the ticket say before triage?
+    answer: >-
+      I'd write that records disappear from the active view and show how to reproduce it. I'd
+      separately record that the feature is off for customers. The team can apply its severity
+      scale to the first fact and use the second to set the fix order.
+  - question: What would a simple severity scale look like?
+    answer: >-
+      Use blocking for a task people can't complete, major for a serious loss of function, minor
+      for limited impact, and cosmetic for appearance only. A safe, practical workaround may reduce
+      the impact. It doesn't undo lost data.
 sources:
   - label: ISTQB CTFL syllabus, section 5.5 (Defect Management)
     url: https://www.istqb.org/certifications/certified-tester-foundation-level

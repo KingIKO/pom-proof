@@ -14,6 +14,11 @@ trap: "Naming the runs without saying what each one would check."
 followUps:
   - question: "What if the smoke suite can't create an order?"
     answer: "I'd record the build and error, investigate it first, and flag that downstream checkout results aren't meaningful until the path works."
+  - question: The coupon works at the cutoff, but a gift card now changes the shipping total. What would you record?
+    answer: >-
+      I'd mark the original coupon failure as fixed and record the gift-card total as a separate
+      regression, with the build and expected shipping charge. I'd add that pricing case to the
+      repeatable checks for the next change.
 sources:
   - label: "ISTQB glossary, smoke test"
     url: https://glossary.istqb.org/en_US/term/smoke-test

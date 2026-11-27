@@ -17,11 +17,20 @@ followUps:
 sources:
   - label: Scrum Guide on Scrum Team responsibilities
     url: https://scrumguides.org/scrum-guide.html#scrum-team
+  - label: Scrum Guide on sprint events
+    url: https://scrumguides.org/scrum-guide.html#scrum-events
+  - label: Scrum Guide on Product Backlog refinement
+    url: https://scrumguides.org/scrum-guide.html#product-backlog
 ---
 
 I start by asking what the user should be able to do and what could go wrong. If an acceptance criterion says an upload should show an error, I ask what happens to the file the user already saved. I can get the test account and files ready while someone builds the change.
 
 Once there is something to test, I pair with a developer on the first pass and share findings while there is time to act on them. I tell the team which behavior I could verify and what is still blocked. Scrum puts verification within the team's work, so I can bring testing skills without being the only person who tests.
+
+Refinement is where my questions usually save the most rework. In planning I surface test
+dependencies and estimate effort. At the daily stand-up I raise blockers. At the review I
+share what we saw in the working increment, and at the retrospective I propose one change
+based on what slowed feedback.
 
 ### Example
 

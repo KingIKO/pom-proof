@@ -14,6 +14,16 @@ trap: "Opening the application and clicking around with no record of what was tr
 followUps:
   - question: "What belongs in the debrief?"
     answer: "The charter, parts exercised, a useful set of observations, and a decision on which issues or gaps deserve another pass."
+  - question: How would the next tester know where to pick up after your session?
+    answer: >-
+      With session-based test management, I'd link the charter and time box to a report of the
+      data I used, what I exercised and what remains. In the debrief we'd choose which risk
+      merits the next session.
+  - question: The reopened draft has the right text, but the first tab still says "Saving." What would you try next?
+    answer: >-
+      I'd add a distinct sentence in the first tab after reconnecting and open a fresh copy of the
+      draft. If the new sentence arrives, I'd investigate the stale status. If it doesn't, I'd
+      record both edits and which one the service kept.
 sources:
   - label: "ISTQB CTFL v4.0.1, section 4.4.2"
     url: https://www.istqb.org/certifications/certified-tester-foundation-level

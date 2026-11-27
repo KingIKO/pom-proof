@@ -99,6 +99,7 @@ examples:
 ---
 
 I'd ask whether the limit includes both ends and whether party size is a whole number. That tells me which values are neighbors. For two-value boundary analysis, I want the closest accepted and rejected value at each cutoff. I'd keep the room, availability, and account valid and use independent bookings so one accepted case doesn't take the slot away from the next.
+If the code uses less than instead of less than or equal to for the upper limit, only the limit itself changes outcome.
 
 I'd check the result of submitting the booking. A helpful validation message matters, but so does making sure a rejected size never creates a reservation.
 

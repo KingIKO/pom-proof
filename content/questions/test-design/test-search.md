@@ -14,9 +14,18 @@ trap: Searching a live catalogue and passing the test whenever at least one resu
 followUps:
   - question: How would you catch the wrong list appearing after a quick query change?
     answer: I'd have the first search finish after the second in a controlled test. I'd check that the final list still belongs to the second query.
+  - question: How would you exercise unusual input and verify ranking?
+    answer: >-
+      Try a query beyond the length limit, one with punctuation, and one that looks like markup.
+      Expect safe text handling or a clear rejection and no server error. For ranking, seed an exact
+      match and a lower-ranked partial match and check their order against the promised rule.
 sources:
   - label: ISTQB CTFL v4.0.1, section 4.2.1, choosing representatives by expected behavior
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
+  - label: OWASP input validation and free-form text
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html
+  - label: OWASP output encoding for untrusted text
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
 ---
 
 I'd set up a small catalogue so I know which records should come back and which should stay out. I'd use a query with several matches, one with no matches, and a query that exercises a promised matching rule. I'd ask about things like partial words or accents before setting expectations. If the feature promises an order, I'd check that too.

@@ -19,11 +19,14 @@ followUps:
 sources:
   - label: NIST SP 800-142, Practical Combinatorial Testing
     url: https://csrc.nist.gov/pubs/sp/800/142/final
+  - label: NIST, research on the number of inputs involved in faults
+    url: https://csrc.nist.gov/projects/automated-combinatorial-testing-for-software
   - label: NIST ACTS tool and constraint support
     url: https://csrc.nist.gov/Projects/automated-combinatorial-testing-for-software/downloadable-tools
 ---
 
 I'd use it when we support a lot of combinations and need good coverage of settings that can interact. Pick the parameters and values, write down the combinations the product doesn't support, and build a suite where every feasible pair shows up in at least one test. I'd then decide what to check in each case. The rows tell me which settings to use; I still need the delivery rules to tell me what should happen.
+NIST found that most failures in the systems it studied involved just one or two inputs, so covering pairs can catch many of them without testing every combination.
 
 Pairwise can miss a failure that needs a particular combination of more than two values. I'd add targeted cases for those if I know the product has a path that depends on them.
 

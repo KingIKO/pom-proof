@@ -14,6 +14,11 @@ trap: "Writing 'verify the results are correct' with no expected value or behavi
 followUps:
   - question: "Would you include every click?"
     answer: "Only if the click sequence matters to the bug or makes the test repeatable. Otherwise I'd name the meaningful action and the state it needs."
+  - question: Both wallets display the ticket after acceptance. What would make that run pass or fail?
+    answer: >-
+      I'd write down which ticket and accounts to use, then check whether the recipient can enter
+      and the sender's copy is rejected. An old ticket still shown as transferred may be fine;
+      the case needs to say whether visibility itself is part of the rule.
 sources:
   - label: "ISTQB glossary, test case"
     url: https://glossary.istqb.org/en_US/term/test-case
