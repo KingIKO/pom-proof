@@ -2,10 +2,52 @@
 problem: code/count-failure-words
 ---
 
-Recognize the words before counting them. The JavaScript version uses a pattern for runs of ASCII letters or digits. The Python version accumulates the same characters until a separator. Both lowercase only the tokens they recognize, then sort the counts using the stated tie rule.
+## What is going on
 
-The shortcut splits on whitespace and deletes punctuation within each token. That handles a comma attached to the end of a word, but it joins two words around a hyphen or underscore. A report for `cart-timeout` would count a new term `carttimeout` and lose the two meaningful terms. Deleting separators and splitting on separators are different operations.
+A failure report counts runs of ASCII letters and digits. Whitespace can end a word, and so can a hyphen, an underscore, or a non-ASCII letter. That definition decides what gets counted before case and sorting come into play.
 
-One good interview example uses punctuation at the beginning, middle, and end to check where a word starts and stops. Another shows why character classes matter across languages: the same character could count as a letter under a Unicode definition and as a separator here. Say that the exercise chooses ASCII explicitly to keep the two implementations comparable.
+## The fix
 
-[Related reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Character_class)
+1. Match every run of ASCII letters or digits and use an empty list when there are no matches.
+
+   **Why:** A pattern for the allowed runs preserves both words on either side of a separator. `interior-punctuation` needs two words in each pair. `unicode-separators` makes the ASCII rule visible, and `only-separators` and `empty-notes` need the fallback because `match()` can return `null`.
+
+   ```js
+   const tokens = notes.match(/[A-Za-z0-9]+/g) ?? [];
+   ```
+
+2. Lowercase each matched token and increment its count in a map.
+
+   **Why:** Case folding after tokenization makes matching spellings share a counter without changing where words begin and end. A map holds one entry per word, and keeping counts separate leaves the original note untouched for display. The Python solution can accumulate those same ASCII characters until it encounters a separator.
+
+   ```js
+   const counts = new Map();
+   for (const token of tokens) {
+     const word = token.toLowerCase();
+     counts.set(word, (counts.get(word) ?? 0) + 1);
+   }
+   ```
+
+3. Sort the entries by count descending, then by word ascending.
+
+   **Why:** Count alone leaves the order of tied entries dependent on the note. `order-ties-by-word` requires `cart` before `checkout` even when `timeout` was read first. Plain string comparison gives the required order for the ASCII tokens in this exercise.
+
+   ```js
+   return [...counts].sort(([a, x], [b, y]) =>
+     y - x || (a < b ? -1 : a > b ? 1 : 0));
+   ```
+
+## Why the tempting answer fails
+
+Splitting on whitespace and deleting punctuation handles a trailing comma. It joins the words of `cart-timeout` as `carttimeout` in `interior-punctuation`; it also joins the two sides of `表` in `unicode-separators`. Deleting a separator cannot recover the boundary it marked.
+
+## What the interviewer listens for
+
+Give a test with punctuation at the beginning, middle, and end. Explain why a Unicode letter definition would split the same note differently and why both implementations use ASCII here.
+
+## Sources
+
+- [MDN: Regular expression character classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Character_class)
+- [MDN: String.match()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match)
+- [MDN: Less than operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Less_than)
+- [Python: ASCII character constants](https://docs.python.org/3/library/string.html#string.ascii_letters)
