@@ -3,11 +3,39 @@ import { join, relative, sep } from 'node:path';
 import { parseFrontmatter } from '@astrojs/internal-helpers/frontmatter';
 import { root } from './problems';
 
-/** Topic ids from the Phase 2 brief, in the brief's order. */
+/** Topic ids from the Phase 2 brief in its order, then the twelve phase 5 topics in the plan's order. */
 export const questionTopics = [
   'fundamentals', 'test-design', 'bug-reports', 'agile', 'automation-strategy', 'locators-waits',
   'flaky-tests', 'playwright', 'selenium', 'api', 'ci-git-docker', 'behavioral', 'leadership',
+  'framework-design', 'bdd', 'cypress', 'performance', 'security', 'ai-testing', 'system-design',
+  'sql', 'java', 'python', 'javascript-typescript', 'containers',
 ] as const;
+
+/** Example languages from the phase 5 plan; only the switchable ones may share an example. */
+export const switchableLanguages = ['ts', 'js', 'python', 'java'] as const;
+export const exampleLanguages = [
+  ...switchableLanguages, 'sql', 'yaml', 'gherkin', 'bash', 'groovy', 'dockerfile', 'json', 'xml', 'http', 'properties',
+] as const;
+
+export interface ExampleVariant { lang: string; label: string; code: string }
+export interface QuestionExample { title?: string; variants: ExampleVariant[] }
+
+/**
+ * Accessible name of a variant's code box: "Code example: <label>", optionally followed by context
+ * such as the example number and the question title.
+ */
+export function exampleCodeName(variant: ExampleVariant) {
+  return new RegExp(`^Code example: ${variant.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:,|$)`);
+}
+
+/**
+ * The `examples` field as written, unvalidated. Callers that need valid data run after
+ * tests/content/questions.test.ts has checked the shape.
+ */
+export function questionExamples(question: DiscoveredQuestion): QuestionExample[] {
+  const { examples } = question.frontmatter;
+  return Array.isArray(examples) ? examples as QuestionExample[] : [];
+}
 
 export interface DiscoveredQuestion {
   /** Collection id and review key, for example `playwright/independent-checkout-contexts`. */

@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import QuestionCard from './QuestionCard.astro';
-import { questionLevels, questionListUrl, questionTopics, questionTypes, withParams } from './questions';
+import { questionLevels, questionListUrl, questionTopics, questionTypes, topicGroups, withParams } from './questions';
 
 interface Props {
   questions: CollectionEntry<'questions'>[];
@@ -13,25 +13,29 @@ const selects = [
   { name: 'level', label: 'Level', options: questionLevels, all: 'All levels' },
   { name: 'type', label: 'Type', options: questionTypes, all: 'All types' },
 ];
-const topics = Object.entries(questionTopics).map(([id, label]) => ({
-  id,
-  label,
-  count: questions.filter(({ data }) => data.topic === id).length,
-}));
+const counts = new Map<keyof typeof questionTopics, number>();
+for (const { data: { topic } } of questions) counts.set(topic, (counts.get(topic) ?? 0) + 1);
 ---
 
 <div class="questions-layout" data-question-bank>
   <nav class="topic-rail" aria-label="Question topics" data-bank-control hidden>
     <h2 class="section-label">Topics</h2>
-    <ul class="topic-links" role="list">
-      {topics.map(({ id, label, count }) => (
-        <li>
-          <a href={withParams(questionListUrl, new URLSearchParams({ topic: id }))} data-topic-filter={id} data-chip>
-            <span>{label}</span><span class="count">{count}</span>
-          </a>
-        </li>
+    <div class="question-topic-groups">
+      {topicGroups.map(({ label, topics }) => (
+        <div class="question-topic-group">
+          <h3 class="section-label">{label}</h3>
+          <ul class="topic-links" role="list">
+            {topics.map((id) => (
+              <li>
+                <a href={withParams(questionListUrl, new URLSearchParams({ topic: id }))} data-topic-filter={id} data-chip>
+                  <span>{questionTopics[id]}</span><span class="count">{counts.get(id) ?? 0}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       ))}
-    </ul>
+    </div>
   </nav>
   <section class="question-results" aria-label="Question list">
     <div class="question-toolbar filter-bar" id="review" data-card data-bank-control hidden>

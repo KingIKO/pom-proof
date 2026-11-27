@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { discoverProblems, kinds, onePerKind } from '../support/problems';
+import { discoverQuestions, questionExamples } from '../support/questions';
+import { expandQuestion } from '../support/review';
 import { openWorkspace, resultPanel, submitStructured } from '../support/workspace';
 
 const workspaces = onePerKind();
@@ -23,12 +25,14 @@ async function open(page: Page, url: string, status = 200) {
   await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
 }
 
-/** Fails on serious or critical violations; lesser ones are recorded as annotations. */
-async function expectNoSeriousViolations(page: Page, testInfo: TestInfo, state: string) {
+/** Fails on serious or critical violations; lesser ones are recorded as annotations. `include` limits the scan to one part. */
+async function expectNoSeriousViolations(page: Page, testInfo: TestInfo, state: string, include?: string) {
   // Contrast read during the 120 ms result fade would see partly transparent text.
   await expect.poll(() => page.evaluate(() => document.getAnimations().filter(({ playState }) => playState === 'running').length))
     .toBe(0);
-  const { violations, passes } = await new AxeBuilder({ page }).analyze();
+  const builder = new AxeBuilder({ page });
+  if (include) builder.include(include);
+  const { violations, passes } = await builder.analyze();
   expect(passes.length, 'axe ran no checks').toBeGreaterThan(0);
   for (const { id, impact, nodes } of violations.filter(({ impact }) => impact !== 'serious' && impact !== 'critical')) {
     testInfo.annotations.push({ type: `axe ${impact}`, description: `${state}: ${id} on ${nodes.length} nodes` });
@@ -77,6 +81,29 @@ test('an expanded question card in the bank has no serious or critical axe viola
   await card.locator('summary').first().click();
   await expect(card.getByRole('group', { name: 'Rate your answer' })).toBeVisible();
   await expectNoSeriousViolations(page, testInfo, 'expanded card');
+});
+
+const withExample = discoverQuestions().find((question) => questionExamples(question).some(({ variants }) => variants.length > 1));
+
+test('an expanded card with a code example has no serious or critical axe violations, before and after switching', async ({ page }, testInfo) => {
+  expect(withExample, 'a question with a multi-language example').toBeDefined();
+  await open(page, 'questions/');
+  const card = await expandQuestion(page, withExample!);
+  const languages = card.getByRole('group', { name: 'Example language' }).first();
+  await expect(languages).toBeVisible();
+  await expectNoSeriousViolations(page, testInfo, 'expanded card with an example');
+  await languages.getByRole('button').nth(1).click();
+  await expect(languages.getByRole('button').nth(1)).toHaveAttribute('aria-pressed', 'true');
+  // Only the card changed; a whole-page scan took the test to 9.1 s of its 10 s budget (2026-11-27).
+  await expectNoSeriousViolations(page, testInfo, 'switched example', `[data-question-id="${withExample!.id}"]`);
+});
+
+test('a revealed answer with a code example has no serious or critical axe violations', async ({ page }, testInfo) => {
+  expect(withExample, 'a question with a multi-language example').toBeDefined();
+  await open(page, withExample!.path);
+  await page.getByText('Show answer').click();
+  await expect(page.getByRole('group', { name: 'Example language' }).first()).toBeVisible();
+  await expectNoSeriousViolations(page, testInfo, 'revealed answer with an example');
 });
 
 test('code run results have no serious or critical axe violations', async ({ page }, testInfo) => {

@@ -12,6 +12,7 @@ const { entry, number } = Astro.props;
 const { id, data } = entry;
 const { Content } = await render(entry);
 const slug = id.split('/')[1];
+const titleId = `question-title:${slug}`;
 ---
 
 <li data-question-id={id} data-topic={data.topic} data-role={data.roles.join(' ')}
@@ -19,7 +20,7 @@ const slug = id.split('/')[1];
   <details class="question-card" id={slug} data-card>
     <summary class="question-head">
       <span class="question-number num" data-chip aria-hidden="true">{String(number).padStart(2, '0')}</span>
-      <h2 data-question-search>{data.title}</h2>
+      <h2 id={titleId} data-question-search>{data.title}</h2>
       <span class="question-meta">
         <span class="chip" data-chip data-question-search>{questionTopics[data.topic]}</span>
         <span class="chip question-level" data-chip>{questionLevels[data.level]}</span>
@@ -28,7 +29,7 @@ const slug = id.split('/')[1];
       <span class="plus-minus" data-chip aria-hidden="true"></span>
     </summary>
     <div class="question-answer">
-      <AnswerContent answer={data} cardId={slug}><Content /></AnswerContent>
+      <AnswerContent answer={data} cardId={slug} cardTitleId={titleId}><Content /></AnswerContent>
       <div class="question-answer-actions">
         <div class="question-ratings" role="group" aria-label="Rate your answer" data-bank-control hidden>
           <span>Rate your answer</span>

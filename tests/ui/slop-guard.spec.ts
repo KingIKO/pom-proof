@@ -2,6 +2,8 @@ import { readdirSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { discoverProblems, onePerKind, root } from '../support/problems';
+import { discoverQuestions, questionExamples } from '../support/questions';
+import { expandQuestion } from '../support/review';
 import { openWorkspace, resultPanel, submitStructured } from '../support/workspace';
 
 // The redesign plan's slop guard (section 4): bans on decoration, radius by role, one shadow token,
@@ -525,6 +527,29 @@ test('questions: an expanded card and the stuck filter bar have no slop', async 
     { message: 'the filter bar is stuck after scrolling' }).toBe(0);
   test.info().annotations.push({ type: 'stuck filter bar', description: `data-stuck ${await bar.getAttribute('data-stuck') === null ? 'absent' : 'present'} while stuck` });
   expect(grouped(await scan(page)), 'stuck filter bar').toEqual([]);
+});
+
+const withExample = discoverQuestions().find((question) => questionExamples(question).some(({ variants }) => variants.length > 1));
+
+test('questions: an expanded card with a switchable code example has no slop', async ({ page }) => {
+  expect(withExample, 'a question with a multi-language example').toBeDefined();
+  await settle(page, 'questions/', 200);
+  const card = await expandQuestion(page, withExample!);
+  const languages = card.getByRole('group', { name: 'Example language' }).first();
+  await expect(languages).toBeVisible();
+  await test.step('at rest', async () => expect(grouped(await scan(page)), 'expanded card with an example').toEqual([]));
+  await test.step('focus states', async () => {
+    const visited: string[] = [];
+    expect(grouped(await scanFocusStates(page, { within: card, visited })), 'example focus states').toEqual([]);
+    const names = (await languages.getByRole('button').allTextContents()).map((name) => name.trim());
+    expect(visited.join('\n'), 'the walk reached the language buttons, Copy and the code').toMatch(
+      new RegExp(`${names.join('[\\s\\S]*')}[\\s\\S]*Copy[\\s\\S]*\\npre "`));
+  });
+  await test.step('after switching language', async () => {
+    await languages.getByRole('button').nth(1).click();
+    await expect(languages.getByRole('button').nth(1)).toHaveAttribute('aria-pressed', 'true');
+    expect(grouped(await scan(page)), 'switched example').toEqual([]);
+  });
 });
 
 test.describe('the first item is in view at 1440x900', () => {

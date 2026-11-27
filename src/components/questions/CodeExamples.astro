@@ -1,0 +1,57 @@
+---
+import { Code } from 'astro:components';
+import type { CollectionEntry } from 'astro:content';
+import { shikiConfig } from '../../lib/shiki-config.mjs';
+
+interface Props {
+  examples: NonNullable<CollectionEntry<'questions'>['data']['examples']>;
+  questionTitle?: string;
+}
+
+const { examples, questionTitle } = Astro.props;
+const languageNames: Record<string, string> = {
+  ts: 'TypeScript',
+  js: 'JavaScript',
+  python: 'Python',
+  java: 'Java',
+};
+---
+
+{examples.map(({ title, variants }, exampleIndex) => (
+  <figure class="question-example" data-code-example>
+    <figcaption class="question-example-caption">
+      <div class="question-example-heading">
+        {title && <strong>{title}</strong>}
+        <span data-example-label>{variants[0].label}</span>
+      </div>
+      <div class="question-example-actions">
+        {variants.length > 1 && (
+          <div class="question-example-languages" role="group" aria-label="Example language" data-example-languages hidden>
+            {variants.map(({ lang }, index) => (
+              <button class="button outline" type="button" data-example-lang={lang} aria-pressed={index === 0}>
+                {languageNames[lang]}
+              </button>
+            ))}
+          </div>
+        )}
+        <button class="button quiet" type="button" data-example-copy hidden>Copy</button>
+      </div>
+    </figcaption>
+    {variants.map(({ lang, code, label }, index) => {
+      const regionName = [
+        `Code example: ${label}`,
+        examples.length > 1 ? `Example ${exampleIndex + 1}` : undefined,
+        questionTitle,
+      ].filter(Boolean).join(', ');
+      const snippet = <Code {...shikiConfig} lang={lang} code={code} tabindex="0" role="region"
+        aria-label={regionName} data-example-code={lang} data-example-code-label={label} />;
+      return index === 0 ? snippet : <template>{snippet}</template>;
+    })}
+    <p class="question-example-status" role="status" data-example-status></p>
+  </figure>
+))}
+
+<script>
+  import { setupCodeExamples } from './code-examples';
+  setupCodeExamples();
+</script>

@@ -1,16 +1,62 @@
 import { describe, expect, it } from 'vitest';
-import { discoverQuestions, questionTopics, type DiscoveredQuestion } from '../support/questions';
+import {
+  discoverQuestions, exampleLanguages, questionTopics, switchableLanguages, type DiscoveredQuestion,
+} from '../support/questions';
 
-// Checks every question file against the Phase 2 brief, independently of the collection schema.
+// Checks every question file against the Phase 2 brief and the phase 5 examples schema,
+// independently of the collection schema.
 const questions = discoverQuestions();
 const roles = ['manual-qa', 'automation', 'sdet', 'senior'];
 const levels = ['junior', 'mid', 'senior'];
 const types = ['concept', 'scenario', 'behavioral', 'tooling'];
 const required = ['title', 'topic', 'roles', 'level', 'type', 'oneLine', 'looksFor', 'trap', 'followUps'];
-const allowed = new Set([...required, 'sources']);
+const allowed = new Set([...required, 'sources', 'examples']);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const isText = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
+const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+
+/** Problems with the `examples` field: 1 or 2 examples, each with an optional title and 1 to 3 variants. */
+function exampleProblems(list: unknown): string[] {
+  if (!Array.isArray(list) || list.length < 1 || list.length > 2) {
+    return [`examples needs 1 or 2 items, has ${Array.isArray(list) ? list.length : 'none'}`];
+  }
+  const found: string[] = [];
+  list.forEach((item, index) => {
+    const at = `examples[${index}]`;
+    if (!isRecord(item)) {
+      found.push(`${at} must be an object with variants`);
+      return;
+    }
+    for (const key of Object.keys(item)) if (key !== 'title' && key !== 'variants') found.push(`${at} has unknown field ${key}`);
+    if ('title' in item && !isText(item.title)) found.push(`${at}.title, when present, must be text`);
+    const variants = item.variants;
+    if (!Array.isArray(variants) || variants.length < 1 || variants.length > 3) {
+      found.push(`${at}.variants needs 1 to 3 items, has ${Array.isArray(variants) ? variants.length : 'none'}`);
+      return;
+    }
+    const langs: unknown[] = [];
+    variants.forEach((variant, position) => {
+      const where = `${at}.variants[${position}]`;
+      if (!isRecord(variant)) {
+        found.push(`${where} must be an object with lang, label and code`);
+        return;
+      }
+      for (const key of Object.keys(variant)) if (!['lang', 'label', 'code'].includes(key)) found.push(`${where} has unknown field ${key}`);
+      langs.push(variant.lang);
+      if (!exampleLanguages.includes(variant.lang as never)) {
+        found.push(`${where}.lang "${String(variant.lang)}" is not one of ${exampleLanguages.join(', ')}`);
+      }
+      if (!isText(variant.label)) found.push(`${where}.label must be text`);
+      if (!isText(variant.code)) found.push(`${where}.code must be non-empty text`);
+    });
+    if (new Set(langs).size !== langs.length) found.push(`${at} uses a language twice: ${langs.join(', ')}`);
+    if (langs.length > 1 && !langs.every((lang) => switchableLanguages.includes(lang as never))) {
+      found.push(`${at} has ${langs.length} variants; only ${switchableLanguages.join(', ')} can share an example, got ${langs.join(', ')}`);
+    }
+  });
+  return found;
+}
 
 /** Words a reader would count: tokens with a letter or digit, so Markdown markers are left out. */
 function countWords(markdown: string) {
@@ -74,6 +120,7 @@ function problemsOf({ frontmatter: data, body, folder, slug }: DiscoveredQuestio
       });
     }
   }
+  if ('examples' in data) found.push(...exampleProblems(data.examples));
 
   const words = countWords(body);
   if (words < 80 || words > 220) add(`body has ${words} words; write 80 to 220`);
@@ -139,6 +186,31 @@ describe('the question checks catch planted mistakes', () => {
     expect(problemsOf(valid)).toEqual([]);
   });
 
+  const variant = (lang: string, extra: Record<string, unknown> = {}) => ({ lang, label: `Tool (${lang})`, code: 'x\n', ...extra });
+  const withExamples = (examples: unknown) => ({ frontmatter: { ...valid?.frontmatter, examples } });
+
+  it.each([
+    ['one example with three switchable variants', [{ title: 'Refund check', variants: [variant('ts'), variant('python'), variant('java')] }]],
+    ['two untitled single-language examples', [{ variants: [variant('sql')] }, { variants: [variant('gherkin')] }]],
+    ['js alone', [{ variants: [variant('js')] }]],
+  ])('accepts %s', (_name, examples) => {
+    expect(base, 'a question file to copy').toBeDefined();
+    expect(problemsOf({ ...valid, ...withExamples(examples) } as DiscoveredQuestion)).toEqual([]);
+  });
+
+  it.each(questionTopics.slice(questionTopics.indexOf('framework-design')))('accepts the phase 5 topic %s in its own folder', (topic) => {
+    expect(base, 'a question file to copy').toBeDefined();
+    const planted = { ...valid, folder: topic, frontmatter: { ...valid.frontmatter, topic } } as DiscoveredQuestion;
+    expect(problemsOf(planted)).toEqual([]);
+  });
+
+  it('knows all twelve phase 5 topics', () => {
+    expect(questionTopics.slice(questionTopics.indexOf('framework-design'))).toEqual([
+      'framework-design', 'bdd', 'cypress', 'performance', 'security', 'ai-testing',
+      'system-design', 'sql', 'java', 'python', 'javascript-typescript', 'containers',
+    ]);
+  });
+
   it.each([
     ['a missing trap', { frontmatter: { ...valid?.frontmatter, trap: undefined } }, 'trap must be text'],
     ['two looksFor items', { frontmatter: { ...valid?.frontmatter, looksFor: ['One', 'Two'] } }, 'looksFor needs 3 to 5'],
@@ -150,6 +222,24 @@ describe('the question checks catch planted mistakes', () => {
     ['a long body', { body: `${'word '.repeat(230)}\n\n### Example\n\nOne line.\n` }, 'write 80 to 220'],
     ['no Example section', { body: `${'word '.repeat(90)}\n` }, 'must end with a "### Example" section'],
     ['a section after Example', { body: `${'word '.repeat(90)}\n\n### Example\n\nText.\n\n### Notes\n\nMore.\n` }, 'must end with a "### Example" section'],
+    ['an empty examples list', withExamples([]), 'examples needs 1 or 2 items, has 0'],
+    ['three examples', withExamples(Array(3).fill({ variants: [variant('sql')] })), 'examples needs 1 or 2 items, has 3'],
+    ['examples as a map', withExamples({ variants: [variant('sql')] }), 'examples needs 1 or 2 items, has none'],
+    ['an example with no variants', withExamples([{ title: 'Empty', variants: [] }]), 'examples[0].variants needs 1 to 3 items, has 0'],
+    ['an example without a variants list', withExamples([{ title: 'Bare' }]), 'examples[0].variants needs 1 to 3 items, has none'],
+    ['four variants', withExamples([{ variants: [variant('ts'), variant('js'), variant('python'), variant('java')] }]), 'variants needs 1 to 3 items, has 4'],
+    ['a language used twice', withExamples([{ variants: [variant('ts'), variant('ts')] }]), 'examples[0] uses a language twice: ts, ts'],
+    ['a language outside the list', withExamples([{ variants: [variant('rust')] }]), 'variants[0].lang "rust" is not one of'],
+    ['sql beside ts', withExamples([{ variants: [variant('ts'), variant('sql')] }]), 'only ts, js, python, java can share an example, got ts, sql'],
+    ['yaml beside json', withExamples([{ variants: [variant('yaml'), variant('json')] }]), 'only ts, js, python, java can share an example'],
+    ['an empty label', withExamples([{ variants: [variant('ts', { label: '  ' })] }]), 'variants[0].label must be text'],
+    ['a missing label', withExamples([{ variants: [{ lang: 'ts', code: 'x' }] }]), 'variants[0].label must be text'],
+    ['blank code', withExamples([{ variants: [variant('ts', { code: '  \n' })] }]), 'variants[0].code must be non-empty text'],
+    ['code that is not text', withExamples([{ variants: [variant('ts', { code: 42 })] }]), 'variants[0].code must be non-empty text'],
+    ['a typo in a variant field', withExamples([{ variants: [variant('ts', { langauge: 'ts' })] }]), 'variants[0] has unknown field langauge'],
+    ['a typo in an example field', withExamples([{ titel: 'Typo', variants: [variant('ts')] }]), 'examples[0] has unknown field titel'],
+    ['an empty title', withExamples([{ title: '', variants: [variant('ts')] }]), 'examples[0].title, when present, must be text'],
+    ['a second example that is wrong', withExamples([{ variants: [variant('ts')] }, { variants: [variant('cobol')] }]), 'examples[1].variants[0].lang "cobol"'],
   ])('reports %s', (_name, override, message) => {
     expect(base, 'a question file to copy').toBeDefined();
     const planted = { ...valid, ...override } as DiscoveredQuestion;
