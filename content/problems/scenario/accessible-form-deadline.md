@@ -8,53 +8,53 @@ roles: [manual-qa, sdet, senior]
 items:
   - id: clarify
     type: multi-select
-    prompt: Which questions change the scope of the remaining time?
+    prompt: Which questions affect what you can test in the time left?
     choices:
-      - { id: environment, text: "Which assistive-technology pairing is supported for the affected users?" }
-      - { id: website, text: "Which marketing page should link to the form next quarter?" }
-      - { id: recovery, text: "What keyboard and screen reader behavior is needed to correct an invalid submission?" }
-      - { id: roadmap, text: "When will the rest of the site adopt the same color palette?" }
+      - { id: environment, text: "Which combination of assistive tools does the form support for these users?" }
+      - { id: website, text: "Which marketing page should add a link to the benefits form next quarter?" }
+      - { id: recovery, text: "How should the keyboard and screen reader help users correct an invalid submission?" }
+      - { id: roadmap, text: "When will the other pages on the site use the same colors?" }
   - id: risk
     type: budgeted-pick
-    prompt: Spend up to 15 minutes on completing the form and recovering from an input error without a pointer.
+    prompt: You have up to 15 minutes. Choose checks for completing the form and fixing an input error without a pointer.
     budget: 15
     choices:
-      - { id: matrix, cost: 9, text: "Repeat valid submissions with a pointer across desktop browsers." }
-      - { id: keyboard, cost: 6, text: "Run the keyboard-only path from entry through invalid submission, correction, and success." }
-      - { id: reader, cost: 9, text: "Use the supported screen reader to identify the invalid field and complete the corrected form." }
-      - { id: glyphs, cost: 5, text: "Compare decorative icons across the changed page and its neighbors." }
+      - { id: matrix, cost: 9, text: "Use a pointer to submit valid forms several times across desktop browsers." }
+      - { id: keyboard, cost: 6, text: "Use only the keyboard to enter data, submit with an error, fix it, and submit successfully." }
+      - { id: reader, cost: 9, text: "Use the supported screen reader to find the invalid field and complete the corrected form." }
+      - { id: glyphs, cost: 5, text: "Compare the decorative icons on the changed page with those on nearby pages." }
   - id: layer
     type: single-choice
-    prompt: Which layer first verifies what a person actually hears during recovery with the supported screen reader?
+    prompt: Which kind of test first checks what a person hears from the supported screen reader while fixing an error?
     choices:
-      - { id: api, text: "API" }
-      - { id: manual, text: "Manual exploratory" }
-      - { id: unit, text: "Unit" }
-      - { id: ui, text: "UI automation" }
+      - { id: api, text: "An API test" }
+      - { id: manual, text: "A manual exploratory test" }
+      - { id: unit, text: "A unit test" }
+      - { id: ui, text: "An automated UI test" }
   - id: keyboard-layer
     type: single-choice
-    prompt: Which layer should own a repeatable regression that drives Tab and checks whether browser focus reaches the invalid field?
+    prompt: Which kind of repeatable test should press Tab and check whether focus reaches the invalid field?
     choices:
-      - { id: ui, text: "UI automation" }
-      - { id: manual, text: "Manual exploratory" }
-      - { id: unit, text: "Unit" }
-      - { id: api, text: "API" }
+      - { id: ui, text: "An automated UI test" }
+      - { id: manual, text: "A manual exploratory test" }
+      - { id: unit, text: "A unit test" }
+      - { id: api, text: "An API test" }
   - id: stop
     type: single-choice
-    prompt: Which finding blocks the candidate release?
+    prompt: Which finding should stop this release?
     choices:
-      - { id: duplicate, text: "The invalid summary and linked field both identify the same error as required." }
-      - { id: zoom, text: "The field label wraps without losing text at the supported zoom level." }
-      - { id: trap, text: "After an invalid submit, keyboard focus is trapped in the summary and cannot reach the fields." }
-      - { id: copy, text: "The success message uses the approved short wording." }
+      - { id: duplicate, text: "The error summary and its linked field both show the same error, as required." }
+      - { id: zoom, text: "At the supported zoom level, the field label wraps and all its text stays visible." }
+      - { id: trap, text: "After an invalid submission, keyboard focus stays in the summary and never reaches the fields." }
+      - { id: copy, text: "On successful submission, the form shows the short message that the team approved." }
   - id: order
     type: ordering
-    prompt: Order a test that follows the user from invalid submission back to success.
+    prompt: Put the test steps in order from invalid submission to success.
     choices:
-      - { id: notice, text: "Observe where focus lands and identify the invalid field from the announced error." }
-      - { id: success, text: "Resubmit with the keyboard and verify the confirmation." }
-      - { id: invalid, text: "Fill the required fields by keyboard except for one known invalid value, then submit." }
-      - { id: repair, text: "Use the error recovery path to reach and correct the field by keyboard." }
+      - { id: notice, text: "Check where focus lands. Listen to the announced error to find the invalid field." }
+      - { id: success, text: "Submit the corrected form with the keyboard and check that the form confirms success." }
+      - { id: invalid, text: "Use the keyboard to fill the required fields with one known invalid value, then submit." }
+      - { id: repair, text: "Follow the form's error recovery steps by keyboard to reach the field and correct it." }
 reference:
   clarify: [environment, recovery]
   risk: [keyboard, reader]
@@ -71,6 +71,6 @@ decoy:
   order: [invalid, repair, notice, success]
 ---
 
-A benefits form changed its validation summary. The candidate release must let someone using a keyboard and the supported screen reader identify an invalid field, reach it, correct it, and submit. There is no alternate submission route for this release.
+A benefits form changed its validation summary, the list of errors it shows after an invalid submission. A user with a keyboard and the supported screen reader must be able to find the invalid field and reach it. They must then be able to fix it and submit. This release offers only one way to submit.
 
-You have 15 minutes before the release decision. The device is ready. Product has not yet supplied the complete acceptance notes.
+You have 15 minutes before the release decision. The device is ready. The product team has yet to share the full notes on what the form must do.

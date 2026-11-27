@@ -4,16 +4,16 @@ topic: containers
 roles: [sdet]
 level: senior
 type: scenario
-oneLine: Replay one instant on the affected host and change only the setting that could move it across the cutoff.
+oneLine: I replay the same instant on the affected host. I change only the setting that could move it across the cutoff.
 looksFor:
-  - Starts with the business cutoff and identifies whose clock the decision uses.
-  - Uses the known-good image on the same host to separate packaged settings from host effects.
-  - Records differences that matter to the symptom and checks startup failures separately.
-  - Changes one setting while keeping the instant, account, and target stable.
-trap: Retrying on the VM until one run passes, then treating the failure as random.
+  - Find the business cutoff and the clock that controls it.
+  - Run the image that already works on the same host to tell image settings apart from host effects.
+  - Record differences that could explain the failure and check startup failures separately.
+  - Change one setting and keep the instant, account, and target the same.
+trap: Running the test on the VM until it passes once and then calling the failure random.
 followUps:
   - question: What if the same image also fails on the VM?
-    answer: "I'd compare the two hosts' resource limits and mount permissions first. The image doesn't fix differences in the host kernel or the network path to the test service."
+    answer: "I'd start by checking resource limits and mount permissions on both hosts. I'd remember that the image cannot make the host kernels or the network paths to the test service the same."
 sources:
   - label: Docker containers and virtual machines
     url: https://docs.docker.com/learn/content/what-is-a-container/
@@ -25,16 +25,12 @@ sources:
     url: https://playwright.dev/docs/test-use-options
 ---
 
-I'd establish which time zone the checkout rule uses and freeze the instant at the failing
-boundary. On the affected VM I'd replay it in the known-good image. A pass there gives me a
-reason to inspect the native setup, since the same host ran both. A pinned image carries its
-packaged dependencies, whereas the VM's separately installed tools and defaults can change.
-I'd compare the browser and service clocks and locale before changing one suspect setting.
+I'd find the time zone the checkout rule uses and freeze time at the instant where the test fails. On the affected virtual machine (VM), I'd replay that instant in the image that already works. If it passes, I'd inspect the tools that run directly on the VM, since the same host ran both tests.
 
-If the native test didn't reach checkout at all, I'd look for a different cause. I'd compare
-the actual browser and runtime, headless settings, resource pressure, and write permissions
-using the fixture's account.
+A pinned image keeps its packaged dependencies at fixed versions. The tools installed separately on the VM and their defaults can change. I'd compare the browser and service clocks and locale before changing one suspect setting.
+
+If the test that runs directly on the VM never reaches checkout, I'd look for a different cause. I'd use the test fixture's account to compare the browser and runtime that actually ran. I'd also check the headless settings, resource pressure, and write permissions.
 
 ### Example
 
-A checkout test uses a fixed instant that falls on Monday in UTC and Sunday in Los Angeles. I compare the browser and the server time zones to see which one the cutoff uses. If the VM's browser is in UTC and the container's is set to Los Angeles, I'd rerun the VM with only its browser time zone changed. The cutoff should then match if that setting explains the difference.
+My checkout test uses a fixed instant that falls on Monday in UTC and Sunday in Los Angeles. I'd compare the browser and server time zones to see which one the cutoff uses. Suppose the VM's browser uses UTC and the container's browser uses Los Angeles time. I'd rerun the test on the VM after changing only its browser time zone to Los Angeles. If that setting caused the difference, the cutoff should match.

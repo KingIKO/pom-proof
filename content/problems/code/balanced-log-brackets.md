@@ -110,6 +110,8 @@ decoy:
     }
 ---
 
-A diagnostic log prints a small expression fragment. Return `true` if its parentheses, square brackets, and braces are properly matched and nested, and `false` otherwise. Ignore every other character, even quotes and backslashes. A fragment with no brackets is balanced. A closing bracket must match the most recent opening bracket that has not been closed.
+A diagnostic log prints part of an expression. Check its parentheses, square brackets, and braces. Ignore all other characters, including quotes and backslashes.
 
-`balancedLogBrackets("filter({mode: [fast]})")` returns `true`. Leave the inputs unchanged.
+A closing bracket must match the last opening bracket that is still open. The fragment is balanced if every bracket matches in this order. A fragment with no brackets also counts as balanced. If the fragment is balanced, return `true`. Otherwise, return `false`.
+
+For example, `balancedLogBrackets("filter({mode: [fast]})")` returns `true`. Leave the inputs unchanged.

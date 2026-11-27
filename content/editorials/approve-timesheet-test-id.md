@@ -4,7 +4,7 @@ problem: locator/approve-timesheet-test-id
 
 ## What is going on
 
-Every timesheet has an approval button, and the app repeats `approve-timesheet` once per section. That hook identifies what the button does. To approve Jules Carr's timesheet `T-291`, the test also needs the record's identity. An employee can have more than one timesheet, so even finding the right person can leave the test on the wrong week.
+Every timesheet has one approval button with the `approve-timesheet` test ID, an identifier for tests. The test ID tells you what the button does. To approve Jules Carr's timesheet `T-291`, the test must also find that record. An employee can have more than one timesheet, so the right employee can still lead you to the wrong week.
 
 ## The fix
 
@@ -13,21 +13,21 @@ page.getByRole('region', { name: 'Timesheet T-291', exact: true })
   .getByTestId('approve-timesheet')
 ```
 
-1. Scope to the region whose accessible name is exactly `Timesheet T-291`.
+1. Find the region whose accessible name is exactly `Timesheet T-291`.
 
-   **Why:** In `localized-toolbar-and-new-entry`, Jules has another timesheet and the visible week text is translated. The app keeps the section's accessible name tied to the timesheet number, so the region still singles out the right entry even when the surrounding copy and element IDs change.
+   **Why:** An accessible name is the name the browser exposes to assistive tools. In `localized-toolbar-and-new-entry`, Jules has another timesheet and the visible week text appears in another language. The app bases the section's accessible name on the timesheet number. That name still singles out the right entry when nearby text and element IDs change.
 
 2. Find `approve-timesheet` by test ID inside that region.
 
-   **Why:** In `localized-toolbar-and-new-entry`, the button reads `Approuver` and sits inside a new toolbar wrapper. The test ID travels with the action. Chaining it after the region restricts the lookup to that timesheet, so the identical hooks on other cards never enter the result.
+   **Why:** In `localized-toolbar-and-new-entry`, a new toolbar wraps the button and it reads `Approuver`. The same test ID still identifies that action. Searching only inside the region limits the result to that timesheet, so matching test IDs from other cards stay out.
 
 ## Why the tempting answer fails
 
-Taking the first approval test ID works while `T-291` is first. In `sorted-by-hours`, the longest work week comes first and the decoy would approve Sam Lau's `T-292`. In `localized-toolbar-and-new-entry`, it would approve Jules's `T-301`. In both layouts the decoy can still return one actionable button. A check that an approval message appeared would leave the important question open: which entry did the app approve?
+If `T-291` is first, taking the first approval test ID works. In `sorted-by-hours`, the longest work week comes first, so the decoy would approve Sam Lau's `T-292`. In `localized-toolbar-and-new-entry`, it would approve Jules's `T-301`. In both layouts the decoy can return one usable button. An approval message alone would leave you unsure which entry the app approved.
 
 ## What the interviewer listens for
 
-Explain when a repeated test ID is useful: one matching action inside an unambiguous parent is enough for this pattern. If two approval hooks appear inside that parent, investigate the repeated action or improve the app's testing contract before choosing by index.
+Explain when a repeated test ID is useful: this pattern needs one matching action inside a region you can identify exactly. If two approval test IDs appear in that region, investigate the duplicate action or improve how the app identifies each button before using its position.
 
 ## Sources
 

@@ -4,7 +4,7 @@ problem: sql/average-defect-close-time
 
 ## What is going on
 
-The report compares how long closed defects stayed open at each severity. Crossing midnight can take minutes; closing a defect before midnight can take hours. A calendar date alone cannot tell you either duration.
+The report compares how long closed defects stayed open for each severity. A defect that stays open across midnight may close within minutes. A defect that closes before midnight may stay open for hours. The dates alone cannot tell you how long either defect stayed open.
 
 ## The fix
 
@@ -17,33 +17,33 @@ GROUP BY severity;
 
 1. Keep only rows with `closed_at IS NOT NULL`.
 
-   **Why:** An open defect has no elapsed time to close. Letting it reach the grouping would still create a row for a severity with only open defects, such as minor in the sample.
+   **Why:** An open defect has no time to close yet. If the query groups it with the others, the results would include a row for minor severity, even though all minor defects are open.
 
 2. Subtract the opening Julian day from the closing Julian day.
 
-   **Why:** `julianday()` keeps a fraction for the time of day. A defect opened at 22:00 and closed at 10:00 the next morning contributes half a 24-hour day.
+   **Why:** The `julianday()` function represents a date and time as a day number with a fraction for the time of day. A defect opened at 22:00 and closed at 10:00 the next morning adds half a 24-hour day.
 
 3. Group by `severity`.
 
-   **Why:** A major closure must have no effect on the critical figure. Grouping gives each severity with closed defects its own result.
+   **Why:** The time to close a major defect must leave the critical result unchanged. Grouping gives each severity with closed defects a separate result.
 
 4. Average the elapsed durations with `AVG`.
 
-   **Why:** A same-instant closure contributes zero days. A short closure and a long closure each contribute once, so the result represents the average defect rather than the longest one.
+   **Why:** If a defect closes as soon as it opens, it adds zero days. Each defect contributes once, regardless of how long it stayed open. The `AVG` function returns their average.
 
-5. Round the average to two decimal places after aggregation.
+5. Round the average to two decimal places after you calculate it.
 
-   **Why:** Rounding five-minute and eight-minute closures first gives 0.00 and 0.01 days. Averaging those and rounding gives 0.01. Averaging the original durations gives six and a half minutes, which rounds to 0.00 days.
+   **Why:** If you round five-minute and eight-minute durations first, they become 0.00 and 0.01 days. The rounded average of those values is 0.01. The average of the original durations is six and a half minutes. That rounds to 0.00 days.
 
-With typed UTC timestamps, PostgreSQL can subtract timestamps and divide `EXTRACT(EPOCH FROM (closed_at - opened_at))` by `86400`. In MySQL, use `TIMESTAMPDIFF(SECOND, opened_at, closed_at) / 86400.0` for these second-resolution inputs. Use UTC consistently in either expression.
+If the columns use UTC timestamp types, PostgreSQL can find the difference in seconds with `EXTRACT(EPOCH FROM (closed_at - opened_at))`. Divide that value by `86400`. In MySQL, the inputs are precise to the second, so use `TIMESTAMPDIFF(SECOND, opened_at, closed_at) / 86400.0`. Use UTC for both timestamps in either database.
 
 ## Why the tempting answer fails
 
-The decoy strips the times with `date()`. Every visible closure occurs at the same time of day as its opening, so both queries average two days for critical and major. In the altered data, a nine-hour same-day closure contributes zero to the decoy, and the twelve-hour overnight closure contributes a full day.
+The decoy uses `date()` to drop the time of day. In the visible data, each defect opens and closes at the same time of day. Both queries therefore average two days for critical and major defects. In the altered data, the decoy counts a nine-hour closure on the same day as zero. It also counts a twelve-hour overnight closure as a full day.
 
 ## What the interviewer listens for
 
-Explain which duration the report measures, why unfinished work has no place in that average, and why rounding is the last operation.
+Explain which duration the report measures and why the average excludes unfinished work. Show why you round only after you calculate the average.
 
 ## Sources
 

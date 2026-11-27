@@ -4,16 +4,16 @@ topic: playwright
 roles: [manual-qa, automation, sdet]
 level: junior
 type: tooling
-oneLine: Give the expected UI state time to appear by asserting on the locator rather than on a single captured value.
+oneLine: I use a locator assertion to give the expected UI state time to appear. A captured value gives me only one observation.
 looksFor:
-  - The locator assertion rechecks the condition
-  - The result must be awaited
-  - A meaningful state after the user action
-  - A separate reason to investigate a real timeout
-trap: Reading a boolean once and adding a fixed sleep when it occasionally returns false.
+  - Explain that the locator assertion checks the condition more than once if needed.
+  - Await the assertion.
+  - Check a state that matters to the user after the action.
+  - Investigate what happened if the assertion times out.
+trap: Reading a boolean once and adding a fixed wait when it sometimes reads false.
 followUps:
   - question: Does retrying the assertion mean Playwright retries the click?
-    answer: No. The locator assertion rechecks the expected state after the action; it doesn't repeat the previous action.
+    answer: No. When I retry a locator assertion, it checks the expected state again. It does not repeat the click.
 sources:
   - label: Playwright assertions
     url: https://playwright.dev/docs/test-assertions
@@ -52,12 +52,12 @@ examples:
               expect(page.get_by_role("heading", name="Avery Green")).to_be_visible()
 ---
 
-The UI may still be rendering when a click completes. Playwright assertions such as `await expect(status).toHaveText('Saved')` recheck the locator and its condition until it passes or reaches its timeout. If I capture a visibility boolean first and assert on that boolean, I've kept only one observation.
+The UI may still be changing when my click completes. A locator is a way to find a page element. A web-first assertion checks the locator and its condition again until it passes or times out. For example, I can use `await expect(status).toHaveText('Saved')`. If I read whether the element is visible once, I have only that one result to check.
 
-I choose an assertion that describes the change the user can see. I'd prefer checking the address value and a visible save confirmation over checking that a spinner disappeared. If the intended state never appears, the saved value and the request response are better leads than a longer blanket timeout.
+I choose an assertion about a change the user can see. I'd check the address value and a visible save confirmation instead of a spinner going away. If the expected state never appears, I'd check the saved value and the response to the request before extending the general timeout.
 
 ### Example
 
-After changing a name in account settings, I'd check that the profile header shows the new name. If I care about persistence, I'd reload and verify the same name appears again.
+After changing a name in account settings, I'd check that the profile header shows the new name. If I need to check that the name lasts, I'd reload and look for the same name again.
 
-The local fixture starts with a different name and saves asynchronously. It signals `Saved` after persistence, and the test expects `Avery Green` in the header both times.
+The local fixture, or test page, starts with a different name and saves in the background. It shows `Saved` once it stores the new name. The test expects `Avery Green` in the header both before and after reloading.

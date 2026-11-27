@@ -4,16 +4,16 @@ topic: javascript-typescript
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Use strict equality for scalar fields and a deep equality assertion when comparing response objects.
+oneLine: I use strict equality for single values such as the item count. I compare the contents of response objects with a deep equality assertion.
 looksFor:
-  - Explains how loose equality can mask a type mismatch.
-  - Describes identity checks for objects under both operators.
-  - Selects a deep equality assertion for separately constructed response objects.
-  - Knows how strict equality and Object.is treat NaN and signed zeros.
-trap: Comparing the returned count to the number 2 with loose equality and passing a response that contains a string.
+  - Explain how loose equality can hide a difference in types.
+  - Explain that both operators check whether the values refer to the same object.
+  - Use a deep equality assertion to compare objects created separately.
+  - Explain how strict equality and `Object.is` treat `NaN` and signed zeros.
+trap: Comparing the count to the number 2 with loose equality, which can pass when the response contains text.
 followUps:
-  - question: When would Object.is be useful in a numeric test?
-    answer: Strict equality considers the two signed zeros equal and considers NaN unequal to itself. Object.is distinguishes the signed zeros and considers NaN the same as itself.
+  - question: When would `Object.is` be useful in a numeric test?
+    answer: I'd use `Object.is` if I need to tell the two signed zeros apart or compare `NaN` with itself. Strict equality treats both zeros as equal and `NaN` as unequal to itself. `Object.is` treats the zeros as different and `NaN` as equal to itself.
 sources:
   - label: MDN loose equality
     url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality
@@ -42,16 +42,12 @@ examples:
           assert.notDeepStrictEqual(wrong, expected);
 ---
 
-I'd check the count with `===`. Loose equality can convert one operand before comparing it, so the
-string `"2"` can pass a check against the number `2`. Strict equality preserves that distinction.
-If I compare the whole JSON payload, I'd use a deep equality assertion. Both operators only
-consider two objects equal when they refer to the same object.
+I'd check the count with `===`, the strict equality operator. Loose equality can change the type of a value before comparing it. The string `"2"` can therefore pass a loose check against the number `2`. Strict equality keeps the types apart.
 
-For numeric edge cases I check the assertion's equality rule. With `===`, `NaN` differs from itself
-and `0` equals `-0`. `Object.is` treats `NaN` as the same value and distinguishes the two zeros.
+If I compare the whole JSON response, I'd use a deep equality assertion to check its contents. Both equality operators treat two objects as equal only when both values refer to the same object.
+
+For unusual numeric values, I check which equality rule the assertion uses. With `===`, `NaN` differs from itself and `0` equals `-0`. The `Object.is` method treats `NaN` as equal to itself and tells the two signed zeros apart.
 
 ### Example
 
-The check compares two decoded cart responses with a separately constructed expected object.
-The response with a numeric count matches by value. The otherwise identical response with a
-string count fails the comparison.
+I'd compare two decoded cart responses with an expected object I created separately. The response with a numeric count matches by value. The other response has the same contents except for the count type. It fails because its count is text.

@@ -4,7 +4,7 @@ problem: locator/billing-email-field
 
 ## What is going on
 
-The payment form has two email fields. The billing address receives receipts, and the account address serves a different purpose. A test can fill either input with the same valid email, so success at the fill step gives you no evidence that the address went into the right field. Start from the text the customer reads before typing.
+The payment form has two email fields. The billing address receives receipts. The account address serves a different purpose. Both fields accept the same valid email, so filling one successfully cannot prove you picked the right field. Start with the label the customer reads before typing.
 
 ## The fix
 
@@ -12,19 +12,21 @@ The payment form has two email fields. The billing address receives receipts, an
 page.getByLabel('Billing email', { exact: true })
 ```
 
-1. Use the exact `Billing email` label to find the input associated with it.
+1. Find the input by its exact `Billing email` label.
 
-   **Why:** In `regenerated-field-ids`, the label's `for` value and the input's ID change together. `getByLabel` follows that association on the current page and returns the input you can fill. In `reversed-with-input-wrapper`, the wrapper separates the label and input in the markup without changing that link. The label is still `Billing email`, so an exact match can continue to use the full field name.
+   **Why:** In `regenerated-field-ids`, the label's `for` attribute and the input's ID change together. The `getByLabel` locator follows that link on the current page to find the input you can fill. In `reversed-with-input-wrapper`, a wrapper separates the label from the input in the markup, but their link stays the same. The label still reads `Billing email`. The exact match can still use the whole label.
 
-The ID has a job in the form: it allows the label to refer to its input in the same document. The test can rely on that relationship without carrying the ID from one render into the next.
+The ID lets the label refer to its input in the same document. The test can use that link without remembering the ID from the last time the form appeared.
 
 ## Why the tempting answer fails
 
-The inspector shows a unique match for `#contact-891`, but the billing input becomes `contact-951` in `regenerated-field-ids`. The selector finds nothing there. In `reversed-with-input-wrapper`, the old ID is gone again. Guessing from field order would fill the account email first, and assuming the billing input immediately follows its label would miss the input inside the wrapper.
+The inspector finds exactly one match for `#contact-891`. In `regenerated-field-ids`, the billing input becomes `contact-951`, so that selector finds nothing. In `reversed-with-input-wrapper`, the old ID is gone again.
+
+Guessing by field order would fill the account email first. Looking for the input immediately after the label would miss the input inside the wrapper.
 
 ## What the interviewer listens for
 
-Explain why the receipt destination matters and how the locator finds that field. If two panels contain `Billing email`, scope by panel name first. If the label stops pointing to the input, report the broken form association.
+Explain why the address that receives receipts matters. Show how the locator, an expression that finds a page element, finds that field. If two panels contain `Billing email`, find the right panel by name before you look for the field. If the label stops pointing to the input, report the broken link.
 
 ## Sources
 

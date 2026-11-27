@@ -32,6 +32,6 @@ decoy:
     WHERE department_id NOT IN (SELECT department_id FROM employees);
 ---
 
-Check which department records should show an empty roster. Include every department that has no employee assigned to it. An employee with a `NULL` department ID is unassigned and belongs to no roster. Department names can repeat.
+Find the departments with an empty roster, meaning no employees are assigned to them. An employee whose department ID is `NULL` has no department and appears on no roster. More than one department can have the same name.
 
-Return `department_id`, `department_name`, in that column order. Row order does not matter.
+Return `department_id` first and `department_name` second. The rows can appear in any order.

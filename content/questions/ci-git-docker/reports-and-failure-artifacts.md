@@ -4,16 +4,16 @@ topic: ci-git-docker
 roles: [manual-qa, automation, sdet]
 level: mid
 type: tooling
-oneLine: Save a result people can scan, then attach the smallest evidence needed to understand the named failing attempt.
+oneLine: I save a result people can scan. I attach just enough evidence to explain the specific failing attempt.
 looksFor:
-  - Test and attempt identifiers in a structured result
-  - A useful trace, screenshot, or narrow log
-  - Evidence uploaded on failure and separated by job
-  - Sensitive data handling and retention
-trap: Uploading a large pile of files with no link to the failure, or losing the files because the upload only runs on success.
+  - Include the test and attempt IDs in the structured result.
+  - Save a trace, screenshot, or focused log that helps explain the failure.
+  - Upload evidence even when a test fails and keep jobs' files separate.
+  - Protect sensitive data and decide how long to keep the files.
+trap: Uploading files without showing which failure they explain. Uploading only on success can also lose the files you need.
 followUps:
   - question: What value does a trace add to a screenshot?
-    answer: A screenshot shows one moment. A trace can show the preceding actions, snapshots, and network activity that explain it.
+    answer: A screenshot shows me one moment. With a trace, I can see earlier actions, snapshots, and network activity that may explain that moment.
 sources:
   - label: Playwright reporters
     url: https://playwright.dev/docs/test-reporters
@@ -75,12 +75,14 @@ examples:
                     retention-days: 5
 ---
 
-I save a structured test result with the test name, browser, commit, and attempt. For Playwright I might use a JUnit result for the CI summary and attach a failure trace with a screenshot when visual state matters. I make sure the upload runs after a normal test failure, and label files with the shard so a later job can't be mistaken for the one that failed.
+I save a structured test result with the test name, browser, commit, and attempt. A CI artifact is a file the run keeps for later use. For Playwright, I might use a JUnit result for the CI summary and attach a failure trace, a record of what happened. If the visual state matters, I'd attach a screenshot too.
 
-I'd inspect the output from a deliberately failing test. Someone should be able to find the right attempt without downloading every file. I keep sensitive data out of tests and artifacts, restrict access, and set a retention period suited to how the team investigates.
+I make sure the upload still runs after an ordinary test failure. I label each file with its shard, the group of tests the job ran. That keeps people from confusing a later job with the one that failed.
 
-I name steps for user actions and make sure the assertion reports the expected and actual values. The run should identify the application build as well as the test revision when they differ. That gives someone enough to start investigating without a rerun.
+I'd make a test fail on purpose and check what the run saves. A teammate should find the right attempt without downloading every file. I keep sensitive data out of tests and artifacts. I restrict access to the files and keep them for as long as the team's investigations need them.
+
+I name test steps after the user's actions. I check that each assertion reports the expected and actual values. If the application build and test revision differ, I record both. A teammate should then have enough information to start investigating without running the test again.
 
 ### Example
 
-In a Chromium-only repo with a synthetic export spec, the workflow tests the checked-out build. A failed export should leave XML, the commit and run identifiers, and the retained trace. A teammate can find the Generate action and see why the file differed.
+If a repository tests only in Chromium, I can use a test export with synthetic data against the checked-out build. If the export test fails, I expect the saved XML, the commit and run IDs, and the trace. A teammate can find the Generate action in the trace and see why the file differed.

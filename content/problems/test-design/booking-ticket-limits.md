@@ -17,7 +17,7 @@ implementation: |
   }
 mutants:
   - name: excludes-minimum-age
-    teaches: Try the youngest buyer who qualifies, with a valid ticket count.
+    teaches: Use a valid ticket count and the youngest age that qualifies.
     implementation: |
       export function checkBooking(age, quantity) {
         if (age <= 18) return 'age-restricted';
@@ -25,7 +25,7 @@ mutants:
         return 'quantity-invalid';
       }
   - name: admits-underage-buyer
-    teaches: Try the closest underage buyer, with a valid ticket count.
+    teaches: Use a valid ticket count and the oldest age below the limit.
     implementation: |
       export function checkBooking(age, quantity) {
         if (age < 17) return 'age-restricted';
@@ -33,7 +33,7 @@ mutants:
         return 'quantity-invalid';
       }
   - name: excludes-smallest-booking
-    teaches: Try the smallest allowed booking with a buyer who qualifies.
+    teaches: Use a buyer who qualifies and the smallest allowed ticket count.
     implementation: |
       export function checkBooking(age, quantity) {
         if (age < 18) return 'age-restricted';
@@ -41,7 +41,7 @@ mutants:
         return 'quantity-invalid';
       }
   - name: accepts-below-minimum
-    teaches: Try a ticket count immediately below the minimum for an eligible buyer.
+    teaches: Use a buyer who qualifies and one ticket fewer than the minimum.
     implementation: |
       export function checkBooking(age, quantity) {
         if (age < 18) return 'age-restricted';
@@ -49,7 +49,7 @@ mutants:
         return 'quantity-invalid';
       }
   - name: excludes-largest-booking
-    teaches: Try a booking exactly at the ticket limit.
+    teaches: Use exactly the maximum number of tickets in one booking.
     implementation: |
       export function checkBooking(age, quantity) {
         if (age < 18) return 'age-restricted';
@@ -57,7 +57,7 @@ mutants:
         return 'quantity-invalid';
       }
   - name: accepts-above-maximum
-    teaches: Try the closest whole ticket count above the limit.
+    teaches: Try one whole ticket more than the maximum.
     implementation: |
       export function checkBooking(age, quantity) {
         if (age < 18) return 'age-restricted';
@@ -65,7 +65,7 @@ mutants:
         return 'quantity-invalid';
       }
   - name: accepts-fractional-quantity
-    teaches: Try a fractional ticket count within the allowed range for whole counts.
+    teaches: Try a fraction within the range the venue allows for whole ticket counts.
     implementation: |
       export function checkBooking(age, quantity) {
         if (age < 18) return 'age-restricted';
@@ -106,9 +106,9 @@ decoy:
     - { args: [35, 10], expected: quantity-invalid }
 ---
 
-A venue sells up to six tickets per booking. `checkBooking(age, quantity)` receives the buyer's age in completed years (a nonnegative whole number) and the requested quantity (a finite number).
+A venue sells up to six tickets per booking. The `checkBooking(age, quantity)` function takes the buyer's age in completed years and the number of tickets they want. Age is a whole number of zero or more. Quantity is a finite number.
 
-- A buyer under 18 gets `"age-restricted"`, even if the quantity is also invalid.
-- For a buyer aged 18 or older, a whole quantity from 1 through 6 inclusive gets `"accepted"`. Any other quantity gets `"quantity-invalid"`.
+- If the buyer is under 18, return `"age-restricted"` even if the quantity is also invalid.
+- If the buyer is 18 or older, return `"accepted"` for a whole quantity from 1 through 6, including both ends. Return `"quantity-invalid"` for any other quantity.
 
-Enter test rows or write a JavaScript `export function test(checkBooking)` that throws on an unexpected result.
+Enter test rows or write the JavaScript function `export function test(checkBooking)`. If a result differs from what you expect, the function must throw.
