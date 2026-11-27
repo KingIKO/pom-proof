@@ -1,4 +1,4 @@
-import { dueIds, rate, reviewSnapshot, type Rating } from '../../lib/review';
+import { dueIds, rate, reviewSnapshot, type CardState, type Rating } from '../../lib/review';
 import {
   filterParams, questionLevels, questionListUrl, questionRoles, questionTopics, questionTypes,
   questionUrl, ratings, startSession, withParams,
@@ -7,6 +7,17 @@ import {
 const facets = { role: questionRoles, topic: questionTopics, level: questionLevels, type: questionTypes };
 type Facet = keyof typeof facets;
 const facetNames = Object.keys(facets) as Facet[];
+const relativeTime = new Intl.RelativeTimeFormat('en');
+
+function nextReviewLabel(due: string, reviewedAt: Date) {
+  const minutes = Math.round((Date.parse(due) - reviewedAt.getTime()) / 60_000);
+  if (minutes <= 0) return 'Next review due now.';
+  const minutesPerDay = 24 * 60;
+  const delay = minutes < minutesPerDay
+    ? relativeTime.format(minutes, 'minute')
+    : relativeTime.format(Math.round(minutes / minutesPerDay), 'day');
+  return `Next review ${delay}.`;
+}
 
 function searchTerms(params: URLSearchParams) {
   return (params.get('q') ?? '').toLowerCase().trim().split(/\s+/).filter(Boolean);
@@ -95,6 +106,7 @@ export function setupQuestionBank(bank: HTMLElement) {
   let matchingIds: string[] = [];
   let previousTerms = '';
   let refreshTimer: number | undefined;
+  const rated = new Map<string, Rating>();
 
   const refreshReview = () => {
     const cards = reviewSnapshot();
@@ -103,10 +115,12 @@ export function setupQuestionBank(bank: HTMLElement) {
     for (const { row, id, status, ratingButtons } of rows) {
       const state = cards[id];
       const due = state ? Date.parse(state.due) : Infinity;
+      const saved = rated.get(id);
       status.textContent = state ? (due <= now ? 'Due' : `Box ${state.box}`) : 'New';
       status.classList.toggle('due', due <= now);
       for (const button of ratingButtons) {
-        button.setAttribute('aria-pressed', String(button.dataset.rating === state?.last));
+        button.disabled = saved !== undefined;
+        button.setAttribute('aria-pressed', String(button.dataset.rating === (saved ?? state?.last)));
       }
       if (!row.hidden && due > now) nextDue = Math.min(nextDue, due);
     }
@@ -240,7 +254,12 @@ export function setupQuestionBank(bank: HTMLElement) {
   window.addEventListener('popstate', restoreFromUrl);
   window.addEventListener('hashchange', restoreFromUrl);
   window.addEventListener('pageshow', (event) => {
-    if (event.persisted) restoreFromUrl();
+    if (!event.persisted) return;
+    for (const { id, feedback: message } of rows) {
+      if (rated.has(id)) message.hidden = true;
+    }
+    rated.clear();
+    restoreFromUrl();
   });
   window.addEventListener('storage', (event) => {
     if (event.key === 'pom-proof:review' || event.key === null) refreshReview();
@@ -249,15 +268,20 @@ export function setupQuestionBank(bank: HTMLElement) {
   for (const { card, id, feedback: message, ratingButtons } of rows) {
     for (const button of ratingButtons) {
       button.addEventListener('click', () => {
-        const rating: Rating | undefined = ratings.find(({ id }) => id === button.dataset.rating)?.id;
+        if (rated.has(id)) return;
+        const rating = ratings.find(({ id }) => id === button.dataset.rating);
         if (!rating) return;
+        const reviewedAt = new Date();
+        let state: CardState;
         try {
-          rate(id, rating);
-          refreshReview();
-          feedback(message, `${button.textContent?.trim()} saved`);
+          state = rate(id, rating.id, reviewedAt);
         } catch {
           feedback(message, 'Rating could not be saved; check browser storage and try again.');
+          return;
         }
+        rated.set(id, state.last);
+        refreshReview();
+        feedback(message, `Rated ${rating.label}. ${nextReviewLabel(state.due, reviewedAt)}`);
       });
     }
     card.querySelector('[data-question-copy]')?.addEventListener('click', async () => {

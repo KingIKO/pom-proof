@@ -123,6 +123,29 @@ test('expanding a bank card shows the answer inline, rates it there, and links t
   await expect(page.getByText('Show answer')).toBeVisible();
 });
 
+test('rapidly double-clicking Solid rates a bank card only once per visit', async ({ page }) => {
+  const [question] = questions;
+  await page.clock.install({ time: start });
+  await page.goto(`questions/#${question.slug}`);
+  const card = questionRow(page, question);
+  const ratings = card.getByRole('group', { name: 'Rate your answer' });
+  const solid = ratings.getByRole('button', { name: 'Solid', exact: true });
+
+  await solid.dblclick({ delay: 10 });
+  expect((await storedCards(page))[question.id]).toMatchObject({ box: 1, seen: 1, last: 'solid' });
+  await expect(reviewState(page, question)).toHaveText('Box 1');
+  await expect(solid).toHaveAttribute('aria-pressed', 'true');
+  for (const button of await ratings.getByRole('button').all()) await expect(button).toBeDisabled();
+  await expect(card.getByRole('status')).toHaveText('Rated Solid. Next review in 1 day.');
+
+  await page.clock.fastForward(day);
+  await page.reload();
+  await expect(solid).toBeEnabled();
+  await solid.click();
+  expect((await storedCards(page))[question.id]).toMatchObject({ box: 2, seen: 2, last: 'solid' });
+  await expect(card.getByRole('status')).toHaveText('Rated Solid. Next review in 3 days.');
+});
+
 test('a deep link opens its card in the list', async ({ page }) => {
   const question = questions.at(-1)!;
   await page.goto(`questions/#${question.slug}`);
