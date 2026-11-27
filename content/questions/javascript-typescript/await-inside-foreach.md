@@ -1,19 +1,19 @@
 ---
-title: Why does an order batch test read its summary before the seed requests finish?
+title: Why does the test read the order summary before the requests that create the test orders finish?
 topic: javascript-typescript
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Await each seed in a for-of loop when order matters, or await the promises together when the seeds are independent.
+oneLine: If order matters, I await each seed in a `for...of` loop. If the seeds are independent, I await their promises together.
 looksFor:
-  - Explains what completes on the current call stack.
-  - Distinguishes promise continuations from later event-loop tasks.
-  - Identifies that forEach discards the promises returned by the callbacks.
-  - Chooses sequential or concurrent setup according to data dependencies.
-trap: Putting await outside forEach and assuming that waits for each async callback.
+  - Explain which work finishes on the current call stack.
+  - Tell promise continuations apart from tasks that the event loop runs later.
+  - Point out that `forEach` discards the promises that the callbacks return.
+  - Choose to run setup in order or at the same time, based on whether the seeds depend on each other's data.
+trap: Putting `await` outside `forEach` and assuming that it waits for each async callback.
 followUps:
-  - question: What happens if one concurrent seed rejects?
-    answer: Promise.all rejects with the first rejection it sees, but other requests can keep running. Cleanup needs to account for any records they created.
+  - question: What happens if one seed rejects while the others run at the same time?
+    answer: Then `Promise.all` rejects with the first rejection it sees. The other requests can keep running. My cleanup needs to account for any records they created.
 sources:
   - label: MDN JavaScript execution model
     url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model
@@ -52,16 +52,14 @@ examples:
           assert.deepEqual(concurrent, new Set(ids));
 ---
 
-`forEach` calls each callback on the current stack and discards what it returns. An async callback
-returns a promise when it pauses, so the caller can reach the summary check before the seeds
-finish. Awaiting `forEach` itself still gives me no promise that represents those requests.
+The `forEach` method calls each callback on the current call stack. The call stack is the code that is running right now. `forEach` discards whatever each callback returns.
 
-Once an awaited promise resolves, its continuation runs as a microtask. In the browser event loop,
-microtasks run after the current stack clears and before the next task, such as a timer callback.
-That scheduling won't make `forEach` wait. I'd use `for...of` with `await` for dependent seeds and
-`Promise.all` over `map` for independent requests.
+An async callback returns a promise when it pauses. A promise is an object that stands for a result that arrives later. As a result, the caller can reach the summary check before the seeds finish. If I await `forEach` itself, I still get no promise that represents those requests.
+
+Once an awaited promise resolves, its continuation runs as a microtask. The continuation is the code after the `await`. In the browser, the event loop picks which work runs next. It runs microtasks after the current stack clears and before the next task, such as a timer callback. That scheduling won't make `forEach` wait.
+
+For dependent seeds, I'd use `for...of` with `await`. For independent requests, I'd use `Promise.all` over `map`.
 
 ### Example
 
-The seed stub yields once before adding an order to a store. Both versions wait until their own
-store contains the two expected order IDs.
+The seed stub, a stand-in for the real seed request, pauses once before it adds an order to a store. Both versions wait until their own store contains the two expected order IDs.

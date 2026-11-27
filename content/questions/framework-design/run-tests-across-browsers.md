@@ -1,19 +1,19 @@
 ---
-title: How would you check that a delivery picker works in every supported browser?
+title: "How would you check a delivery picker in every browser the team supports?"
 topic: framework-design
 roles: [automation, sdet]
 level: junior
 type: tooling
-oneLine: Reuse the same test across browser settings and vary the CI selection by support risk.
+oneLine: "I'd run the same test with different browser settings. I'd pick how much to run in each job based on what could break for users."
 looksFor:
-  - Treats browser choice as configuration.
-  - Tests distinct rendering engines where the support policy calls for them.
-  - Runs broader coverage on the primary browser.
-  - Names realistic layout or interaction differences.
-trap: Copying the same test into several suites and letting the copies drift.
+  - "Choose the browser in settings instead of copying code."
+  - "Test different rendering engines when the support policy requires it."
+  - "Run a wider set of tests on the primary browser."
+  - "Name differences someone could see in the layout or controls."
+trap: "Copying the same test into several suites and letting the copies develop different expectations."
 followUps:
-  - question: What would you run outside the primary browser?
-    answer: I'd start with critical journeys and known browser-sensitive controls, then expand where the failure history warrants it.
+  - question: "What would you run outside the main browser?"
+    answer: "I'd start with important journeys and controls known to behave differently. I'd add more tests if past failures point to a need."
 sources:
   - label: Playwright projects
     url: https://playwright.dev/docs/test-projects
@@ -79,12 +79,12 @@ examples:
           }
 ---
 
-I'd start with the browser and OS combinations we promise to support. Then I'd make browser choice a setting so the same spec can run in different CI jobs. I'd run broader coverage on the browser most customers use and run critical, browser-sensitive paths on the other supported combinations. A real Safari requirement deserves validation on the actual target rather than an assumption based on engine similarity.
+I'd start with the browser and operating system combinations we promise to support. I'd make browser choice a setting so the same test can run in different automated jobs. I'd run more cases in the browser most customers use. I'd run critical paths that may behave differently on the other supported combinations. If we promise Safari support, I'd test Safari itself instead of assuming a similar engine works the same way.
 
-Controls can still behave differently across browsers. I'd look at focus after a native picker closes and whether the layout leaves its confirmation reachable on a small screen.
+A rendering engine lays out and draws the page. Controls can still act differently in each browser. I'd check where keyboard focus goes after a browser's own picker closes. I'd also check that the confirmation is reachable on a smaller screen.
 
 ### Example
 
-On the local delivery page, selecting the depot pickup radio should update the delivery summary synchronously. The examples run that check in Chromium or Chrome and Firefox without duplicating its expected result.
+On my local delivery page, I'd select the depot pickup radio button and expect the delivery summary to change right away. I'd run the same check in Chromium or Chrome and in Firefox without copying the expected result.
 
-In `playwright.config.ts`, define the `chromium` and `firefox` projects with `use: { browserName: 'chromium' }` and `use: { browserName: 'firefox' }`, respectively. Each CI job selects one project by name.
+I'd define the `chromium` and `firefox` projects in `playwright.config.ts`. For the first, I'd use `use: { browserName: 'chromium' }`. For the second, I'd use `use: { browserName: 'firefox' }`. I'd have each automated job pick one project by name.

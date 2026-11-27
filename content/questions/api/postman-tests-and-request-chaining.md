@@ -1,19 +1,19 @@
 ---
-title: "How would you use Postman to prove a parcel created in one request can be read in the next?"
+title: "How would you create a parcel in Postman and check it with the next request?"
 topic: api
 roles: [manual-qa, automation]
 level: junior
 type: tooling
-oneLine: "Add post-response assertions, pass the validated parcel ID to the next request, and check the saved details there."
+oneLine: "I'd check the create reply and pass the confirmed parcel ID to the read request. I'd use the read reply to check what the service saved."
 looksFor:
-  - "Keeps the requests in a shared collection that can run in order."
-  - "Uses post-response assertions on status and business fields."
-  - "Passes an ID with a scope that lasts for the collection run."
-  - "Adds a negative case and checks for unintended writes."
-trap: "Hand-copying a parcel ID after each run and accidentally reading yesterday's record."
+  - "Save both requests in a shared collection that runs them in order."
+  - "Check the response status and the fields that identify the parcel."
+  - "Store the ID in a variable available for the collection run."
+  - "Add a rejection case and check that it saved nothing by mistake."
+trap: "Copying parcel IDs by hand and accidentally reading a record from the last run."
 followUps:
-  - question: "Where would you put a missing-postcode case?"
-    answer: "I'd keep it as a separate request in the same collection and check the documented error field. I'd check the rejected address was never saved."
+  - question: "Where would you test an address without a postcode?"
+    answer: "I'd add a separate request to the collection and check the documented error field. I'd make sure the service didn't save the rejected address."
 sources:
   - label: Postman, write post-response scripts
     url: https://learning.postman.com/docs/tests-and-scripts/write-scripts/test-scripts/
@@ -38,10 +38,10 @@ examples:
           });
 ---
 
-I'd save the create and read requests in one collection. In the create request's post-response script, I'd check the response status and the fields that identify the parcel we submitted. Once those assertions pass, I'd save its ID as a local variable for the run. The next request uses the variable and checks the saved address rather than relying on the create response.
+I'd keep both requests in one Postman collection, a saved group of requests I can run in order. In the script that runs after the create reply, I'd check the status and the fields that identify the parcel. If those checks pass, I'd save its ID in a local variable that lasts for the run. I'd use that variable in the next request and check the saved address.
 
-I'd share the collection with reproducible test data and add a request for a documented rejection. Team members should be able to run it without copying IDs or sharing login secrets.
+I'd share the collection with test data other people can recreate. I'd add a separate request for a documented rejection. People should be able to run it without copying IDs or sharing login secrets.
 
 ### Example
 
-Run the collection against a parcel sandbox with postcode `02108`. This script expects `201` and a parcel ID. The next request reads `/parcels/{{createdParcelId}}` and should return the same postcode.
+I'd run the collection in a parcel sandbox with postcode `02108`. I'd expect `201` and a parcel ID. I'd read `/parcels/{{createdParcelId}}` and expect the same postcode in the reply.

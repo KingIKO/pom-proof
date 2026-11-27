@@ -1,19 +1,19 @@
 ---
-title: Which declarations would you use for a fixture URL and a counter that changes on retry?
+title: How would you declare a test data URL and a counter that changes on each retry?
 topic: javascript-typescript
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Use const for bindings you keep, let for bindings you reassign, and watch for var leaking past a block.
+oneLine: I use `const` for bindings I keep and `let` for bindings I reassign. I watch for `var`, because it can leak past the end of a block.
 looksFor:
-  - Distinguishes function-scoped var from block-scoped let and const.
-  - Explains undefined before var initialization and the temporal dead zone for let and const.
-  - Describes redeclaration rules within a scope.
-  - Separates reassignment from changes to an object bound with const.
-trap: Assuming const prevents a fixture object from being changed by another test that shares it.
+  - Tell function-scoped `var` apart from block-scoped `let` and `const`.
+  - Explain why `var` reads as `undefined` before initialization and what the temporal dead zone means for `let` and `const`.
+  - Describe the rules for declaring the same name twice within a scope.
+  - Tell reassignment apart from changes to an object bound with `const`.
+trap: Assuming `const` prevents a fixture object from being changed by another test that shares it.
 followUps:
-  - question: Can I declare a new let count inside a nested block?
-    answer: Yes, that creates a separate binding. Declaring the same let name twice in the same scope is a syntax error.
+  - question: Can I declare a new `let` named `count` inside a nested block?
+    answer: Yes. That creates a separate binding. If I declare the same `let` name twice in the same scope, I get a syntax error.
 sources:
   - label: MDN var
     url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/var
@@ -55,16 +55,14 @@ examples:
           ]);
 ---
 
-I'd use `const` for the fixture URL and `let` for a counter I reassign. Both are block scoped.
-Their bindings exist from the start of the block, but reading them before initialization throws
-because they're in the temporal dead zone. `var` is function scoped inside a function. Its
-declaration is hoisted and an early read gives `undefined`, because the initializer hasn't run.
+I'd use `const` for the fixture URL and `let` for a counter I reassign. A binding is the link between a name and its value. Both declarations are block scoped, so each binding belongs to the block, the code between braces, that contains it.
 
-A `var` can be redeclared with `var` in the same scope. `let` and `const` reject same-scope
-redeclarations. A `const` object can still change; only the binding is fixed. I'd create
-a new fixture for each test rather than rely on `const` to isolate it.
+Their bindings exist from the start of the block. If I read one before it gets its initial value, JavaScript throws. That period is called the temporal dead zone.
+
+Inside a function, `var` is function scoped. Its declaration is hoisted, which means the name exists from the start of the function. An early read gives `undefined`, because the initializer hasn't run.
+
+A `var` can be redeclared with `var` in the same scope. `let` and `const` reject a second declaration in the same scope. A `const` object can still change. Only the binding is fixed. I'd create a new fixture for each test instead of relying on `const` to isolate it.
 
 ### Example
 
-The seed stub records a 503 and a subsequent 201. The reference to the trace stays fixed while
-its attempt list grows. Each loop iteration has its own `status` binding.
+The seed stub, a stand-in for the real seed request, records a 503 and then a 201. The reference to the trace stays fixed while its attempt list grows. Each loop iteration has its own `status` binding.

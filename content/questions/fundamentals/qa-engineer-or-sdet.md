@@ -1,35 +1,28 @@
 ---
-title: Two CI jobs share one sample roster. How would you split the investigation?
+title: Two automated test jobs use the same sample class roster. How would you share the work of finding the problem?
 topic: fundamentals
 roles: [manual-qa, automation, sdet]
 level: junior
 type: concept
-oneLine: Establish the correct transfer result and check whether another job overwrote the roster used to test it.
+oneLine: I'd find out what the roster should show after a transfer. I'd also check whether another test job replaced the sample roster.
 looksFor:
-  - Distinguishes a changed export from a changed fixture.
-  - Explains what the school office expects after a transfer.
-  - Gives each parallel run independent data and verifies the fix.
-  - Leaves room for the two roles to share the work and review.
-trap: Treating the title as a seniority ranking or assuming QA engineers never write code.
+  - Tell a change in the file the app produced apart from a change in the sample data.
+  - Say what the school office expects the roster to show after a transfer.
+  - Give each job its own data and test the fix with both jobs running.
+  - Show how the two roles can work together and review the fix.
+trap: Using the job title to rank people by experience or assuming quality assurance engineers never write code.
 followUps:
-  - question: The CI failures stop when only one job runs. What would you want to see before closing the ticket?
-    answer: I'd run both jobs together with separate sample rosters and check each export for its own transferred student.
+  - question: If the tests pass when only one job runs, what would you check before closing the bug report?
+    answer: I'd run both jobs at once with separate sample rosters. I'd check that each file lists the student transferred in its own test.
 sources:
   - label: ISTQB CTFL v4.0.1, sections 1.4.5 and 1.5.2, role variation and shared quality
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
 ---
 
-I'd ask whether both jobs exported the rosters they started with. One person can trace what
-the runner seeded while the other checks which class the roster should list after a transfer.
-Then they can compare what they found to see whether the export or the test data changed.
+I'd check whether both jobs exported the rosters they started with. An export is a file the app writes with its data. I'd have one person trace the starting data that the test runner loaded. I'd have the other check which class the roster should show after a transfer. Then I'd compare their findings to see whether the output or the test data changed.
 
-If the software development engineer in test (SDET) owns the runner on this team, I'd ask them
-to review the fixture fix. The QA engineer can supply the transfer case and own the shared check
-with them. Someone who mostly tests by hand could pair on the fixture change as a first step
-into maintaining test tooling. The titles don't dictate the split on every team.
+An SDET is a software development engineer in test who writes or maintains test tools. If they own the runner on this team, I'd ask them to review the fix to the test data. I'd ask the quality assurance (QA) engineer for the transfer case so they can share responsibility for the check. Someone who mostly tests by hand could help fix the data as a first step toward maintaining test tools. I'd base the split on how the team works.
 
 ### Example
 
-If two jobs share the same sample roster, I'd have one person verify the transfer scenario while
-the other makes the test data independent. A tester moving into SDET work could take on that data
-change and prove both jobs pass in parallel.
+If two jobs share a sample roster, I'd ask one person to check the transfer case. I'd ask the other to give each job separate data. A tester moving into SDET work could make that change and show that both jobs pass when they run at the same time.

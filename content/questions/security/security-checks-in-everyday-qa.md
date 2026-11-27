@@ -4,16 +4,16 @@ topic: security
 roles: [manual-qa, automation, sdet]
 level: mid
 type: concept
-oneLine: Make the viewer's read, export denial, and sign-out behavior repeatable checks, and send deeper findings to their owners.
+oneLine: I'd make invoice access, export denial, and sign-out repeatable tests. I'd send findings that need a deeper review to the teams responsible.
 looksFor:
-  - Confirms a viewer can read their invoice but the server denies the wider export.
-  - Checks the same session can't read the invoice after sign-out or expiry.
-  - Looks for test session values in logs and verifies the portal's header requirements.
-  - Describes which findings need a security specialist rather than a QA sign-off.
-trap: Treating the OWASP Top 10 as a checklist that certifies the portal is secure.
+  - Check that the server lets a viewer read their invoice and blocks their full account export.
+  - Check that the same session loses invoice access after sign-out or when it expires.
+  - Check logs for test session values and compare reply headers with the portal's requirements.
+  - Name which findings need a security specialist rather than a QA sign-off.
+trap: Treating the OWASP Top 10 as proof that the portal is secure after you check every item.
 followUps:
-  - question: The portal's invoice library gets a dependency alert. What would you give the owner before they triage it?
-    answer: I'd record the affected version, owning service, and exposure I can substantiate, then route the finding to its owner and the security team for a decision.
+  - question: The portal's invoice library gets a dependency alert. What would you give the owner before they decide how to handle it?
+    answer: A dependency alert flags a risk in a library the portal uses. I'd record the affected version and the service that owns it. I'd describe what I can show about exposure. I'd send the finding to the owner and the security team so they can decide what to do.
 sources:
   - label: OWASP Top 10, broken access control
     url: https://top10.owasp.org/2025/A01_2025-Broken_Access_Control/
@@ -25,15 +25,10 @@ sources:
     url: https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html
 ---
 
-I'd put the viewer's allowed invoice read and denied account export in the same smoke run.
-After sign-out or expiry, the read should also be denied. I'd check the log for the synthetic
-session value and check the response headers against the portal's requirements. I'd also
-confirm an invoice name with punctuation still renders as text.
+I'd use one smoke run, a quick check of basic behavior, to test the viewer's invoice read and blocked export. I'd check that the server also blocks reads after sign-out or when the session expires. I'd search the log for a made-up session value that represents the viewer's sign-in. I'd compare response headers, the details sent alongside each reply, with the portal's rules. I'd check that the browser shows punctuation in an invoice name as text.
 
-I use the OWASP Top 10 to help spot gaps beyond that flow, and review dependency findings
-with the service owner. A passing regression suite is evidence about those controls on this
-build. A security specialist can assess risks that need broader or deeper examination.
+I'd use the OWASP Top 10, a list of common web security risks, to look for gaps beyond this flow. I'd review findings about outside libraries with the service owner. If my repeatable tests pass, they give me evidence about those safeguards in this build. QA sign-off records whether those checks passed. I'd ask a security specialist to assess risks that need a wider or deeper review.
 
 ### Example
 
-In an isolated test portal, an account viewer can see their synthetic invoices but cannot export the organization's full invoice list. I'd assert both outcomes, then sign out and confirm the session can no longer access the viewer's invoices.
+I'd use a separate test portal with made-up invoices. I'd check that a viewer can read their invoices and cannot export the organization's full list. After I sign out, I'd check that the same session can no longer read the viewer's invoices.

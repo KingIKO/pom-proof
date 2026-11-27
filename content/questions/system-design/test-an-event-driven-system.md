@@ -1,19 +1,19 @@
 ---
-title: Stock shows five units after a return. What would prove a delayed duplicate cannot make it six?
+title: Stock shows five units after a return. How would you check that a delayed copy can't make it six?
 topic: system-design
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: Account for both deliveries and check the committed stock movement as well as the displayed quantity.
+oneLine: I'd check what happened to both messages. I'd check the saved stock change as well as the displayed quantity.
 looksFor:
-  - Waits for evidence that both deliveries were handled before trusting the final count.
-  - Checks that the stock movement is recorded once and references the expected return.
-  - Moves race and retry cases into the consumer tests, including permanently failing events.
-  - Uses a message contract to protect fields and versions the consumer depends on.
-trap: Sleeping for ten seconds after publishing and treating a stock change as proof it happened only once.
+  - Before trusting the final count, check that the service handled both deliveries.
+  - Check that there's one saved stock change and it names the correct return.
+  - Test overlapping work, retries, and messages that never succeed in the program that handles events.
+  - Write down and check which message fields and versions the receiving program needs.
+trap: Waiting ten seconds after sending the message and assuming a stock change happened only once.
 followUps:
-  - question: What do you capture if polling times out?
-    answer: I'd capture the return and event IDs, latest inventory state, and the last known processing outcome so the failure distinguishes delayed handling from a rejected event.
+  - question: What would you record if the test stops waiting before it sees the result?
+    answer: I'd keep the return and event IDs and the latest stock state. I'd record the last known result so I can tell delayed handling from a rejected message.
 sources:
   - label: Pact message contracts
     url: https://docs.pact.io/getting_started/how_pact_works
@@ -23,18 +23,12 @@ sources:
     url: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html
 ---
 
-Five units tells me the first delivery worked. I'd poll a read-only inventory view and
-processing records up to the agreed deadline and require evidence that the second delivery
-was ignored. Then I'd check the movement history once for that return. I'd keep a small
-deployed test for routing, since the isolated tests can't prove the event reached inventory.
+Seeing five units tells me the first delivery worked. I'd poll the read-only inventory view and processing records, meaning I'd check them repeatedly until the agreed deadline. I'd look for evidence that the service ignored the second delivery. I'd check the stock change history for that return. I'd keep a small test on the deployed service because tests in isolation can't show that the message reached inventory.
 
-I can make the consumer handle retries, a late status, and a permanently failing event
-without waiting for those conditions in a cluster. I'd check dead-letter handling and no
-stock change in the last case. A message contract can cover the producer's schema version
-and required fields. I'd account for the broker's guarantees when choosing the cases.
+I'd test the consumer, the program that handles messages, without waiting for those conditions in a deployed cluster. I'd make it handle retries, a late status, and an event that always fails. If the event never succeeds, I'd check dead-letter handling, where failed messages go, and make sure stock stays the same.
+
+I'd use a message contract, a set of rules for messages, to check the sender's format version and required fields. I'd choose cases based on what the broker, the service that delivers messages, promises.
 
 ### Example
 
-I start with four units and send the same accepted return twice. I wait for evidence of
-both handling outcomes, one applied and one ignored as a duplicate. The projection should
-then show five units and the stock movement history should have one entry for the return.
+I'd start with four units and send the same accepted return twice. I'd wait to see one delivery applied and the other ignored as a duplicate. I'd expect the projection, the stock view built from events, to show five units. I'd check that the history has one stock change for the return.

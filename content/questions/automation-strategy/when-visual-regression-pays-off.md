@@ -1,19 +1,19 @@
 ---
-title: A shipping label's address overlaps its barcode, but the text check passes. What would you compare?
+title: "A shipping label's address overlaps its barcode, but the text check passes. What would you compare?"
 topic: automation-strategy
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Compare approved images when appearance is part of the requirement and the capture can be repeated reliably.
+oneLine: "If appearance is part of the requirement and I can repeat the capture reliably, I'd compare the screenshot with an approved image."
 looksFor:
-  - Picks a stable surface with a visual risk.
-  - Controls fonts, browser, viewport, and dynamic regions.
-  - Explains component and full-page coverage.
-  - Gives baseline changes an approval owner.
-trap: Regenerating every screenshot after a test failure without looking at what moved.
+  - "Pick a part of the app with a stable design where a layout mistake matters."
+  - "Keep the browser, fonts, and window size fixed and account for content that changes."
+  - "Explain when to compare one part of a screen and when to compare the whole page."
+  - "Name who reviews and approves a new reference image."
+trap: "Updating all the approved screenshots after a failure without checking what moved."
 followUps:
-  - question: The print timestamp changes on every run. Would you mask the whole bottom half of the label?
-    answer: I'd mask just the timestamp. The address and barcode need to stay in the comparison so their spacing can still fail the check.
+  - question: "The print time changes on each run. Would you hide the bottom half of the label?"
+    answer: "I'd hide only the print time. I'd keep the address and barcode visible so a spacing problem can fail the check."
 sources:
   - label: Playwright visual comparisons and baseline environments
     url: https://playwright.dev/docs/test-snapshots
@@ -40,10 +40,10 @@ examples:
           });
 ---
 
-I'd start with the label preview. Its address and barcode must fit on the printed label, so a comparison can catch overlap that a text assertion misses. I'd use a component image for that risk and add a full-page image only if the arrangement of the whole editor matters. I wouldn't start with a screen whose design changes every week.
+I'd start with the label preview. The address and barcode have to fit on the printed label. A screenshot comparison can catch an overlap even when the text itself is right. I'd capture the label by itself. I'd add a screenshot of the full page only if the whole editor layout matters.
 
-I'd fix the viewport and font installation in the browser image and mask fields that legitimately vary. When the baseline changes, I'd ask the person responsible for the design to review the diff before approving it.
+I wouldn't start on a screen whose design changes every week. I'd keep the browser setup, fonts, and viewport, or visible page size, fixed. I'd mask fields that are supposed to change by leaving them out of the comparison. If the new image differs from the approved one, I'd ask the design owner to review the difference before approving it.
 
 ### Example
 
-The local sample label always uses the same address. The check compares its preview with the approved image and masks the print timestamp. A shifted address should show up in the diff.
+I'd use the local sample label, which always uses the same address. I'd compare its preview with the approved image and mask the print time. If the address moves, I'd expect that change to appear in the difference image.

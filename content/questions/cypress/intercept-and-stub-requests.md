@@ -1,19 +1,19 @@
 ---
-title: How would you test the message shown when two people reserve the same desk?
+title: "How would you test the message when two people try to reserve the same desk?"
 topic: cypress
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Intercept the reservation request before it can leave, then check the request, the stubbed response, and the rendered state.
+oneLine: "I catch the reservation call before it goes out. I check what it sends and what the page shows after a reply I control."
 looksFor:
-  - Registers an exact method and route before submission.
-  - Waits for the alias instead of sleeping.
-  - Checks the request and visible conflict message.
-  - Explains what the stub leaves unproven.
-trap: Registering the intercept after the click on a fast path, or never running a real backend check.
+  - "Match the exact request method and address before clicking submit."
+  - "Wait for the named request instead of using a fixed delay."
+  - "Check what the call sends and whether the desk conflict appears on screen."
+  - "Explain what a test with a made-up reply can't prove."
+trap: "Setting up the intercept after the click on a fast path or never checking the real service."
 followUps:
-  - question: How would you keep the stub aligned with the service?
-    answer: I'd check the real service contract separately and update the stub when the contract changes. A fixture is useful if several cases share the same response.
+  - question: "How would you keep the stub consistent with the real service?"
+    answer: "I'd check the service contract, the rules for its requests and replies, separately. I'd update the stub when those rules change. If tests share a reply, I'd keep it in a fixture, a reusable piece of test data."
 sources:
   - label: Cypress intercept and static responses
     url: https://docs.cypress.io/api/commands/intercept
@@ -44,10 +44,12 @@ examples:
           });
 ---
 
-I'd intercept the specific reservation request before clicking the button. I'd give it an alias so I can wait for that call, check that it targeted the right desk, and return a predictable conflict. Then I'd assert what the user sees rather than treat the HTTP status as the end of the test.
+I'd intercept the specific reservation request before I click submit. The intercept catches the request before it goes out. I'd give it an alias so the test can wait for that named request. I'd check which desk the request names and send a stub, a response I control, that reports a conflict. I'd check what the user sees as well as the response.
 
-A fixture or handler can make rare paths repeatable. I'd keep most ordinary journeys against the real backend because a controlled response can't prove the server's reservation rules or establish that the service returns our assumed error.
+On a fast path, the app can send the request before a test sets up the intercept.
+
+I'd use saved test data or code that handles the request to make rare cases repeatable. I'd test most ordinary flows against the real service. A controlled reply can't prove the server follows the reservation rules or returns the error I assumed.
 
 ### Example
 
-The local desk page submits `D12` to the reservation API. I return 409 with `desk_taken` and expect the page to say the desk is no longer available.
+My local desk page sends `D12` to the reservation API, the address it uses to talk to the service. I return 409 with `desk_taken`. I expect the page to tell me the desk is no longer available.

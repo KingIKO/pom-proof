@@ -4,17 +4,17 @@ topic: playwright
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Use separate browser contexts when the test needs two independent sessions that can still interact with the same backend.
+oneLine: I'd use two browser contexts when the test needs separate browser sessions that can still use the same server.
 looksFor:
-  - Explain why two tabs can share login and cart state.
-  - Create each customer in a separate browser context.
-  - Seed shared inventory and assert what each customer sees after checkout.
-trap: Opening a second tab and assuming it represents a second customer.
+  - Explain why two tabs can share a sign-in and cart.
+  - Open checkout for each customer in a separate browser context.
+  - Set up shared stock and check what each customer sees after checkout.
+trap: Opening a second tab and treating it as a separate customer session.
 followUps:
-  - question: How would you make both customers compete for the same last pickup slot?
-    answer: Seed one slot, check that both sessions see it, and coordinate the two submit requests so neither waits for the other checkout to finish.
-  - question: How do you check that only one reservation was created?
-    answer: Check that one customer receives a confirmation and the other sees an unavailable message, then use a permitted reservation API to count confirmed records for the seeded slot.
+  - question: How would you test two customers trying to book the last pickup slot?
+    answer: I'd set up one slot and check that both customers see it. I'd send both requests without waiting for either checkout to finish first.
+  - question: How would you check that the service booked the slot only once?
+    answer: I'd check that one customer sees a confirmation and the other sees that the slot is unavailable. I'd use a reservation API I'm allowed to call to count confirmed reservations for that slot.
 sources:
   - label: Playwright browser context isolation
     url: https://playwright.dev/docs/browser-contexts
@@ -64,12 +64,12 @@ examples:
           });
 ---
 
-I'd use `browser.newContext()` for each customer and open the checkout page inside each context. Two pages in the same context can share cookies and origin storage, so I wouldn't use a second tab to stand in for a second login. I would give each context a different test account or start each as a separate guest, depending on what the checkout supports.
+I'd use `browser.newContext()`, the Playwright method that starts a separate browser session, for each customer. I'd open checkout inside each context. Two pages in the same context can share cookies, which can hold a sign-in. They can also share origin storage, data the browser saves for the same site. If checkout supports guests, I could use two separate guests instead of two test accounts.
 
-The contexts still talk to the same server. I'd seed a slot that this test owns, make sure each customer sees it as available, and check both outcomes after submitting.
+Both contexts still use the same server. I'd create a pickup slot just for this test. Before submitting, I'd make sure both customers see the slot as available. After submitting, I'd check both results.
 
 ### Example
 
-For the last pickup slot at a store, I would submit one checkout per context and expect one confirmation and one unavailable message. Then I'd check that the server recorded exactly one confirmed reservation for the slot.
+For the last pickup slot at a store, I'd submit one checkout per context. I'd expect one confirmation and one message saying the slot is unavailable. I'd check that the server saved exactly one confirmed reservation for the slot.
 
-The local test API provisions one slot per call, lists its confirmed reservations, and removes it with its records at cleanup. Both guest pages target that same slot.
+I'd use the local test API to set up one slot per call and list confirmed reservations. I'd point both guest pages at the same slot. During cleanup, I'd use the API to remove that slot and its records.

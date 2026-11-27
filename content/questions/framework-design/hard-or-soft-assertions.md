@@ -1,19 +1,19 @@
 ---
-title: A receipt must show four fields. When should its test stop at the first failure?
+title: "A receipt must show four fields. Which failed check should stop the test?"
 topic: framework-design
 roles: [automation, sdet]
 level: junior
 type: tooling
-oneLine: Require the heading for R42 before checking its details, then report all field mismatches together.
+oneLine: "I require the heading for R42 first. If I'm on the right receipt, I report all independent wrong fields together."
 looksFor:
-  - Identifies a prerequisite whose failure makes later checks misleading.
-  - Collects only independent mismatches.
-  - Explains how the runner reports grouped failures.
-  - Checks the result of any custom failure collector.
-trap: Continuing through another write after a prerequisite failed, or logging collected failures without failing the test.
+  - "Name a check that must pass for the later results to mean anything."
+  - "Collect only failures that don't depend on each other."
+  - "Explain how the runner reports several mismatches from one test."
+  - "Check that your own collector fails the test when it finds a mismatch."
+trap: "Continuing to write data after a required check fails or logging errors without failing the test."
 followUps:
-  - question: In the Playwright variant, pickup and total both fail. What does CI report, and would you still send that receipt?
-    answer: Both mismatches can be reported and Playwright already marks the run failed. If sending the receipt were the next step, I'd require test.info().errors to be empty before sending it.
+  - question: "In Playwright, pickup and total both fail. What does CI report, and would you still send the receipt?"
+    answer: "I'd expect Playwright to report both mismatches and mark the run failed. If sending is the next step, I'd require `test.info().errors` to be empty before I send the receipt."
 sources:
   - label: Playwright soft assertions
     url: https://playwright.dev/docs/test-assertions#soft-assertions
@@ -85,10 +85,10 @@ examples:
           }
 ---
 
-I'd stop if I landed on the wrong receipt. Checking its delivery and total after that would add noise. Once I have the right receipt, I'd collect independent mismatches together so someone can see whether both fields broke in the same run.
+I'd stop the test if I land on the wrong receipt. That's a hard assertion, a check that stops the test if it fails. The delivery and total checks would be misleading on that page. Once I have the right receipt, I'd collect independent failures so someone can see which fields broke in the same run.
 
-Playwright Test marks a failed soft assertion as a test failure even if execution continues. In JUnit, `assertAll` runs the group and reports its failures together. If a team builds its own collector, it needs a final assertion on the collected results. A list in a log by itself can leave a bad result green.
+I can use a soft assertion in Playwright Test to keep running after a check fails. Playwright still marks the test failed. In JUnit, I'd use `assertAll` to run the group and report its failures together. If my team collects errors itself, I'd add a final check for any failures. Logging a list alone can leave the test marked as passed.
 
 ### Example
 
-For the local fixture, receipt R42 is rendered with all its details on load. I require the correct heading before checking pickup, the $18 total, and the card payment on the page. The Python example requires pytest-playwright 0.8.0 or newer for soft assertions.
+My local test page shows all the details for receipt R42 at load. I'd require the right heading before checking pickup, the $18 total, and card payment. I'd need pytest-playwright 0.8.0 or newer to use the Python example's soft assertions.

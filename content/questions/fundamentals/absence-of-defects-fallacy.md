@@ -1,26 +1,28 @@
 ---
-title: "How can a feature meet its spec and still fail customers?"
+title: "How can a feature meet its requirements and still fail users?"
 topic: fundamentals
 roles: [manual-qa, automation, senior]
 level: junior
 type: concept
-oneLine: "A feature can satisfy its written rules and still leave users unable to finish the task that matters to them."
+oneLine: "I check whether users can finish their real task, even when the feature meets every written rule."
 looksFor:
-  - "Distinguishes specification conformance from usefulness."
-  - "Identifies the actual user goal."
-  - "Uses realistic data or observation."
-  - "Takes a specification gap back to the decision maker."
-trap: "Closing the issue as soon as the implementation matches every acceptance criterion."
+  - "Tell meeting the written rules apart from helping users do their work."
+  - "Name the task the user needs to finish."
+  - "Use realistic data or watch someone use the feature."
+  - "Show the decision maker what the written rules missed."
+trap: "Closing the issue as soon as the feature meets every rule for accepting it."
 followUps:
-  - question: "What would count as evidence of the gap?"
-    answer: "Watch someone try their normal workflow with representative data and record exactly where they have to stop or use a workaround."
+  - question: "How would you show that the feature misses a user need?"
+    answer: "I'd watch someone do their usual work with typical data. I'd record exactly where they stop or have to find another way."
 sources:
   - label: "ISTQB CTFL v4.0.1, section 1.3"
     url: https://www.istqb.org/certifications/certified-tester-foundation-level
 ---
 
-I'd look at the job the feature was meant to help with. Checking the written rules tells me whether the team built what was agreed. I also want to see a user try to finish their task with realistic inputs. If they can't, I'll show product where the workflow breaks and ask whether we need to change the requirement, even if the code works as written.
+I start with the task the feature is supposed to help users finish. I check the specification, or written rules, to see if the team built what we agreed. Then I watch someone try the task with data like the data they use at work.
+
+If they can't finish the task, I show the product team where they got stuck. I ask whether the rule needs to change, even if the code follows it.
 
 ### Example
 
-A finance export might include every requested column. If the billing team needs the merchant account ID to match entries to their bank feed and the spec never asked for it, they'd still reconcile by hand. I'd show that with a sample statement and document what a usable export needs.
+I'd look at a finance export, a file with data from the app. It might include every requested column. If the billing team needs the merchant account ID and the rules leave it out, they'd still match entries to their bank feed by hand. I'd show the gap with a sample statement and write down what the file needs.

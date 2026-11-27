@@ -1,19 +1,19 @@
 ---
-title: A parking permit stays in Draft after Submit. What should the first CI check tell you?
+title: "A parking permit stays in Draft after you submit it. What should the first automated check tell you?"
 topic: framework-design
 roles: [automation, sdet, senior]
 level: senior
 type: scenario
-oneLine: Make it clear whether the draft was created, the submit action ran, and the portal confirmed the same permit ID.
+oneLine: "I want to know whether the test created a draft and submitted it. I check if the portal confirmed the same permit ID."
 looksFor:
-  - Uses the runner output to separate draft setup failure from a failed submission.
-  - Keeps the permit ID and expected confirmation visible in the test.
-  - Keeps the draft setup client independent of the page interactions.
-  - Uses the runner directly until another permit flow needs the same helper.
-trap: Designing a driver abstraction and a general-purpose command language before any test runs.
+  - "Use the report to separate a draft setup failure from a failed submission."
+  - "Keep the draft ID and expected confirmation easy to find in the test."
+  - "Keep the code that creates drafts separate from the code that uses the page."
+  - "Use the runner directly until another permit flow needs the same helper."
+trap: "Designing a general browser driver and command language before you have a working test."
 followUps:
-  - question: The next change covers permit renewal. Where should its author start?
-    answer: I'd point them to the submission spec as a working example. They can reuse the setup client and add the renewal interaction without changing the shared runner.
+  - question: "When someone adds coverage for permit renewal, where should they start?"
+    answer: "I'd show them the submission test as a working example. They can reuse the code that sets up a draft and add renewal steps without changing the runner."
 sources:
   - label: Playwright page object models
     url: https://playwright.dev/docs/pom
@@ -53,10 +53,10 @@ examples:
           });
 ---
 
-If the check fails, I want the report to tell me whether we ever had a draft to submit. The setup client creates the draft and returns its ID. The page object handles the user's click, and the test checks the confirmation for that same ID. Both helpers can use shared configuration; neither should depend on the test or call back into it.
+If the test fails, I want its report to show whether there was a draft to submit. I use a setup client, code that calls a service, to create the draft and get its ID. I use a page object, a helper for screen actions, to click Submit. In the test itself, I check the confirmation for that same ID.
 
-I'd publish the runner's failure artifacts in CI and point the next author to the submission spec. When renewal needs setup we've already built, we can reuse that client. I wouldn't add a driver abstraction before we have a second use for it.
+The two helpers can read the same settings. I'd keep both independent of the test so neither has to call it. I'd publish the runner's failure files in continuous integration (CI) and show a new author the submission test. If renewal needs the same setup, I'd reuse the client. I'd wait for a second use before wrapping the browser driver in another helper.
 
 ### Example
 
-In a local test environment that exposes a draft setup and cleanup API, the example creates one parking draft and checks that the portal reports its submission. The test owns one draft ID and removes it afterward.
+If my local test environment has an API for setting up and removing drafts, I'd use it to create one parking draft. I'd check that the portal confirms submission. I'd keep that one draft ID in the test and remove the draft afterward.

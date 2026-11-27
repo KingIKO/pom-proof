@@ -1,19 +1,19 @@
 ---
-title: How do you use a Playwright trace to diagnose a CI failure?
+title: How would you use a Playwright trace to find why an automated run failed?
 topic: playwright
 roles: [manual-qa, automation, sdet]
 level: junior
 type: tooling
-oneLine: Find the first wrong step and compare its action log, page snapshot, and network evidence.
+oneLine: I'd find the first step where the test went wrong. I'd compare what Playwright did, what the page showed, and which requests succeeded.
 looksFor:
-  - A distinction between the root failure and the last timeout
-  - An action log and snapshot used together
-  - Network evidence tied to the user flow
-  - A retention policy that captures useful attempts safely
-trap: Looking only at the last screenshot and guessing the timeout was too short.
+  - Tell the first failure apart from the step that eventually timed out.
+  - Use the list of actions and the saved page state together.
+  - Match request and reply details to the step the user was trying to complete.
+  - Save traces from the attempts you need and limit who can see them.
+trap: Seeing only the last screenshot and assuming Playwright needed more time.
 followUps:
-  - question: What if the trace only shows a passing retry?
-    answer: I'd adjust trace retention to capture a failed initial run and keep its result alongside the retry.
+  - question: What would you change if you can only see the successful retry?
+    answer: I'd change the trace settings to keep the failed first attempt. I'd save that result alongside the retry.
 sources:
   - label: Playwright Trace Viewer
     url: https://playwright.dev/docs/trace-viewer
@@ -38,12 +38,14 @@ examples:
           });
 ---
 
-I open the trace at the failing step and read backward to the first unexpected state. The action log tells me what Playwright was trying to do. The DOM snapshot shows which page it was operating on, and the network view can tell me whether a dependency responded as expected. These clues together beat guessing from the last line of the stack.
+I'd open the trace, Playwright's recording of the run, at the failed step. I'd work backward to the first unexpected state. The action log tells me what Playwright tried to do. The DOM snapshot, a saved copy of the page's structure, shows which page it used. The network view shows requests and helps me see whether each service sent the expected reply.
 
-I'd check which attempt produced the trace. Recording only the first retry can leave me looking at a pass, so if I need first-failure evidence I'd choose a policy that retains failed attempts. I use test data and keep the trace accessible only to people who need it.
+I'd use that evidence before drawing a conclusion from the last line of the error.
+
+I'd check which attempt produced the trace. If I only record the first retry, I may get a trace of a passing run. If I need to see the first failure, I'd choose settings that keep failed attempts. I'd use test data and give access only to people who need the trace.
 
 ### Example
 
-If Download never appeared, I'd inspect the preceding Generate click and its network response. A failed export call gives me a better lead than the missing button in the final snapshot.
+If Download never appears, I'd inspect the earlier Generate click and the reply to the export request. A failed export request gives me a better lead than a missing button in the final snapshot.
 
-The local report fixture should produce a download link after generation. A failed attempt keeps a trace. I can open its `trace.zip` with `npx playwright show-trace` and inspect what happened between the click and assertion.
+I'd expect the local report test app to show a download link after it generates the report. The test saves a trace if the attempt fails. I'd open the `trace.zip` file with the `npx playwright show-trace` command. I'd inspect what happened between the click and the check for the link.

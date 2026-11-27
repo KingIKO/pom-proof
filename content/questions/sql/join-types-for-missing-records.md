@@ -1,19 +1,19 @@
 ---
-title: "Which join finds paid orders that never got a shipping label?"
+title: "Which SQL join finds paid orders without a valid shipping label?"
 topic: sql
 roles: [manual-qa, automation, sdet]
 level: junior
 type: tooling
-oneLine: "Start with paid orders, left join qualifying labels, and keep orders whose joined label ID is null."
+oneLine: "I'd start with paid orders and use a left join to match active labels. I'd keep orders whose matching label ID is null."
 looksFor:
-  - "Explains which unmatched rows each join preserves."
-  - "Puts qualifying label filters in the join condition."
-  - "Checks a label column that cannot be null on a real row."
-  - "Uses fixtures for a missing, a voided, and a valid label."
-trap: "Filtering for an active label in WHERE, which drops the very rows with no match."
+  - "Say which rows each join keeps when they have no match."
+  - "Put the active label check in the join condition."
+  - "Check a column that always has a value on a real label row."
+  - "Test orders with no label, a voided label, and an active label."
+trap: "Checking for an active label in `WHERE`, which removes orders with no match."
 followUps:
-  - question: "What if you also need labels with no order?"
-    answer: "In SQLite 3.39 or later a full outer join can show both sides. For a single audit I'd use two separate checks if they have different qualifying rules."
+  - question: "How would you also find labels that have no matching order?"
+    answer: "In SQLite 3.39 or later, I'd use a full outer join to see unmatched rows on both sides. If each side has different rules, I'd use two checks in the same audit."
 sources:
   - label: SQLite join processing and WHERE filtering
     url: https://www.sqlite.org/lang_select.html
@@ -36,10 +36,12 @@ examples:
           ORDER BY o.id;
 ---
 
-An inner join returns matching orders and labels. For missing labels, I'd start with orders and left join labels. Every order stays in the result and unmatched label columns become null. A right join preserves the right side instead, and a full outer join preserves unmatched rows from both sides. MySQL 8.4 doesn't offer a native full outer join.
+I'd use an inner join if I only wanted orders and labels that match. To find missing labels, I'd start with orders on the left and use a left join. It keeps every order and fills the label columns with null, or no value, if there's no match.
 
-I put the label's active status in `ON` so a voided label doesn't count as a match. I use `WHERE` to select paid orders and look for a null in the label's ID, which a real label always has.
+A right join keeps unmatched rows on the right instead. A full outer join keeps unmatched rows from both sides. MySQL 8.4 doesn't have a built-in full outer join.
+
+I'd check active status in `ON`, the part of the join that decides which rows match. A voided label then won't count as a match. I'd use `WHERE`, which filters the resulting rows, to keep paid orders with a null label ID. A real label always has an ID.
 
 ### Example
 
-Order 11 has no label, 12 has a voided one, and 13 has an active one. The query returns 11 and 12.
+I'd give order 11 no label and order 12 a voided label. I'd give order 13 an active label. I'd expect the query to return 11 and 12.

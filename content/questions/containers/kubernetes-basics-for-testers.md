@@ -1,19 +1,19 @@
 ---
-title: Checkout smoke tests get a 503 after a rollout. What would you inspect in Kubernetes?
+title: "A quick checkout test gets a 503 after rollout. What would you check in Kubernetes?"
 topic: containers
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Follow the checkout Service to the expected Pods and check whether the rollout produced healthy, ready backends.
+oneLine: "I check which Pods the checkout Service sends requests to. I look for the expected copies of the app and check they're ready to receive traffic."
 looksFor:
-  - Explains how a Deployment manages replicas and how a Service reaches Pods.
-  - Distinguishes readiness to receive traffic from liveness and container restarts.
-  - Checks Pod status and events, then reads application logs for the failure.
-  - Checks the Service selector and ready endpoints before blaming the test.
-trap: Taking a Pod's Running phase as proof that the Service can route requests to it.
+  - "Explain how a Deployment keeps app copies running and how a Service reaches them."
+  - "Tell readiness to receive requests apart from liveness checks that can trigger restarts."
+  - "Check Pod status and events before looking for the error in the app logs."
+  - "Check the Service selector and its ready endpoints before blaming the test."
+trap: "Assuming the Service can use a Pod just because its status says Running."
 followUps:
-  - question: Where would you look after a container has restarted?
-    answer: "I'd check the Pod's events and use `kubectl logs --previous` on that Pod to read the prior instance's logs, if they're still available."
+  - question: "Where would you look if a container restarted?"
+    answer: "I'd check the Pod's events. I'd run `kubectl logs --previous` on the Pod to read the previous container's logs if they're still available."
 sources:
   - label: Kubernetes Pods
     url: https://kubernetes.io/docs/concepts/workloads/pods/
@@ -49,10 +49,12 @@ examples:
           kubectl -n qa get endpointslices -l kubernetes.io/service-name=checkout-api -o yaml
 ---
 
-The Deployment keeps the desired number of checkout Pods and rolls out new versions. A Pod is where the app container runs. The Service gives the tests one address and uses its selector to find Pods with matching labels. I'd check the rollout's ready replica count and inspect Pod events if any replicas are missing. If a container starts, I'd read its logs.
+The Deployment keeps the requested number of checkout Pods and rolls out new versions. A Pod is where the app container runs. The Service gives my tests one address. It uses a selector, a rule that matches Pod labels, to find the Pods it should use. I'd check how many copies are ready and look at Pod events if any are missing.
 
-Readiness answers whether the app can accept traffic. A failed readiness probe removes the Pod from the ready backends for normal Service traffic. When liveness failures reach the probe's threshold, Kubernetes restarts the app container. I'd also check whether the Service selector still matches the new Pods.
+If a container starts, I'd read its logs. A failed readiness probe, a check that the app can take requests, takes that Pod out of normal Service traffic. The liveness probe checks whether the app needs a restart. When it fails enough times to reach its limit, Kubernetes restarts the container. I'd check that the Service selector still matches the new Pods.
 
 ### Example
 
-The `checkout-api` Deployment and Service are in the `qa` namespace, and the Pods should have `app=checkout-api`. If the new Pods are running but readiness fails because their database is still starting, I'd expect no ready endpoints when no older ready Pod remains. I'd look for probe failures in the Pod events and confirm the database connection error in the app logs.
+I'd look for the `checkout-api` Deployment and Service in the `qa` namespace, a named group of resources. I'd expect the Pods to have `app=checkout-api`. If the database is still starting, the new Pods can be running without being ready.
+
+If none of the old Pods are ready either, I'd expect no ready endpoints, the network addresses that can accept Service traffic. I'd look for failed probes in Pod events and confirm the database connection error in the app logs.

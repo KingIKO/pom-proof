@@ -1,19 +1,19 @@
 ---
-title: How would you choose between Playwright, Selenium, and Cypress?
+title: "How would you pick Playwright, Selenium, or Cypress for your browser tests?"
 topic: automation-strategy
 roles: [automation, sdet, senior]
 level: senior
 type: tooling
-oneLine: Compare supported browsers, team experience, and the real flows you need, then test the short list in CI.
+oneLine: "I'd compare browser support and what the team already knows. I'd run the same important flows with each contender in CI."
 looksFor:
-  - Required browser, version, and operating system combinations
-  - Existing suite and team skills as real migration costs
-  - A flow that exposes tool differences
-  - Measured diagnostics and execution cost
-trap: Picking by a speed claim from someone else's suite or rewriting a working suite on reputation alone.
+  - "List the browser versions and operating systems you must support."
+  - "Count what it costs to replace the suite or learn a new tool."
+  - "Pick a flow that shows where the tools differ."
+  - "Measure the work to run tests and investigate failures."
+trap: "Picking by someone else's speed results or replacing a working suite because another tool is popular."
 followUps:
-  - question: What would make you keep Selenium?
-    answer: A stable Java suite running against required remote browser and operating system combinations can outweigh the convenience of migrating.
+  - question: "When would you keep Selenium?"
+    answer: "If a stable Java suite already covers the required remote browsers and operating systems, I'd weigh that against what I'd gain by moving."
 sources:
   - label: Playwright browsers
     url: https://playwright.dev/docs/browsers
@@ -87,12 +87,12 @@ examples:
           }
 ---
 
-First I ask what browser and OS versions we actually promise to support. For a TypeScript team starting fresh, I'd try Playwright Test because its runner, browser support, and failure tools fit together. I'd consider Selenium if the team already owns a Java suite and needs remote sessions for specific browser and OS combinations. I'd trial Cypress if the frontend team already uses it to mount and test components in a browser and wants to keep that workflow.
+I start with the browser and operating system versions we support. If a TypeScript team is starting fresh, I'd try Playwright Test because its runner, browser support, and failure reports work together. If we have Java tests and need specific remote browser and operating system combinations, I'd consider Selenium. If the frontend team already uses Cypress to test components in a browser and wants to keep doing that, I'd try Cypress.
 
-I don't start with a rewrite. I run the same representative checks in CI and compare time to implement, first-attempt reliability, and how long it takes someone else to diagnose a failed run. If a supported browser is missing, fast results can't make up for that.
+I wouldn't start by rewriting the suite. I'd run the same checks in continuous integration (CI), the service that runs checks on code changes. I'd measure how long each test takes to write and how often it passes on the first try. I'd ask someone else to time how long a failure takes to explain.
+
+If a tool can't test a browser we support, I'd rule it out regardless of speed.
 
 ### Example
 
-For an account portal I'd trial a sign-in redirect and a report download before picking. I'd also make the pilot fail on purpose once and see which run output the on-call teammate can act on.
-
-The local order fixture opens a new tab for its invoice. The same pilot checks that the tab shows `Invoice A104`. I'd compare the implementation and the diagnostics across candidates.
+I'd try a sign-in redirect and a report download for an account portal. I'd make a test fail once on purpose and ask what the on-call teammate can tell from the report. I'd also use the local order's invoice, which opens in a new tab. I'd check for `Invoice A104` and compare the code and failure details across tools.

@@ -1,19 +1,19 @@
 ---
-title: How would you make a test client return the right type for each warehouse route?
+title: How would you make a test client return the right type for each warehouse API route?
 topic: javascript-typescript
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Use the route as a type parameter and index an endpoint map for the request and response types.
+oneLine: I make the route a type parameter. Then I look up the request and response types for that route in an endpoint map.
 looksFor:
-  - Uses a generic function whose type parameter connects arguments and return value.
-  - Restricts route keys to the endpoint map.
-  - Derives the input and output types from the selected route.
-  - Validates untrusted network data at runtime.
-trap: Letting callers choose any response type parameter and casting the decoded body to it.
+  - Use a generic function whose type parameter links the arguments to the return value.
+  - Allow only route keys that exist in the endpoint map.
+  - Get the input and output types from the chosen route.
+  - Validate untrusted network data at runtime.
+trap: Letting callers pick any response type parameter and casting the decoded response to that type without checking it.
 followUps:
-  - question: Where should the client check that the server sent a numeric stock count?
-    answer: At the response boundary, after decoding the JSON. A route-specific parser can reject incompatible data before an assertion uses it.
+  - question: At what point would you check that the server sent the stock count as a number?
+    answer: I'd check it at the response boundary, after decoding the JSON. A parser for that route can reject data that doesn't match before an assertion uses it.
 sources:
   - label: TypeScript generic constraints
     url: https://www.typescriptlang.org/docs/handbook/2/generics.html#using-type-parameters-in-generic-constraints
@@ -58,16 +58,12 @@ examples:
           export {};
 ---
 
-I'd define a map from route to input and output. `request<Route extends keyof Warehouse>` ties
-a known route to both types. Given `/stock`, the compiler expects a SKU and returns the
-stock response type. When the endpoint contract changes, call sites that still expect the old
-fields fail type checking. If a route variable can hold more than one route, I'd narrow it first
-so it stays paired with the right input.
+I'd define a map from each route, a path in the API, to its input and output types. A generic function takes a type parameter, which works like an argument for types. In `request<Route extends keyof Warehouse>`, the type parameter `Route` must be a known route. That ties the route to both types.
 
-This checks the TypeScript side. With a real network transport I'd decode the body as `unknown`
-and give each route a parser. A static type can't prove what the server actually sent.
+Given `/stock`, the compiler expects a SKU and returns the stock response type. When the endpoint contract changes, call sites that still expect the old fields fail type checking. If a route variable can hold more than one route, I'd narrow it first. Narrowing means checking which route it holds, so it stays paired with the right input.
+
+This checks the TypeScript side. Casting tells TypeScript to treat a value as a given type without checking the contents. With a real network transport, I'd decode the body as `unknown` and give each route a parser. A static type can't prove what the server actually sent.
 
 ### Example
 
-The stub transport gives `/stock` a SKU input and `/aisle` a numeric aisle input. The case for
-SKU `P-17` expects eight items. Passing the aisle argument to `/stock` would fail type checking.
+The stub transport, a stand-in for the network, gives `/stock` a SKU input and `/aisle` a numeric aisle input. The case for SKU `P-17` expects eight items. If I passed the aisle argument to `/stock`, it would fail type checking.

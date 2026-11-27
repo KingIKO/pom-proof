@@ -1,23 +1,23 @@
 ---
-title: What does Docker make repeatable in a browser test environment?
+title: "Which parts of a browser test setup does Docker make repeatable?"
 topic: ci-git-docker
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Pin the test environment and run it the same way locally and in CI while keeping external dependencies visible.
+oneLine: "I fix the test setup at known versions and use it locally and in CI. I keep anything outside that setup visible."
 looksFor:
-  - Browser, dependency, and image versions
-  - The test process and supporting services
-  - Readiness and lifecycle of dependencies
-  - The difference between a container and production parity
-trap: Using a floating image tag and calling the result reproducible because it runs in a container.
+  - "Name the browser, software packages, and image versions."
+  - "Describe how the tests and the services they need run together."
+  - "Explain how you wait for those services and clean them up."
+  - "Explain which parts of the live setup a container cannot reproduce."
+trap: "Using an image tag that can change and assuming the container will always run the same way."
 followUps:
-  - question: Why measure image pull time separately?
-    answer: Browser tests can get faster while fresh jobs get slower if they spend more time downloading an image.
-  - question: Two jobs use the same image. Why can only one write its trace?
-    answer: The image defines the packaged filesystem and defaults. Each running container gets its own process and mount settings. I'd compare the host report directory and the user's write access in each job.
-  - question: Which checkout failure would you still try on a real phone?
-    answer: I'd try a payment handoff that depends on the phone's browser or another app. The browser container also can't account for remote service behavior or the data shapes seen in production, so I check those separately.
+  - question: "Why measure the time to download the image on its own?"
+    answer: "I can speed up the browser tests and still slow down fresh jobs if they spend longer downloading the image."
+  - question: "If both jobs use the same image, why might only one be able to save its trace?"
+    answer: "The image supplies the files and defaults. Each running container has its own process and settings for which host folders it can see. I'd compare those report folders and check who can write to them."
+  - question: "Which checkout problem would you still test on a real phone?"
+    answer: "I'd test a payment that hands control to the phone's browser or another app. I'd separately check remote services and the kinds of data customers use, because the browser container can't account for either."
 sources:
   - label: Playwright Docker
     url: https://playwright.dev/docs/docker
@@ -49,10 +49,10 @@ examples:
               --output=/reports --trace retain-on-failure'
 ---
 
-I use an image to make the test runner's system dependencies and browser binaries predictable. For Playwright, I'd match the project package version to the version in the chosen Playwright image and install the project's locked dependencies. I'd record the image used so a developer can reproduce the environment from a failed run.
+I use Docker to run tests in a container, an isolated environment started from an image of files and settings. The image keeps the test runner's system packages and browser versions predictable. For Playwright, I'd match the project package version to the Playwright image. I'd install the exact dependencies the project lists and save the image version with failures.
 
-If the app needs a database, I'd make the test startup wait until the app and database are ready, load test-owned data, and tear down the temporary services later. A container doesn't control a remote identity service or production traffic. I keep coverage for those differences somewhere explicit.
+I use the same setup on my machine and in continuous integration (CI), where jobs run automatically. If the app uses a database, I'd wait for the app and database before starting tests. I'd load data the tests own and remove the temporary services afterward. I plan separate checks for remote services such as sign-in, and for live traffic patterns a container can't control.
 
 ### Example
 
-Assume the checkout project locks Playwright to `1.64.1`, starts its synthetic storefront from its test setup, and tags smoke cases with `@smoke`. I give Chromium shared memory and keep installed dependencies in an anonymous volume. A failed checkout check should exit nonzero and leave its trace in the host's `artifacts` folder.
+Suppose I use a checkout project that locks Playwright to `1.64.1`. Its setup starts a test storefront and labels quick checks `@smoke`. I give Chromium shared memory for its processes. I keep installed packages in an anonymous volume, a storage area Docker gives a random name. If the checkout check fails, I expect a nonzero exit status and a trace, or record of the run, in the host's `artifacts` folder.

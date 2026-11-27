@@ -1,19 +1,19 @@
 ---
-title: How would you catch a payments API returning amount cents as a string in a TypeScript test?
+title: How would a TypeScript test catch a payments API returning the amount in cents as text?
 topic: javascript-typescript
 roles: [automation, sdet]
 level: senior
 type: tooling
-oneLine: Parse unknown response data with a runtime schema and infer the test's type from that same schema.
+oneLine: I parse unknown response data with a runtime schema. I infer the test's type from that same schema.
 looksFor:
-  - Distinguishes a type assertion from an actual runtime check.
-  - Checks the decoded reply before the test client returns a Payment.
-  - Infers the compile-time type from the parser schema.
-  - Chooses an explicit policy for extra fields and avoids coercing contract failures.
-trap: Casting JSON to Payment and treating the lack of a compiler error as evidence about the API.
+  - Tell a type assertion apart from an actual runtime check.
+  - Check the decoded reply before the test client returns a `Payment`.
+  - Infer the compile-time type from the parser schema.
+  - Choose an explicit rule for extra fields, and avoid converting data that breaks the contract into the expected type.
+trap: Casting JSON to `Payment` and treating the lack of a compiler error as evidence about the API.
 followUps:
-  - question: Would you reject extra fields?
-    answer: I'd check the contract. Use strict parsing when extras are forbidden and accept them when the API allows additive fields.
+  - question: When would you reject a response that has fields you didn't expect?
+    answer: I'd check the contract. If it forbids extra fields, I use strict parsing. If the API allows new fields to be added, I accept them.
 sources:
   - label: TypeScript type assertions
     url: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions
@@ -50,17 +50,12 @@ examples:
           );
 ---
 
-I'd make `decodePayment` earn its return type. It treats the decoded JSON as `unknown` and
-returns a `Payment` only after Zod accepts the data. A cast like `as Payment` disappears
-from the generated JavaScript. If the server sends `"2500"`, the parser points to `amountCents`
-before a test can use the string in a total.
+I'd make `decodePayment` check the data before it can return a `Payment`. It treats the decoded JSON as `unknown`. Zod, a validation library, then checks the data against a schema. A schema describes the expected shape in a form the code can check at runtime. The function returns a `Payment` only after Zod accepts the data.
 
-I'd infer the TypeScript type from the schema so I don't have to keep an interface and a validator
-in sync. I'd also decide how to handle fields the schema doesn't list. If the contract allows
-additions, the test should accept extra fields.
+A cast like `as Payment` disappears from the generated JavaScript. So the cast checks nothing at runtime. If the server sends `"2500"`, the parser points to `amountCents`. It does that before a test can use the string in a total.
+
+I'd infer the TypeScript type from the schema. Then I don't have to keep an interface and a validator in sync. I'd also decide how to handle fields the schema doesn't list. If the contract allows additions, the test should accept extra fields.
 
 ### Example
 
-This checkout endpoint has a closed response shape and sends a nonnegative integer for
-`amountCents`. The local check uses Zod to parse two saved bodies. The numeric amount parses,
-and the string amount throws a schema error.
+This checkout endpoint has a closed response shape, which allows no unlisted fields. It sends a nonnegative integer for `amountCents`. The local check uses Zod to parse two saved bodies. The numeric amount parses, and the string amount throws a schema error.

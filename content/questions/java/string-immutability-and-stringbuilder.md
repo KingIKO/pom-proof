@@ -1,19 +1,19 @@
 ---
-title: How would you build an order mismatch report without changing its shared heading?
+title: How would you write a report on differences between orders and leave the shared heading unchanged?
 topic: java
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Keep the heading as a shared String and append the report rows to a local StringBuilder.
+oneLine: I keep the heading as a shared `String`. I append the report rows to a local `StringBuilder`.
 looksFor:
-  - Explains that a String value cannot change after creation.
-  - Connects immutability with interning, sharing, and cacheable hashes.
-  - Uses StringBuilder for repeated appends in a loop.
-  - Distinguishes StringBuilder from synchronized StringBuffer operations.
-trap: Sharing one StringBuilder across parallel tests because the String values passed to it are immutable.
+  - Explain that a `String` value cannot change after it is created.
+  - Connect immutability with interning, sharing, and hashes that can be cached.
+  - Use `StringBuilder` for repeated appends in a loop.
+  - Tell `StringBuilder` apart from the synchronized operations of `StringBuffer`.
+trap: Sharing one `StringBuilder` across parallel tests because the `String` values passed to it are immutable.
 followUps:
-  - question: Is StringBuffer enough to keep a whole report together across threads?
-    answer: It synchronizes its operations. Multiple calls can still interleave, so I'd build each report separately.
+  - question: Is `StringBuffer` enough to keep a whole report together across threads?
+    answer: I can use it to run one operation at a time on the same buffer. Calls from different threads can still alternate. I'd build each report separately.
 sources:
   - label: Java 21 String immutability and interning
     url: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html
@@ -53,16 +53,14 @@ examples:
           }
 ---
 
-A Java `String` never changes its characters after creation. That lets threads share the same
-heading without a thread being able to edit its value. Interned strings can share an instance,
-and a hash derived from the characters can be cached. OpenJDK 21 does that internally.
+A Java `String` never changes its characters after creation. This is called immutability. Because of it, threads can share the same heading, and no thread can edit its value.
 
-For a report with a row per mismatch, I'd use a `StringBuilder` local to the call and append
-each row in a loop. The builder is mutable and produces the finished string with `toString`.
-`StringBuffer` synchronizes its operations. I don't need that overhead for a builder that only
-one thread uses.
+Interned strings can share one instance. Interning means Java keeps one shared copy of a string value in a pool. A hash worked out from the characters can also be cached. OpenJDK 21 does that internally.
+
+For a report with a row per mismatch, I'd use a `StringBuilder` that is local to the call. I'd append each row in a loop. The builder is mutable, which means its contents can change. It produces the finished string with `toString`.
+
+`StringBuffer` synchronizes its operations, so only one thread at a time can run them on the same buffer. I don't need that overhead for a builder that only one thread uses.
 
 ### Example
 
-One report lists two missing order IDs under the shared heading. A second report with no
-missing IDs returns only the heading, with no rows carried over.
+One report lists two missing order IDs under the shared heading. A second report has no missing IDs. It returns only the heading, with no rows carried over.

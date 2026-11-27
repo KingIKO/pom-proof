@@ -4,24 +4,26 @@ topic: leadership
 roles: [senior, sdet]
 level: senior
 type: behavioral
-oneLine: Link coverage and launch decisions to the ways real customers could be harmed.
+oneLine: I tie test coverage and launch decisions to the ways real customers could be harmed.
 looksFor:
-  - Your role in identifying expensive or irreversible failures
-  - Deliberate choices about test layers and environments
-  - Evidence that changed the launch plan
-  - A result and a lesson you reused
-trap: Presenting a list of test types without tying any of them to a launch decision.
+  - Explain your part in finding failures that are costly or cannot be undone.
+  - Show deliberate choices about test layers and test environments.
+  - Give evidence that changed the launch plan.
+  - Share a result and a lesson you used again.
+trap: Listing test types without showing what any of the tests would tell you about whether to launch.
 followUps:
-  - question: What do you cut if the timeline is halved?
-    answer: I'd protect coverage for irreversible actions, permissions, and recovery, then make the lower-risk gaps explicit to the release owner.
-  - question: How would operations know whether the booking pilot should expand?
+  - question: If you have half as much time to test, which checks would you drop?
+    answer: I'd protect coverage for actions that cannot be undone, for permissions, and for recovery. Then I'd make the lower-risk gaps clear to the release owner.
+  - question: What would help the operations team decide whether to expand the booking trial?
     answer: >-
-      Give operations a named owner and a way to see when cancelled slots stay held. Before the
-      pilot I'd make the rollback rehearsal a release requirement, run it with synthetic appointments
-      in staging, and check that recovery still works at the expected booking volume.
+      I'd give operations a named owner and a way to see when cancelled slots stay held. Before the
+      pilot, I'd make the rollback rehearsal a release requirement. I'd run it with synthetic
+      appointments in staging. I'd also check that recovery still works at the expected booking volume.
 ---
 
-I led QA for a new clinic booking portal with six weeks to launch. I interviewed support and product to learn which failures were hardest to recover from. Double bookings and confirmations sent to the wrong person topped the list. I put overlap rules in service tests and used a few browser flows for booking and cancellation. I asked operations to rehearse a rollback with synthetic appointments.
+I led QA for a new clinic booking portal with six weeks to launch. I used a test strategy to decide what to test and how. I interviewed support and product to learn which failures were hardest to recover from. Double bookings and confirmations sent to the wrong person were at the top of the list.
+
+I put the rules for overlapping appointments in service tests. Those tests check the booking service directly, without a browser. I used a few browser tests for booking and cancellation. I asked operations to rehearse a rollback, which means undoing a release. They used synthetic appointments, fake bookings made only for testing.
 
 The rehearsal found that cancelling a booking didn't restore the slot. I made that a launch requirement and checked the fix before the pilot. Over two pilot weeks, staff reconciled 240 appointments without finding a duplicate. The pilot was small, so we kept monitoring overlap. I learned to include recovery in the strategy from the first draft.
 

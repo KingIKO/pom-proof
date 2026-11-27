@@ -1,27 +1,27 @@
 ---
-title: When would you quarantine a flaky test?
+title: "When would you quarantine a flaky test?"
 topic: flaky-tests
 roles: [automation, sdet, senior]
 level: mid
 type: scenario
-oneLine: Separate a diagnosed noisy check from the merge gate briefly, keep it running, and give someone a deadline to restore it.
+oneLine: "I temporarily take out a test only when the evidence points to the test or setup. I keep it running if possible and name who'll fix it and when."
 looksFor:
-  - Evidence that distinguishes test instability from a product defect
-  - An owner, repair ticket, and review date
-  - Continued visibility into failures
-  - Temporary coverage for the risk being removed
-trap: Skipping the test indefinitely without documenting what coverage disappeared.
+  - "Show why you think the failure comes from the test or setup rather than the product."
+  - "Name the owner, ticket, and date to review the fix."
+  - "Keep test results visible while the check is out."
+  - "Cover the risk another way until the fix is ready."
+trap: "Skipping the test with no end date and no record of what it used to check."
 followUps:
-  - question: What earns a quarantined check its place back?
-    answer: I'd require a fix tied to the cause, clean repeat runs under the failing conditions, and evidence the check catches the original bad outcome.
-  - question: The CSV download check was quarantined yesterday. Another team wants to make a new PDF download check required today. What would you do before the release?
-    answer: I'd run the PDF check repeatedly beside the other downloads on the same CI workers before making it required. I'd use the quarantine log to see which failures recur most and compare the release risk they leave uncovered. If the CSV cleanup collision is frequent and leaves a gap for this release, I'd repair it first.
+  - question: "What would make you require the quarantined test again?"
+    answer: "I'd check that the repair addresses the cause and passes repeatedly under the original conditions. I'd prove the test still catches the wrong result."
+  - question: "You quarantined the CSV check yesterday. Another team wants to require a new PDF download check today. What do you do before release?"
+    answer: "I'd run the PDF check repeatedly next to the other downloads on the same CI workers before requiring it. I'd read the quarantine log for recurring failures. I'd compare what release risks we'd miss. If the CSV tests often interfere during cleanup and that leaves a risk, I'd fix it first."
 ---
 
-I quarantine a test when the evidence points to the test or environment and the noise is making people ignore the merge gate. If the intermittent behavior can harm a customer, I treat it as product risk and bring it to whoever owns the release decision.
+A flaky test sometimes passes and sometimes fails under the same conditions. I quarantine a test by temporarily taking it out of the merge gate, the checks that must pass before code can merge. I do this when evidence points to the test or setup and repeated failures make people ignore the gate. If the intermittent behavior can harm a customer, I treat it as a product risk and tell the person who owns the release decision.
 
-I keep the quarantined test running outside the gate if feasible. It needs a named owner, a ticket with first-failure evidence, and a review date. I also say what checked that path before and what will cover it during repair. A quarantine that nobody looks at is a quiet deletion.
+If possible, I keep the test running separately. I name an owner, file a ticket with the first failure, and set a date to review it. I record what used to check that behavior and what's covering it during the repair. If nobody reads the results, keeping the test is little different from deleting it.
 
 ### Example
 
-For an export test broken by competing file cleanup, I'd give its owner two days to isolate the download directory. I'd keep the export API check required and manually check browser downloads on the release candidate until the fixed test returns.
+If two tests try to clean up the same exported file, I'd give the owner two days to separate the download folders. I'd keep the check that calls the export service directly as a required check. Until the fixed test returns, I'd manually check browser downloads on the build we plan to release.

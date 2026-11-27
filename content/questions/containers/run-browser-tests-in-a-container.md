@@ -1,19 +1,19 @@
 ---
-title: Chromium dies during warehouse search and leaves no trace. What would you check before changing the test?
+title: "Chromium crashes during warehouse search and saves no trace. What would you check before changing the test?"
 topic: containers
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Keep browser crashes distinct from assertion failures by giving the runner room to work and saving its evidence outside the container.
+oneLine: "I check whether the browser crashed or the test found a wrong result. I give the browser room to run and save evidence outside the container."
 looksFor:
-  - Uses the exit status and browser output to distinguish a process crash from a failed search assertion.
-  - Checks whether the report directory is writable and survives removal of the runner.
-  - Tests whether headless Chromium runs more reliably with more shared memory.
-  - Confirms the locked Playwright version matches the browser image.
-trap: Treating every browser crash as a locator failure and increasing the test timeout.
+  - "Use the exit status and browser output to tell a crash from a failed check."
+  - "Check that the runner can write reports and that the files survive its removal."
+  - "Test whether Chromium is more reliable without a window when it has more shared memory."
+  - "Match the exact Playwright package version to the browser image."
+trap: "Treating every browser crash as a broken element lookup and giving the test more time."
 followUps:
-  - question: Warehouse search only passes with more shared memory, but CI requires IPC isolation. Which option would you test?
-    answer: "Docker can give the container more space at `/dev/shm` with `--shm-size`. Playwright recommends `--ipc=host` for Chromium, but that shares the host IPC namespace. I'd start with a private mount if the runner needs IPC isolation."
+  - question: "If search needs more shared memory but CI requires IPC isolation, what would you try?"
+    answer: "Docker can give the container more space at `/dev/shm` with `--shm-size`. Playwright recommends `--ipc=host` for Chromium. That shares the host's IPC namespace, where processes communicate. If the runner needs to keep that separate, I'd try a private mount first."
 sources:
   - label: Playwright Docker images and Chromium guidance
     url: https://playwright.dev/docs/docker
@@ -50,14 +50,10 @@ examples:
                 --reporter=junit --output=/artifacts/results'
 ---
 
-I'd start with the process exit and any browser logs. A sudden crash with several active tabs
-would make me check `/dev/shm`, even in headless mode. I'd rerun with more shared memory and
-leave the search assertion and its timeout alone. I'd check that CI publishes whatever evidence
-is available on failure. A writable host mount keeps reports after the container is removed.
+I'd inspect the browser's exit status and any logs. If Chromium crashes with several tabs active, I'd check `/dev/shm`, the shared memory area, even in headless mode, which runs without a window. I'd rerun with more shared memory and leave the search check and its time limit alone. I'd make sure continuous integration (CI), the system running the job, publishes any evidence it has after a failure. A writable folder mounted from the host keeps the reports after the container goes away.
 
-I'd also match the image tag with the Playwright version in the lockfile. The image supplies
-the browsers and system dependencies; the test suite still needs its locked package install.
+I'd match the image tag to the Playwright version in the lockfile, which lists exact package versions. The image includes the browsers and system software. I'd still install the test suite's locked packages.
 
 ### Example
 
-On a Linux CI runner, use a trusted warehouse search suite with Playwright `1.64.1` locked and a self-contained Chromium spec under `tests/`. This example doesn't copy `playwright.config.ts`, so Playwright uses defaults except for the options passed on the command line. The package install stays in the container. A failed assertion should give CI a nonzero exit and leave `artifacts/junit.xml` and its trace under `artifacts/results`.
+On a Linux CI runner, I'd use a trusted warehouse search suite locked to Playwright `1.64.1`. I'd put a self-contained Chromium test under `tests/`. This example leaves out `playwright.config.ts`, so I'd get defaults except for options passed on the command line. I install packages inside the container. If a test assertion fails, I'd expect a nonzero exit and `artifacts/junit.xml` plus a trace under `artifacts/results`.

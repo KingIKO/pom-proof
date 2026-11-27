@@ -1,25 +1,27 @@
 ---
-title: "How would you test that a paginated endpoint returns every matching record once?"
+title: "How would you check that an API returns each matching record once across all pages?"
 topic: api
 roles: [manual-qa, automation, sdet]
 level: mid
 type: scenario
-oneLine: "Seed an ordered dataset with ties, traverse to the end, and compare the combined identifiers with the expected sequence."
+oneLine: "I'd set up sorted records with equal sort values. I'd fetch every page and compare the collected IDs with the expected order."
 looksFor:
-  - "Sets up exact expected identifiers and sort order."
-  - "Tests ties and the final page."
-  - "Detects duplicates and omissions."
-  - "Clarifies what happens when data changes mid-traversal."
-trap: "Checking the size of the first page and assuming every later page works."
+  - "Set up the exact records and know what order their IDs should appear in."
+  - "Check equal sort values and the final page."
+  - "Look for an ID that appears twice or not at all."
+  - "Say what the API promises if the data changes between requests."
+trap: "Checking only the first page and assuming the later pages work."
 followUps:
   - question: "What if a record arrives between page requests?"
-    answer: "I'd test according to the consistency promise. A snapshot and a live list may legitimately produce different sequences."
-  - question: "What would you check about the page parameters themselves?"
-    answer: "I'd compare an omitted size with the documented default, test the maximum and one over it, and send a zero size and a negative page. I'd assert the promised behavior for each, including whether an oversized request is clamped or rejected."
+    answer: "I'd follow the API's promise about changes between pages. If it takes a fixed copy of the data, I might expect a different order than if it reads the live list."
+  - question: "How would you test the inputs that control which page the API returns?"
+    answer: "I'd leave size out and check the documented default. I'd try the maximum and one above it. I'd also try a size of zero and a negative page. For each, I'd check the promised behavior, including whether an oversized request is rejected or reduced to the maximum."
 ---
 
-I'd seed more records than fit on one page and include a tie in the main sort field near a page break. I fetch pages the way a client does and compare the collected IDs in order against the expected dataset, including any documented tie-breaker. I'd cover no results and an exact page multiple to exercise the end condition. I'd test changing data separately using the endpoint's consistency guarantees.
+I'd create more records than fit on one page. I'd put two equal values for the main sort field near a page boundary. I'd fetch pages the way a client does and compare the collected IDs in order. I'd include any documented tie-breaker, the rule that sorts records when the main values match.
+
+I'd check an empty result and a list that exactly fills its last page. Both tell me when the API stops. I'd test records that change between page requests separately, using what the API promises about that case.
 
 ### Example
 
-A report returns records sorted by update time, then by ID for matching timestamps. I'd use page size two and place two records with identical timestamps on either side of the first break. Checking just the total would miss an ID that appears twice in place of one that's missing.
+I'd use a report sorted first by update time and then by ID when timestamps match. With a page size of two, I'd put two records with the same timestamp on either side of the first break. Checking the count alone would miss one ID showing up twice in place of a missing one.

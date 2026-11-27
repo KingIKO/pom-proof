@@ -1,19 +1,19 @@
 ---
-title: "Two billing tickets tie for the longest wait. Which tickets belong on the runner-up report?"
+title: "Two billing tickets tie for the longest wait. Which tickets count as second place?"
 topic: sql
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: "Use the next distinct measured wait for each queue and return all tickets at that wait if the report gives ties the same place."
+oneLine: "If ties share a place, I'd find the next shorter measured wait in each queue. I'd return every ticket at that wait."
 looksFor:
-  - "Works out why the second billing ticket in sort order may still be in first place."
-  - "Returns both runner-up tickets when their waits tie."
-  - "Does not borrow a runner-up from another queue or rank an unmeasured wait."
-  - "Distinguishes the query needed to report ticket IDs from the one needed to report just a wait value."
-trap: "Using RANK and expecting rank 2 to exist when two rows are tied for first."
+  - "Explain why the second ticket in a sorted list may also rank first."
+  - "Return both second-place tickets if their waits tie."
+  - "Rank measured waits only and keep each queue's results separate."
+  - "Explain how a query for ticket IDs differs from a query for the wait value alone."
+trap: "Using `RANK` and expecting rank 2 when two tickets tie for first."
 followUps:
-  - question: "Product wants only one ticket link per queue. How would you choose it?"
-    answer: "I'd preserve the distinct-wait rank, then pick one of the tickets at that rank using an agreed tie-breaker such as the lowest ticket ID."
+  - question: "If the product team wants only one link per queue, how would you pick the ticket?"
+    answer: "I'd still rank each different wait once. I'd use an agreed rule to pick one ticket at that rank, such as the lowest ticket ID."
 sources:
   - label: SQLite ranking window functions
     url: https://www.sqlite.org/windowfunctions.html
@@ -40,10 +40,10 @@ examples:
           SELECT id, queue, minutes FROM ranked WHERE place = 2 ORDER BY queue, id;
 ---
 
-I'd ask whether the report gives both longest-wait tickets first place. If it does, the runner-up is the next distinct wait. `DENSE_RANK` gives every ticket at that wait rank 2. I'd use `ROW_NUMBER` with an ID tie-breaker only if the report instead means the second ticket in a sorted list.
+I'd ask whether both tickets with the longest wait share first place. If they do, I'd use `DENSE_RANK`, which assigns one rank per distinct wait without skipping ranks. Every ticket at the next shorter wait gets rank 2. If the report means the second ticket in a sorted list, I'd use `ROW_NUMBER` to number individual rows. I'd use the ID to break ties in that list.
 
-Each queue gets its own ranks. I'd skip unmeasured tickets and let a queue without a runner-up return nothing. If the report only needs one distinct value across all queues, a sorted `DISTINCT` subquery with an offset also works. MySQL 8.4 and PostgreSQL support `DENSE_RANK` too.
+I'd rank each queue separately and skip tickets with no measured wait. If a queue has no second place, I'd return nothing for it. If I only need one wait value across all queues, I'd use a sorted nested query with `DISTINCT` to remove repeats. I'd use an offset to skip the first result. MySQL 8.4 and PostgreSQL also support `DENSE_RANK`.
 
 ### Example
 
-Billing has two tickets tied at 30 and two at 24. The query returns the two at 24, IDs 3 and 4. Delivery has only one known wait, so it has no second place.
+I'd give Billing two tickets at 30 and two at 24. I'd expect the two at 24, IDs 3 and 4. If Delivery has just one known wait, I'd expect no second place there.

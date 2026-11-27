@@ -1,35 +1,30 @@
 ---
-title: The hotel's cancellation ticket says "free until midnight." What should be attached before the change ships?
+title: The hotel says cancellation is free until midnight. What would you add to the ticket before release?
 topic: fundamentals
 roles: [manual-qa, automation]
 level: junior
 type: concept
-oneLine: Keep the midnight decision, the tested booking setup, and the resulting balances together on the ticket.
+oneLine: I'd record which midnight the rule uses on the ticket. I'd include how I set up the booking for the test and the balances I saw.
 looksFor:
-  - Records whose midnight the rule uses and which risks that creates.
-  - Names what evidence is needed for release and how to produce it.
-  - Plans the booking setup while the feature is being built.
-  - Keeps results and open gaps with the rule for the next change.
-trap: Putting the entire testing life cycle between the last code change and the release.
+  - Write down which time zone the rule uses and what can go wrong.
+  - Say what evidence the release needs and how you'll get it.
+  - Plan how to set up the test booking while the team builds the feature.
+  - Keep the results and any gaps with the rule for the next change.
+trap: Waiting until the last code change to start planning and running tests.
 followUps:
-  - question: The hotel changes its cutoff after launch. Which part of the ticket would you reuse?
-    answer: I'd use the reservation and clock setup again, update the expected balances for the new boundary, and check whether the old rule still applies to existing bookings.
+  - question: If the hotel changes its cutoff after launch, what could you reuse from the ticket?
+    answer: I'd reuse the reservation and clock settings. I'd update the balances I expect at the new cutoff. I'd check whether the old rule still applies to existing bookings.
 sources:
   - label: ISTQB CTFL v4.0.1, sections 1.4 and 2.1
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
 ---
 
-I'd want the ticket to show which midnight we agreed on and what balance we saw after
-cancellation. The balance is release evidence. To make it repeatable, I'd record the test build,
-reservation and clock setting, along with any defect or untested case the release owner needs to see.
+I'd record which midnight we agreed on and the balance I saw after cancelling. The balance helps the release owner decide whether the change is ready. So someone can repeat the test, I'd note the app version, reservation, and clock setting. I'd also record any bugs or untested cases the release owner needs to see.
 
-That record starts during requirements review, where I'd flag the time-zone risk and agree how
-much evidence we need. As the design takes shape, I'd write the cutoff cases and get a verified
-environment ready while development continues. Those are parts of the testing life cycle within
-the broader software development life cycle. In a short iteration they can overlap. At closure
-I'd keep the results with the rule so the next change can use them.
+I'd start that record during the requirements review. I'd raise the time zone risk and agree on how much evidence we need. While the team designs the feature, I'd write tests for the cutoff. While development continues, I'd set up a place to run the tests and check that it works.
+
+These steps are part of my testing life cycle, the work from planning tests through recording results. I do that work within the software development life cycle, which covers building and releasing the feature. In a short work cycle, testing and development steps can overlap. I'd keep the final results with the rule so the next change can use them.
 
 ### Example
 
-For free hotel cancellation, I'd settle which time zone sets the cutoff, prepare an account with a
-reservation, then record whether cancelling on either side of the cutoff leaves the correct balance.
+For free hotel cancellation, I'd agree which time zone sets the cutoff. I'd prepare an account with a reservation. I'd cancel on each side of the cutoff and record whether the account has the right balance each time.

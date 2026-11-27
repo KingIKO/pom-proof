@@ -1,19 +1,19 @@
 ---
-title: "How would you check that two seat reservations can't both win?"
+title: "How would you prove that only one of two requests can reserve the same seat?"
 topic: api
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: "Overlap independent booking attempts for one known seat, then check both results and the one reservation that actually committed."
+oneLine: "I'd make two independent attempts overlap. I'd check both replies and read the one reservation the service saved."
 looksFor:
-  - "Targets a shared, independently seeded seat with two different intents."
-  - "Coordinates the competing calls without relying on a sleep."
-  - "Checks the conflict and the identity of the stored winner."
-  - "Separates locking or uniqueness from deduplicating retries with an idempotency key."
-trap: "Checking only the response codes without reading the committed reservations."
+  - "Set up one seat that two separate test clients try to reserve."
+  - "Make the requests overlap without guessing how long to wait."
+  - "Check the conflict reply and the identity of the saved winner."
+  - "Explain why preventing two bookings differs from ignoring a repeat of the same request."
+trap: "Checking only the reply codes and never reading the saved reservations."
 followUps:
-  - question: "How would you separately test a retry of the winning booking?"
-    answer: "I'd reuse the winning key and equivalent input after a lost response, then check the same logical result and the unchanged count."
+  - question: "How would you test retrying the winning booking in a separate case?"
+    answer: "I'd drop the first reply and retry with the winning key and equivalent inputs. I'd check that the reply identifies the same booking and the booking count stays the same."
 sources:
   - label: RFC 9110, 409 Conflict
     url: https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.10
@@ -141,10 +141,10 @@ examples:
           }
 ---
 
-I'd start with a free seat and use a different client and idempotency key for each attempt. That tests two people competing for the same seat. Reusing one key would test a retry instead. I'd expect one create and one conflict, then read the committed reservation and compare its ID with the winning response.
+I'd start with a free seat. I'd give each request a different client and idempotency key, which marks repeat attempts at the same booking. Reusing a key would test a retry. I'd expect one booking and one conflict. I'd read the saved reservation and compare its ID with the winning reply.
 
-Sending both calls concurrently is a start. To reproduce a particular overlap I'd use a test-only server barrier before the claim, outside the lock or transaction that must serialize it. The storage rule could be a unique constraint or a lock on the seat row.
+I'd start by sending both calls at the same time. To repeat a specific overlap, I'd use a test-only barrier to hold the calls before either claims the seat. I'd put that barrier outside the lock or transaction that makes the claims take turns. The database could use a unique constraint, a rule that allows only one booking per seat. It could also lock the seat's row while saving.
 
 ### Example
 
-Reset the local service to a free seat B17 for each run. The test uses a fresh key per booking attempt so a prior run can't supply a cached result. It expects `201` and `409` in either order and a list containing just the winner.
+I'd reset the local service so seat B17 is free. I'd use a fresh key for each attempt so a prior run can't give me a saved reply. I'd expect `201` and `409` in either order and a reservation list containing only the winner.

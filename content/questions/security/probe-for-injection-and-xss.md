@@ -1,19 +1,19 @@
 ---
-title: How would you show that a profile name stays data when it's stored and displayed?
+title: How would you check that a profile name stays data when the app stores and shows it?
 topic: security
 roles: [manual-qa, automation, sdet]
 level: mid
 type: concept
-oneLine: Verify the database call binds input as data and each display treats that value according to its output context.
+oneLine: I'd check that the database receives the name as a value. I'd also check that each screen handles the name safely for where it appears.
 looksFor:
-  - Distinguishes database query structure from browser rendering.
-  - Checks parameters at the query boundary.
-  - Covers each output context rather than applying one encoding to every destination.
-  - Tests ordinary punctuation as valid data and verifies the stored value survives the round trip.
-trap: Rejecting all apostrophes and angle brackets and calling the remaining flow safe.
+  - Explain how the database reads a query and how a browser displays text.
+  - Check that the app passes the name as a value separate from the query.
+  - Check each place the name appears instead of applying the same rules everywhere.
+  - Enter ordinary punctuation and check that saving and reading the name keeps it intact.
+trap: Blocking every apostrophe and angle bracket and assuming that makes the rest of the flow safe.
 followUps:
   - question: Where would you apply output encoding?
-    answer: At the output boundary, using the encoder appropriate to that destination. I'd keep a plain name as stored data so a later plain-text export doesn't inherit HTML encoding.
+    answer: I'd apply output encoding at the output boundary, the point where the name goes to a destination. I'd choose an encoder that keeps characters safe for that destination. I'd store the plain name so a later plain-text export doesn't include HTML escape sequences.
 sources:
   - label: OWASP SQL injection prevention and parameterized queries
     url: https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
@@ -21,10 +21,12 @@ sources:
     url: https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
 ---
 
-I'd check both boundaries. At the database, input must stay a parameter value instead of becoming part of the SQL statement. I'd review the query binding and test with a legal name containing an apostrophe. At the browser, user-controlled text should never become executable content. For a plain profile name I'd check that it lands in a text location, with output handling appropriate to each context that displays it.
+I'd check how the app sends the name to the database. It must pass the name as a parameter, which supplies a value separately from the SQL command. I'd review how the app binds the parameter, or supplies that value. I'd test with a valid name that contains an apostrophe.
 
-One successful save leaves a lot unchecked. I'd read the stored value back and check the edit form as well as the public profile. I'd keep those regression cases on an isolated fixture.
+I'd also check how the browser shows the name. The browser must never treat user text as code it can run. I'd check that a plain profile name appears as text in each place that shows it. I'd check the output encoding, which keeps characters from taking on special meaning where the name appears.
+
+After a successful save, I'd read back the stored value. I'd check both the edit form and the public profile. I'd keep the test cases in a separate test setup so I can catch the same problem if it returns.
 
 ### Example
 
-A synthetic display name is `O'Neil <Home>`. I expect the database to preserve it exactly. On the profile page and in the editor, both punctuation marks should be visible as text and there should be no new element representing the angle-bracketed part.
+I'd use `O'Neil <Home>` as a made-up name. I'd expect the database to keep it exactly as I entered it. I'd check that I can see the punctuation in the editor and on the profile page. The browser should show the angle brackets as text without turning that part into a new page element.

@@ -1,28 +1,28 @@
 ---
-title: Why not just add retries to a flaky test?
+title: "Why not add retries to a test that fails only sometimes?"
 topic: flaky-tests
 roles: [manual-qa, automation, sdet]
 level: junior
 type: concept
-oneLine: A retry can collect evidence, but the passing attempt can't explain why the first attempt failed.
+oneLine: "I use a retry to get more evidence. A passing retry doesn't tell me why the first attempt failed."
 looksFor:
-  - A pass on retry can hide a customer-facing defect
-  - A distinction between retrying a test and waiting for a condition
-  - First-attempt outcomes remain visible
-  - A concrete path to eliminating the cause
-trap: Increasing retries until the CI badge is green and measuring only the final result.
+  - "Explain how a pass on retry can hide a bug customers see."
+  - "Tell a whole-test retry apart from waiting for one expected result."
+  - "Keep the first result visible even if the retry passes."
+  - "Use the evidence to pick what to investigate and fix."
+trap: "Adding retries until the job passes and counting only the final result."
 followUps:
-  - question: When could a retry be useful?
-    answer: I'd use a retry to collect diagnostic evidence or distinguish an intermittent failure from a repeatable one, while still showing the original failure.
+  - question: "When would another attempt help you?"
+    answer: "I'd retry to collect more evidence or see if the failure happens every time under those conditions. I'd still report the original failure."
 sources:
   - label: Playwright retries
     url: https://playwright.dev/docs/test-retries
 ---
 
-A retry can be useful evidence. Playwright labels a test flaky when it fails initially and passes on retry. I keep that first result visible because a customer may hit the same timing bug and won't get a new browser session just because CI did.
+A retry gives me another result to compare. Playwright calls a test flaky when it fails first and passes on retry. I keep the first result visible. A customer may see the same timing bug and won't get a fresh browser session just because our test did.
 
-I'd separate retrying the entire test from waiting for an expected state within the test. If the UI needs time to show a completed export, I wait for the state that tells the user the file is ready. If an export genuinely goes missing occasionally, a second clean run doesn't erase the defect.
+I distinguish retrying the whole test from waiting for one thing to happen inside it. If the page needs time to finish an export, I wait for the same sign the user sees when the file is ready. If an export sometimes goes missing, I'd still investigate the product even when another attempt passes.
 
 ### Example
 
-If a search test fails on its first attempt, I compare the inputs and results of both attempts. I'd fix a test that asserts before results arrive, but file a product bug if correct queries are sometimes returning the wrong rows.
+If search fails on its first attempt, I compare the inputs and results from both attempts. If my test checks before results arrive, I'd fix the test. If valid searches sometimes return the wrong rows, I'd report a product bug.

@@ -1,19 +1,19 @@
 ---
-title: "The carrier sends 503, but checkout shows no quote error. Where would you put the test double?"
+title: "The carrier returns 503, but checkout shows no quote error. Where would you put the test double?"
 topic: api
 roles: [sdet]
 level: senior
 type: concept
-oneLine: "Replace the carrier at its HTTP address so the real shipping client must turn its 503 into the quote error checkout expects."
+oneLine: "I'd point the real shipping client at a test carrier URL. I'd check that the client turns the 503 into the quote error checkout expects."
 looksFor:
-  - "Keeps the code that interprets the carrier's reply in the running test."
-  - "Starts with a canned reply because this quote check needs no shipment history."
-  - "Keeps the quote fixture isolated when other suites change the simulator's behavior."
-  - "Limits the conclusion to how checkout handles the configured reply."
-trap: "Stubbing the quote handler itself, which leaves the carrier client out of the test again."
+  - "Keep the real code that reads the carrier's reply in the test."
+  - "Use a fixed reply when the check needs no shipment history."
+  - "Keep each run's test carrier separate if other tests change its replies."
+  - "Say what the test proves about the chosen reply and what it leaves open."
+trap: "Replacing the quote handler itself and skipping the code that reads the carrier's response."
 followUps:
-  - question: "One team is testing a slow carrier and another is testing recovery. Can they share the same simulator?"
-    answer: "They can share its setup, but each run should control its own endpoint or instance. Otherwise one suite can change the response while the other is waiting for it."
+  - question: "One team tests a slow reply and another tests recovery. Can they use the same simulator?"
+    answer: "I'd share the setup but let each run control its own URL or instance. Otherwise, one test can change the reply while another is waiting for it."
 sources:
   - label: WireMock delays and faults
     url: https://wiremock.org/docs/simulating-faults/
@@ -69,10 +69,10 @@ examples:
           }
 ---
 
-I'd put the double behind the carrier URL. For this check I need one canned reply from WireMock, then I can ask the shipping service for a quote and see which error it gives checkout. With an in-process mock that hands the fallback a finished error, the code that reads the HTTP reply never runs.
+I'd put a test double, a substitute for the real carrier, behind the carrier URL. I'd use WireMock to send one fixed HTTP reply. I'd ask the shipping service for a quote and see what error it sends to checkout. If I hand the fallback code an error inside the same process, the code that interprets the HTTP reply never runs.
 
-A different suite can reuse that setup with a delayed reply or a dropped connection. I'd consider a hand-written fake if the test needs to follow a shipment as its status changes. I'd keep a separate real sandbox check because a recording can keep replaying a reply the carrier no longer sends.
+I'd reuse the setup for a delayed reply or dropped connection. If I need to track a shipment as its status changes, I'd consider writing a fake service that stores its state. I'd keep a separate test in the real carrier's sandbox. A recorded reply may no longer match what the carrier sends.
 
 ### Example
 
-Configure the local quote service to talk to a WireMock carrier that returns `503` for standard shipping. Expect our service to return `503` with `carrier_unavailable`.
+I'd point the local quote service at a WireMock carrier that returns `503` for standard shipping. I'd expect our service to return `503` with `carrier_unavailable`.

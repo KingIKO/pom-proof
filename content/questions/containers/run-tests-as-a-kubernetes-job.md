@@ -1,19 +1,19 @@
 ---
-title: A failed checkout Job left no usable report. What should CI collect before teardown?
+title: "A failed Kubernetes checkout Job left no useful report. What would you save before cleanup?"
 topic: containers
 roles: [sdet]
 level: mid
 type: tooling
-oneLine: Preserve the first result and startup evidence outside the disposable namespace before removing it.
+oneLine: "I save the first test result and startup evidence outside the temporary namespace before deleting it."
 looksFor:
-  - Preserves the HTTP result and Job status before removing `qa-pr-184`.
-  - Uses Pod events and resource requests to explain a runner that never started.
-  - Keeps the first failed result visible instead of replacing it with a retry.
-  - Ties the runner image to the revision and mounts the URL and credential separately.
-trap: Relying on kubectl cp from the test container after it has already stopped.
+  - "Save the HTTP result and Job status before removing `qa-pr-184`."
+  - "Use Pod events and resource requests to explain why a runner didn't start."
+  - "Keep the first failure in the report even if you try again."
+  - "Tie the runner image to the tested revision and mount the URL and credential separately."
+trap: "Trying to copy files with `kubectl cp` after the test container has stopped."
 followUps:
-  - question: The checkout Job now takes screenshots and has already exited. Where should the collector read them from?
-    answer: "Write them to a mounted persistent volume claim and use a separate collector in the same namespace after the run. Upload the files before deleting the disposable namespace."
+  - question: "If the Job already stopped, where could a collector read the screenshots?"
+    answer: "I'd write them to a mounted persistent volume claim, a request for storage outside the container. I'd read them with a separate collector in the same namespace after the run. I'd upload them before deleting that temporary namespace."
 sources:
   - label: Kubernetes Jobs and failure policy
     url: https://kubernetes.io/docs/concepts/workloads/controllers/job/
@@ -95,15 +95,12 @@ examples:
                       secretName: checkout-smoke-auth
 ---
 
-I'd have CI save the Job status and container logs before deleting its namespace. If the test never
-started, I'd save the Pod events too, so a scheduling or image problem doesn't look like a failed
-assertion. For screenshots and larger reports I'd collect them from separate storage. A stopped
-container isn't a dependable place to fetch them from.
+I'd have continuous integration (CI) save the Kubernetes Job status and container logs. A Job runs a task to completion. If my test never starts, I'd save the Pod events too. They help tell scheduling or image problems apart from a failed assertion, a check for an expected result. I'd collect screenshots and larger reports from separate storage because I can't count on reading them from a stopped container.
 
-I'd keep the first ordinary test failure visible with `restartPolicy: Never` and `backoffLimit: 0`.
-Each pull request can get a disposable namespace. A full runner image would carry the suite and
-its dependencies, with CPU and memory requests and separate mounts for configuration and credentials.
+I'd use `restartPolicy: Never` and `backoffLimit: 0` to keep the first ordinary test failure visible. I can give each pull request its own temporary namespace, a group of resources. My full runner image would carry the tests and the software they need. I'd request CPU and memory and mount settings separately from credentials.
 
 ### Example
 
-For one HTTP check, the curl image is enough. The checkout service is deployed in `qa-pr-184` with an HTTPS certificate the runner trusts. The ConfigMap's `target.conf` sets curl's `url` option, and the Secret's `token.conf` sets the `header` option for a short-lived credential. The Job succeeds only on HTTP 200. CI saves `kubectl -n qa-pr-184 logs job/checkout-smoke` before removing the namespace.
+For one HTTP check, I'd use a curl image. I'd deploy checkout in `qa-pr-184` with an HTTPS certificate the runner trusts. The ConfigMap stores settings, and its `target.conf` sets curl's `url` option. The Secret stores the short-lived credential, and its `token.conf` sets the `header` option.
+
+I'd expect the Job to succeed only on HTTP 200. Before deleting the namespace, I'd save the logs with `kubectl -n qa-pr-184 logs job/checkout-smoke`.

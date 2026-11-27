@@ -1,19 +1,19 @@
 ---
-title: What does final protect when a Java refund test hands its fixture to a helper?
+title: What can a helper change if a Java refund test passes it a list through a final variable?
 topic: java
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: A final variable gets one assignment, a final method cannot be overridden, and a final class cannot be extended.
+oneLine: I use `final` to assign a variable just once. For a method, I use it to prevent overrides, and for a class, to prevent subclasses.
 looksFor:
-  - Applies final correctly to variables, methods, and classes.
-  - Distinguishes a fixed reference from an immutable object.
-  - Shows mutation through a final collection reference.
-  - Explains how an unmodifiable copy can protect a test's expected data.
-trap: Passing a final mutable list to a helper and assuming the helper cannot change it.
+  - Apply `final` correctly to variables, methods, and classes.
+  - Tell a fixed reference apart from an immutable object.
+  - Show a change made through a `final` collection reference.
+  - Explain how an unmodifiable copy can protect a test's expected data.
+trap: Passing a `final` mutable list to a helper and assuming the helper cannot change it.
 followUps:
-  - question: Does List.copyOf make the objects inside an immutable snapshot too?
-    answer: No. It makes the list unmodifiable. Mutable elements can still change, so I'd copy those separately if needed.
+  - question: Does `List.copyOf` make the objects inside an immutable snapshot too?
+    answer: No. I'd use it to get a list I can't edit. The objects inside can still change if they're mutable. If I need those objects to stay the same, I'd copy them separately.
 sources:
   - label: Java 21 final variables
     url: https://docs.oracle.com/javase/specs/jls/se21/html/jls-4.html#jls-4.12.4
@@ -49,15 +49,12 @@ examples:
           }
 ---
 
-For a variable, `final` prevents a second assignment. If I declare a list reference final,
-I can't point it at another list. The list can still change if it's mutable. For methods,
-`final` prevents overriding an instance method. A final class can't have subclasses.
+For a variable, `final` prevents a second assignment. If I declare a list reference final, I can't point it at another list. The list can still change if it's mutable, which means its contents can be edited.
 
-In a refund test I'd use `final` to express that a binding stays put, then separately
-choose whether the data should be editable. For expected codes that are strings, I'd use
-`List.copyOf` to keep a separate, unmodifiable snapshot.
+For methods, `final` prevents overriding an instance method, so a subclass can't replace it with its own version. A final class can't have subclasses.
+
+In a refund test, I'd use `final` to show that a binding doesn't change. A binding is the link between a variable name and the object it refers to. Then I'd decide separately whether the data should be editable. For expected codes that are strings, I'd use `List.copyOf` to keep a separate, unmodifiable snapshot.
 
 ### Example
 
-The fixture starts with `DAMAGED`. The test passes its final list reference to a helper,
-which appends `WRONG_ITEM`. The saved expectation still contains only `DAMAGED`.
+The fixture starts with `DAMAGED`. The test passes its final list reference to a helper, which appends `WRONG_ITEM`. The saved expectation still contains only `DAMAGED`.

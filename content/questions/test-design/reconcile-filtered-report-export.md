@@ -1,19 +1,19 @@
 ---
-title: How would you prove a filtered CSV export contains the right records?
+title: How would you check that a filtered CSV export includes exactly the records it should?
 topic: test-design
 roles: [manual-qa, automation, sdet]
 level: mid
 type: scenario
-oneLine: Use seeded records to compute the expected set independently, then compare exported IDs and values across all result pages.
+oneLine: I'd work out which test records belong in the file without using the report. I'd check their IDs and values across every result page.
 looksFor:
-  - Confirms the scope of the export and the time represented by its data.
-  - Builds a known set of included and excluded records.
-  - Compares identifiers, important field values, and totals.
-  - Covers a multi-page result and a filter with no matching records.
-trap: Checking that the file opens and has the same row count as the first page of the report.
+  - Check which records the export covers and what point in time it represents.
+  - Set up records you know the file should include or leave out.
+  - Compare IDs, important values, and totals with the records you expect.
+  - Test results that span several pages and a filter that matches nothing.
+trap: Opening the file and checking only that its row count matches the first report page.
 followUps:
-  - question: Why check IDs if the row count and total already match?
-    answer: A missing row and a duplicate with the same amount could cancel each other out. Comparing IDs and their counts tells me which records actually made it into the file.
+  - question: If the row count and total match, what can checking the IDs still tell you?
+    answer: If one row is missing and another with the same amount appears twice, the count and total can still match. I'd count rows per ID to see exactly what the file contains.
 sources:
   - label: ISTQB CTFL v4.0.1, section 4.2.1, representative input groups
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
@@ -39,10 +39,12 @@ examples:
           ORDER BY id;
 ---
 
-I'd confirm whether the export is meant to include every filtered record or only the current page. I'd also agree on which point in time the file should represent if the job runs in the background.
+I'd check whether the export is meant to include every match or only the current page. If the job runs in the background, I'd agree on what point in time its data should represent.
 
-Then I'd make a small set of records where I can work out the answer without using the report. I'd include matching records across pages, records just outside the filter, and an empty result case. In the downloaded file I'd check IDs, counts, and the values the user relies on. If dates or amounts have a particular format, I'd compare them against the export contract.
+I'd set up a few records so I can work out what belongs in the file without the report. I'd include matches on several pages and records just outside the filter. I'd also test a filter that matches nothing. In the downloaded file, I'd compare IDs, counts, and values the user relies on. If the export rules require a date or amount format, I'd check that too.
 
 ### Example
 
-A branch manager exports approved expenses across all pages. I seed four approved claims for $25, $25, $37, and $50, plus a pending claim, and use a page size of two. The CSV should contain each approved ID exactly once and exclude the pending claim. A duplicated $25 claim could leave the total at $137 if the other $25 claim went missing. The query reports both mismatches: claim 101 appears twice, and claim 102 is missing.
+I'd test a branch manager exporting approved expenses across all pages. I'd set up four approved claims for $25, $25, $37, and $50, plus a pending one. I'd set the page size to two. I'd expect the CSV, or comma-separated values file, to contain each approved ID once and leave out the pending claim.
+
+If the export duplicates one $25 claim and leaves out the other $25 claim, the total could still be $137. I'd expect the query to report both problems. Claim 101 appears twice and claim 102 is missing.

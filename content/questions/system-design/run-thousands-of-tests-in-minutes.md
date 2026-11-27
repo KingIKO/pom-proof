@@ -1,35 +1,28 @@
 ---
-title: More CI workers made reservation tests slower. Where would you spend the next six minutes?
+title: The reservation tests got slower after you added CI workers. How would you fit them into six minutes?
 topic: system-design
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: Make the work safe to run concurrently and use a timed run to see whether shared services or a single shard set the floor.
+oneLine: I'd make it safe to run tests together. I'd time a run to see whether a shared service or one group of tests limits the speed.
 looksFor:
-  - Checks whether parallel workers fight over accounts, records, or database connections.
-  - Identifies browser cases that can test the same rule below the UI.
-  - Budgets for startup and reporting when estimating ideal capacity.
-  - Uses measured test times to move work off the shard that finishes last.
-trap: Splitting by test count and adding workers until the shared environment starts timing out.
+  - Check whether workers compete for accounts, records, or database connections.
+  - Find rules that a test can check without opening the browser.
+  - Leave time for startup and reports when estimating how many workers you need.
+  - Use test times to shift work away from the group that finishes last.
+trap: Dividing tests by count alone and adding workers until the shared test environment times out.
 followUps:
-  - question: What if one test uses most of the time budget on its own?
-    answer: More shards cannot shorten that test. I'd inspect its setup and waits, then split independent checks or move suitable assertions to the API.
+  - question: What would you do if one test takes most of the time by itself?
+    answer: Adding shards won't shorten that test. I'd check what it does to set up and where it waits. I'd split checks that can run apart or move suitable checks to the API.
 sources:
   - label: Playwright sharding across machines
     url: https://playwright.dev/docs/test-sharding
 ---
 
-I'd check whether workers are blocking on the same reservation records or waiting for database
-connections. I'd isolate their data and move reservation rules that don't need a browser to the
-API layer. If the shared database still queues requests, adding runners can increase the wait.
+In CI, the system that runs automated jobs, I'd check what each worker waits for. Workers are processes that run tests. I'd check for waits on shared reservation records or database connections. I'd give each worker separate data and check rules through the API when I don't need the browser. If the shared database still queues requests, adding workers can make that wait longer.
 
-The estimate gives me a sanity check. Multiply the test count by the average duration, then
-divide by the time available after setup and reporting. I'd use disposable workers and look
-at the last shard to finish. If three specs dominate its timeline, I'd redistribute those
-using their previous run times before paying for another runner.
+To estimate the worker count, I'd multiply the number of tests by their average duration. I'd divide by the time left after setup and reporting. I'd use workers I can discard after the run. I'd check the last shard to finish, the group of tests assigned to one job. If three test files take most of its time, I'd use past timings to spread them out before paying for another runner.
 
 ### Example
 
-At four seconds each, 3,600 tests need 14,400 worker-seconds. Six minutes calls for at least
-40 concurrent workers in the ideal case. With a minute reserved for overhead, the estimate
-starts at 48, and I'd check it with a representative run.
+At four seconds each, I'd budget 14,400 worker-seconds for 3,600 tests. That's the total time spent by all workers. In ideal conditions, I'd need at least 40 workers at once to finish in six minutes. If I reserve a minute for setup and reporting, I'd start the estimate at 48. I'd check it with a run that reflects the suite.

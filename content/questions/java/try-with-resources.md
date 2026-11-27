@@ -1,19 +1,19 @@
 ---
-title: How would you close both invoice streams when an export comparison fails halfway through?
+title: If a test fails halfway through comparing invoice exports, how would you close both input streams?
 topic: java
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Declare both AutoCloseable resources in the try header and inspect suppressed exceptions for cleanup failures.
+oneLine: I declare both `AutoCloseable` resources in the try header. Then I check the suppressed exceptions for cleanup failures.
 looksFor:
-  - Opens resources in the try header and closes them in reverse order.
-  - Explains what happens when a later resource fails to initialize.
-  - Preserves the comparison failure when a close call throws as well.
-  - Uses getSuppressed to diagnose secondary failures.
-trap: Closing resources one by one in finally and letting the first close failure skip the other close.
+  - Open the resources in the try header and close them in reverse order.
+  - Explain what happens when a later resource fails to initialize.
+  - Keep the comparison failure when a close call also throws.
+  - Use `getSuppressed` to find secondary failures, such as a failed close.
+trap: Closing resources one at a time in `finally` and letting the first failed close skip the other close.
 followUps:
   - question: If the second stream fails to open, what happens to the first?
-    answer: The first stream is closed if it initialized successfully. A failure closing it is suppressed on the opening failure.
+    answer: If the first stream opened successfully, I'd expect Java to close it. If that close fails, I'd find its error as a suppressed exception, attached to the error from opening the second stream.
 sources:
   - label: Java 21 try-with-resources and suppression
     url: https://docs.oracle.com/javase/specs/jls/se21/html/jls-14.html#jls-14.20.3
@@ -60,17 +60,12 @@ examples:
           }
 ---
 
-I'd open both streams in the try header. Java closes successfully initialized non-null
-resources in reverse order, even if the comparison throws. If the second stream fails to
-open, Java still closes the first one. If closing one stream fails, Java still attempts
-to close the other.
+I'd open both streams in the try header, the parentheses right after `try`. This form is called try-with-resources. Each stream is an `AutoCloseable` resource, an object with a `close()` method that Java calls for me.
 
-When the comparison and a close call both fail, the comparison exception remains primary.
-Java puts the close failure on its suppressed list. I'd look at `getSuppressed()` when
-diagnosing a failure so I can see the cleanup problem alongside the original mismatch.
+Java closes each resource that initialized successfully and isn't null. It closes them in reverse order, even if the comparison throws. If the second stream fails to open, Java still closes the first one. If closing one stream fails, Java still tries to close the other.
+
+Sometimes the comparison and a close call both fail. Then the comparison exception stays primary, which means the try statement throws it. Java adds the close failure to that exception's suppressed list. That list holds extra exceptions attached to the main one. When I diagnose a failure, I look at `getSuppressed()` to see the cleanup problem next to the original mismatch.
 
 ### Example
 
-Two fixture streams return different invoice IDs. The export's close call also fails.
-The check expects both close attempts, export first, and finds the close error on the
-invoice mismatch's suppressed list.
+Two fixture streams return different invoice IDs. The export's close call also fails. The check expects both close attempts, with the export closed first. It finds the close error on the suppressed list of the invoice mismatch.

@@ -4,16 +4,16 @@ topic: java
 roles: [sdet]
 level: mid
 type: concept
-oneLine: Define equality and hashing from the same claim fields, or use a record whose components match the claim key.
+oneLine: I define equality and hashing from the same claim fields. Or I use a record whose components match the claim key.
 looksFor:
-  - States the hashCode contract for equal objects and allows collisions for unequal objects.
-  - Explains how inconsistent hashes can keep equal values in separate buckets.
-  - Chooses fields that actually define the business key.
-  - Shows how a record supplies matching equals and hashCode implementations.
-trap: Adding an equals method alone and assuming a HashSet will find the equal key.
+  - State the `hashCode` contract for equal objects, and allow collisions for unequal objects.
+  - Explain how inconsistent hashes can keep equal values in separate buckets.
+  - Choose the fields that actually define the business key.
+  - Show how a record supplies matching `equals` and `hashCode` implementations.
+trap: Adding an `equals` method alone and assuming a `HashSet` will find the equal key.
 followUps:
-  - question: Should the amount go into a claim key record?
-    answer: Only if it defines identity. If one claim ID remains the same claim after an amount change, I'd leave the amount out of the key.
+  - question: Would you use the amount as part of the record that identifies a claim?
+    answer: Only if it defines identity. If one claim ID remains the same claim after the amount changes, I'd leave the amount out of the key.
 sources:
   - label: Java 21 Object equality and hashing
     url: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html
@@ -61,16 +61,12 @@ examples:
           }
 ---
 
-I'd identify the fields that make two claims the same. If equality only looks at the claim ID,
-including the export row number in the hash breaks the contract. Equal objects must produce the
-same hash code. Unequal objects can share one. A hash set can put equal keys with different
-hashes in different buckets and never compare them.
+I'd identify the fields that make two claims the same. A hash code is a number that `hashCode` computes from an object. If equality only looks at the claim ID, including the export row number in the hash breaks the contract.
 
-For a claim ID key I'd choose a record with just that component. Java supplies `equals` and
-`hashCode` based on the record components unless I provide my own. I'd keep row numbers and
-amounts in the export row itself.
+The contract says equal objects must produce the same hash code. Unequal objects can share one. A hash set sorts keys into buckets by hash code. It can put equal keys with different hashes in different buckets and never compare them.
+
+For a claim ID key, I'd choose a record with just that component. A record is a Java class that holds a fixed set of values, called components. Java supplies `equals` and `hashCode` based on the record components unless I provide my own. I'd keep row numbers and amounts in the export row itself.
 
 ### Example
 
-The input has two rows for claim `CL-18`. A deliberately broken hash admits both keys. The
-record keyed just by claim ID rejects the second insertion.
+The input has two rows for claim `CL-18`. A deliberately broken hash admits both keys. The record keyed just by claim ID rejects the second insertion.

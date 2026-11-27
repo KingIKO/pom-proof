@@ -1,19 +1,19 @@
 ---
-title: Several event tests need their own draft. How would you make that a Playwright fixture?
+title: Each event test needs its own draft. How would a Playwright fixture set that up?
 topic: playwright
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Define a named fixture that creates the draft, passes it to the test, and cleans it up when the test ends.
+oneLine: I'd give the fixture a name and have it create a draft for the test. When the test ends, the fixture deletes the draft.
 looksFor:
-  - Uses test.extend and awaits the call that provides the resource.
-  - Declares a dependency on the request fixture.
-  - Separates per-test writes from worker-scoped setup.
-  - Explains when an automatic fixture is appropriate.
-trap: Putting a mutable draft in a worker fixture and assuming every test gets a new one.
+  - Use `test.extend` and wait for the call that gives the test the draft.
+  - List the fixture named `request` as a dependency.
+  - Keep data a test can change separate from setup shared by a worker.
+  - Name a task that should run even when a test doesn't ask for the fixture.
+trap: Putting a draft that tests can change in a worker fixture and expecting each test to get a new draft.
 followUps:
   - question: When would you use an automatic fixture?
-    answer: I'd use one for a concern like collecting diagnostic evidence, where the fixture must run even when the test doesn't list it.
+    answer: I'd use an automatic fixture for work that must happen even if the test doesn't ask for it. Collecting logs for debugging is one example.
 sources:
   - label: Playwright fixture scopes, dependencies, and execution order
     url: https://playwright.dev/docs/test-fixtures
@@ -45,10 +45,12 @@ examples:
           });
 ---
 
-I'd extend the base test with a fixture named `draftId`. It depends on the runner's `request` fixture. It creates the resource before calling `use` and deletes it afterward. The test lists its dependency next to `page`, so a reader can see what it needs without tracing through hooks or a base class.
+I'd add a fixture named `draftId` with `test.extend`, the Playwright method that adds setup to the base test. A fixture prepares something the test needs and can clean it up afterward. I'd use Playwright's `request` fixture to create the draft through the API. I'd pass the ID to `use`, the function that runs the test with that value. I'd wait for `use` to finish before deleting the draft.
 
-I'd make the draft test-scoped because a test may publish it. A worker fixture can share slower setup that is safe within a worker, such as a service client with no mutable test data. Ordinary fixtures are requested as needed. An automatic fixture runs even when the test doesn't ask for it.
+I'd list `draftId` next to `page`, the browser page fixture. That shows what the test needs without making the reader look through hooks or a base class for shared setup.
+
+I'd give each test its own draft because the test might publish it. I'd use a worker fixture for slower setup that tests in one worker process can share safely. A service client that stores no test data those tests can change is one example. Playwright runs ordinary fixtures when a test requests them.
 
 ### Example
 
-The local test API creates a fresh draft. The browser checks that its publication status says `Draft`, and the fixture removes that draft by ID.
+I'd create a fresh draft through the local test API. In the browser, I'd check that its publication status says `Draft`. When the test ends, I'd have the fixture delete the draft by ID.

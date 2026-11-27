@@ -1,19 +1,19 @@
 ---
-title: "Inventory reports nine marker packs available, but three are reserved. Which regression belongs at the endpoint?"
+title: "Inventory reports nine marker packs available, but three are reserved. Which regression test belongs at the endpoint?"
 topic: api
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: "Seed nine packs with three reservations and check that the inventory endpoint reports six available."
+oneLine: "I'd set up nine packs with three reserved. I'd check that the inventory endpoint reports six available."
 looksFor:
-  - "Uses different on-hand and reserved counts so a bad column lookup changes the result."
-  - "Checks the exact total in the endpoint's public response for the seeded SKU."
-  - "Works back from a wrong total to the query and the value passed to the calculator."
-  - "Keeps calculator cases separate, where inputs can be varied without resetting stock."
-trap: "Stubbing the reservation count in the endpoint test and masking the bad column lookup."
+  - "Use different counts for packs in stock and packs reserved so the wrong column gives the wrong result."
+  - "Check the exact available count in the public response for the test item."
+  - "Trace a wrong total back to the database query and the count sent to the calculator."
+  - "Test the calculator separately so each case can supply counts without resetting stock."
+trap: "Supplying a fake reservation count to the endpoint test and hiding the mistake that reads the wrong column."
 followUps:
-  - question: "The service reads three reservations and the calculator returns six, but the JSON says nine. Where would you look?"
-    answer: "I'd trace the response field back to the calculated value. The serializer or response model may be filling availablePacks from the on-hand count."
+  - question: "The service reads three reservations, and the calculator returns six, but the JSON says nine. Where would you look?"
+    answer: "I'd trace availablePacks back to the calculated value. The response model, which defines the reply fields, may use the count in stock. The serializer, which turns the reply into JSON, may also use the wrong count."
 sources:
   - label: Ham Vocke, unit tests and integration tests
     url: https://martinfowler.com/articles/practical-test-pyramid.html
@@ -67,10 +67,12 @@ examples:
           }
 ---
 
-I'd keep the regression at the inventory endpoint. A seeded SKU with nine packs and three reservations gives me distinct values to trace from storage through the calculator to `availablePacks`. If the service reads the wrong column and feeds the calculator zero reservations, that fixture exposes it. Going through the running endpoint also exercises routing, input validation, and serialization.
+I'd use the inventory endpoint, the URL the client calls for inventory, for the regression test that catches this bug if it returns. I'd set up a test SKU, or stock item code, with nine packs and three reservations. I can trace those counts from storage through the calculator to the `availablePacks` response field. If the service reads the wrong column and gives the calculator zero reservations, the test exposes it.
 
-I'd pass the two counts directly to the calculator in a unit test. A double can supply a dependency when needed. That's where I'd vary the arithmetic cases without rebuilding the inventory fixture every time.
+Calling the running endpoint also checks routing, which sends the request to the right code. It checks input validation and serialization, the step that puts the result in the reply.
+
+I'd test the arithmetic separately by passing both counts straight to the calculator. If the calculator needs another component, a test double can act in its place. I can vary the counts without setting up inventory again.
 
 ### Example
 
-Seed nine marker packs with three reserved. The running inventory service should return `200` with `availablePacks` equal to six.
+I'd add nine marker packs and reserve three. I'd expect the running service to return `200` and set `availablePacks` to six.

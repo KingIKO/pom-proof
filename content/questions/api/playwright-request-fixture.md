@@ -1,19 +1,19 @@
 ---
-title: "How would you write a Playwright API test without opening a browser page?"
+title: "How would you test an API in Playwright without opening a browser page?"
 topic: api
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: "Use Playwright Test's built-in request fixture with an isolated test identity, then assert the response and read back the result."
+oneLine: "I'd use Playwright Test's request fixture with a separate test identity. I'd check the reply and read back anything the request saves."
 looksFor:
-  - "Uses the request fixture rather than a UI navigation."
-  - "Keeps environment and credentials out of the test body."
-  - "Uses an exact status and meaningful data assertions."
-  - "Uses independent data or reliable cleanup."
-trap: "Checking response.ok() alone on an endpoint that promises a particular resource and status."
+  - "Send requests through the request fixture instead of opening a browser page."
+  - "Get the target and credentials from test settings rather than putting them in the test body."
+  - "Check the exact status and the data that matters."
+  - "Use separate records or clean them up reliably."
+trap: "Using only response.ok() when the API promises an exact status and a particular record."
 followUps:
-  - question: "When might you use page.request instead?"
-    answer: "When I want the request to share cookies with that page's browser context, such as reading back a change made with that session."
+  - question: "When would you use page.request instead?"
+    answer: "I'd use it if the request needs to share cookies with the browser session. An example is reading a change the test made in that session."
 sources:
   - label: "Playwright, API testing"
     url: https://playwright.dev/docs/api-testing
@@ -42,8 +42,8 @@ examples:
           });
 ---
 
-I'd take `request` from the test function's fixtures. It sends requests directly and uses Playwright Test configuration such as `baseURL`. I'd provide credentials from the test environment and keep the payload beside the assertions. For a write I'd check the exact status from our contract and verify the resulting resource using a separate read.
+I'd use the `request` fixture that Playwright Test provides to send HTTP requests directly. It uses test settings such as `baseURL`, the starting address for relative paths. I'd get credentials from the test environment and keep the request data next to the checks. If the request writes data, I'd check the exact status the API promises. I'd make a separate request to read the saved record.
 
 ### Example
 
-With `baseURL` and the test identity set in Playwright configuration, I'd call `request.post('/labels', { data: { name } })` in a dedicated account reset for each run. I'd check `201`, read the ID from `await response.json()`, and use `request.get` to check `200` and the saved name.
+With `baseURL` and the account set in Playwright settings, I'd call `request.post('/labels', { data: { name } })`. I'd use a dedicated account that resets for every run. I'd check `201` and read the ID with `await response.json()`. I'd use `request.get` to check `200` and the saved name.

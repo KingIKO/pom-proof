@@ -1,30 +1,30 @@
 ---
-title: How would you build a decision table for whether a cart can be picked up?
+title: How would you use a decision table to test whether checkout offers pickup?
 topic: test-design
 roles: [manual-qa, automation, sdet, senior]
 level: mid
 type: concept
-oneLine: Write one rule for each feasible combination of conditions and record the expected action, including which reason wins when rules overlap.
+oneLine: I'd write an expected result for each combination that can happen. If more than one reason blocks pickup, I'd record which reason should appear.
 looksFor:
-  - Separates the conditions from the actions.
-  - Checks whether each combination can happen before removing it.
-  - Confirms which explanation wins when both blocking conditions apply.
-  - Derives a test from each rule and checks the offered option and explanation.
-trap: Testing each reason for blocking pickup on its own and missing the case where both apply.
+  - List the conditions separately from what checkout does.
+  - Before dropping a combination, check whether it can happen.
+  - Check which explanation checkout should show when both reasons apply.
+  - Make a test for each rule and check what checkout offers or explains.
+trap: Testing each reason on its own and missing what happens when both reasons block pickup.
 followUps:
-  - question: Can you combine two columns that both block pickup?
-    answer: Only if the differing condition does not affect any expected action. Two blocked results with different messages are still different rules.
-  - question: What if the rules do not say which message wins?
-    answer: I'd show that combination to the product owner and ask for a decision before treating either message as correct.
+  - question: When can you merge two columns that both block pickup?
+    answer: I'd only merge them if the condition that differs changes none of the expected actions. If checkout shows different messages, I'd keep them separate.
+  - question: What would you do if the rules don't say which reason should appear?
+    answer: I'd show the product owner the combination. I'd ask them to choose the correct message before I test for it.
 sources:
   - label: ISTQB CTFL v4.0.1, section 4.2.3
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
 ---
 
-I'd put the conditions in rows and give each feasible combination its own column. Below the conditions I'd record what checkout should do, including the reason it gives when pickup is unavailable. That makes it easy to see a missing rule before I start creating carts.
+I'd use a decision table to show what checkout should do for each combination of conditions. I'd put the conditions in rows and give each possible combination its own column. Below them, I'd record the expected action and any reason pickup is unavailable. I can spot a missing rule before making test carts.
 
-I'd check whether stock and pickup eligibility are independent before assuming some columns can be dropped. I'd first run one cart per feasible rule. If two columns differ on a condition that has no effect on any action, I can merge them and keep extra cases where the risk warrants it.
+Before dropping columns, I'd check whether stock and pickup eligibility can change independently. Pickup eligibility says whether an item qualifies for pickup. I'd first test one cart for each combination that can happen. If two columns differ only in a condition that changes no action, I'd merge them. I'd keep extra tests where the risk calls for them.
 
 ### Example
 
-A store offers pickup if every item is pickup-eligible and in stock at the chosen store. With both conditions true, offer pickup. If only stock is missing, say the store is out of stock. If an item is ineligible, show the eligibility reason whether stock is available or missing. I'd test both of those last cases while checking which explanation is supposed to take priority.
+I'd expect pickup when every item qualifies and is in stock at the chosen store. If stock is the only problem, I'd expect an out-of-stock message. If an item doesn't qualify, I'd expect the message to explain that. I'd test an item that doesn't qualify both with and without stock to check which explanation takes priority.

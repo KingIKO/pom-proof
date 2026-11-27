@@ -1,28 +1,28 @@
 ---
-title: When would you set up a browser test through an API?
+title: "When would you create test data through an API before opening the browser?"
 topic: automation-strategy
 roles: [automation, sdet]
 level: mid
 type: scenario
-oneLine: Use an API for prerequisites and leave the behavior you're testing on the real customer path.
+oneLine: "I'd use an API to set up what the browser test needs. I'd do the action I'm testing the same way a customer would."
 looksFor:
-  - A boundary between setup and the feature under test
-  - Unique records with known state
-  - Setup failures that stop the test with useful evidence
-  - Cleanup limited to test-owned records
-trap: Using the setup endpoint to do the very action the test is supposed to verify.
+  - "Say what counts as setup and what behavior the test checks."
+  - "Give the test unique records in a known state."
+  - "Stop if setup fails and report the failure where it happened."
+  - "Clean up only records the test created."
+trap: "Using the setup request to do the action the test is meant to check."
 followUps:
-  - question: What if the API cannot create the prerequisite?
-    answer: I'd discuss a supported seed path with the team. Until then I'd use the real setup flow and make a failure there distinct from a feature failure.
+  - question: "What if the API can't create a record the test needs?"
+    answer: "I'd ask the team for a supported way to create it. Until then, I'd use the real setup flow and report setup failures separately from failures in the feature."
 sources:
   - label: Playwright API testing
     url: https://playwright.dev/docs/api-testing
 ---
 
-I use an API to set up facts the test assumes. For a test of downloading an invoice, it's reasonable to create a paid order before the browser opens. For a test of placing that order, I'd keep the purchase in the flow. Playwright's `APIRequestContext` can send the setup requests without clicking through admin screens.
+I use an API, an interface code can call, to set up facts the test assumes. If I'm testing an invoice download, I can create a paid order before the browser opens. If I'm testing order placement, I'd make the purchase through the browser. Playwright's `APIRequestContext` sends setup requests without clicking through admin screens.
 
-I check the setup response and keep the returned order ID. If creation fails, I want the report to say so before anyone tries to debug a missing Download button. I'd give the run its own test account or records and clean up what it actually created. I also keep separate coverage for how the app produces real invoices.
+I'd check the setup response and save the returned order ID. If order creation fails, I'd report it before anyone looks for a missing Download button. I'd give each run its own account or records and delete only what it created. I'd also test separately how the app makes real invoices.
 
 ### Example
 
-I create a synthetic paid order and confirm that its invoice is ready. I open that order in the browser, download the invoice, and check the document names the same order and amount.
+I'd create a fictional paid order and check that its invoice is ready. I'd open the order in the browser and download the invoice. Then I'd check that it shows the same order and amount.

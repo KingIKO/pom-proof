@@ -1,26 +1,28 @@
 ---
-title: "Why would you test two similar features differently?"
+title: "When would two features that look alike need different tests?"
 topic: fundamentals
 roles: [manual-qa, automation, senior]
 level: mid
 type: scenario
-oneLine: "The right test approach depends on what can fail, who is affected, and how easily the team can recover."
+oneLine: "I choose tests based on what might break and who it would affect. I also consider how easily the team can recover."
 looksFor:
-  - "Compares the consequences of a failure."
-  - "Adapts test depth and evidence to the feature."
-  - "Checks recovery options."
-  - "Retains a defensible minimum for the lower-risk feature."
-trap: "Copying the same checklist to both features because they share a UI component."
+  - "Compare what would happen if each feature failed."
+  - "Choose how closely to test each feature and what the results need to show."
+  - "Check what the team can do if something goes wrong."
+  - "Keep enough checks to explain why the less risky feature is ready."
+trap: "Using the same checklist for both features because they share a control on the page."
 followUps:
-  - question: "What if both features share the same backend?"
-    answer: "I'd reuse checks for the shared behavior and add feature-specific checks where policy, data, or user impact differs."
+  - question: "What if both features use the same service behind the page?"
+    answer: "I'd reuse checks for what both features do. If the rules, data, or effects on users differ, I'd add tests for those differences."
 sources:
   - label: "ISTQB CTFL v4.0.1, section 1.3"
     url: https://www.istqb.org/certifications/certified-tester-foundation-level
 ---
 
-I decide how much evidence I need by looking at what the button does after it's clicked. A reversible preference change and an action that affects a payment can use the same controls. The work behind them calls for different checks. I want to know who can act, how many people a mistake affects, and what support can do after the fact.
+I look at what the software does after the user clicks a button. An option users can undo and an action that changes a payment can use the same controls. I'd choose different tests because the actions have different effects.
+
+I ask who can take each action. I also ask how many people a mistake might affect and what support can do to help afterward.
 
 ### Example
 
-For pausing marketing email, I'd check that the change sticks, takes effect in the next send, and can be undone. For pausing automatic billing, I'd also check requests either side of the billing cutoff and verify whether the next invoice and any customer notice agree. I'd use a test ledger so the checks don't affect real accounts.
+If I pause marketing emails, I'd check that the app saves the change. I'd check that the next send skips the account and that I can turn emails back on. If I pause automatic billing, I'd also test requests on both sides of the last time customers can pause it. I'd check that the next invoice agrees with any notice we send. I'd use a test ledger, a record of charges, so the tests don't affect real accounts.

@@ -1,19 +1,19 @@
 ---
-title: How would you run the profile checks concurrently without tests sharing a Selenium session?
+title: How would you run profile tests at the same time without sharing a Selenium session?
 topic: selenium
 roles: [automation, sdet]
 level: senior
 type: tooling
-oneLine: Allocate one browser and independent mutable data per test, then configure concurrency to fit the available slots.
+oneLine: I'd give each test its own browser and separate data to change. I'd set the number of tests running together to fit the available slots.
 looksFor:
-  - Creates and quits a WebDriver session per test.
-  - Enables concurrency in the runner.
-  - Looks for leaked data and other shared state.
-  - Matches CI concurrency to compatible Grid slots.
-trap: Assigning every test to the same static driver and locking individual clicks.
+  - Start and quit a WebDriver session for each test.
+  - Set the test runner to start more than one test at a time.
+  - Check whether a test can affect another test's data or files.
+  - Limit jobs running together to the Grid slots that have the browsers they need.
+trap: Giving every test one shared driver and locking each click to try to prevent interference.
 followUps:
-  - question: Alex and Blair have distinct browsers, but both jobs save their screenshot as profile.png. Where would you change the test?
-    answer: I'd give each test attempt its own output path, just as I'd give it a distinct record ID if it edited a profile. Separate WebDriver sessions don't separate those files or backend records.
+  - question: Alex and Blair use different browsers, but both jobs save a screenshot as `profile.png`. What would you change?
+    answer: I'd give each attempt its own file path. If a test edits a profile, I'd give it a separate record ID too. Separate WebDriver sessions don't keep files or server records apart.
 sources:
   - label: Selenium test isolation
     url: https://www.selenium.dev/documentation/test_practices/encouraged/avoid_sharing_state/
@@ -74,10 +74,10 @@ examples:
               assert driver.title == title
 ---
 
-I'd start by giving each test its own driver and making sure teardown quits it. A static driver would let one test switch pages or close the browser under another test. I'd also audit what happens outside the browser, including shared accounts, cleanup jobs, and artifact paths.
+I'd start a WebDriver session, the connection that controls the browser, for each test. I'd have cleanup quit the session. If I use one static driver, every test shares it. One test could change pages or close the browser another test uses. I'd also check for shared accounts, cleanup jobs that affect other tests, and file paths used by more than one test.
 
-The runner decides which tests start together. I'd enable its parallel mode and measure startup and queue time against the number of compatible Grid slots. If the suite still fails, I'd reproduce the smallest pair before adding workers.
+I'd turn on parallel mode so the test runner can start more than one test at a time. I'd count compatible Grid slots, places to run the browsers my jobs ask for. I'd measure time waiting for a slot and time starting a session. If the suite still fails, I'd find the smallest pair of tests that fails together before adding workers.
 
 ### Example
 
-The local fixture serves read-only profiles A and B with distinct page titles. The runner can execute both checks together, and each one opens and closes its own session.
+I'd use a local test setup with read-only profiles A and B. They have different page titles, so I can tell them apart. I'd run both checks together and make sure each opens and closes its own session.

@@ -1,19 +1,19 @@
 ---
-title: "How would you structure a Java API check with REST Assured?"
+title: "Where do you put setup, the request, and checks in a REST Assured test?"
 topic: api
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: "Put the test setup in given, make the request in when, and assert the contract and business values in then."
+oneLine: "I'd set up the request in given and send it in when. I'd use then to check the promised status and the values that matter."
 looksFor:
-  - "Explains the setup, request, and assertion chain."
-  - "Keeps credentials and target environment configurable."
-  - "Checks data derived from the setup."
-  - "Keeps diagnostics useful without printing secrets."
-trap: "Asserting only the status or sharing mutable fixture state across parallel tests."
+  - "Explain where the test prepares the request, sends it, and checks the reply."
+  - "Get credentials and the test target from settings."
+  - "Check values you can predict from the test data."
+  - "Give people enough detail to investigate without printing secrets."
+trap: "Checking only the status or letting parallel tests change the same test records."
 followUps:
-  - question: "When would you extract a response value?"
-    answer: "When I need a returned ID for a follow-up read or cleanup. I'd validate the response before using the ID."
+  - question: "When would you save a value from the response?"
+    answer: "I'd save an ID if I need it to read the record again or clean up. I'd check the reply before using the ID."
 sources:
   - label: "REST Assured, usage examples"
     url: https://rest-assured.io/docs/usage/examples/
@@ -45,8 +45,8 @@ examples:
           }
 ---
 
-I'd use `given()` to set up the request and any parameters or headers, `when()` for the HTTP call, and `then()` for the expected status and response fields. I keep the account and known data local to each test. If something fails, I'd want the record ID and assertion diff on hand without printing credentials or personal data.
+I'd start with `given()` to set the request parameters and headers it needs. I'd use `when()` to send the HTTP request. I'd use `then()` to check the expected status and response fields. I give each test its own account and known records. If a check fails, I'd need the record ID and the difference between the expected and actual values without exposing credentials or personal data.
 
 ### Example
 
-For a local fixture with invoice `draft-18`, I'd expect `200` JSON with `1800` in minor units and `USD`. That catches an invoice with the right number in the wrong currency. With REST Assured 7, use `json-path-gpath` for the field assertions.
+I'd use a local test record for invoice `draft-18`. I'd expect `200` and JSON with `1800` minor units and `USD`. I'd catch an invoice with the right number in the wrong currency. With REST Assured 7, I'd use `json-path-gpath` to check the fields.

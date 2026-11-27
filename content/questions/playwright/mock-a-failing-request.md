@@ -1,21 +1,21 @@
 ---
-title: How would you use Playwright to test the UI when a request returns an error?
+title: How would you use Playwright to test the interface when a request returns an error?
 topic: playwright
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Register a narrow route before the request and return a controlled error that lets you check the recovery path.
+oneLine: Before the app sends the request, I'd set up Playwright to answer that request with an error. I'd check how the user can recover.
 looksFor:
-  - Register routing before the relevant request
-  - Match the exact request needed for the case
-  - Assert the user's recovery and resulting state
-  - Keep separate evidence for the real service
-trap: Mocking every request and calling the resulting browser test proof of the whole integration.
+  - Set up the route before the request goes out.
+  - Match only the request the test needs to change.
+  - Check what the user can do to recover and what they see afterward.
+  - Keep a separate test that uses the real service.
+trap: Replacing every reply and taking a passing browser test as proof the real services work together.
 followUps:
-  - question: How would you check recovery?
-    answer: I'd make the failing response apply to the first intended request, allow the next attempt to succeed under controlled conditions, and verify the UI reflects the outcome.
-  - question: What if you want to keep most of the real response?
-    answer: I'd call route.fetch, keep the response, and use route.fulfill with a changed body. I'd use a separate, narrow route with route.abort only for known third-party traffic that the case doesn't need.
+  - question: How would you check recovery after the error?
+    answer: I'd fail the first matching request. I'd make the next attempt succeed in a way I can control. I'd check that the page shows the successful result.
+  - question: What if you only need to change one part of the real reply?
+    answer: I'd use `route.fetch` to get the real reply. I'd use `route.fulfill` to send it back with a changed body. If the test doesn't need some known third-party traffic, I'd block only that traffic with a separate `route.abort` rule.
 sources:
   - label: Playwright mock APIs
     url: https://playwright.dev/docs/mock
@@ -83,12 +83,14 @@ examples:
               expect(page.get_by_test_id("quote-total")).to_have_text("$7.90")
 ---
 
-I'd register `page.route` before the page or user action can send the request. I'd match the endpoint and, when the same URL serves several actions, check the HTTP method too. For the request I want to fail, `route.fulfill` can return a chosen status and body. I leave unrelated requests alone so the test has fewer assumptions.
+I'd call `page.route` before the page or a user action can send the request. That method lets me set a rule for how Playwright handles matching requests. I'd match the endpoint, the URL the request goes to. If several actions use that URL, I'd also check the HTTP method, such as GET or POST. I'd use `route.fulfill` to answer with a status code and response body I choose.
 
-The goal is a user outcome: can someone tell what happened and safely recover? A controlled response makes a rare failure repeatable. I keep a separate check against the real service because this test doesn't show that the service returns that response in production.
+I'd leave unrelated requests alone so my test makes fewer assumptions.
+
+I'd check that the user can tell what happened and recover safely. By choosing the reply, I can make a rare failure happen on every run. I'd keep a separate check against the real service. My browser test can't tell me whether the service sends that reply in production.
 
 ### Example
 
-For a temporary shipping quote error, I'd return 503 for the quote call. I check that the address stays filled in, the page offers a retry, and a controlled successful retry displays the quote.
+For a temporary shipping quote failure, I'd return 503, a status that says the service is unavailable. I'd check that the page keeps the address and offers a retry. I'd make the retry succeed and check that the page displays the quote.
 
-On the local checkout fixture, the real retry endpoint returns a successful JSON quote. I keep its response and change only the price. The UI should display $7.90 after the retry.
+In the local checkout test app, the retry endpoint returns a successful quote as JSON, a format for structured data. I'd keep that reply and change only the price. After the retry, I'd expect the page to display $7.90.

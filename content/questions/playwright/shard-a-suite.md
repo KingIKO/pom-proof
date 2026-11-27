@@ -1,19 +1,19 @@
 ---
-title: What changes when you shard a Playwright suite?
+title: What changes when you split a Playwright suite into shards?
 topic: playwright
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Divide one test selection across CI jobs and confirm all shards ran before trusting the result.
+oneLine: I'd split one set of tests across separate automated jobs. Before trusting the result, I'd check that each job ran its part.
 looksFor:
-  - Difference between sharding and workers
-  - File-level versus test-level distribution
-  - Independent data and consistent configuration on every shard
-  - Reports that show missing or failing shards
-trap: Running the entire suite on every job and assuming the matrix split it.
+  - Explain how dividing work across jobs differs from running several workers in one job.
+  - Say when Playwright splits by file and when it can split by test.
+  - Give every shard the same settings and separate data for tests that make changes.
+  - Check the reports for parts that failed or never ran.
+trap: Starting several jobs that each run the entire suite and assuming the job list split the tests.
 followUps:
-  - question: Why might one shard take much longer?
-    answer: File size and test duration can skew the split. I'd inspect per-shard timings and address costly cases before throwing more runners at it.
+  - question: Why might one part of the suite take much longer?
+    answer: I'd check whether that job got larger files or slower tests. I'd look at the times for each shard and work on the slow cases before adding machines.
 sources:
   - label: Playwright sharding
     url: https://playwright.dev/docs/test-sharding
@@ -72,12 +72,14 @@ examples:
                     path: playwright-report/
 ---
 
-Workers run tests concurrently within one Playwright job. Shards divide the selected tests across separate invocations, often in CI jobs on different machines. Playwright's `--shard=2/4` picks one part of a four-way split. With `fullyParallel` it can distribute at test level; otherwise the split is at file level, so a few big files can make the jobs uneven.
+I'd use workers, separate processes that run tests at the same time within one Playwright job. Shards divide the selected tests across separate runs, often in CI jobs on different machines. CI is the automated system that runs the tests. For example, the `--shard=2/4` flag picks one part of a four-way split. If I use the `fullyParallel` setting, Playwright can split the tests individually.
 
-I start with a CI timing baseline and take runner queue time into account. Each shard needs the same revision and test configuration, plus independent mutable test data. I'd merge the shard reports and check that the workflow requires success from all of them.
+Without that setting, Playwright splits by file. A few big files can leave some jobs with more work.
+
+I'd measure how long CI takes before making changes. I'd include the time a job waits for a machine. I'd give each shard the same code version and test settings, plus its own data for tests that make changes. I'd combine the reports and check that the workflow requires every shard to pass.
 
 ### Example
 
-If one of four jobs runs for 18 minutes and the other three finish in 5, I'd find which files or tests dominate that job and measure the split again after addressing them.
+If one of four jobs takes 18 minutes and the other three finish in 5, I'd find the slow files or tests. I'd measure the split again after dealing with them.
 
-In a repository with Playwright installed and a configured test target, the matrix runs each shard and saves its blob report. The merged HTML report is for diagnosis. I still check the result of every shard.
+If the repository has Playwright and a test target set up, I'd use a job matrix, a list of jobs to run each shard. Each job saves a blob report, a file Playwright can combine with reports from other shards. I'd use the combined HTML report to investigate failures. I'd still check every shard's result.

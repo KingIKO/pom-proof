@@ -1,32 +1,25 @@
 ---
-title: Tell me how you sped up the 60,000-row test report without losing results.
+title: "How did you speed up a 60,000-row test report without dropping results?"
 topic: behavioral
 roles: [sdet]
 level: mid
 type: behavioral
-oneLine: Keep the first result for each suite and test ID without scanning the results already written.
+oneLine: "I kept each suite's first result for every test ID without rereading the results I'd already saved."
 looksFor:
-  - Explains why an ID alone would discard valid results.
-  - Shows what the set stores and what memory that costs.
-  - Reports timings on the same input and names the checks that protect the report.
-  - Connects interview practice to a choice the candidate made at work.
-trap: Reporting a faster runtime after discarding results that belong to a different suite.
+  - "Explain why using the test ID alone would drop valid results."
+  - "Describe what the set remembers and how much memory it needs."
+  - "Compare times on the same input and name the checks that protect the report."
+  - "Connect interview practice to a decision you made at work."
+trap: "Calling the report faster after dropping results from a different test suite."
 followUps:
-  - question: Two suites both report that test 17 failed. What should the faster report show?
-    answer: Both failures. I'd use the suite name with the test ID as the key and assert that each result survives.
+  - question: "If test 17 fails in two suites, what should the faster report show?"
+    answer: "I'd keep both failures. I'd identify each result by its suite name and test ID, then check that both results appear."
 ---
 
-I was asked to speed up a report that took 28 seconds on 60,000 results. The change still had
-to keep the first result per test. A colleague showed me two suites with the same IDs, so I used
-a set of suite-and-ID pairs. I could keep the input order in one pass, though the set grew with
-the number of distinct keys.
+I was asked to speed up a report that took 28 seconds for 60,000 results. I still had to keep the first result per test. A colleague showed me two suites, or groups of tests, that reused the same test IDs. I used a set, a collection that keeps each entry once, to track suite-and-ID pairs. I read the input once and kept its order.
 
-The same sample took four seconds after the change. I checked an empty run and overlapping IDs
-before shipping it. I'd judge a coding exercise by that same tradeoff: can the person explain
-why the faster version preserves the output other teams use?
+The more distinct pairs I saw, the more memory the set needed. The same sample took four seconds after the change. I checked an empty run and IDs shared by different suites before shipping. I'd look for the same tradeoff in a coding exercise. I'd ask the candidate to explain why the faster version still gives other teams the results they need.
 
 ### Example
 
-I'd practice two easy or medium problems per week over a month. I'd rotate through arrays,
-maps, sets and queues, then explain the runtime and memory for each solution. I'd apply
-patterns like counting and grouping to real tasks such as log parsing.
+I'd practice two easy or medium problems per week for a month. I'd choose problems that use arrays, maps, sets, and queues. I'd explain how long each solution takes to run and how much memory it uses. I'd use counting and grouping on real work, such as pulling information from a log.

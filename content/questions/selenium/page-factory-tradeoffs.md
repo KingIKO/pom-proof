@@ -1,19 +1,19 @@
 ---
-title: A Selenium page object caches a button that gets re-rendered. What would you change?
+title: A Selenium page object keeps a reference to a button the page replaces. What would you change?
 topic: selenium
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Locate the current element when acting on it and avoid caching references to replaceable nodes.
+oneLine: I'd find the current button when I need it. I wouldn't keep a reference to a button the page can replace.
 looksFor:
-  - Explains PageFactory's lazy Java proxies.
-  - Distinguishes repeated lookup from cached references.
-  - Accounts for a node replaced by a render.
-  - Avoids an unnecessary suite rewrite.
-trap: Adding CacheLookup across a page so repeated interactions appear to run faster.
+  - Explain how PageFactory's Java proxies find elements only when a test uses them.
+  - Explain the difference between looking up the element again and reusing a saved reference.
+  - Show what happens when the browser replaces the element.
+  - Fix the failing lookup without rewriting the whole suite.
+trap: Adding `@CacheLookup` to every field to try to speed up repeated actions.
 followUps:
-  - question: Refresh replaces only the receipt status node. Which field would you change first?
-    answer: I'd remove CacheLookup from the status field and rerun the Pending-to-Paid check. The other page objects can stay as they are until a specific lookup causes trouble.
+  - question: Refresh replaces only the receipt status element. Which field would you change first?
+    answer: I'd remove `@CacheLookup` from the status field and rerun the change from Pending to Paid. I'd leave the other page objects alone unless another lookup causes trouble.
 sources:
   - label: Selenium PageFactory behavior
     url: https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/support/PageFactory.html
@@ -65,10 +65,10 @@ examples:
           }
 ---
 
-PageFactory sets up lazy proxies for fields in a Java page object. By default a proxy looks up the matching element whenever a method on it is called. With `@CacheLookup`, the reference can outlive the original node. If the browser replaces that node, the next interaction with the cached reference can fail as stale.
+I use a Java page object to keep a page's controls and actions in one class. PageFactory sets up lazy proxies, which stand in for elements and wait until I use them to find a match. By default, a proxy finds the element each time I call a method on it. With `@CacheLookup`, it can keep a reference after the browser replaces the original element. If I use that reference again, Selenium can report it as stale, meaning it points to an element that no longer exists there.
 
-For new code I prefer plain locator fields and an explicit lookup or wait inside an intent-named method, because a teammate can see when it resolves. In an existing suite I'd remove a bad cache where it causes failures. The rest can change when there's a practical reason.
+For new code, I'd store plain locators, the rules Selenium uses to find elements. I'd look up or wait for the element inside a method named for what it does. A teammate can then see when the lookup runs. In an existing suite, I'd remove the saved reference where it causes failures. I'd leave the rest until there's a reason to change it.
 
 ### Example
 
-The local receipt page starts at Pending and synchronously replaces its status node with Paid when refreshed. The uncached proxy reads both values from the correct node.
+I'd open a local receipt page that starts at Pending. When I refresh the status, the page replaces the element with Paid immediately. I'd check that the proxy finds the right element for each read when it doesn't save the reference.

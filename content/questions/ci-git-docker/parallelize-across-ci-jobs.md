@@ -1,21 +1,21 @@
 ---
-title: How do you split a slow test suite across CI jobs safely?
+title: "How do you safely split a slow test suite across CI jobs?"
 topic: ci-git-docker
 roles: [automation, sdet, senior]
 level: mid
 type: tooling
-oneLine: Split one test selection across jobs, isolate mutable resources, and verify the final check covers every job.
+oneLine: "I split one list of tests across jobs and keep their writable data separate. I check that the final result counts every job."
 looksFor:
-  - An observed bottleneck before adding runners
-  - A distinct shard selection per job
-  - Job-scoped identities or environments
-  - Reports and a gate that account for every shard
-trap: Creating four identical jobs and unintentionally running the same suite four times.
+  - "Show what slows the run down before adding machines."
+  - "Give each job a different slice of the test list."
+  - "Use separate accounts, data, or environments where jobs might interfere."
+  - "Collect a report from every group and require every group to pass."
+trap: "Creating four identical jobs that each run the entire suite."
 followUps:
-  - question: What if CI gets faster but runner cost doubles?
-    answer: I'd compare queue time, feedback time, and total runner minutes, then try fewer shards or remove the slowest redundant work.
-  - question: Three agents finish at minute six and the fourth is still running at minute twelve. What would you change first?
-    answer: I'd take per-test timings from the most recent comparable unsharded run and move some long work off the last agent. If the slow agent keeps changing because durations vary, I'd try a queue that lets idle agents claim another case.
+  - question: "What if results arrive sooner but the runner cost doubles?"
+    answer: "I'd compare the wait to start, the time to get results, and the total minutes billed across all machines. I'd try fewer shards or remove the slowest repeated work."
+  - question: "Three agents finish at minute six, but the fourth is still running at minute twelve. What would you try first?"
+    answer: "I'd use per-test times from the latest comparable run that used one group. I'd move some long tests off the last agent. If uneven durations keep changing which agent finishes last, I'd let idle agents take another test from a shared queue."
 sources:
   - label: Playwright sharding
     url: https://playwright.dev/docs/test-sharding
@@ -69,10 +69,12 @@ examples:
                     if-no-files-found: error
 ---
 
-I measure the current critical path first. If executing the tests dominates it, I'd use a job matrix to supply each runner a different shard index and the same shard count. I pass those values to the test runner so it selects that slice. Without that step, each job can run the whole suite.
+In continuous integration (CI), jobs run tests automatically. I measure which steps control how soon we get a result. If the tests take most of that time, I'd split them into shards, or groups. I'd use a job matrix, a list of job settings, to give each runner a different group number and the same total count.
 
-I use the same build and test configuration throughout, and namespace mutable state by run and shard so jobs can't delete another job's records. I'd make the merge check fail if any required shard fails or never reports. Then I compare both wall time and total runner minutes with the baseline.
+I pass both values to the test runner so it selects only its group. Otherwise each job can run everything.
+
+I use the same build and settings for each group. I label data that can change by run and shard so a job can't delete another job's records. I fail the merge check if any required shard fails or never reports. I compare total time on the clock and total runner minutes with the old setup.
 
 ### Example
 
-Assume the checkout repo has a lockfile and runs only Chromium. I send its suite to four jobs, cache npm downloads, and still install from the lockfile each time. The combined test list should match an unsharded run. If shard two fails, the other jobs should finish and upload their own reports.
+Suppose my checkout project runs only Chromium and has a lockfile listing exact package versions. I'd send the tests to four jobs and reuse downloaded npm packages when I can. I'd still install from the lockfile every time. I'd expect the combined test list to match an unsharded run, where one job runs the whole list. If shard two fails, I'd expect the other jobs to finish and upload their own reports.

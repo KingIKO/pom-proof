@@ -1,19 +1,19 @@
 ---
-title: "How would you find stores with at least two failed pickups this week?"
+title: "How would you find which stores had two or more pickup failures this week?"
 topic: sql
 roles: [manual-qa, automation]
 level: mid
 type: tooling
-oneLine: "Use WHERE to select the failed pickups in the date range, then use HAVING to keep stores with enough matching rows."
+oneLine: "I'd use `WHERE` to keep failed pickups from this week. After grouping by store, I'd use `HAVING` to keep stores with at least two."
 looksFor:
-  - "Uses a row filter for status and date."
-  - "Groups by the store identifier."
-  - "Uses HAVING to compare the count after grouping."
-  - "Uses fixtures that would catch a missing date or status filter."
-trap: "Counting every pickup for each store and using the resulting total to flag repeat failures."
+  - "Filter each pickup by its status and date."
+  - "Group the remaining pickups by store ID."
+  - "Use `HAVING` to check the count for each store."
+  - "Set up test data that reveals a missing date or status filter."
+trap: "Counting all pickups per store and using that total to flag repeat failures."
 followUps:
-  - question: "What if the report should count unique customers who hit a failure?"
-    answer: "I'd use COUNT(DISTINCT customer_id) after filtering and include two failures from one customer to prove they count once."
+  - question: "How would you count customers who had a failed pickup rather than counting the failures?"
+    answer: "After filtering, I'd use `COUNT(DISTINCT customer_id)` to count each customer once. I'd add two failures for one customer to check that the count goes up by one."
 sources:
   - label: SQLite SELECT processing
     url: https://www.sqlite.org/lang_select.html
@@ -37,10 +37,10 @@ examples:
           HAVING COUNT(*) >= 2;
 ---
 
-I use `WHERE` for rules I can apply to one pickup at a time. In this case a pickup must be marked failed and its date must fall inside the report week. I then group the remaining rows by store. `HAVING` can check the count that comes out of each group.
+I'd use `WHERE` to filter individual pickups before I count them. A pickup must have a failed status. Its date must also fall inside the report week. I'd group the remaining rows by store. I'd use `HAVING` to filter the groups using the pickup count for each store.
 
-I'd seed a store at the cutoff and one below it. For the store below it I'd include an older failure and a successful pickup in the current week. Either row would make that store appear incorrectly if the report missed a filter.
+I'd set up one store right at the cutoff and another just below it. For the second store, I'd add an older failure and a successful pickup from this week. If the query leaves out either filter, that store appears even though it shouldn't.
 
 ### Example
 
-The fixture uses date-only values for the week starting November 23. The query returns store 8 with two failures and omits store 9.
+I'd use dates without times for the week starting November 23. I'd expect the query to show store 8 with two failures and leave out store 9.

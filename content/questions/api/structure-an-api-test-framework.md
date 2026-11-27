@@ -1,19 +1,19 @@
 ---
-title: "The quotes route is moving and the metro rate stays $4.50. Which parts of the tests should change?"
+title: "The quote URL changes, but the metro rate stays $4.50. What would you change in the tests?"
 topic: api
 roles: [automation, sdet]
 level: senior
 type: concept
-oneLine: "Change the route in the shipping client and keep the metro-rate expectation in the test that supplies the 500 gram parcel."
+oneLine: "I'd change the path in the shipping client. I'd keep the price in the test that sends the 500 gram parcel."
 looksFor:
-  - "Localizes the route edit without changing the parcel or rate in the test."
-  - "Reports enough HTTP detail to tell a route failure from a wrong price."
-  - "Keeps the environment and test identity configurable without changing the client call."
-  - "Shares the quote payload contract without sharing the expected rate or fixture state."
-trap: "Baking the metro price into the client's quote method so every caller inherits that expectation."
+  - "Change the route in one place without changing the parcel or rate in the test."
+  - "Report enough HTTP detail to tell a wrong route from a wrong price."
+  - "Let tests change the environment and identity without changing the client call."
+  - "Share the shape of the quote data without sharing test records or expected prices."
+trap: "Putting the metro price inside the shared quote method so every caller gets the same expectation."
 followUps:
-  - question: "One team needs to see expired quotes and another only wants active ones. Where does that difference go?"
-    answer: "Give the client a named filter or separate methods if the service exposes distinct operations. Let each test choose its view and state which quotes should appear. A hidden default would make both suites harder to read."
+  - question: "One team needs expired quotes and another needs only active quotes. Where would you put that choice?"
+    answer: "I'd give the client a named filter, or separate methods if the service offers separate operations. I'd let each test choose and say which quotes should appear. A hidden default would make both suites harder to read."
 sources:
   - label: Playwright Test fixtures and request
     url: https://playwright.dev/docs/test-fixtures
@@ -109,10 +109,10 @@ examples:
           }
 ---
 
-I'd aim for one route edit in the shipping client. A quote test should still show the 500 gram parcel and the expected 450 cents, so someone reviewing the route change can see the price expectation stayed put. I'd share the parcel type or quote schema across callers and keep the raw status available so a routing failure looks different from a pricing failure.
+I'd change the route, the URL path to the quote operation, in one place in the shipping client. I'd leave the 500 gram parcel and the expected 450 cents visible in the test. A reviewer can then see that the expected price stayed the same. I'd share the parcel type or the schema that describes a quote. I'd keep the actual HTTP status available to tell a routing failure from a wrong price.
 
-It's the same separation I'd use with a page object that owns a locator. Here the fixture supplies the client with the environment and test identity. In CI I'd keep each test's data independent and report the failed operation, expected rate, and request ID.
+I'd make the same split with a page object that decides how to find a control on a screen. Here the fixture, or test setup, gives the client the environment and test identity. In CI, I'd give each test separate data. If one fails, I'd report the operation, expected rate, and request ID.
 
 ### Example
 
-Seed the shipping service with a $4.50 metro price for a 500 gram parcel. Point Playwright's `baseURL` or the other clients' `SHIPPING_API` at that service. The client owns `/quotes`. The test expects `200` with `450` minor units and `USD`.
+I'd set the metro price to $4.50 for a 500 gram parcel in the test service. I'd point Playwright's `baseURL` or the other clients' `SHIPPING_API` at that service. The client uses `/quotes`. I'd expect `200` with `450` minor units and `USD`.

@@ -1,28 +1,28 @@
 ---
-title: A shared checkout base class keeps growing. How would you split it using SOLID?
+title: "A shared checkout base class keeps growing. How would you use SOLID to split it?"
 topic: framework-design
 roles: [sdet]
 level: senior
 type: concept
-oneLine: Give test helpers one reason to change and introduce abstractions only when there is a real substitution or extension.
+oneLine: "I give each helper one reason to change. I add another layer only when I have real pieces to combine or swap."
 looksFor:
-  - Separates page interactions, setup, and business assertions.
-  - Extends behavior through composition instead of editing a shared base.
-  - Explains substitutable clients and small fixture interfaces.
-  - Gives a limit on abstraction before it harms readability.
-trap: Adding an interface for every class before the suite has a second implementation.
+  - "Separate screen actions, setup, and checks for business behavior."
+  - "Put small helpers together for new behavior instead of editing a shared base class."
+  - "Explain how clients can replace each other and why tests need only a few setup methods."
+  - "Explain when extra layers would make the tests harder to read."
+trap: "Adding an interface to every class before the tests need a second version."
 followUps:
-  - question: How would you know that two payment clients are substitutable?
-    answer: I'd exercise the shared contract, including failures that callers rely on, with both versions.
+  - question: "How would you check that two payment clients can stand in for each other?"
+    answer: "I'd run both against the same rules for requests and results. I'd include failures the calling code depends on."
 sources:
   - label: Robert C. Martin on SOLID
     url: https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html
 ---
 
-I'd apply single responsibility by splitting a page that drives payment fields from a helper that creates orders. To extend support for a new checkout flow, I'd compose those pieces rather than change a shared superclass and risk altering every caller.
+SOLID is a set of design principles for code. For single responsibility, I'd separate the helper that fills payment fields from the helper that creates orders. That's one main job for each. For a new checkout flow, I'd use composition, putting small helpers together. Editing the class that all flows inherit from could change their behavior too.
 
-Substitution means a fake payment client preserves the success and failure behavior that the calling test expects. Interface segregation means refund tests shouldn't have to depend on an interface with dozens of unrelated setup operations. Dependency inversion helps when the same test-facing service needs to accept a real client or a fake. For a helper with one caller and one implementation, a plain function can be enough.
+Substitution means my fake payment client works like the real one for successes and failures the test expects. For interface segregation, I'd let refund tests depend on only the setup actions they need. They can skip a long list of unrelated operations. Dependency inversion lets the same test-facing service use a real client or a fake through the same set of methods. If a helper has only one caller and one version, a plain function can be enough.
 
 ### Example
 
-I'd let subscription checkout introduce its own small payment form component and reuse the order builder. Tests that pay for a one-time order can keep their existing form.
+I'd give subscription checkout its own small payment form helper and reuse the order builder. I'd leave one-time order tests on their existing form.

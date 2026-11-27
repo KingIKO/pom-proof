@@ -1,25 +1,27 @@
 ---
-title: How do you measure flakiness without making the numbers misleading?
+title: "How do you measure flakiness without making the numbers misleading?"
 topic: flaky-tests
 roles: [automation, sdet, senior]
 level: senior
 type: concept
-oneLine: Define the numerator and denominator, preserve first-attempt outcomes, and compare runs with the same retry policy.
+oneLine: "I say what I count and what total I divide it by. I keep first results visible and compare runs with the same retry rules."
 looksFor:
-  - Logical test executions as the denominator rather than retry attempts
-  - What failure then pass can and cannot establish
-  - Separation of infrastructure failures and missing attempts
-  - A sample size and a time window
-trap: Reporting final pass percentage as reliability or comparing weeks with different retry settings.
+  - "Count each test execution once instead of counting every attempt."
+  - "Explain what a failure followed by a pass can show and what it can't."
+  - "Report machine or setup failures and missing results separately."
+  - "Give the number of executions and the period measured."
+trap: "Reporting only the final pass rate or comparing runs that used different retry rules."
 followUps:
-  - question: What if only failed jobs were retried in one period?
-    answer: I'd separate that period and report retry eligibility and completion, since its observed recovery rate isn't directly comparable.
+  - question: "What if only failed jobs got another attempt during one period?"
+    answer: "I'd report that period separately. I'd say which runs could retry and which completed a retry because the recovery rates aren't directly comparable."
 ---
 
-I'd report how many logical executions fail the first time and later pass on the same revision, divided by the executions started under the same retry policy. Each test and browser combination counts once per run, rather than once per attempt. I'd publish counts alongside percentages and show first-attempt failures separately. An execution with no retry outcome can't be classified as a recovered flake.
+I measure flakiness, when tests sometimes pass and sometimes fail under the same conditions. I count logical executions, meaning each test and browser combination counts once per run. I count the ones that fail first and later pass on the same code revision. I divide by all the executions that started under the same retry rules.
 
-I break the data down by test, browser, and environment. That helps separate a noisy check from a bad runner day. Even a documented failure followed by a pass doesn't identify whether the cause is a test race, infrastructure, or the app.
+I share counts with the percentages and report first-attempt failures separately. If a retry result is missing, I can't count that execution as a recovered flake. I split the numbers by test, browser, and environment. That helps me tell a test that often fails from a bad day on a machine running the tests.
+
+Even a documented failure followed by a pass doesn't tell me what caused it. The cause could be a test race, where the result depends on which actions finish first. It could also be a problem with the machines or services that run the tests, or a bug in the app.
 
 ### Example
 
-If 12 of 400 executions fail first and pass on retry, I'd report 3% observed retry recovery and say how many failed all attempts. I'd include the time window and identify any cancelled runs separately.
+If 12 of 400 executions fail first and pass on retry, I'd report 3% observed retry recovery. I'd say how many failed on every attempt. I'd name the time period and list canceled runs separately.

@@ -1,28 +1,28 @@
 ---
-title: Tell me about a sprint retrospective where you changed how the team tested.
+title: "When did a sprint retrospective change how your team tested?"
 topic: agile
 roles: [senior, sdet]
 level: senior
 type: behavioral
-oneLine: Bring a recurring testing problem with evidence, agree on one change the team can try, and check whether it helped.
+oneLine: "I brought evidence of a problem that kept coming back. We tried one change and checked whether it helped."
 looksFor:
-  - Show a recurring problem with examples from actual test work.
-  - Separate the likely cause from the visible symptom.
-  - Pick an improvement with an owner that fits the next sprint.
-  - Compare the result against the baseline and use it to decide what to keep.
-trap: Ending the retrospective with a commitment to communicate better and no change anyone can check.
+  - "Show the repeating problem with examples from actual test runs."
+  - "Explain what you think caused the failures."
+  - "Choose a change someone can own in the next sprint."
+  - "Compare the new results with the earlier runs before deciding what to keep."
+trap: "Agreeing to communicate better without choosing a change anyone can test."
 followUps:
-  - question: What if the first experiment doesn't help?
-    answer: I'd look at which failures remain. If they still come from shared state, I'd trace who writes it before expanding the experiment. If blocked time hasn't improved, I'd ask the team whether to stop paying for the extra setup.
+  - question: "What if the first change doesn't help?"
+    answer: "I'd look at which failures are left. If runs still interfere with each other, I'd trace which runs change the same data before trying the change elsewhere. If the team still loses as much time, I'd ask whether to drop the extra setup."
 sources:
   - label: Scrum Guide on the Sprint Retrospective
     url: https://scrumguides.org/scrum-guide.html#sprint-retrospective
 ---
 
-Our export checks kept failing in the shared test environment, but they'd pass when someone ran them alone. I compared the failure timestamps with the runs that edited the same customer account. That gave us something specific to act on at the retrospective.
+Our export checks kept failing in the shared test environment. They passed when someone ran them alone. I compared when the checks failed with when other runs edited the same customer account. I took that evidence to our retrospective, the meeting where we look back at a sprint and decide what to change.
 
-I proposed changing one group of checks first. A teammate owned creating a fresh customer account per run, and I owned tracking how often a collision blocked testing. We agreed to review the results at the next retrospective before extending it.
+I proposed trying the change with one group of checks first. A teammate set up a fresh customer account for each run. I kept track of how often runs blocked each other. We agreed to check the results at the next retrospective before trying the change elsewhere.
 
 ### Example
 
-Two report tests changed the same account's billing country, so one run could export rows for the wrong country. Before the change, we lost time to two collisions in one sprint. With separate accounts, we saw no collisions in the next sprint with a similar number of runs. We kept the setup for reports and left unrelated suites alone.
+Two report tests changed the same account's billing country. A run could export rows for the wrong country. I counted two collisions in one sprint. With separate accounts, I saw none the next sprint with about as many runs. We kept separate accounts for the report tests and left the other suites alone.

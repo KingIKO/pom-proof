@@ -1,25 +1,25 @@
 ---
-title: Tell me about a time a developer disagreed that something was a bug.
+title: "Tell me about a time a developer didn't think you'd found a bug."
 topic: behavioral
 roles: [manual-qa, automation, sdet]
 level: junior
 type: behavioral
-oneLine: Turn the disagreement into a shared reproduction and agree on what the customer should see.
+oneLine: "I show how to repeat the problem and agree on what the customer should see."
 looksFor:
-  - Your calm and specific reply
-  - Evidence someone else can reproduce
-  - A clear decision about the intended behavior
-  - The result and what you learned from it
-trap: Treating the bug discussion as something to win and escalating before sharing useful evidence.
+  - "Describe how you replied calmly and explained the problem."
+  - "Share evidence someone else can use to repeat the bug."
+  - "State what the team agreed should happen."
+  - "Explain the result and what you learned."
+trap: "Treating the bug discussion as something to win and taking it to someone else before giving the developer evidence they can check."
 followUps:
-  - question: What if the requirement is genuinely unclear?
-    answer: I'd write down the two interpretations and ask the product owner which to test, with the customer impact of each.
+  - question: "What if the requirement doesn't say which behavior is right?"
+    answer: "I'd write down both interpretations and explain how each affects the customer. I'd ask the product owner which one to test."
 ---
 
-A developer closed my report about a booking calendar because it showed the right date on their machine. I wanted to find the difference between our setups. I sent a synthetic reservation ID and compared the local time zones. The date changed when I switched my environment back to theirs, so I invited them to reproduce both cases with me.
+A developer closed my report about a booking calendar because their machine showed the right date. I wanted to find what differed between our setups. I sent the ID for a made-up reservation and compared our local time zones. The date changed when I switched to their time zone. I invited them to repeat both cases with me.
 
-I asked product whether appointments should display in the venue's time zone or the customer's. Product confirmed venue time and added that rule to acceptance criteria. I verified the fix in four time zones. I learned to put environment details directly in every date-related bug report.
+I asked the product team whether appointments should appear in the venue's time zone or the customer's. They chose the venue's time zone and added it to the acceptance criteria, the rules the feature must meet. I checked the fix in four time zones. I learned to include the setup in every bug report about dates.
 
 ### Example
 
-The reservation was July 12 at 12:30 a.m. venue time. The affected view displayed July 11 for a customer in a different time zone.
+I tested a reservation for July 12 at 12:30 a.m. in the venue's time zone. I saw July 11 in the affected view when I used a customer's different time zone.

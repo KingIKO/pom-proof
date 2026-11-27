@@ -1,28 +1,28 @@
 ---
-title: How would you start testing a bulk archive feature with no written requirements?
+title: How would you start testing a feature that archives several records at once if nobody wrote down the rules?
 topic: test-design
 roles: [manual-qa, automation, sdet, senior]
 level: mid
 type: scenario
-oneLine: Find what users need the feature to do, explore with safe data, and keep observations separate from agreed behavior.
+oneLine: I'd find out what users need and try the feature with test records I can discard. I'd separate what I see from what the team confirms.
 looksFor:
-  - Finds people or existing evidence that can establish the intended outcome.
-  - Lists unknown rules and clarifies the ones with the highest impact.
-  - Runs a focused exploratory session with reversible test data.
-  - Records confirmed defects separately from questions and assumptions.
-trap: Writing the feature's current behavior into test cases as the expected result.
+  - Find someone or something that can tell you what should happen.
+  - List the open questions and answer the ones that matter most first.
+  - Explore a specific part of the feature using records you can restore or discard.
+  - Keep confirmed bugs separate from open questions and assumptions.
+trap: Treating what the feature does today as what every test should expect.
 followUps:
-  - question: What if nobody can confirm what should happen today?
-    answer: I'd record the observed outcome and who is affected, then flag that scenario as unresolved. I can still report coverage for the behavior we did confirm.
+  - question: How would you report a case if nobody can confirm the rule today?
+    answer: I'd write down what happened and who it affects. I'd mark the case as unresolved. I'd still report the checks for behavior the team confirmed.
 sources:
   - label: ISTQB CTFL v4.0.1, section 4.4.2
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
 ---
 
-I'd ask the team why users need bulk archive and who can confirm the rules. A demo or notes from support can tell me how people work today. I'd turn that into a short session with disposable records and write down which results are agreed and which are just what I observed.
+I'd ask why users need bulk archive, which moves several records out of active use at once. I'd ask who can confirm its rules. A demo or support notes can show how people do the work today. I'd use that information to plan a short test session with records I can discard. I'd mark which results the team agrees on and which I only observed.
 
-I'd ask about scope and recovery early. If there's a chance the action affects more records than the user intended, that matters more than settling the copy on the confirmation screen.
+I'd ask early which records the action affects and how to undo it. If it could archive more records than the user meant to select, I'd check that before settling the words on the confirmation screen.
 
 ### Example
 
-A support lead wants to archive resolved tickets without touching open ones. I'd seed both statuses, select a few tickets, and record which IDs moved. If changing a filter keeps earlier selections, I'd show the lead what gets archived and ask whether selection should persist across filters. Once we agree, I'd turn that case into a regression check.
+Suppose a support lead wants to archive resolved tickets and leave open ones alone. I'd set up both statuses, select a few tickets, and record which IDs move. If changing a filter keeps the earlier selection, I'd show the lead what gets archived. I'd ask whether the selection should stay when the filter changes. Once we agree, I'd keep the test so it can catch future changes to that behavior.

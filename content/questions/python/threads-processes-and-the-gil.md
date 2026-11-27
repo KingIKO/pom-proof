@@ -4,16 +4,16 @@ topic: python
 roles: [sdet]
 level: senior
 type: concept
-oneLine: Match the worker model to what the checks spend time doing, and measure whether it improves the run.
+oneLine: I'd choose how to run checks together based on where they spend time. I'd measure whether the change helps.
 looksFor:
-  - Qualifies the bytecode limit as applying to CPython with the GIL enabled.
-  - Separates time spent waiting for I/O from time spent doing CPU work.
-  - Explains why pytest-xdist workers need isolated test data.
-  - Checks the interpreter build before assuming threads can execute Python in parallel.
-trap: Adding threads to a CPU-heavy pure Python check and assuming they will use all cores.
+  - Explain that the one-thread limit for Python bytecode applies to CPython when its GIL is on.
+  - Separate time waiting for files or network replies from time spent computing.
+  - Explain why pytest-xdist workers still need separate test data.
+  - Check the interpreter build before assuming threads can execute Python in parallel.
+trap: Adding threads to a computation-heavy check written in pure Python and assuming it will use every CPU core.
 followUps:
-  - question: What would you check before making the entire suite parallel?
-    answer: I'd rerun a representative slice with independent resource names and compare elapsed time and failure rates against the serial run.
+  - question: What would you measure before running the whole suite in parallel?
+    answer: I'd pick some tests that represent the suite and give each separate resource names. I'd compare the total time and failure rates with running those tests one at a time.
 sources:
   - label: Python threading and the GIL
     url: https://docs.python.org/3/library/threading.html#gil-and-performance-considerations
@@ -45,17 +45,12 @@ examples:
               assert counts == [0, 1]
 ---
 
-I'd time the checks with the reports already on disk, then with downloads included. If the
-cached run is still slow and the check spends most of its time in pure Python, I'd try a process
-pool and see whether the work offsets worker startup and data transfer. With CPython's GIL enabled,
-only one thread executes Python bytecode at a time. A free-threaded build can run Python threads
-in parallel, so I'd check which interpreter and dependencies the suite actually uses.
+I'd time the checks with reports already on disk and then include downloads. If checking the saved files is still slow and most of the work is in pure Python, I'd try a process pool. A process pool runs jobs in separate processes. I'd measure whether the speed gain is worth the time it takes to start workers and send them data.
 
-If the difference comes from waiting on downloads, I'd overlap those waits with threads or use
-`asyncio` if the client is already async. If I spread whole tests across pytest-xdist processes,
-each worker gets its own in-memory fixtures. I'd also give each worker its own download path.
+CPython is the standard Python interpreter. If its global interpreter lock (GIL) is on, only one thread at a time can run Python bytecode. Bytecode is the set of instructions Python runs. A free-threaded build can execute Python in parallel, with multiple threads doing Python work at the same instant. I'd check which Python build and dependencies my suite actually uses.
+
+If waiting for downloads accounts for the difference, I'd use threads to overlap those waits. If my download client already lets other tasks run while it waits, I'd use Python's `asyncio` library. If I use pytest-xdist to run whole tests in separate processes, each worker gets its own test setup in memory. I'd give each worker its own download path too.
 
 ### Example
 
-Two small in-memory exports stand in for larger files. The process pool checks their ID ordering.
-The first export has no backwards steps and the second has one.
+I'd use two small exports in memory to stand in for larger files. I'd have the process pool check the order of their IDs. I'd expect no step backward in the first export and one in the second.

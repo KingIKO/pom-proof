@@ -1,19 +1,19 @@
 ---
-title: "How would you check a receipt schema and trace failures in REST Assured without logging secrets?"
+title: "How would you check a receipt's shape and trace a REST Assured failure without exposing secrets?"
 topic: api
 roles: [automation, sdet]
 level: senior
 type: tooling
-oneLine: "Check receipt shape with the schema matcher and use a filter to attach a request ID without writing credentials or payloads to logs."
+oneLine: "I'd check the receipt against its schema. I'd use a filter to add a request ID and keep credentials and bodies out of logs."
 looksFor:
-  - "Uses a schema that names required fields and their types."
-  - "Keeps endpoint-specific assertions separate from cross-request filters."
-  - "Adds a correlation ID and emits limited diagnostics on failure."
-  - "Redacts headers and avoids logging private bodies."
-trap: "Logging full requests and responses to get a trace ID more quickly."
+  - "Use a schema that names the required fields and value types."
+  - "Keep checks for one endpoint separate from filters that run across requests."
+  - "Add an ID that links the failure to the request and log only what you need."
+  - "Hide credential headers and keep private bodies out of logs."
+trap: "Logging full requests and replies just to get the ID for a trace."
 followUps:
-  - question: "Why still check the actual receipt amount?"
-    answer: "The schema can require an integer in minor units and the number can still be wrong. I'd use a known transaction to assert the amount independently."
+  - question: "Why would you also check the actual receipt amount?"
+    answer: "I'd use a known transaction to check the exact amount. A schema can require a whole number in minor units, but the number can still be wrong."
 sources:
   - label: REST Assured schema validation module
     url: https://rest-assured.io/docs/usage/json-schema/
@@ -70,10 +70,10 @@ examples:
           }
 ---
 
-I'd use the JSON schema matcher to check required fields and types. I'd keep exact amounts and other business expectations in tests with known data. A filter can add a token or request ID across calls without duplicating that setup.
+I'd use a JSON schema, a set of rules for the fields and value types, to check the receipt's shape. I'd use known test data to check the exact amount and other business expectations. A filter is code that runs around requests. I'd use one to add a token or request ID without repeating that setup.
 
-For diagnosis I'd log a request ID and minimal status information on failure. If I enable standard failure logging, I'd blacklist credential headers and avoid bodies with private data. I also check what assertion failures put in CI reports. A schema failure can include more detail than I want to publish.
+If the test fails, I'd log the request ID and the minimum status details. If I enable standard failure logging, I'd exclude credential headers and private request or response bodies. I'd also check what failed checks show in CI reports. A schema failure can expose more detail than I want to share.
 
 ### Example
 
-With the `json-schema-validator` module installed, read a synthetic receipt from a local service that records `X-Request-Id`. Expect `200` and a body with a string ID and integer `totalMinor`. The example reports only the request ID on assertion failure, so someone with test log access can look up the trace.
+With the `json-schema-validator` module installed, I'd read a fictional receipt from a local service that records `X-Request-Id`. I'd expect `200`, a text ID, and a whole number in `totalMinor`. If the check fails, I'd report only the request ID so someone with test log access can look up the trace.

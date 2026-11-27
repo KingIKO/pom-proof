@@ -1,19 +1,19 @@
 ---
-title: What causes a stale element reference and how do you handle it?
+title: What causes a stale element reference in Selenium, and how would you handle it?
 topic: locators-waits
 roles: [automation, sdet]
 level: mid
 type: scenario
-oneLine: Find out what replaced the element, wait for the new state, and locate the current element again.
+oneLine: I find out what replaced the element and wait for the new state. Then I locate the current element again.
 looksFor:
-  - Difference between an element reference and its locator
-  - An explanation of DOM replacement or navigation
-  - A fresh lookup after the correct state change
-  - Care around repeating a write action
-trap: Catching every stale-element error and replaying the last click regardless of what it did.
+  - Tell an element reference apart from the locator used to find it.
+  - Explain DOM replacement or navigation as the cause.
+  - Look up the element again after the correct state change.
+  - Take care before repeating an action that writes data.
+trap: Catching every stale-element error and replaying the last click no matter what it did.
 followUps:
-  - question: What if the original action might have submitted an order?
-    answer: I'd inspect the confirmation and order state before considering another submit, because the first attempt might already have taken effect.
+  - question: What would you do if the first action might already have submitted the order?
+    answer: I'd inspect the confirmation and the order state before I consider another submit. The first attempt might already have taken effect.
 sources:
   - label: Selenium troubleshooting errors
     url: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/
@@ -21,10 +21,10 @@ sources:
     url: https://www.selenium.dev/documentation/webdriver/waits/
 ---
 
-A Selenium `WebElement` refers to a particular element. If the app replaces that node or navigates to a new document, the old reference can no longer point to a usable element, even when the page looks unchanged. I look for what changed around the failure before deciding whether to wait or to fix the selector.
+A Selenium `WebElement` refers to one particular element in the DOM, the browser's tree of page elements. If the app replaces that element or navigates to a new document, Selenium can't use the old reference. That's a stale element reference, even if the page looks unchanged. Before I decide whether to wait or fix the selector, I look for what changed around the failure.
 
-If the app refreshes a table, I'd synchronize with the refreshed result and locate the row again by its business identifier. If I switched to a different frame, I check the browsing context before looking for the element. I also check the result of any write action before replaying it.
+If the app refreshes a table, I'd wait for the refreshed result. Then I'd locate the row again by its business identifier, the value people use to name that record. If I switched to a different frame, I check the browsing context before I look for the element. The browsing context is the document Selenium is currently searching. Before I replay any write action, I also check its result.
 
 ### Example
 
-A booking test saved a row element, changed the date filter, then clicked the saved row. I'd wait for the new date's booking to appear and find it by reservation number. That also keeps the test from editing the wrong booking after a sort.
+A booking test saved a row element and changed the date filter. Then it clicked the saved row. I'd wait for the booking for the new date to appear. Then I'd find that booking by its reservation number. That also keeps the test from editing the wrong booking after a sort.

@@ -1,22 +1,19 @@
 ---
-title: Seven helmets were in stock. Which Java call does the four-helmet reservation step make?
+title: "Seven helmets are in stock. Which Java call reserves four of them?"
 topic: bdd
 roles: [automation, sdet]
 level: junior
 type: tooling
-oneLine: Pass 4 to the stock model through one matching step definition and check that 3 helmets remain.
+oneLine: "I'd pass 4 to the stock model through one matching step definition. I'd then check that 3 helmets remain."
 looksFor:
-  - Traces the reservation from the feature text to the stock call.
-  - Explains why the stock model owns the update and the step checks its result.
-  - Shows where the integer argument comes from.
-  - Resolves overlapping expressions without relying on the Gherkin keywords.
-trap: Registering separate definitions for the same wording and expecting Cucumber to choose by keyword.
+  - "Trace the words in the reservation step to the call that changes stock."
+  - "Explain why the stock model changes the count and the step checks it."
+  - "Show where the whole number passed to Java comes from."
+  - "Fix overlapping matches without relying on Gherkin keywords to tell the steps apart."
+trap: "Giving Cucumber two definitions for the same words and expecting the step keyword to resolve the match."
 followUps:
-  - question: A second feature adds a definition that matches only "the group reserves 4 helmets." Which definition should survive?
-    answer: >-
-      If it reserves stock the same way, I'd delete the literal definition and reuse the integer
-      expression. If it means something different, I'd name that action so the expressions don't
-      match the same step.
+  - question: "Another feature adds a match only for “the group reserves 4 helmets.” Which definition would you keep?"
+    answer: "If both reserve stock the same way, I'd delete the exact-text match and reuse the expression that accepts a whole number. If they mean different things, I'd change the wording so only one expression matches each action."
 sources:
   - label: Cucumber step definitions
     url: https://cucumber.io/docs/cucumber/step-definitions/
@@ -86,16 +83,12 @@ examples:
           }
 ---
 
-The reservation step ends at `stock.reserve(4)`. I want the stock model to own the stock
-change so the last step can check the actual count. In a real check, the Java step could
-make that call through an API client or a page object.
+I'd use the call `stock.reserve(4)` to reserve the helmets. I'd let the stock model update the count so the last step can check the actual result. In a real check, my Java step might make the call through an API client or a page object that handles screen actions.
 
-Cucumber reaches that call by matching the step text to the expression on the Java method.
-`{int}` supplies 4 as an integer. I can reuse the expression across features, but if I
-register a second matching expression, Cucumber reports ambiguity. Changing the Gherkin
-keyword won't resolve it.
+Cucumber uses a step definition, a method it calls when the scenario's text matches the method's expression. The `{int}` placeholder passes 4 as a whole number. I'd reuse the expression across features when the action is the same. If I add another expression that matches the same words, Cucumber reports more than one match.
+
+Gherkin keywords are the words that start each step, like Given and When. Cucumber ignores them when it matches step text.
 
 ### Example
 
-The Java steps call a small rental stock model. Cucumber passes 4 into the reservation method,
-and the final step checks that the number available fell from 7 to 3.
+I'd use the Java steps with a small rental stock model. After Cucumber passes 4 to the reservation method, I'd check that the available count dropped from 7 to 3.

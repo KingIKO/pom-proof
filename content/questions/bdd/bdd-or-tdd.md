@@ -1,19 +1,19 @@
 ---
-title: How would BDD and TDD work together when adding a train fare cap?
+title: "How would you use BDD and TDD to add a train fare cap?"
 topic: bdd
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Agree on a fare example with the team, then use small failing tests to build the pieces that make it pass.
+oneLine: "I'd agree on a fare example with the team. I'd use small failing tests to build the code that makes the example work."
 looksFor:
-  - Uses BDD to settle an observable rule across roles.
-  - Explains red, green, and refactor in TDD.
-  - Derives several focused unit checks from one agreed scenario.
-  - Retains evidence that the parts work together.
-trap: Writing a scenario after implementation and missing the decision it could have prompted.
+  - "Use BDD to agree across roles on behavior a rider can observe."
+  - "Explain the failing test, passing test, and code cleanup in TDD."
+  - "Use one agreed scenario to choose several focused unit checks."
+  - "Keep a check that shows the pieces work together."
+trap: "Writing a scenario after the code is ready and missing the chance to agree on the rule first."
 followUps:
-  - question: If the unit checks pass, what does the scenario still buy you?
-    answer: It can catch the right fare calculation being applied to the wrong card or the wrong service day.
+  - question: "What can the scenario catch if the unit checks pass?"
+    answer: "I'd use the scenario to check that the right fare goes on the right card on the right service day."
 sources:
   - label: Cucumber, behavior-driven development
     url: https://cucumber.io/docs/bdd/
@@ -35,16 +35,10 @@ examples:
               Then the card is charged 1 dollar for the trip
 ---
 
-I'd start BDD by working through fares with product, development and QA. We could agree that
-the trip which reaches the cap still costs the remaining amount. I'd write that agreed
-behavior as a scenario that we can run against the payment flow.
+I'd start with behavior-driven development (BDD), where people use examples to agree on what the system should do. I'd discuss the fares with product, development, and QA. We might agree that the ride that reaches the cap costs only the amount left before the cap. I'd write that rule as a scenario we can run against the payment flow.
 
-For TDD I'd work on the fare code in smaller steps. I'd write a failing unit test, make the
-smallest change that gets it passing, then refactor while the tests stay green. I'd repeat
-that loop for the exact cap, the remaining allowance below the next fare, and the case where
-the rider has already reached the cap.
+I'd use test-driven development (TDD) to build the fare code in small steps. I'd write a failing unit test that checks one piece of code. Then I'd make the smallest change that passes it and clean up the code while the tests still pass. I'd repeat that for a fare that reaches the cap exactly and a fare above the remaining allowance. I'd also check a rider who's already reached the cap.
 
 ### Example
 
-The shared scenario follows one rider's card on one service day. The card has already paid
-$9 and the cap is $10. A $3 ride should add only $1, so the daily total stays at $10.
+I'd follow one rider's card through one service day. If the card has paid $9 toward a $10 cap, a $3 ride should add only $1. I'd check that the daily total is $10.

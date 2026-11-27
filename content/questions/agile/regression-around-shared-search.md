@@ -1,25 +1,27 @@
 ---
-title: A small search change touches a shared query. How do you choose sprint regression checks?
+title: "A search change touches a shared database query. What else would you test this sprint?"
 topic: agile
 roles: [manual-qa, automation, sdet]
 level: mid
 type: scenario
-oneLine: Find the other features that use the changed query and test the ones where a wrong result would matter most.
+oneLine: "I'd find which features use the query. I'd start where a wrong result would do the most harm."
 looksFor:
-  - Ask which screens and jobs use the changed query.
-  - Pick a fixture that distinguishes the new rule from the existing rule.
-  - Check a caller that should change and a caller that should stay the same.
-  - Explain what can be left to existing coverage or a later check.
-trap: Running every search test while missing a report that uses the same query.
+  - "Ask which screens and background jobs use the query."
+  - "Pick test data that gives different results under the old and new rules."
+  - "Check a feature that should change and one that should stay the same."
+  - "Say which checks an existing test covers and which can wait."
+trap: "Running every search test but missing a report that uses the same query."
 followUps:
-  - question: What if you cannot tell which features share the query?
-    answer: I'd ask the developer to trace the call sites with me. Until then I'd name the callers I've checked and leave the rest unverified in my test notes.
+  - question: "What if you don't know which features share the query?"
+    answer: "I'd ask the developer to trace where the query runs with me. Until then, I'd list what I've checked and mark the rest as unverified."
 ---
 
-I'd ask the developer to show me what else calls the query. A small change can affect pages the ticket never mentions. Then I'd pick inputs that make the expected difference easy to see. I want to check the new behavior and keep at least one check for a caller that should behave as before.
+I'd ask the developer to show me what uses the query, the instruction that fetches results from the database. A small change can affect pages the ticket doesn't name. I'd pick test records that make the old and new results easy to tell apart. I'd check at least one feature that should still give the old result.
 
-I'd spend time on callers that can affect a customer or a business decision. For a screen that only displays the same results in another layout, I'd use the existing coverage unless the layout changed too.
+I'd spend my time on features where the wrong result could hurt a customer or lead to a bad business decision. If another screen only shows those results in a different layout, I'd rely on existing tests unless that layout changed too.
 
 ### Example
 
-Support asked for order search to include archived orders. The same query fed a report for the warehouse team, where archived orders still had to stay out. I made one active order and one archived order for the same buyer. The search was right, but the report included both. The developer made archive inclusion explicit for each caller, and I reran both checks with the same fixture.
+Support asked us to include archived orders in order search. The warehouse report used the same query, but it still needed to exclude archived orders. I made one active order and one archived order for the same buyer. Search returned both as expected, but so did the report.
+
+The developer made each feature say whether to include archived orders. I reran both checks with the same orders.

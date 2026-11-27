@@ -1,21 +1,21 @@
 ---
-title: When does a page object help, and when does it get in the way?
+title: "When would you add a page object, and when would you keep the actions in the test?"
 topic: automation-strategy
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Put repeated interactions behind clear names and keep each test's business claim easy to read.
+oneLine: "I'd name screen actions that several tests share. I'd leave the business result each test expects in the test itself."
 looksFor:
-  - A concrete interaction shared by multiple tests
-  - A reason to prefer a small component object
-  - Test-specific expectations visible in the spec
-  - A sign that an abstraction should be removed
-trap: Building a base class and wrapping every browser method before writing the first feature test.
+  - "Show an interaction that more than one test uses."
+  - "Explain when an object for a small part of the page fits better."
+  - "Keep the result unique to each case visible in its test file."
+  - "Give a sign that grouping actions has made the tests harder to read."
+trap: "Building a base class and wrapping every browser method before writing the first feature test."
 followUps:
-  - question: An expired return and a valid return both use submit. Where would you check the deadline message?
-    answer: In the expired-return spec, since the valid case needs a different outcome. The form helper can still wait for the controls it needs.
-  - question: A valid return opens a confirmation page. What should the test get from the helper?
-    answer: I'd let the test read the confirmation number or work with that next screen through its own object. I'd keep selectors private. In Selenium I'd use plain locator fields for new code so the reader can see when the lookup happens.
+  - question: "The expired and valid return cases both submit the form. Where would you check the deadline message?"
+    answer: "I'd check it in the expired-return test because the valid return has a different result. The form helper can still wait for the controls it needs."
+  - question: "What should the helper give the test when a valid return opens a confirmation page?"
+    answer: "I'd let the test read the confirmation number or use a separate object for that screen. I'd keep selectors private. In new Selenium code, I'd use plain locator fields so the reader can see when the test looks up a control."
 sources:
   - label: Playwright page object models
     url: https://playwright.dev/docs/pom
@@ -118,12 +118,12 @@ examples:
           }
 ---
 
-I'd extract a page object when multiple tests need the same interaction and a name like `applyCoupon` describes it better than a sequence of clicks. If the same coupon widget appears on two pages, I'd model that widget instead of duplicating it in two large classes.
+I'd use a page object, a class that names screen actions, when several tests share the same steps. A method like `applyCoupon` tells me more about the test than a list of clicks. If two pages share a coupon widget, I'd model the widget once instead of copying it into two large classes.
 
-A page object starts to hurt when reading the test means opening four more files or when one method does setup, interaction, and assertions for every caller. I want to see the expected price in the test. If there's one caller and the interaction already reads well, I'd keep it there until there's a reason to extract it.
+If reading a test sends me into four more files, the page object adds work. I'd also avoid one method that sets up every case, performs the action, and checks the result. I want to see the expected price in the test. If only one test uses an action and it reads well where it is, I'd leave it there.
+
+I'd also avoid starting with a base class, a shared class that other page objects inherit code from. I'd write a feature test before deciding what code belongs there.
 
 ### Example
 
-On returns, I'd add a small form object with `chooseReason` (`choose_reason` in Python) and `submit`. The test for an expired return would still assert that the screen explains the deadline. A valid return can reuse `submit` and check for a confirmation number.
-
-On the local expired-return fixture, selecting a valid reason and submitting shows a deadline error synchronously. The page object handles the interaction and the test owns the expected message.
+I'd give a small return form object a `chooseReason` method (`choose_reason` in Python) and a `submit` method. On the local test setup, a valid reason for an expired return shows a deadline error as soon as I submit. I'd check that message in the expired-return test. I'd reuse `submit` in the valid case and check the confirmation number there.

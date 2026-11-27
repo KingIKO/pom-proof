@@ -4,18 +4,18 @@ topic: test-design
 roles: [manual-qa, automation, sdet]
 level: junior
 type: scenario
-oneLine: Check that a supported file is saved to the right record and that rejected or interrupted uploads leave a clear way to recover.
+oneLine: I'd open a valid upload from the right record. If an upload fails or stops, I'd check that the user can recover.
 looksFor:
-  - Confirms the accepted file type and exact limit in bytes.
-  - Checks an uploaded file after reopening the record.
-  - Covers an unsupported file and the size boundary with controlled fixtures.
-  - Checks the outcome of an interrupted upload and a retry.
-trap: Passing the upload because the file picker shows a name or the progress bar reaches the end.
+  - Confirm which file type the server accepts and the exact size limit in bytes.
+  - Reopen the record and check the saved attachment.
+  - Use known test files to check an unsupported type and the sizes around the limit.
+  - Check what happens when an upload stops and the user tries again.
+trap: Assuming the upload worked because the file picker shows a filename or the progress bar reached the end.
 followUps:
-  - question: How would you select a test file in Playwright?
-    answer: I'd call `setInputFiles()` on the file input with a local fixture, submit if the form requires it, then check the saved attachment. Selecting the file is just setup.
-  - question: How would you isolate a size failure?
-    answer: I'd use known-good PDFs just below, exactly at, and just above the documented byte limit so a different file type or a damaged PDF can't explain the result.
+  - question: How would you pick a local test file in Playwright?
+    answer: I'd use `setInputFiles()` to give the file input a known local file. If the form requires a separate submit, I'd submit it. I'd check the saved attachment because choosing a file only sets up the upload.
+  - question: How would you make sure a file fails because of its size?
+    answer: I'd use valid PDFs just below, at, and just above the documented byte limit. That rules out the wrong file type or a damaged PDF.
 sources:
   - label: ISTQB CTFL v4.0.1, section 4.2.2
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
@@ -25,10 +25,10 @@ sources:
     url: https://playwright.dev/docs/input#upload-files
 ---
 
-I'd ask what type and size the server accepts, whether an upload replaces an existing attachment, and when the file is ready to open. I'd upload a valid PDF, reopen the record, and open the saved attachment to make sure it belongs there and has the expected contents.
+I'd ask which file type and size the server accepts. I'd ask whether an upload replaces an existing file and when the new file is ready to open. After uploading a valid PDF, I'd reopen the record. I'd open the saved file to check that it belongs to this record and contains what I uploaded.
 
-Next I'd try an unsupported type and PDFs at the size cutoff. I'd check that rejections explain how to proceed and leave no attachment to open. I'd interrupt a transfer in a test environment and verify that it doesn't appear complete, and that following the offered recovery path can save a valid attachment.
+I'd try an unsupported file type and PDFs near the size limit. If the upload fails, I'd expect a message explaining what to do and no attachment to open. I'd interrupt a transfer in a test environment. I'd make sure the page doesn't show it as complete. I'd follow the steps it offers to save a valid file.
 
 ### Example
 
-A warranty claim accepts one PDF of at most 2,000,000 bytes. I'd try a valid PDF of exactly that size and one of 2,000,001 bytes on separate test claims. Only the first should leave an attachment I can open from a reopened claim.
+Suppose a warranty claim accepts one PDF of up to 2,000,000 bytes. I'd upload a valid PDF of exactly that size to one test claim. I'd try a valid PDF of 2,000,001 bytes on another. I'd reopen both claims and expect an attachment only on the first.

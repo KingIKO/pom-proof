@@ -1,19 +1,19 @@
 ---
-title: A failed pickup confirmation loses its browser before triage. Where should the evidence be captured?
+title: "The browser closes before anyone can investigate a failed pickup confirmation. Where would you capture the evidence?"
 topic: bdd
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Use hooks for browser setup and cleanup, and attach the screenshot before quitting on a failed scenario.
+oneLine: "I'd open and close the browser in hooks. If a scenario fails, I'd attach a screenshot before closing it."
 looksFor:
-  - Distinguishes scenario hooks from hooks around individual steps.
-  - Uses the scenario status to decide whether to attach evidence.
-  - Captures failure evidence before closing the browser.
-  - Leaves business setup visible in Gherkin.
-trap: Closing the browser before taking the screenshot or letting a screenshot failure skip cleanup.
+  - "Explain which hooks run around a scenario and which run around one step."
+  - "Check the scenario result before deciding whether to attach a screenshot."
+  - "Attach the screenshot before closing the browser."
+  - "Keep the facts that explain the business rule visible in Gherkin."
+trap: "Closing the browser too early or skipping cleanup because taking the screenshot failed."
 followUps:
-  - question: Would you put the shopper's existing order in a Before hook?
-    answer: I'd keep it in a Given because it explains why the shopper can view a pickup confirmation.
+  - question: "Would you create the shopper's existing order in a Before hook?"
+    answer: "I'd put the order in a Given step. That fact explains why the shopper can see a pickup confirmation."
 sources:
   - label: Cucumber scenario hooks and step hooks
     url: https://cucumber.io/docs/cucumber/api/#hooks
@@ -96,16 +96,10 @@ examples:
           }
 ---
 
-I'd start a browser in a Before hook and tear it down in an After hook. Those are scenario
-hooks; step hooks run around individual steps and would be a poor fit for one screenshot per
-failed scenario. The fact that a shopper already has an order belongs in the scenario.
+I'd use a Before hook to open the browser and an After hook to close it. Hooks are code Cucumber runs at set points. Those two run around a scenario. I'd avoid step hooks here because they run around each step and I need one screenshot per failed scenario.
 
-In the After hook I'd check the scenario's status. If it failed and the browser started, I'd
-attach a screenshot before quitting. I'd put cleanup in `finally` so it still happens if
-capture fails.
+I'd keep the existing order in the scenario, where someone reading Gherkin, the scenario's written steps, can see it. In the After hook, I'd check whether the scenario failed and whether the browser opened. If both are true, I'd attach a screenshot before closing it. I'd close the browser in `finally`, the block that still runs if taking the screenshot fails.
 
 ### Example
 
-The local test app serves synthetic order 42 and renders the confirmation heading in its
-initial HTML. The tagged scenario starts one Chrome session. If the heading assertion fails,
-the report gets a screenshot and the session still closes.
+I'd test fictional order 42 in the local app. The app puts the heading in the first HTML it sends. I start one Chrome session for the tagged scenario. If the heading check fails, I'd attach a screenshot to the report and still close the session.

@@ -1,19 +1,19 @@
 ---
-title: A saved-filter test fails when Cypress sees a replaced row. How would you fix it?
+title: "Cypress loses a saved-filter row when the app replaces it. How would you fix the test?"
 topic: cypress
 roles: [automation, sdet]
 level: senior
 type: scenario
-oneLine: Use first-attempt evidence to distinguish a changing DOM, slow state, shared data, or an actual feature bug.
+oneLine: "I start with the first failure. I check for a replaced element, a slow update, shared data, or a feature bug."
 looksFor:
-  - Reproduces with first-failure evidence and test-owned data.
-  - Requeries after actions that trigger a render.
-  - Uses an alias or retrying assertion rather than a fixed delay.
-  - Treats test retries as evidence for investigation.
-trap: Setting a longer sleep or relying on retries for every detached-element failure.
+  - "Use evidence from the first failure and data only this test controls."
+  - "Look for the element again after an action changes the page."
+  - "Use a request alias or a retrying assertion instead of waiting a fixed time."
+  - "Keep retries as evidence that the result varies."
+trap: "Adding a longer wait or relying on whole-test retries for every detached-element failure."
 followUps:
-  - question: What if the assigned filter still disappears after the request succeeds?
-    answer: I'd check whether the app rendered the wrong response or lost the saved state and report a product issue if I can observe it outside the test.
+  - question: "What if the saved filter is still missing after the request succeeds?"
+    answer: "I'd check whether the app used the wrong response or lost the saved filter. If I can see it outside the test, I'd report a product bug."
 sources:
   - label: Cypress query retrying and detached elements
     url: https://docs.cypress.io/app/core-concepts/retry-ability
@@ -39,10 +39,12 @@ examples:
           });
 ---
 
-I'd keep the first failed attempt and see whether the action completed and which element Cypress was holding. After a re-render, I'd query again rather than carry a row reference across a click. I use a retrying assertion for changing text, and wait on a specific request alias when the response helps explain the result. A one-time check inside `then` won't keep reading as the page updates.
+I'd save the first failure and check if the action finished and which element Cypress had found. If the app replaces a row in the DOM, the browser's tree of page elements, I'd look for it again. The reference from before the click may point to a detached element, a row the app removed.
 
-I'd rerun with data this test owns and check for collisions if it fails only alongside other tests. A passing whole-test retry tells me the result varies. It doesn't tell me why.
+For changing text, I'd use a retrying assertion. Cypress repeats this check until the expected result appears or time runs out. If the response helps explain the result, I'd wait for its alias, a name I gave that request. A check inside `then` runs once instead of rereading the page as it updates.
+
+I'd rerun with data only this test uses. If it fails only with other tests, I'd check if they change the same data. A passing retry shows me the result varies. I'd still need to find the cause.
 
 ### Example
 
-The local sample page starts with a seeded active filter. Refresh fetches the list again and replaces its rows. I wait for that response, then query the active row from the updated page.
+I'd start my local test page with an active filter already saved. When I click Refresh, the page fetches the list again and replaces the rows. I'd wait for that reply and then find the active row on the updated page.

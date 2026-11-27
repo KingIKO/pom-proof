@@ -1,19 +1,19 @@
 ---
-title: What belongs in the Background of a library pickup feature?
+title: "What shared details belong in the Background for library pickup?"
 topic: bdd
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Put short shared business context in Background and keep technical setup in a hook.
+oneLine: "I'd put short, shared facts about pickup in Background. I'd use a hook for technical setup."
 looksFor:
-  - Knows when Cucumber runs a feature-level Background.
-  - Uses context that is true and useful in every scenario.
-  - Keeps case-specific conditions in their own scenarios.
-  - Distinguishes a Background from an invisible Before hook.
-trap: Hiding facts that explain an expected result in a hook nobody reading the feature can see.
+  - "Say when Cucumber runs a feature's Background."
+  - "Include only facts every scenario needs."
+  - "Keep a fact in its own scenario if it applies only there."
+  - "Tell visible Background steps apart from a Before hook readers can't see in the feature."
+trap: "Hiding a fact that explains the expected result in a hook readers can't see in the feature."
 followUps:
-  - question: What if only half the scenarios need a closed branch?
-    answer: Keep that fact in those scenarios, or separate them under a named rule with its own context.
+  - question: "What if only half the cases need a closed branch?"
+    answer: "I'd say the branch is closed in each case that needs it. I could also group those cases under a named rule with its own Background."
 sources:
   - label: Cucumber, Background
     url: https://cucumber.io/docs/gherkin/reference/#background
@@ -38,17 +38,10 @@ examples:
               Then the member receives no pickup notice
 ---
 
-I'd use a feature-level Background for a small piece of business context every scenario needs.
-Cucumber runs those Given steps before each scenario, after any Before hooks. If it takes a
-reader a whole screen to get from the context to the scenario, I'd look for a shorter
-description or break up the feature.
+I'd use Background, a group of shared Given steps, for facts every scenario in the feature needs. Cucumber runs those steps before each scenario and after any Before hooks. If the Background takes a whole screen, I'd shorten it or split the feature into smaller ones.
 
-A Before hook is for setup readers don't need to understand the rule, like creating an isolated
-browser session. A condition that affects what the member should experience belongs in the
-scenario or the Background where people can see it.
+A Before hook runs setup code outside the written feature. I'd use it for setup that readers don't need to understand the rule, like opening a separate browser session. If a fact affects what the member should experience, I'd put it in the scenario or Background so readers can see it.
 
 ### Example
 
-Both pickup cases start with the member's existing request. It takes one line to put that
-context in view. Making the book available should send a pickup notice; cancelling the
-request should send no pickup notice.
+I'd use one line in Background to say the member already requested a book. I'd then check two different results. When the book becomes available, I expect a pickup notice. If the member cancels the request, I expect no notice.

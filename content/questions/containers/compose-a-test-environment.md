@@ -1,19 +1,19 @@
 ---
-title: The vote container started, but ballot submission failed. What result should CI report?
+title: "The vote container started, but ballot submission failed. What should CI report?"
 topic: containers
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Use the ballot submission result as the CI verdict, and keep enough output to tell a bad vote from a stack that never became ready.
+oneLine: "I use the ballot check to decide if the CI job passed. I save enough output to tell a rejected ballot from services that never became ready."
 looksFor:
-  - Uses the smoke container's exit status for CI and saves its output before teardown.
-  - Distinguishes a rejected ballot from Redis or the app failing its health check.
-  - Keeps the ballot on the project's network and addresses the app as `vote`.
-  - Leaves traffic during a Kubernetes rollout to a separate staging check.
-trap: Adding a fixed sleep before tests and treating a successfully started container as a passing check.
+  - "Use the quick test's exit status and save its output before removing the containers."
+  - "Tell a rejected ballot apart from a failed readiness check for Redis or the app."
+  - "Keep the ballot on the project's own network and send it to `vote`."
+  - "Check voting during a Kubernetes rollout separately in the environment used before release."
+trap: "Using a fixed wait and counting a started container as a passing test."
 followUps:
-  - question: Vote job 185 starts while job 184 is deleting its test volumes. What keeps their ballots separate?
-    answer: "Give each run a unique Compose project name with `-p`, leave host ports unpublished, and use only that project's network and data volumes."
+  - question: "If vote job 185 starts while job 184 deletes its storage, what keeps the ballots separate?"
+    answer: "I'd use `-p` to give each Compose run its own project name. I'd avoid publishing host ports and use only that project's network and storage volumes."
 sources:
   - label: Docker Compose dependency health checks
     url: https://docs.docker.com/compose/how-tos/startup-order/
@@ -78,15 +78,12 @@ examples:
               command: ["--fail", "--silent", "--show-error", "--data", "vote=a", "http://vote/"]
 ---
 
-I'd report the smoke container's exit status and keep its output before removing the project.
-Seeing `vote` start tells me little about whether it accepted a ballot. If the smoke command
-never ran, I'd report a setup failure and check whether Redis answered and the app served HTTP.
-The `service_healthy` dependencies keep those startup failures separate from a failed POST.
+I'd report the exit status, the code the quick test returns, in continuous integration (CI), where tests run automatically. I'd keep the output before I remove the project. Seeing `vote` start doesn't show whether it accepted a ballot. If the test command never ran, I'd report a setup failure. I'd check whether Redis answered and the app responded over HTTP.
 
-The test posts to `vote` over its own Compose project's network, with no host port to reserve.
-This shows the stack can accept a ballot. I'd test what happens to votes during a Kubernetes
-rolling update in staging, where that traffic switch actually happens.
+The `service_healthy` dependencies tell Compose to wait until the services the test needs pass their health checks. They separate services that never became ready from a failed POST, the request that submits the ballot.
+
+I send the ballot to `vote` over the project's own Docker Compose network. I don't need to reserve a port on the host. That checks whether the group of services can accept a ballot. I'd test voting during a Kubernetes rolling update, when traffic moves to new copies of the app, in staging where the traffic switch happens.
 
 ### Example
 
-Save this as `compose.smoke.yaml` at the root of Docker's example voting app. Run `docker compose -p vote-184 -f compose.smoke.yaml up --exit-code-from smoke`. The smoke container posts a vote to the app, which writes it to Redis before replying. Expect exit zero for a successful response. On the disposable stack's cleanup step, use the same project and file with `down --volumes`.
+I'd save `compose.smoke.yaml` at the root of Docker's example voting app. I'd run `docker compose -p vote-184 -f compose.smoke.yaml up --exit-code-from smoke`. The test container sends a vote and the app writes it to Redis before replying. For a successful reply, I expect exit zero. I'd use `down --volumes` with the same project and file to remove the temporary setup.

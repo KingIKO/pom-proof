@@ -1,28 +1,23 @@
 ---
-title: A story is ready to test on the final afternoon of the sprint. What do you do?
+title: "A story is ready to test on the sprint's last afternoon. What do you do?"
 topic: agile
 roles: [manual-qa, automation, senior]
 level: mid
 type: scenario
-oneLine: Tell the team what can still be checked, test the highest-risk behavior first, and keep unfinished work out of Done.
+oneLine: "I'd tell the team what I can still test and start with the biggest customer risks. I'd keep unfinished work out of the completed product."
 looksFor:
-  - Ask what changed and what the build already covers.
-  - Pick the first checks by customer impact.
-  - Tell the team exactly what has not been checked and whether a fix can be retested.
-  - Work with the team and Product Owner on scope without lowering the quality bar.
-trap: Calling a rushed happy-path pass enough and leaving the rest of the testing unreported.
+  - "Ask what changed and which checks already ran on this build."
+  - "Start with the checks that matter most to customers."
+  - "Tell the team what you couldn't check and whether there's time to retest a fix."
+  - "Agree on what can still be finished with the team and Product Owner without dropping any required quality checks."
+trap: "Passing the usual success case in a rush and leaving the other checks unreported."
 followUps:
-  - question: What evidence do you leave for the next sprint?
-    answer: I record the build, the cases I ran, and their results. I also note the checks I couldn't run so the next person knows where to pick up.
-  - question: What if stories arrive late in every sprint?
-    answer: >-
-      I'd bring sprint dates, counts of late stories, and time left to test to the retrospective.
-      I'd propose thinner slices and getting the first testable build out sooner, then compare the dates.
-  - question: The account shows promotional mail is off, but the order receipt never reaches the test inbox. What evidence would you take to the sprint review?
-    answer: >-
-      I'd bring the build, the saved preference, and the test order ID. I'd trace the order to see
-      whether the mail worker queued its receipt. The unit result for saving the preference can stand;
-      the required receipt still failed, so I'd leave the change out of the Increment.
+  - question: "What do you record for the next sprint?"
+    answer: "I record the build, the cases I ran, and what happened. I list the checks I couldn't run so the next person knows where to start."
+  - question: "What if stories arrive late every sprint?"
+    answer: "I'd bring the sprint dates, the number of late stories, and the time left to test to the retrospective. I'd propose smaller pieces of work and an earlier testable build. Then I'd compare the dates."
+  - question: "The account has promotional mail turned off, but the receipt never arrives. What would you show at the Sprint Review?"
+    answer: "I'd bring the build, the saved preference, and the test order ID. I'd trace the order to see if the mail worker put the receipt in the send queue. The unit check for saving the preference can still pass. Since the required receipt failed, I'd leave the change out of the Increment."
 sources:
   - label: Scrum Guide on sprint scope and quality
     url: https://scrumguides.org/scrum-guide.html#the-sprint
@@ -30,10 +25,10 @@ sources:
     url: https://scrumguides.org/scrum-guide.html#commitment-definition-of-done
 ---
 
-I'd ask what changed in the build and what the team has already checked. Then I'd tell the team how much I can cover, including whether there is time to fix and retest a problem. I'd start with the paths where getting it wrong hurts a customer, including any existing behavior touched by the change.
+I'd ask what changed in the story, a piece of work for the user. I'd ask what the team has already checked in the build. I'd tell the team what I can test in the time left. I'd say whether there's time to fix and retest a problem. I'd start where a failure could hurt a customer, including existing behavior the change could break.
 
-If we can't meet the Definition of Done, I make that visible. We can discuss completing a smaller, usable piece with the Product Owner if that still serves the Sprint Goal. Otherwise the unfinished work stays out of the Increment.
+If we can't meet the Definition of Done, our shared quality requirements, I'd tell the team. We could discuss finishing a smaller, usable piece with the Product Owner if it still serves the Sprint Goal. Otherwise I'd keep the unfinished work out of the Increment, the usable product work we completed.
 
 ### Example
 
-A new order email preference arrived late. I tried saving it and placing an order with an account that had opted out of promotional email. The required order receipt never arrived. We agreed to leave the change out of the Increment, and I recorded the build and the failing account setup so we could retest the fix early next sprint.
+An order email preference arrived late. I saved the preference and placed an order on an account that had opted out of promotional email. The required receipt never arrived. We agreed to keep the change out of the Increment. I recorded the build and the account setup so we could retest early next sprint.

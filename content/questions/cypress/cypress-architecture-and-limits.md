@@ -1,19 +1,19 @@
 ---
-title: Would you choose Cypress for a dispatch board that also opens carrier popups?
+title: "Would you use Cypress for a dispatch board that opens carrier popups?"
 topic: cypress
 roles: [automation, sdet]
 level: junior
 type: concept
-oneLine: Weigh Cypress's direct control over a web app against the browser and window boundaries of the flow.
+oneLine: "I weigh what Cypress can control inside the web app against which tabs, sites, and browsers the test needs."
 looksFor:
-  - Explains Cypress's in-browser execution and accompanying Node process.
-  - Connects the design to network control and retrying queries.
-  - Accounts for the one-tab runner and its plugin option.
-  - Separates web coverage from native mobile and cross-origin needs.
-trap: Assuming the core Cypress command chain can drive a native mobile app or two independent browsers.
+  - "Explain how Cypress runs in the browser and works with a separate Node process."
+  - "Explain how that design helps control responses and retry searches for elements."
+  - "Describe the single-tab runner and the add-on you can test for popups."
+  - "Distinguish ordinary web tests from cross-origin tests and tests of native phone apps."
+trap: "Assuming the built-in Cypress commands can drive a native phone app or two separate browsers."
 followUps:
-  - question: The dispatcher clicks a carrier link and the quote opens in a second tab. What would you need to check that tab in Cypress?
-    answer: The test still runs in its original tab. I'd pilot the official Puppeteer plugin on a supported Chromium-based browser before relying on it to inspect the quote.
+  - question: "If the carrier quote opens in a second tab, what would you need to check it in Cypress?"
+    answer: "Cypress keeps running the test in the original tab. I'd try the official Puppeteer add-on on a supported Chromium-based browser before depending on it to inspect the quote."
 sources:
   - label: Cypress architecture
     url: https://docs.cypress.io/app/get-started/why-cypress
@@ -44,10 +44,12 @@ examples:
           });
 ---
 
-Cypress runs JavaScript test code in the browser alongside the app and works with a Node process. Selenium sends WebDriver commands from outside the browser. I'd try Cypress for a browser board where the team wants to control network responses and use queries that retry as the page updates.
+Cypress runs JavaScript test code beside the app inside the browser. It also works with a Node process running JavaScript outside the browser. Selenium sends WebDriver commands to control the browser from outside. I'd try Cypress if I need to control network replies and use queries that keep looking for elements as the page changes.
 
-The test runner operates in one tab. A plugin can reach carrier popups on supported Chromium-based browsers, but I'd pilot that before choosing. For a different origin I'd check whether `cy.origin` fits the flow. I'd choose a separate tool for a native mobile app.
+The Cypress runner uses one tab. A plugin, or add-on, can reach carrier popups on supported Chromium-based browsers. I'd try it on the dispatch flow before choosing it.
+
+A cross-origin flow crosses between addresses with different schemes, hosts, or ports. A different subdomain counts because the host changes. If Cypress needs to run commands on another origin, those commands need `cy.origin`, which tells Cypress where to run them. I'd check that it fits the flow. I'd choose a separate tool for a native app that runs directly on the phone.
 
 ### Example
 
-The local dispatch board loads its queue on arrival. Cypress returns a controlled dispatch response and checks that Glasgow renders as queued. I'd keep a separate integration check for the real dispatch service.
+I'd have my local dispatch board load the queue when I open it. I'd make Cypress return a planned reply and check the board shows Glasgow as queued. I'd also keep a separate test that connects to the real dispatch service.

@@ -1,19 +1,19 @@
 ---
-title: How would you run the same billing smoke test in staging and a temporary environment?
+title: "How would you run the same quick billing check in staging and a temporary test environment?"
 topic: framework-design
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Select the environment once, validate the resolved configuration before running tests, and inject credentials from CI.
+oneLine: "I choose the environment once and check the settings before the test runs. I supply the credentials from the automated job."
 looksFor:
-  - Defines an explicit precedence for defaults and job values.
-  - Validates the URL and required credentials before tests run.
-  - Keeps secrets out of source, logs, and reports.
-  - Adds a target through configuration rather than code.
-trap: Switching environments by editing the test source or printing all resolved settings after a failure.
+  - "Say which settings win if the job and local defaults both provide a value."
+  - "Check the URL and required credentials before running the tests."
+  - "Keep credentials out of code, logs, and reports."
+  - "Add an environment through settings without editing tests."
+trap: "Editing the test to switch environments or printing all settings when a job fails."
 followUps:
-  - question: A temporary billing environment has its own URL but no token. What should the smoke job do?
-    answer: It should stop and name BILLING_TOKEN without printing a value or falling back to staging. I'd add the scoped credential to that CI environment entry so the same job input can select the target without a code change.
+  - question: "If a temporary billing environment has a URL but no token, what should the job do?"
+    answer: "I'd stop the job and name `BILLING_TOKEN` without printing its value or using staging instead. I'd add a credential for that environment so the same job input can select it without a code change."
 sources:
   - label: Node.js environment variables
     url: https://nodejs.org/api/process.html#processenv
@@ -119,10 +119,12 @@ examples:
           }
 ---
 
-I'd have one CI input choose the environment. The selected entry supplies the base URL and injects the credential from the secret store at startup. I'd document precedence: keep local defaults for harmless settings, let the job override them, and require the credential rather than invent a default. Tests read one configuration object whose values are checked before the suite runs.
+I'd use one continuous integration (CI) input to choose the environment. CI runs the test job automatically. The chosen settings provide the base URL, the starting address for requests. I'd supply the credential from the secret store when the job starts.
 
-A missing setting should name the setting so someone can fix it. I'd keep the value out of errors and restrict artifacts that might record authorization headers. Pipeline masking helps with logs, but I would still avoid printing secrets in the first place.
+I'd document which value wins when settings overlap. I allow local defaults for harmless settings and let the job override them. I require the credential instead of making up a default. Tests read one set of settings. I check those values before running the suite.
+
+If a setting is missing, I'd name it so someone can fix it. I'd leave its value out of errors. I'd restrict access to saved reports that may contain authorization headers, which can carry credentials. CI can hide known secret values in logs, but I'd still avoid printing them.
 
 ### Example
 
-Each environment supplies `BILLING_URL` and `BILLING_TOKEN` to the same test. The protected health endpoint should return 200 when accessed with that environment's token.
+I'd give each environment its own `BILLING_URL` and `BILLING_TOKEN` for the same test. When I use that environment's token at the protected health address, I'd expect status code 200.

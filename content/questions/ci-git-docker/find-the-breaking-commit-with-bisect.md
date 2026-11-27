@@ -1,19 +1,19 @@
 ---
-title: Catalog search can no longer be built at some revisions. Can you still trust a bisect result?
+title: "Some catalog revisions won't build. How would you check whether Git bisect found the ranking bug?"
 topic: ci-git-docker
 roles: [sdet]
 level: senior
 type: tooling
-oneLine: Trust the reported boundary only if you can distinguish the ranking regression from failures that prevent measuring it.
+oneLine: "I trust the reported boundary only if my check can tell a wrong ranking from a revision it can't test."
 looksFor:
-  - States what a skipped commit can conceal.
-  - Distinguishes an entry point that won't load from a wrong ranking result.
-  - Establishes known-good and known-bad revisions with the same fixture and runtime.
-  - Confirms the boundary on both sides instead of blaming the first candidate.
-trap: Sending a flaky browser test through bisect and treating an unrelated setup failure as the search regression.
+  - "Explain what Git could miss if it skips a commit."
+  - "Separate a module that won't load from a search that ranks results incorrectly."
+  - "Prove a known good and bad revision with the same test data and software."
+  - "Check the reported change and the revision just before it."
+trap: "Using a test that passes and fails inconsistently, or counting an unrelated setup issue as the ranking bug."
 followUps:
-  - question: What if losing the ability to import the module is itself the bug?
-    answer: I'd write a probe for that symptom and classify the relevant import failure as bad. A probe for rank order alone cannot classify a revision that never returns a ranking.
+  - question: "What if the bug is that the module won't load?"
+    answer: "I'd write a check for that failure and mark the relevant import failure as bad. A check for rank order can't judge a revision that gives no ranking."
 sources:
   - label: Git bisect run and exit codes
     url: https://git-scm.com/docs/git-bisect
@@ -37,10 +37,10 @@ examples:
           git bisect reset
 ---
 
-I'd first decide what counts as bad. For the ranking bug, zero means the first result is correct and one means the order is wrong. This probe returns 125 when the module fails to load or its ranking function is unavailable. If the commit that introduced the regression is skipped, Git may only be able to report several possible first bad commits.
+I'd decide what counts as a bad result. For this bug, my probe, a small check that runs the search, returns zero for a correct top result. It returns one for a wrong order. It returns 125 if the module won't load or its ranking function isn't available. That tells Git to skip the revision.
 
-I'd run the same fixture and runtime at the known good and bad revisions before starting the binary search. If skips leave the answer unclear, I'd restore a compatible setup where possible. I'd rerun the reported boundary and its parent before blaming a change.
+Git bisect looks for the first bad commit by testing revisions between a known good and a known bad one. Before starting, I'd test both known revisions with the same data and runtime. If Git skips the revision that caused the bug, it may list several candidates. If skips leave the answer unclear, I'd restore a compatible setup where possible. I'd rerun the first bad candidate and its parent, the revision just before it, before blaming the change.
 
 ### Example
 
-The `search-v1` tag is known good and `HEAD` ranks a tea towel ahead of green tea. In a clean checkout the probe calls the pure search module with two products. A revision without the entry point is skipped, and `git bisect reset` returns me to the starting branch.
+I know the `search-v1` tag ranks the results correctly. On `HEAD`, my current revision, a tea towel comes ahead of green tea. I run the search module directly with two products in a clean checkout. If an older revision lacks the function I call, I skip it. I run `git bisect reset` to return to my starting branch.

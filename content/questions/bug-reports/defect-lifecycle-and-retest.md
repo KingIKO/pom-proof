@@ -1,28 +1,30 @@
 ---
-title: What happens to a defect from the time you file it to the time you close it?
+title: "What happens to a defect from the time you report it until you close it?"
 topic: bug-reports
 roles: [manual-qa, automation]
 level: junior
 type: concept
-oneLine: Record the finding, track the team's decision, and verify the fix in a build that contains it before marking it verified.
+oneLine: "I report the defect, a problem in the product, and track what the team decides. If someone fixes it, I test a build with the fix before I mark it verified."
 looksFor:
-  - Describe the handoff from a reported finding to a triage decision.
-  - Allow for duplicate, deferred, and other outcomes besides a fix.
-  - Retest the original reproduction in a build that contains the fix.
-  - Explain how to record a failed retest or a separate regression.
-trap: Saying that moving a ticket to fixed proves the original issue is gone.
+  - "Explain how a filed report reaches the people who decide what to do next."
+  - "Describe outcomes besides a fix, including duplicate reports and issues the team decides to handle later."
+  - "Repeat the original steps in a build that includes the fix."
+  - "Explain how to record a failed retest or file a separate problem the change caused."
+trap: "Treating a fixed ticket as proof that the bug is gone."
 followUps:
-  - question: What if the original steps pass, but you find a different failure nearby?
-    answer: I'd record that the original issue passed retest, then file and link the new failure with its own steps and impact.
-  - question: What if the test environment doesn't have the fix yet?
-    answer: I'd note which build is available and leave verification pending until I can test one that includes the fix.
+  - question: "What if the original steps work but you find another problem nearby?"
+    answer: "I'd record that the original bug passed its retest. I'd file the new bug with its own steps and impact, and link the tickets."
+  - question: "What if the fix isn't in the test environment yet?"
+    answer: "I'd record which build is available. I'd leave the fix unverified until I can try a build that includes it."
 sources:
   - label: ISTQB CTFL syllabus, section 5.5 (Defect Management)
     url: https://www.istqb.org/certifications/certified-tester-foundation-level
 ---
 
-I start with a report the team can act on. In triage, we might assign a fix, link a duplicate, or defer the issue and record why. The status names and who changes them vary by team. When a fix is ready, I check which build contains it, run the original steps, and check a related path the change could affect. If the original issue still happens, I send the ticket back with fresh evidence from that build.
+I start with a report someone else can act on. In triage, the team decides what to do about the report. We might assign someone to fix it, link a duplicate, or explain why the issue can wait. The status names and who updates them vary by team.
+
+When a fix is ready, I check which build includes it. I repeat the original steps and check one related behavior the change could affect. If the original problem still happens, I send the ticket back with new evidence from that build.
 
 ### Example
 
-Say turning off weekly reminders looks successful, but the switch is back on after a reload. On the patched build, I'd turn reminders off, reload, then sign in again and check that they stay off. I'd also turn them back on to make sure the other direction still saves. If those checks pass, I record the build and results before marking the fix verified.
+Suppose I turn off weekly reminders and see the switch turn back on after I reload. In the build with the fix, I'd turn them off, reload, and sign in again. I'd check that they stay off. I'd turn them back on to see if that setting still saves. If those checks pass, I'd record the build and results before marking the fix verified.

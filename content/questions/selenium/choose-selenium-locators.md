@@ -4,16 +4,16 @@ topic: selenium
 roles: [automation, sdet]
 level: junior
 type: tooling
-oneLine: Locate the shipment by a stable attribute, then scope the action to that row.
+oneLine: I'd find the shipment by an attribute that stays the same. I'd look for the control only inside that row.
 looksFor:
-  - Names Selenium's traditional By strategies.
-  - Prefers stable IDs and dedicated test attributes.
-  - Explains when XPath or a relative locator earns its use.
-  - Avoids text and position when they are likely to change.
-trap: Clicking the third row's link and assuming the fixture order won't change.
+  - Name Selenium's usual `By` strategies for finding elements.
+  - Prefer IDs that stay the same or attributes the app sets aside for tests.
+  - Explain when XPath or a locator based on position relative to another element helps.
+  - Avoid using text or row order if it may change.
+trap: Clicking the link on the third row and assuming the test data will always appear in that order.
 followUps:
   - question: When would a relative locator be a good fit?
-    answer: When the spatial relationship is part of the interface and identifies one target across the supported layouts. I'd avoid it when responsive layouts change that relationship.
+    answer: I'd use a relative locator if the position is part of the design and the same rule picks one target across supported layouts. If the layout changes that relationship, I'd choose another locator.
 sources:
   - label: Selenium traditional and relative locators
     url: https://www.selenium.dev/documentation/webdriver/elements/locators/
@@ -63,10 +63,12 @@ examples:
                   assert driver.find_element(By.TAG_NAME, "h1").text == "Shipment S218"
 ---
 
-I'd start with a unique stable ID or a dedicated test attribute, then use short CSS scoped to the part of the page I care about. Selenium's traditional strategies include ID, name, class name, tag name, CSS, XPath, link text, and partial link text. I'd choose XPath for a useful text or ancestor relationship I can't express clearly with the available attributes.
+I'd start with a locator, which tells Selenium how to find a page element. I'd use a unique ID that stays the same or an attribute the app sets aside for tests. I'd use a short CSS selector, a rule for matching elements, inside the part of the page I need.
 
-Link text depends on the words staying the same, and a positional path can target a different row when the list is sorted. A relative locator can express a spatial relationship, though I'd check it at the supported viewport sizes.
+Selenium's `By` strategies include ID, name, class name, tag name, CSS, XPath, link text, and partial link text. XPath describes where to look in a page's element tree. If the available attributes can't express a match clearly, I'd use XPath to match text or an element that contains another.
+
+If I match link text, the words need to stay the same. If I match by row position, sorting can send me to a different shipment. I can use a relative locator to match an element by where it sits next to another. I'd check it at every supported browser window size.
 
 ### Example
 
-The sample shipments page includes S218 among several rows. The test finds that row by a data attribute, clicks its detail control, and expects the heading `Shipment S218`.
+I'd use S218 from a sample page with several shipments. I'd find its row by its data attribute and click the details control inside it. I'd expect the heading `Shipment S218`.

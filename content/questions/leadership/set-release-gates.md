@@ -4,27 +4,29 @@ topic: leadership
 roles: [senior, sdet, automation]
 level: senior
 type: behavioral
-oneLine: Make reliable signals for costly failures required and give exceptions an owner and an expiry.
+oneLine: I make reliable checks for costly failures required. I give each exception an owner and an end date.
 looksFor:
-  - Your decision about which risks should block merges
-  - Runtime and first-attempt reliability measured before making checks required
-  - A recovery or exception path with ownership
-  - A measured result and a lesson about keeping trust
-trap: Requiring every available check on day one and normalizing bypasses once the gate gets noisy.
+  - Explain how you decided which risks should block merges.
+  - Before making checks required, measure their run time and how reliable they are on the first attempt.
+  - Describe a way to recover or approve an exception, with a named owner.
+  - Give a measured result and a lesson about keeping people's trust in the gate.
+trap: Requiring every available check on day one. Then letting bypasses become normal once the gate starts raising false alarms.
 followUps:
-  - question: Who can approve an exception?
-    answer: I'd agree on a named release decision owner and require a record of the risk, temporary coverage, and the date the exception ends.
+  - question: Who can decide to let a change through despite a required check?
+    answer: I'd agree on a named owner for release decisions. I'd require a record of the risk, the temporary coverage, and the date the exception ends.
   - question: What would make you move a check from a nightly run to a required check?
     answer: >-
-      I'd ask what bad merge it can stop, how often the result points to a real issue, and how long a
-      developer has to wait. A short sign-in check can earn that place; I'd keep the full browser
-      matrix scheduled if its feedback arrives too late to help. Mandatory checks still run as required.
+      I'd ask what bad merge it can stop, how often its result points to a real issue, and how long a
+      developer has to wait. A short sign-in check can earn that place. If the full browser matrix gives
+      feedback too late to help, I'd keep it scheduled. Mandatory checks still run as required.
 ---
 
-Our merges depended on a verbal release check, so a broken sign-in reached staging twice in a month. I piloted six smoke checks without blocking merges for two weeks. I tracked time to a result and whether a failure reliably meant someone needed to act. Once the checks were dependable, I proposed making them required and leaving the slower browser matrix on a separate schedule.
+Our merges depended on a verbal release check. As a result, a broken sign-in reached staging twice in a month. Staging is the environment where we test a build before release. I piloted six smoke checks for two weeks without letting them block merges. A smoke check is a quick test that a key feature still works.
 
-The new gate took a median of five minutes and caught two sign-in regressions before merge in the next eight weeks. I published who owned a failed check and who could approve an exception. I learned to demonstrate reliability first, so people could trust the gate when it turned red.
+I tracked the time to a result. I also tracked whether a failure reliably meant someone needed to act. Once the checks were dependable, I proposed making them a required quality gate. In CI, the system that tests each change, a quality gate is a set of checks that must pass before merge. The slower browser matrix, which runs tests across many browsers, would stay on a separate schedule.
+
+The new gate took a median of five minutes. In the next eight weeks, it caught two sign-in regressions before merge. A regression is a bug in something that used to work. I published who owned a failed check and who could approve an exception. I learned to show reliability first, so people could trust the gate when it turned red.
 
 ### Example
 
-A change that redirected signed-in users back to the sign-in page failed the smoke. The larger export matrix kept running on its schedule.
+A change redirected signed-in users back to the sign-in page, and it failed the smoke checks. The larger export matrix kept running on its schedule.

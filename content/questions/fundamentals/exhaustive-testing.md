@@ -1,26 +1,28 @@
 ---
-title: "Why can't you test every possible case?"
+title: "Why is exhaustive testing usually impractical?"
 topic: fundamentals
 roles: [manual-qa, automation, sdet]
 level: junior
 type: concept
-oneLine: "Except on very small problems, the possible combinations outgrow the time available, so I choose cases that cover distinct risks."
+oneLine: "Except for very small problems, I have too many combinations to test in the time available. I choose cases that cover different risks."
 looksFor:
-  - "Explains why combinations grow across inputs and states."
-  - "Keeps distinct outcomes instead of repeating near-identical cases."
-  - "Tests boundaries and expensive failures."
-  - "States which cases were left out."
-trap: "Confusing a list of every input field with coverage of every interaction."
+  - "Explain why combining inputs and starting states adds cases."
+  - "Keep cases that lead to different results and cut near-duplicates."
+  - "Test where the rule changes and where a failure would be costly."
+  - "Name the cases you skipped."
+trap: "Assuming that testing each input on its own covers how fields work together."
 followUps:
-  - question: "When might you cover every value?"
-    answer: "For a pure switch that takes one of four fixed states and has no other inputs, I can cover all four cheaply."
+  - question: "What would make it practical to test every value?"
+    answer: "If a switch takes one of four fixed states and nothing else affects its result, I can test all four quickly."
 sources:
   - label: "ISTQB CTFL v4.0.1, section 1.3"
     url: https://www.istqb.org/certifications/certified-tester-foundation-level
 ---
 
-Even when a feature has only a few settings, the number of cases grows once I include roles, data already on the account, and what happens on retry. I start by asking which combinations change the expected behavior. I keep one representative where the rule treats inputs the same, and test the edges where the rule switches. If a specific combination carries a big loss, I test it directly rather than hope the general set covers it.
+Exhaustive testing means trying every possible case. Even if a feature has few settings, I get more cases when I include user roles, existing account data, and repeat attempts. I first ask which combinations change the expected result.
+
+If the rule treats several inputs alike, I pick one to stand for the group. I test the boundaries, or points where the rule changes. If a particular combination could lead to a big loss, I test it directly so I know the suite covers it.
 
 ### Example
 
-In delivery settings I'd test that a restricted postcode never offers next-day shipping, even on an account with express delivery. I'd spend less time combining that same rule with every saved address label.
+For delivery settings, I'd test that a restricted postcode never offers next-day shipping, even if the account has express delivery. I'd spend less time repeating that same check for every label on a saved address.

@@ -1,19 +1,19 @@
 ---
-title: How would you run just the ready checkout smoke scenarios in Cucumber?
+title: "How would you run only the finished checkout smoke scenarios in Cucumber?"
 topic: bdd
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Tag scenarios with their purpose or area, then filter the run with a tag expression.
+oneLine: "I'd label scenarios by area or purpose. I'd tell Cucumber which labels to include or skip."
 looksFor:
-  - Tags a scenario and describes feature-level inheritance.
-  - Uses a boolean expression to select and exclude scenarios.
-  - Explains how tags can scope hooks.
-  - Keeps tags independent of execution order.
-trap: Tagging scenarios as first and second because one relies on the other's data.
+  - "Tag a scenario and say what happens when the whole feature has the tag."
+  - "Combine conditions that include and exclude scenarios."
+  - "Explain how a tag limits when setup code runs."
+  - "Keep each tagged scenario independent of run order."
+trap: "Using tags to force scenarios to run first and second because one depends on the other's data."
 followUps:
-  - question: How would you scope a browser setup hook without putting that detail in each scenario?
-    answer: Apply a browser tag where it belongs and give the hook a matching tag expression.
+  - question: "How would you limit browser setup to the scenarios that need it?"
+    answer: "I'd put a browser tag on those scenarios or their feature. I'd give the setup hook a condition that matches that tag."
 sources:
   - label: Cucumber tags, filtering, and conditional hooks
     url: https://cucumber.io/docs/cucumber/api/#tags
@@ -45,16 +45,10 @@ examples:
           mvn test -Dcucumber.filter.tags="@checkout and @smoke and not @wip"
 ---
 
-I'd agree on a small tag set with the team. I'd use `@checkout` for the area, `@smoke` for
-the short confidence run, and `@wip` for unfinished scenarios. A feature's tags are inherited
-by its scenarios, so we can put a tag there if it applies to all of them.
+I'd agree on a small set of tags, or labels, with the team. I'd use `@checkout` for the feature area and `@smoke` for a short run that checks the basics. I'd use `@wip` for unfinished cases. If a tag applies to every scenario in a feature, I'd put it on the feature. Each scenario gets that tag.
 
-Cucumber can use a tag expression to select a run or to scope a hook. Tags describe when a
-case or hook applies. Each scenario should set up its own data so the filtered run works
-regardless of which other scenarios run.
+I'd use a tag expression, a rule that combines tags, to choose what runs. I'd also use it to decide where a hook, which runs setup or cleanup code, applies. I'd give each scenario its own test data so it works regardless of which others run.
 
 ### Example
 
-In a Maven project already configured to run these features with Cucumber-JVM, the command
-requires checkout and smoke, and excludes work in progress. It runs the pickup order case
-and skips the unfinished store credit case.
+In a Maven project set up to run Cucumber-JVM, I'd use the shown command to require checkout and smoke tags. I'd exclude work in progress. I'd expect the pickup order case to run and the unfinished store credit case to be skipped.

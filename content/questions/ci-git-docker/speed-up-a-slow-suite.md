@@ -1,19 +1,19 @@
 ---
-title: Checkout opens a browser for every postal code. Which checks would you move out of the merge job's browser run?
+title: "Checkout opens a browser for every postal code. Which tests could leave the browser run before merge?"
 topic: ci-git-docker
 roles: [automation, sdet, senior]
 level: senior
 type: scenario
-oneLine: Keep the browser check for the shopper's handoff and prove a wrong quote still blocks the merge once pricing cases move to the API.
+oneLine: "I keep a browser test for the shopper's path to confirmation. I prove that checking postal-code prices directly still blocks a wrong quote before merge."
 looksFor:
-  - Keeps the browser case that proves the quote reaches confirmation.
-  - Shows that the API cases catch the postal-code pricing mistakes.
-  - Uses the timing breakdown to decide whether repeated setup or browser runs dominate.
-  - Measures time and cost after the change and isolates data before trying parallel jobs.
-trap: Buying more parallel execution when every job spends most of its time doing the same setup.
+  - "Keep a browser test that proves the quote reaches the confirmation screen."
+  - "Show that tests at the pricing service catch postal-code mistakes."
+  - "Measure whether setup or browser tests account for most of the wait."
+  - "Compare time and cost afterward, and separate test data before running jobs together."
+trap: "Paying for more jobs when each one spends most of its time repeating the same setup."
 followUps:
-  - question: Pricing now passes at the API, but the shipping total shown on confirmation is wrong. Does the new merge job still catch it?
-    answer: It should fail the browser check that compares the quote with the confirmation. I'd prove that with a deliberate mismatch before moving lower-risk combinations to an owned scheduled or release suite.
+  - question: "The price test passes at the API, but confirmation shows the wrong shipping total. Does the merge job catch it?"
+    answer: "I expect the browser check that compares the quote with confirmation to fail. I'd prove it by making those totals differ on purpose. Then I'd move lower-risk combinations to a scheduled or release suite with an owner."
 sources:
   - label: Playwright sharding and how work is split
     url: https://playwright.dev/docs/test-sharding
@@ -21,15 +21,10 @@ sources:
     url: https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching
 ---
 
-I'd keep a browser case for the path from quote to confirmation and put the postal-code
-pricing and rounding combinations below it where the rules can be checked just as well.
-I'd show that a known wrong price still fails a required check.
+I'd keep one browser test from quote to confirmation. I'd move postal-code pricing and rounding combinations to the API, where a test can ask the service for prices directly. I'd make the price wrong on purpose to prove it still fails a required check.
 
-Then I'd time the 30-minute job by queue, setup, tests, and reporting. If every case builds
-the same catalog, I'd build it once and isolate the checkout records. If installation
-dominates, I'd cache locked dependency downloads. I'd try parallel jobs only when the cases
-can run together, and compare feedback time and runner minutes afterward.
+I'd split the 30-minute job into time spent waiting to start, setting up, running tests, and reporting. If every case builds the same catalog, I'd build it once and give tests separate checkout records. If package installation takes most of the time, I'd reuse downloaded files for the locked package versions. I'd only run jobs together when the cases can safely overlap. I'd compare time to get a result and total runner minutes afterward.
 
 ### Example
 
-If the suite opens a browser for every postal code, I'd check the pricing combinations at the API and keep a browser case for checkout quoting and confirmation. A deliberate pricing regression should still fail the required check.
+If my suite starts a browser for each postal code, I'd test the price combinations at the API. I'd keep a browser test for the quote and confirmation. When I cause a pricing bug on purpose, I expect a required check to fail.

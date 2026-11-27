@@ -1,19 +1,19 @@
 ---
-title: "The label-list test gets untyped maps back. How would you make it compare actual labels?"
+title: "The label-list test gets untyped maps from REST Assured. How would you make it compare actual labels?"
 topic: api
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: "Give REST Assured the list's element type so the create and read checks can compare the same kind of label."
+oneLine: "I'd tell REST Assured the type of each list item. Then I'd compare the label from creation with the one in the list."
 looksFor:
-  - "Explains why List.class cannot tell the mapper to produce Label records."
-  - "Checks the HTTP status before reading a response model."
-  - "Uses a smaller create model because the service supplies the ID."
-  - "Decides whether an added field should affect this client test."
-trap: "Reading a JSON array into List.class and assuming the elements will be typed label records."
+  - "Explain why List.class tells the mapper to make a list but leaves out the type of each item."
+  - "Check the HTTP status before turning the body into Java objects."
+  - "Send a smaller create request because the service supplies the ID."
+  - "Decide whether a new field matters to the client the test represents."
+trap: "Reading a JSON array with List.class and assuming every item becomes a Java label record."
 followUps:
-  - question: "Both reads map successfully, but the list contains two labels named Cold shelf. Which one counts?"
-    answer: "I'd look for the ID returned by the create and compare that record's fields. The name alone doesn't tell me the list contains the label this test created."
+  - question: "Both reads work, but the list has two labels named Cold shelf. Which one would you use?"
+    answer: "I'd find the ID from the create response and compare that record's fields. The name doesn't tell me which label the test created."
 sources:
   - label: REST Assured object mapping and mapper configuration
     url: https://rest-assured.io/docs/usage/object-mapping/
@@ -64,10 +64,10 @@ examples:
           }
 ---
 
-The check I want is that the list contains the label returned by create, including its ID. `List.class` leaves the element type unspecified. After checking the response status, I'd pass `TypeRef<List<Label>>` for the list and `Label.class` for the single response.
+I'd check that the list contains the label the service created, including its ID. The `List.class` type doesn't say what each item is. That gives me untyped maps, or sets of field names and values without a label type. After checking the response status, I'd use `TypeRef<List<Label>>` for a list of label records. I'd use `Label.class` when the response contains one label.
 
-For the create request I'd send a smaller record with only the name. Set the media type to JSON and choose the mapper the suite expects. If the service adds a printer hint, a client that never reads it can ignore the extra field. The test still asserts the values it depends on.
+I'd send a smaller record with only the name when creating the label. I'd set the media type, the format declared in the request, to JSON. In REST Assured I'd use the mapper the suite expects to convert between JSON and Java records. If the service adds a printer hint the client never uses, I'd let the client ignore it. I'd still check all the values the client needs.
 
 ### Example
 
-Use a reset local label service and REST Assured with Jackson 2.12 or newer on the test classpath. `POST` should create `Cold shelf` and `GET` should include that returned label in its JSON array.
+I'd reset the local label service and put Jackson 2.12 or newer on the test classpath so REST Assured can use it. I'd `POST` a label named `Cold shelf`. I'd expect the `GET` response to include the returned label in its JSON array.

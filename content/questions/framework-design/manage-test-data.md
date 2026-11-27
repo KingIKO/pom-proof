@@ -1,19 +1,19 @@
 ---
-title: Several CI jobs edit customer addresses. How would you keep their test data separate?
+title: "Several automated jobs edit customer addresses. How do you keep their test data apart?"
 topic: framework-design
 roles: [automation, sdet, senior]
 level: mid
 type: concept
-oneLine: Create one uniquely owned record per test through a setup interface and delete only that record.
+oneLine: "I create one record that only the test owns. I use a setup service and delete only that record."
 looksFor:
-  - Builds new mutable records below the UI.
-  - Distinguishes shared read-only reference data.
-  - Limits cleanup by record ID or run tag.
-  - Plans for crashes and keeps large datasets separate.
-trap: Resetting the same customer account at the start of every test in a parallel suite.
+  - "Create new records the test can edit without going through the browser."
+  - "Keep shared reference data read-only."
+  - "Use the record ID or run tag to limit what cleanup removes."
+  - "Plan for interrupted runs and keep large datasets separate."
+trap: "Resetting the same customer account at the start of every test that can run at the same time."
 followUps:
-  - question: An abandoned Tacoma record and an active test customer are both in the database. Which one can the cleanup job delete?
-    answer: Only the record tagged to the finished run, and only after its expiry window. I'd use the run state and age for that decision since the city alone doesn't tell me who owns the record.
+  - question: "An abandoned Tacoma record and an active test customer are both in the database. Which can cleanup delete?"
+    answer: "I'd delete only the record tagged to a finished run, and only after its expiry window. I'd check the run status and record age. The city doesn't tell me who owns the record."
 sources:
   - label: Playwright request context
     url: https://playwright.dev/docs/api/class-apirequestcontext
@@ -103,10 +103,10 @@ examples:
           }
 ---
 
-I'd make a factory create the smallest valid customer through a setup API. The test gets its ID and uses it for every write and for cleanup. Unique values and a run ID keep concurrent jobs separate. Shared reference data, like the list of states, can stay read-only. If the worker dies before teardown, a scheduled cleanup can expire records tied to finished runs.
+I'd use a factory, code that creates records, to make the smallest valid customer through a setup API. That API lets the test create records directly. I'd use the returned ID for every change and for cleanup. Unique values and a run ID keep jobs that overlap separate. I'd allow shared, read-only data such as the list of states.
 
-For a load test, I'd build a separate dataset with the sizes and distributions we see in production, without exposing real customer details. Ordinary address tests are easier to understand with a small synthetic record.
+If the test worker stops before cleanup, a scheduled job can remove expired records from finished runs. For a load test, I'd create separate data in the sizes and patterns I see in the live app. I wouldn't include real customer details. For a regular address test, I'd use one small made-up record so the case is easier to understand.
 
 ### Example
 
-The local test API creates a customer with a unique email and returns its ID. The check sets that customer's city to Tacoma, reads the change back, then deletes the one record it owns.
+I'd call the local test service to create a customer with a unique email. I'd keep the returned ID. I'd set that customer's city to Tacoma and read it back. I'd remove only the record my test created.

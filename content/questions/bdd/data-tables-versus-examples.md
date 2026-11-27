@@ -1,19 +1,19 @@
 ---
-title: How would you pass several parcel items into one Cucumber scenario?
+title: "How would you put several items in one parcel in a Cucumber scenario?"
 topic: bdd
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Give one step a data table for the parcel contents, and use Examples only to repeat the whole case.
+oneLine: "I'd use a data table to give the items to one step. I'd use Examples only when I want to repeat the whole scenario."
 looksFor:
-  - Distinguishes a step argument from rows that rerun a scenario outline.
-  - Uses headers to read basket rows as maps in Java.
-  - Keeps the item quantities together in one scenario.
-  - Asserts an outcome that depends on both items.
-trap: Using two Examples rows when the rule depends on both items being in the same parcel.
+  - "Tell a table passed to one step apart from rows that repeat the scenario."
+  - "Read basket rows in Java using their column names."
+  - "Keep all the items and quantities in one run."
+  - "Check a result that depends on both items."
+trap: "Using two Examples rows when the test needs both items in the same parcel."
 followUps:
-  - question: When would you use an outline for parcel weights?
-    answer: Use it for independent parcels on either side of a shipping price cutoff.
+  - question: "When would you use a scenario outline for parcel weights?"
+    answer: "I'd use it to run separate parcels on either side of a cutoff where the price changes."
 sources:
   - label: Cucumber, data tables and scenario outlines
     url: https://cucumber.io/docs/gherkin/reference/
@@ -87,16 +87,10 @@ examples:
           }
 ---
 
-A data table is an argument to one step. I'd use it when a parcel needs several different
-items at the same time. In Cucumber-JVM, `asMaps()` reads the first row as headers and
-gives me a map for each item row. The step converts the quantity and passes each line to
-the parcel.
+I'd give one step a data table if a parcel needs several items together. In Cucumber-JVM, I can call `asMaps()` to read the first row as column names. I get one map per item row, so Java can look up each value by its column name. The step converts each quantity and adds the items to the parcel.
 
-If I used Examples rows instead, each row would run the whole outline separately. That's
-useful when I want distinct parcels to exercise one pricing rule. It would miss a bug in
-the combined weight if I put the mug in one run and the book in another.
+An Examples table supplies inputs for a scenario outline, a template for repeating the whole case. I'd use it to test one pricing rule with separate parcels. If the mug and book go into separate runs, I'd miss a bug in their combined weight.
 
 ### Example
 
-The Java steps use a small parcel model with a 275-gram mug and a 500-gram book. The two
-rows load one parcel. Two mugs plus a book should weigh 1,050 grams before packaging.
+I'd use the Java steps to load two rows into one parcel model. I enter a 275-gram mug and a 500-gram book. With two mugs and one book, I'd expect 1,050 grams before packaging.

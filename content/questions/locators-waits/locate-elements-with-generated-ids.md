@@ -1,19 +1,19 @@
 ---
-title: The invoice drawer gives its reference field a new ID on every load. What would you target?
+title: The invoice drawer gives its reference field a new ID each time it loads. How would the test find the field?
 topic: locators-waits
 roles: [automation, sdet]
 level: mid
 type: tooling
-oneLine: Use a stable name or attribute scoped to the correct drawer before relying on part of a generated ID.
+oneLine: I look for a stable name or attribute inside the correct drawer before I rely on part of a generated ID.
 looksFor:
-  - Uses an accessible name or dedicated test attribute.
-  - Limits the selection to the right drawer.
-  - Requires a stable contract before using an ID prefix.
-  - Asks for a stable hook on Purchase reference if the drawer exposes neither a usable label nor a stable name.
-trap: Choosing the first text input on the page because the generated ID changed.
+  - Use an accessible name or a dedicated test attribute.
+  - Limit the selection to the right drawer.
+  - Require a stable contract before using an ID prefix.
+  - If the drawer exposes neither a usable label nor a stable name, ask for a stable hook on Purchase reference.
+trap: Making the test use the first text field it finds just because the app assigned a new ID.
 followUps:
-  - question: What if a documented ID prefix still matches two fields?
-    answer: I'd scope the match to the relevant section and verify that the resulting selector identifies exactly one control.
+  - question: If two fields share the documented first part of the ID, how would you choose between them?
+    answer: I'd limit the match to the relevant section. Then I'd verify that the resulting selector identifies exactly one control.
 sources:
   - label: Playwright locator recommendations and scoping
     url: https://playwright.dev/docs/locators
@@ -79,10 +79,10 @@ examples:
           }
 ---
 
-I'd inspect how the field is named and where it lives. A label or a role with an accessible name can identify the same control a user looks for. If there are two matches, I'd scope to the named invoice drawer. In a legacy form I might use a stable `name` attribute or a documented ID prefix, as long as it narrows to one element.
+I'd inspect how the field is named and where it sits on the page. A label can identify the same control a user looks for. So can a role with an accessible name, the name that assistive technology reads out. If there are two matches, I'd scope the search to the named invoice drawer. That means I'd search only inside the drawer.
 
-If the entire ID changes, I'd avoid matching any part of it. I'd ask the team for a dedicated test attribute if the interface still gives me no reliable handle.
+In a legacy form, I might use a stable `name` attribute or a documented ID prefix. I'd do that only if it narrows the match to one element. If the entire ID changes, I'd avoid matching any part of it. If the interface still gives me no reliable handle, I'd ask the team for a dedicated test attribute.
 
 ### Example
 
-The local invoice page opens an edit drawer and assigns a new ID to the purchase-reference input. The test types `PO-440` into the field identified by its label or stable name and checks that value.
+The local invoice page opens an edit drawer. It assigns a new ID to the purchase-reference input. The test finds the field by its label or its stable name. It types `PO-440` into that field and checks the value.

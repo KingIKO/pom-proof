@@ -1,19 +1,19 @@
 ---
-title: A basket test only checks that a total exists. How would you make it catch a pricing bug?
+title: "A basket test checks only that there's a total. How would you make it catch a wrong price?"
 topic: framework-design
 roles: [automation, sdet]
 level: mid
 type: concept
-oneLine: Compute the expected total from known inputs and compare it with the amount the customer sees.
+oneLine: "I calculate the price from known inputs. I compare it with the total the customer sees."
 looksFor:
-  - Replaces a meaningless assertion with a specific expectation.
-  - Keeps the expected value independent of the UI output.
-  - Makes expected and actual values clear on failure.
-  - Groups related assertions around one behavior.
-trap: Reading the displayed total and comparing it with itself.
+  - "Replace a check that always passes with a specific expected result."
+  - "Calculate what you expect without reading the amount from the screen."
+  - "Show the expected and actual amounts when the check fails."
+  - "Keep related checks together when they cover the same behavior."
+trap: "Reading the displayed amount and comparing it with itself."
 followUps:
-  - question: Checkout now shows the discount beside the notebook total. Would you check both amounts in this case?
-    answer: I'd check both if the basket setup includes a known discount, since together they explain what the customer pays. I'd give delivery pricing its own case if it requires a different address and setup.
+  - question: "If checkout shows the discount beside the notebook total, would you check both?"
+    answer: "I'd check both if the basket includes a known discount. The two amounts explain what the customer pays. If delivery pricing needs a different address and setup, I'd give it its own test."
 sources:
   - label: Playwright assertions
     url: https://playwright.dev/docs/test-assertions
@@ -69,10 +69,10 @@ examples:
           }
 ---
 
-I'd start by asking what wrong result the test should catch. If it only asserts that the total equals the value it just read from the page, any price can pass. I would seed a basket with known units and prices, calculate what should be charged from the stated rules, and compare that with the displayed amount.
+I'd decide which wrong result the test needs to catch. An assertion is a check that compares what happened with what I expected. If the test compares a total with the same value it read from the page, any price passes. I'd start with a basket with known quantities and prices. I'd calculate the charge from the stated rules and compare it with the amount on screen.
 
-I want a failure message to show both values so the next person can distinguish a calculation error from a formatting error. I use one behavior per test rather than one assertion per test. Checking a discount and final total together can make sense if they describe the same purchase.
+I'd show both amounts when the test fails. That helps the next person tell a calculation error from a formatting error. I'd test one behavior at a time, even when it needs several assertions. I can check a discount and the final total together when they're part of the same purchase.
 
 ### Example
 
-The seeded basket contains two notebooks at $12.50 each, without tax or delivery. The page serves the completed basket and should display $25.00.
+I'd set up two notebooks at $12.50 each with no tax or delivery charge. When the page shows the completed basket, I'd expect $25.00.

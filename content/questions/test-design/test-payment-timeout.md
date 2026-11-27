@@ -1,30 +1,30 @@
 ---
-title: How would you test checkout when the customer loses the payment response?
+title: What would you check if checkout never gets a payment reply?
 topic: test-design
 roles: [manual-qa, automation, sdet]
 level: mid
 type: scenario
-oneLine: Use test payments to distinguish a decline from an unknown outcome, then check that recovery reconciles the original attempt without duplicate charges.
+oneLine: I'd use test payments to tell a decline from an unknown result. I'd check that recovery resolves the original attempt without charging twice.
 looksFor:
-  - Compares approval and decline before testing an ambiguous timeout.
-  - Separates the payment provider's outcome from what the browser displays.
-  - Checks that a retry or resumed session resolves the same checkout attempt.
-  - Reconciles order state and total with the provider's payment record.
-trap: Assuming that a timeout means no charge happened, or counting only what appears on the receipt page.
+  - Compare a successful payment and a decline before testing a missing reply.
+  - Check what the provider recorded separately from what the browser shows.
+  - Check that trying again or returning to checkout resolves the same attempt.
+  - Match the order's status and total to the provider's payment record.
+trap: Assuming a missing reply means there was no charge, or only checking the receipt.
 followUps:
-  - question: How would you cover a known decline without using a real card?
-    answer: I'd use the provider's test environment. For example, Stripe documents test payment methods that simulate issuer declines without moving money.
-  - question: What if you cannot interrupt a provider response in its sandbox?
-    answer: I'd use a controlled provider stub for that timing case and keep a real sandbox check for integration behavior. I'd report which paths each one proved.
+  - question: How would you test a clear decline without a real card?
+    answer: I'd use the provider's test environment. For example, I'd use one of Stripe's documented test payment methods to mimic a card issuer's decline without moving money.
+  - question: What would you do if the provider's test environment can't interrupt a reply?
+    answer: I'd use a stub, a stand-in for the provider, so I can control when the reply drops. I'd keep a test in the provider's sandbox to check how it works with checkout. I'd report what each test proved.
 sources:
   - label: Stripe testing environments and simulated declines
     url: https://docs.stripe.com/testing
 ---
 
-I'd first run a successful test payment and a known decline so I can tell what each looks like in the order and at the provider. A lost response is different. The browser may have no answer even though the payment went through, so I'd test a timeout before the provider accepts the payment and another after it does.
+I'd first run a successful test payment and a known decline. I'd check what each looks like in the order and in the provider's records. The browser may get no reply even if the payment goes through. I'd test a timeout, when the browser gives up waiting, before the provider accepts the payment. I'd test another after the provider accepts it.
 
-I'd ask what the customer is supposed to do in each case and use that recovery flow. I'd check the provider's records, the order status, and the amount and currency. If the first charge went through, resolving the attempt should leave one charge and one paid order for that purchase.
+I'd ask what the customer should do in each case. I'd follow those recovery steps and compare the order status with the provider's records. I'd check that the amount and currency agree. If the first charge went through, I'd expect one charge and one paid order once the attempt is resolved.
 
 ### Example
 
-A parts supplier's checkout tells the customer to return to their order while a payment is being confirmed. I'd let the provider record a successful test charge, drop the response to the browser, then reopen the order. The order should show as paid for the original total once confirmation is complete, with a single charge in the provider's records.
+In a parts supplier's checkout, I'd follow the instruction to return to the order while payment is pending. I'd let the provider record a successful test charge but drop its reply to the browser. I'd reopen the order. Once payment is confirmed, I'd expect it to show as paid for the original total. I'd expect the provider to show only one charge.

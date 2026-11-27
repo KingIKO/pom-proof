@@ -1,19 +1,19 @@
 ---
-title: "Two agents both see an open pickup slot. What keeps them from booking it twice?"
+title: "Two agents see the same available pickup slot. How would you prevent a double booking?"
 topic: sql
 roles: [sdet, senior]
 level: senior
 type: concept
-oneLine: "Enforce one booking per slot in the database, then test that two committed attempts leave one booking and one documented conflict."
+oneLine: "I'd make the database allow only one booking per slot. I'd have two attempts try to commit and check for one committed booking and one documented conflict."
 looksFor:
-  - "Connects the SQL isolation levels to concrete read anomalies."
-  - "Distinguishes the database's actual behavior from the standard's minimum guarantees."
-  - "Explains a uniqueness constraint and alternatives such as row locks or serializable transactions."
-  - "Exercises concurrent attempts through the API and reads the committed result."
-trap: "Assuming a transaction around SELECT followed by INSERT automatically prevents both inserts."
+  - "Give examples of what reads can return at different SQL isolation levels."
+  - "Say where the database does more than the standard requires."
+  - "Explain how a uniqueness constraint, a row lock, or Serializable can prevent double booking."
+  - "Send both attempts through the API and read the result the database saved."
+trap: "Assuming a transaction with `SELECT` and then `INSERT` automatically prevents both attempts from inserting a row."
 followUps:
-  - question: "When would you lock a row instead?"
-    answer: "When a wider rule must be checked, I can lock a stable slot row if the engine supports row locks and every writer takes the same lock before checking."
+  - question: "When would you lock the slot row instead of using only a unique key?"
+    answer: "If I need to check a wider rule, I'd consider locking a stable slot row. I'd only do it if the database supports row locks and every writer takes that lock before checking."
 sources:
   - label: PostgreSQL isolation levels and read anomalies
     url: https://www.postgresql.org/docs/current/transaction-iso.html
@@ -42,10 +42,14 @@ examples:
           SELECT slot_id, agent FROM pickups WHERE slot_id = 14;
 ---
 
-At the standard's minimum, Read Uncommitted can read dirty data. Read Committed rules that out, but the same row or query can yield different results after another commit. Repeatable Read also prevents the same row from changing on reread, while new matches to a predicate can still appear. Serializable requires the committed result to be equivalent to some serial order.
+I'd check the isolation level, the rules for what transactions can see while other transactions run. Under the standard, Read Uncommitted can show changes another transaction hasn't saved. Read Committed prevents that. After another transaction saves changes, the same row or query can still give me a different result.
 
-I'd check the engine. PostgreSQL's Repeatable Read also prevents phantoms, InnoDB defaults to Repeatable Read, and SQLite serializes writes. A unique slot key is the simplest direct rule here. For a broader invariant I'd consider locking an existing slot row or retrying transactions rejected at Serializable.
+Repeatable Read also keeps a row the same if I read it again. A query can still find new rows that match its filter. Serializable requires the saved result to match some order in which the transactions ran one at a time.
+
+I'd check how my database implements those rules. PostgreSQL's Repeatable Read also blocks phantoms, the new rows that would match on a second read. InnoDB uses Repeatable Read by default. SQLite allows only one writer at a time.
+
+I'd use a unique slot key because it's the simplest direct rule here. That key enforces a uniqueness constraint, which prevents two bookings from sharing the same slot. If I need to protect a wider rule, I might lock an existing slot row. I could also retry transactions the database rejects at Serializable.
 
 ### Example
 
-The SQLite script shows the uniqueness rule in sequence: slot 14 keeps the first booking. I would separately send concurrent requests against the production database engine in a test environment. I'd expect one success, one documented conflict, and exactly one committed booking.
+I'd use the SQLite script to try the bookings one at a time. Slot 14 should keep the first booking. In a test environment with the production database engine, I'd separately send requests that overlap. I'd expect one success, one documented conflict, and exactly one committed booking.

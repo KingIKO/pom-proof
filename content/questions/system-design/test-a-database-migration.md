@@ -1,19 +1,19 @@
 ---
-title: Both invoice copies total 2,875 cents. What mismatch would make you hold the cutover?
+title: Both invoice copies total 2,875 cents. What difference would make you delay the switch?
 topic: system-design
 roles: [sdet, senior]
 level: senior
 type: scenario
-oneLine: Look for a missing or changed invoice by ID before trusting matching totals.
+oneLine: Before I trust matching totals, I'd compare invoices by ID to find any missing or changed rows.
 looksFor:
-  - Uses the missing invoice, extra invoice, and changed amount to explain why matching totals are insufficient.
-  - Confirms a rollback keeps an invoice written after the switch.
-  - Tests stopping and resuming a large backfill while watching write latency and locks.
-  - Checks that both app versions can use the expanded storage without violating invoice constraints.
-trap: Matching one row count and assuming the migration preserved every value.
+  - Explain how a missing invoice, an extra invoice, and a changed amount can leave the total unchanged.
+  - Check that switching back keeps an invoice created after the switch.
+  - Stop and resume a large backfill while measuring how long writes and waits for locks take.
+  - Check that both app versions can use the new storage layout and still follow the invoice rules.
+trap: Seeing the same row count and assuming the move kept every value.
 followUps:
-  - question: Invoice 505 arrives during the comparison. What makes it fair to compare the two copies?
-    answer: I'd compare both copies at a common snapshot or write watermark, then verify later writes caught up before switching readers.
+  - question: Invoice 505 arrives during the comparison. How would you compare the copies at the same point in time?
+    answer: I'd use a common snapshot or a marker for the last write included. Before switching readers, I'd check that the new copy caught up with later writes.
 sources:
   - label: Prisma documentation on expand and contract migrations
     url: https://www.prisma.io/docs/guides/database/data-migration
@@ -44,18 +44,14 @@ examples:
           ORDER BY ids.id;
 ---
 
-I'd hold the cutover if an invoice is missing or has a different amount. Comparing ordered
-IDs and values by key range, at the same checkpoint, tells me where to look. I'd use counts
-and checksums to narrow the search, then inspect rows and verify uniqueness and required fields.
-I'd interrupt and resume a production-sized run while measuring lock waits and write latency.
+If an invoice is missing or its amount changed, I'd delay the cutover, the switch to the new copy. At the same checkpoint for both copies, I'd compare IDs and values in sorted ranges. I'd narrow the search with counts and checksums, short values calculated from the data. Then I'd inspect rows for duplicate IDs and missing required fields.
 
-Before switching reads I'd rehearse what happens to an invoice created after the switch.
-The previous app has to read it and still accept new writes. I'd expand the schema alongside
-the old storage, run both versions, and delay removal until the rollback window ends. If
-recovery calls for restoring a backup, I'd test how to recover the intervening writes.
+I'd stop and resume a backfill, a job that copies or fills in existing records, with production-sized data. I'd measure how long writes take and how long they wait for locks that protect data during changes.
+
+Before switching readers, I'd rehearse what happens to an invoice created after the switch. The previous app must be able to read it and still accept writes. I'd expand the schema, the database's layout, while keeping the old storage. I'd run both app versions. I'd wait until the rollback window, the period when we can switch back, ends before removing the old storage.
+
+If recovery requires a backup, I'd test how to recover writes made since that backup.
 
 ### Example
 
-The SQLite query uses two snapshots with three unique invoice IDs each and the same total
-of 2,875 cents. It should report invoice 502 with the wrong amount, 503 as missing, and
-504 as extra. A clean copy returns no rows.
+I'd give the SQLite query two snapshots, or copies from one point in time. Each has three unique invoice IDs and totals 2,875 cents. I'd expect 502 to show the wrong amount and 503 to show as missing. I'd expect 504 to show as extra. If the copy is correct, I'd expect no result rows.

@@ -1,28 +1,30 @@
 ---
-title: How would you test the state changes in a listing approval workflow?
+title: How would you test state changes in a listing approval workflow?
 topic: test-design
 roles: [manual-qa, automation, sdet]
 level: mid
 type: concept
-oneLine: Model what each event can do from each state, then check the state and side effects after every step.
+oneLine: I'd write down what each action should do in each state. After each step, I'd check the new state and anything else that should change.
 looksFor:
-  - Defines the starting states, events, and any conditions on those events.
-  - Covers different ways to leave the same state.
-  - Gives an invalid transition its own test from a known state.
-  - Checks stored status and public visibility after each relevant step.
-trap: Visiting every status once and calling that proof that every allowed move works.
+  - List the possible states, what can happen in each, and any conditions on those actions.
+  - Test the different ways a listing can leave the same state.
+  - Give each disallowed change its own test with a known starting state.
+  - After each relevant step, check the saved status and whether the public can see the listing.
+trap: Seeing every status once and assuming you tested every allowed move between them.
 followUps:
-  - question: Why put only one invalid transition in a test?
-    answer: If the first invalid action changes the state or ends the flow, the rest of the test can give misleading results. Start each invalid case from a known state.
+  - question: Why test one invalid transition at a time?
+    answer: If the first action changes the state or ends the flow, I'd get misleading results from later steps. I'd start each disallowed case from a known state.
 sources:
   - label: ISTQB CTFL v4.0.1, section 4.2.4
     url: https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
 ---
 
-I'd write down the states a listing can be in and, for each event, ask what should happen from each state. For every allowed move I'd record the state we land in and what else should change. I can cover several moves in one test sequence, but I want a check after each step. Just seeing the final state could hide a bad intermediate one.
+I'd list the states, or statuses, a listing can have. For each state, I'd write what should happen when an event occurs, such as someone submitting the listing. A change from one state to another is a transition. I'd record where each allowed transition ends and what else should change.
 
-I'd cover the allowed moves first, then try important disallowed moves from a fresh starting state. For those I check that the action is rejected and that neither the saved status nor public visibility changes.
+I can cover several transitions in one test sequence. I'd check every step because a correct final state can hide a wrong result along the way.
+
+I'd cover the allowed moves first. I'd try important disallowed moves from a fresh starting state. I'd check that the app rejects each action. The saved status and public visibility should both stay the same.
 
 ### Example
 
-A marketplace listing starts as a draft and goes into review on submission. A review can send it back to draft or publish it. I'd submit, return for edits, resubmit, and approve, checking that it becomes public only after approval. I'd separately check that the workflow rejects approval on a draft that was never submitted.
+I'd start with a marketplace draft and submit it for review. A reviewer can return it for edits or approve it for publication. I'd return the listing to draft and submit it again. I'd approve it and check that it goes public only then. In a separate test, I'd try approving a draft nobody submitted and expect the app to reject it.
