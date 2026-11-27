@@ -2,6 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { CatalogProblem } from '../../lib/catalog';
 import type { ProgressAttempt } from '../../lib/contracts';
 import { difficultyLabel, kindLabel, problemStatus, statusLabel, topicLabel } from '../../lib/labels';
+import {
+  latestPracticeContext, nearestShown, practiceContextEvent, practiceLabel, practiceRowId, readPracticeContext,
+  writePracticeContext, type PracticeContext,
+} from '../../lib/practice-context';
 import { bestScores, onProgressChange, readProgress } from '../../lib/progress';
 import { problemUrl } from '../../lib/url';
 
@@ -47,6 +51,34 @@ function readFilters(topics: readonly Option[]): Filters {
       : Object.hasOwn(groups[key].options, value));
   }
   return filters;
+}
+
+/** Writes the filters into `params` the way the list URL holds them: one key per group, values comma-joined, empty keys removed. */
+function setFilterParams(params: URLSearchParams, filters: Filters) {
+  for (const key of ['q', ...facets] as const) {
+    const value = key === 'q' ? filters.q : filters[key].join(',');
+    if (value) params.set(key, value);
+    else params.delete(key);
+  }
+  return params;
+}
+
+/** The filters as the list URL writes them, without the leading `?`. */
+function filterQuery(filters: Filters) {
+  return setFilterParams(new URLSearchParams(), filters).toString();
+}
+
+function filterLabel(filters: Filters) {
+  const names = (key: Exclude<Facet, 'topic'>) =>
+    filters[key].map((value) => (groups[key].options as Record<string, string>)[value] ?? value);
+  return practiceLabel({
+    q: filters.q,
+    topic: filters.topic.map(displayTopic),
+    kind: names('kind'),
+    difficulty: names('difficulty'),
+    role: names('role'),
+    status: names('status'),
+  });
 }
 
 function facetValues(problem: Row, key: Facet): readonly string[] {
@@ -100,11 +132,36 @@ function nextProblem(problems: readonly PracticeTarget[], attempts: readonly Pro
   return recent?.problem ?? problems.find(({ id }) => scores.get(id) !== 1);
 }
 
+/** The list as this page shows it right now; null until the list reports its rows. */
+function useShownList() {
+  const [context, setContext] = useState<PracticeContext | null>(null);
+  useEffect(() => {
+    setContext(latestPracticeContext());
+    const update = (event: Event) => setContext((event as CustomEvent<PracticeContext>).detail);
+    window.addEventListener(practiceContextEvent, update);
+    return () => window.removeEventListener(practiceContextEvent, update);
+  }, []);
+  return context;
+}
+
+/** The problems the list shows right now, in its order; the whole catalog until the list reports its rows. */
+function useShownProblems(problems: PracticeTarget[]) {
+  const context = useShownList();
+  return useMemo(() => context?.items.map(([id, title]) => ({ id, title })) ?? problems, [context, problems]);
+}
+
+/** The title band count: every problem, or how many of them the filters leave. */
+export function PracticeCount({ total }: { total: number }) {
+  const context = useShownList();
+  return <span class="num">{context?.query ? `${context.items.length} of ${total} problems` : `${total} problems`}</span>;
+}
+
 export function PracticeProgress({ problems }: { problems: PracticeTarget[] }) {
   const attempts = useAttempts();
+  const shown = useShownProblems(problems);
   const scores = bestScores(attempts);
   const solved = problems.filter(({ id }) => scores.get(id) === 1).length;
-  const next = nextProblem(problems, attempts, scores);
+  const next = nextProblem(shown, attempts, scores);
 
   return (
     <div class="practice-actions">
@@ -128,6 +185,16 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
   const disclosure = useRef<HTMLDetailsElement>(null);
   const moreTopics = useRef<HTMLDetailsElement>(null);
   const searchField = useRef<HTMLInputElement>(null);
+  const [markedRow, setMarkedRow] = useState<string | null>(null);
+  const hashHandled = useRef(false);
+  const earlierList = useRef<PracticeContext | null>(null);
+  const published = useRef<Omit<PracticeContext, 'v'> | null>(null);
+
+  // The list stored when the learner left, read before this page replaces it, so a row that has
+  // since left the list (now solved under an Unattempted filter, say) can point to its neighbour.
+  useEffect(() => {
+    earlierList.current = readPracticeContext();
+  }, []);
 
   const rows = useMemo<Row[]>(() => {
     const scores = bestScores(attempts);
@@ -167,11 +234,7 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
   function applyFilters(next: Filters) {
     setFilters(next);
     const location = new URL(window.location.href);
-    for (const key of ['q', ...facets] as const) {
-      const value = key === 'q' ? next.q : next[key].join(',');
-      if (value) location.searchParams.set(key, value);
-      else location.searchParams.delete(key);
-    }
+    setFilterParams(location.searchParams, next);
     window.history.replaceState(window.history.state, '', location);
   }
 
@@ -203,12 +266,62 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
     facets.every((key) => !filters[key].length || facetValues(row, key).some((value) => filters[key].includes(value))) &&
     (!search || [row.title, displayTopic(row.topic), topicLabel(row.topic), kindLabel[row.kind]]
       .some((part) => part.toLowerCase().includes(search))));
+  const visibleIds = visible.map(({ id }) => id).join(' ');
+
+  // Other pages follow this list: Previous, Next, the position line, the way back and Continue.
+  useEffect(() => {
+    if (!currentFilters) return;
+    published.current = {
+      query: filterQuery(currentFilters),
+      label: filterLabel(currentFilters),
+      items: visible.map(({ id, title }) => [id, title]),
+    };
+    writePracticeContext(published.current);
+  }, [currentFilters, visibleIds]);
+
+  // A page restored from the back-forward cache shows the list it had, while another page may have
+  // stored a different one since. Store this page's list again so links follow what is on screen.
+  useEffect(() => {
+    const republish = (event: PageTransitionEvent) => {
+      if (event.persisted && published.current) writePracticeContext(published.current);
+    };
+    window.addEventListener('pageshow', republish);
+    return () => window.removeEventListener('pageshow', republish);
+  }, []);
+
+  // A link back from a problem names its row in the hash: bring that row to the middle and mark it.
+  // When that row has left the list, use the next one from the earlier list still shown, or the one before.
+  useEffect(() => {
+    if (!currentFilters || hashHandled.current) return;
+    hashHandled.current = true;
+    const hash = window.location.hash.slice(1);
+    if (!hash.startsWith('row-')) return;
+    let target = hash;
+    const earlier = earlierList.current;
+    const shown = new Set(visible.map(({ id }) => id));
+    if (!visible.some(({ id }) => practiceRowId(id) === hash) && earlier) {
+      const gone = earlier.items.find(([id]) => practiceRowId(id) === hash)?.[0];
+      const nearest = gone && nearestShown(earlier, gone, (id) => shown.has(id));
+      if (!nearest) return;
+      target = practiceRowId(nearest);
+    }
+    const row = document.getElementById(target);
+    if (!row?.closest('.catalog-table')) return;
+    setMarkedRow(target);
+    row.scrollIntoView({ block: 'center' });
+    row.querySelector<HTMLAnchorElement>('.stretched-link')?.focus({ preventScroll: true });
+  }, [currentFilters]);
+
+  const activeLabel = currentFilters ? filterLabel(currentFilters) : '';
 
   return (
     <div class="practice-layout">
       <aside class="filter-sidebar" aria-label="Practice sidebar">
         <details class="filter-disclosure" ref={disclosure} open>
-          <summary>Filters <span class="chevron" aria-hidden="true" /></summary>
+          <summary>
+            <span class="filter-summary">{activeLabel ? `Filters: ${activeLabel}` : 'Filters'}</span>
+            <span class="chevron" aria-hidden="true" />
+          </summary>
           <form class="filter-body" role="search" aria-label="Practice filters" onSubmit={(event) => event.preventDefault()}>
             <label for="practice-search" class="visually-hidden">Search</label>
             <input class="input" id="practice-search" type="search" name="q" ref={searchField}
@@ -240,25 +353,31 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
               </tr>
             </thead>
             <tbody role="rowgroup">
-              {visible.map(({ id, title, kind, topic, difficulty, minutes, status }) => (
-                <tr class="row-card" data-card="" key={id} role="row">
-                  <td role="cell">
-                    <h2 class="catalog-title"><a class="stretched-link" href={problemUrl(id)}>{title}</a></h2>
-                    <p class="catalog-meta">
-                      <span class={`catalog-difficulty difficulty ${difficulty}`}>{difficultyLabel[difficulty]}</span>
-                      <span class="catalog-kind">{kindLabel[kind]}</span>
-                      <span class="catalog-topic">{displayTopic(topic)}</span>
-                      <span class="catalog-minutes num">{minutes} min</span>
-                    </p>
-                  </td>
-                  <td class="catalog-action" role="cell">
-                    <span class="catalog-status">
-                      {status !== 'unattempted' && <span class={`chip ${status}`} data-chip="">{statusLabel[status]}</span>}
-                    </span>
-                    {status === 'unattempted' && <span class="button outline" aria-hidden="true">Solve</span>}
-                  </td>
-                </tr>
-              ))}
+              {visible.map(({ id, title, kind, topic, difficulty, minutes, status }) => {
+                const rowId = practiceRowId(id);
+                const marked = rowId === markedRow;
+                return (
+                  <tr class="row-card" data-card="" key={id} id={rowId} role="row" data-current={marked ? '' : undefined}>
+                    <td role="cell">
+                      <h2 class="catalog-title">
+                        <a class="stretched-link" href={problemUrl(id)} aria-current={marked ? 'true' : undefined}>{title}</a>
+                      </h2>
+                      <p class="catalog-meta">
+                        <span class={`catalog-difficulty difficulty ${difficulty}`}>{difficultyLabel[difficulty]}</span>
+                        <span class="catalog-kind">{kindLabel[kind]}</span>
+                        <span class="catalog-topic">{displayTopic(topic)}</span>
+                        <span class="catalog-minutes num">{minutes} min</span>
+                      </p>
+                    </td>
+                    <td class="catalog-action" role="cell">
+                      <span class="catalog-status">
+                        {status !== 'unattempted' && <span class={`chip ${status}`} data-chip="">{statusLabel[status]}</span>}
+                      </span>
+                      {status === 'unattempted' && <span class="button outline" aria-hidden="true">Solve</span>}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         ) : (

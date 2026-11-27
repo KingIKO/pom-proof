@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import PracticeList, { PracticeProgress } from '../components/shell/PracticeList';
+import PracticeList, { PracticeCount, PracticeProgress } from '../components/shell/PracticeList';
 import TitleBand from '../components/shell/TitleBand.astro';
 import { catalogProblem, orderedProblems } from '../lib/catalog';
 import '../styles/catalog.css';
@@ -9,7 +9,7 @@ const problems = (await orderedProblems()).map(catalogProblem);
 ---
 <Base title="Practice" section="practice" wide>
   <TitleBand slot="title-band" title="Practice">
-    <span slot="meta" class="num">{problems.length} problems</span>
+    <PracticeCount slot="meta" client:load total={problems.length} />
     <PracticeProgress slot="actions" client:load problems={problems.map(({ id, title }) => ({ id, title }))} />
   </TitleBand>
   <PracticeList client:load problems={problems} />
