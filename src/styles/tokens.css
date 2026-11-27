@@ -1,40 +1,112 @@
-:root {
-  color-scheme: light dark;
-  --paper: #faf8f2;
-  --ink: #22221f;
-  --muted: #565650;
-  --line: #c5c2b8;
-  --control-line: #8d897d;
-  --surface: #f0eee6;
-  --accent: #1b3a8a;
-  --on-accent: #fff;
-  --pass: #1e6242;
-  --fail: #9d2929;
-  --warn: #794700;
-  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-code: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  --regular: 400;
-  --strong: 600;
-  --radius: 4px;
-  --prose: 72ch;
-  --rule: 1px solid var(--line);
-  --result-duration: 120ms;
+@font-face {
+  font-family: "Figtree Variable";
+  src: url("@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #1d1d1b;
-    --ink: #f0eee6;
-    --muted: #bebbb0;
-    --line: #646158;
-    --control-line: #777366;
-    --surface: #272723;
-    --accent: #a9bfff;
-    --on-accent: #121c36;
-    --pass: #93d7af;
-    --fail: #ffaeaa;
-    --warn: #efc77a;
-  }
+@font-face {
+  font-family: "Figtree Variable";
+  src: url("@fontsource-variable/figtree/files/figtree-latin-wght-italic.woff2") format("woff2");
+  font-style: italic;
+  font-weight: 300 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  src: url("@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  background: var(--canvas);
+  --ink: #101A33;
+  --onInkMuted: #AEB8D4;
+  --accent: #FFB547;
+  --canvas: #F5F7FC;
+  --surface: #FFFFFF;
+  --surfaceHover: #E9EDF8;
+  --borderCard: #E3E7F2;
+  --borderControl: #7F88A6;
+  --divider: #E1E5EF;
+  --text: #101A33;
+  --text2: #55607A;
+  --text3: #5E6884;
+  --primary: #1E4FD8;
+  --primaryHover: #173FB0;
+  --link: #1E4FD8;
+  --focus: #1E4FD8;
+  --easy: #0F766E;
+  --medium: #A04808;
+  --hard: #BE123C;
+  --badgeBg: #EAF0FF;
+  --badgeText: #173FB0;
+  --disabled: #C2C8DA;
+  --pass: #0F766E;
+  --fail: #BE123C;
+  --warn: #A04808;
+  --codeBg: var(--canvas);
+  --passTint: color-mix(in srgb, var(--pass) 8%, var(--surface));
+  --failTint: color-mix(in srgb, var(--fail) 8%, var(--surface));
+  --warnTint: color-mix(in srgb, var(--warn) 9%, var(--surface));
+
+  --font-body: "Figtree Variable", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-code: "JetBrains Mono Variable", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --type-13: .8125rem;
+  --type-14: .875rem;
+  --type-16: 1rem;
+  --type-20: 1.25rem;
+  --type-24: 1.5rem;
+  --type-32: 2rem;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-bold: 700;
+
+  --space-4: .25rem;
+  --space-8: .5rem;
+  --space-12: .75rem;
+  --space-16: 1rem;
+  --space-24: 1.5rem;
+  --space-32: 2rem;
+  --space-48: 3rem;
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  --radius-pill: 999px;
+  --focus-width: 2px;
+  --focus-offset: 2px;
+  --shadow-raised: 0 4px 12px rgb(16 26 51 / 12%);
+  --page-width: 75rem;
+  --read-width: 58rem;
+  --rail-width: 17.5rem;
+  --gutter: var(--space-32);
+  --header-height: 3.5rem;
+  --control-height: 2.25rem;
+  --prose: 72ch;
+  --result-duration: 120ms;
+
+  /* Compatibility with screen styles that still use the original tokens. */
+  --paper: var(--canvas);
+  --muted: var(--text2);
+  --line: var(--divider);
+  --control-line: var(--borderControl);
+  --on-accent: var(--surface);
+  --regular: var(--weight-regular);
+  --strong: var(--weight-bold);
+  --radius: var(--radius-control);
+  --rule: 1px solid var(--line);
+}
+
+@media (width < 60rem) {
+  :root { --gutter: var(--space-24); }
+}
+
+@media (width < 48rem) {
+  :root { --gutter: var(--space-16); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -43,60 +115,76 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* These legacy callers use accent for controls, links or editor focus on light surfaces. */
+:where(.answer, .unattempted-details, .cm-editor, .mutation-modes) { --accent: var(--primary); }
+
 body {
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font: var(--regular) 1rem/1.55 var(--font-body);
+  background: var(--canvas);
+  color: var(--text);
+  font: var(--weight-regular) var(--type-16)/1.5 var(--font-body);
 }
 
 a {
-  color: var(--accent);
-  text-underline-offset: .16em;
+  color: var(--link);
+  text-underline-offset: 3px;
 }
 
 button, input, select, textarea { font: inherit; }
 
-button, input:not([type="radio"], [type="checkbox"], [type="file"]), select, textarea {
-  color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--control-line);
-  border-radius: var(--radius);
+:where(button, input:not([type="radio"], [type="checkbox"], [type="file"]), select, textarea) {
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--borderControl);
+  border-radius: var(--radius-control);
   padding: .38rem .6rem;
 }
 button:not(:disabled), select { cursor: pointer; }
-button:not(:disabled):not(.primary):hover { background: var(--surface); }
-button:disabled { cursor: default; color: var(--muted); }
+:where(button:not(:disabled, .primary, .button):hover) { background: var(--surfaceHover); }
+:where(button:disabled) { cursor: default; color: var(--text3); }
+:where(input[type="checkbox"], input[type="radio"]) { accent-color: var(--primary); }
 
-.primary {
-  background: var(--accent);
-  color: var(--on-accent);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
+.primary:not(.button) {
+  background: var(--primary);
+  color: var(--surface);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-control);
   padding: .38rem .8rem;
+}
+.primary:not(.button):hover:not(:disabled) { background: var(--primaryHover); }
+.primary:not(.button):disabled {
+  background: var(--surfaceHover);
+  border-color: var(--disabled);
+  color: var(--text3);
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
 }
 
-h1, h2, h3, strong, b, summary, th { font-weight: var(--strong); }
+h1, h2, h3, strong, b, summary, th { font-weight: var(--weight-bold); }
 h1, h2, h3 { line-height: 1.2; }
-h1 { font-size: clamp(1.75rem, 5vw, 2.25rem); margin: 0 0 .6em; }
-h2 { font-size: 1.25rem; margin: 1.75rem 0 .6rem; }
-h3 { font-size: 1rem; margin: 1rem 0 .35rem; }
+h1 { font-size: var(--type-32); margin: 0 0 .6em; }
+h2 { font-size: var(--type-20); margin: 1.75rem 0 .6rem; }
+h3 { font-size: var(--type-16); margin: 1rem 0 .35rem; }
 p { margin: .65rem 0; }
 .prose { max-inline-size: var(--prose); overflow-wrap: anywhere; }
-.muted { color: var(--muted); }
+.muted { color: var(--text2); }
+.num, .count { font-variant-numeric: tabular-nums; }
 
-pre, code { font-family: var(--font-code); font-size: .94em; }
+pre, code, kbd, samp, .code-font {
+  font-family: var(--font-code);
+  font-variant-ligatures: none;
+}
+:where(.cm-scroller, .structured-code button, .locator-workspace input) { font-variant-ligatures: none; }
+pre, code { font-size: .94em; }
 pre {
   padding: .8rem;
   overflow: auto;
-  background: var(--surface);
+  background: var(--codeBg);
   border: var(--rule);
-  border-radius: var(--radius);
+  border-radius: var(--radius-panel);
 }
 
 table { width: 100%; border-collapse: collapse; }

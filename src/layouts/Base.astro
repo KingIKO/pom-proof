@@ -1,6 +1,8 @@
 ---
 import { url } from '../lib/url';
+import figtreeLatin from '@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url';
 import '../styles/tokens.css';
+import '../styles/components.css';
 
 interface Props {
   title: string;
@@ -21,14 +23,15 @@ const nav = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preload" href={figtreeLatin} as="font" type="font/woff2" crossorigin="anonymous" />
     <title>{title} | POM Proof</title>
   </head>
   <body>
-    <a class="skip" href={url('#main')}>Skip to content</a>
+    <a class="skip-link" href={url('#main')}>Skip to content</a>
     <header class="site-header">
-      <div class:list={['wrap', 'header-row', { wide }]}>
+      <div class="container header-inner">
         <a class="brand" href={url('/')}>POM Proof</a>
-        <nav aria-label="Main">
+        <nav class="site-nav" aria-label="Main">
           <ul>
             {nav.map(({ id, label, href }) => (
               <li>
@@ -41,49 +44,96 @@ const nav = [
         </nav>
       </div>
     </header>
-    <main id="main" class:list={['wrap', { wide }]} tabindex="-1">
-      <slot />
+    <main id="main" tabindex="-1">
+      <slot name="title-band" />
+      <div class:list={['container', 'page-content', { wide }]}>
+        <slot />
+      </div>
     </main>
   </body>
 </html>
 
 <style>
-  .wrap {
-    inline-size: min(100% - 2rem, 58rem);
-    margin-inline: auto;
+  .site-header {
+    background: var(--ink);
+    color: var(--surface);
+    --focus: var(--accent);
   }
-  .wrap.wide { inline-size: min(100% - 2rem, 72rem); }
-  .site-header { border-block-end: var(--rule); }
-  .header-row {
+  .header-inner {
     display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: .25rem 1.75rem;
-    padding-block: .8rem;
+    align-items: stretch;
+    gap: var(--space-32);
+    block-size: var(--header-height);
   }
-  .brand { font-weight: var(--strong); color: var(--ink); text-decoration: none; }
-  nav ul {
+  .brand, .site-nav a {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .brand {
+    align-self: center;
+    padding-block: var(--space-8);
+    color: var(--surface);
+    font-size: var(--type-20);
+    font-weight: var(--weight-bold);
+    letter-spacing: -.025em;
+  }
+  .site-nav { min-inline-size: 0; }
+  .site-nav ul {
     display: flex;
-    flex-wrap: wrap;
-    gap: .25rem 1rem;
+    gap: var(--space-8);
+    block-size: 100%;
     list-style: none;
-    padding: 0;
+    padding: var(--space-4);
+    padding-inline-start: 0;
     margin: 0;
   }
-  nav a { display: inline-block; padding-block: .2rem; text-decoration: none; }
-  nav a:is(:hover, [aria-current]) { text-decoration-line: underline; }
-  nav a[aria-current] { font-weight: var(--strong); text-decoration-thickness: 2px; }
-  main { padding-block: 1.8rem 3rem; }
-  .skip {
-    position: absolute;
-    inset: .4rem auto auto .4rem;
-    padding: .4rem .7rem;
-    background: var(--paper);
-    z-index: 1;
+  .site-nav a {
+    position: relative;
+    block-size: 100%;
+    padding-inline: var(--space-12);
+    color: var(--onInkMuted);
+    font-size: var(--type-14);
+    font-weight: var(--weight-medium);
   }
-  .skip:not(:focus) { clip-path: inset(50%); }
-  @media (max-width: 32rem) {
-    .header-row { display: grid; padding-block: .55rem; }
-    main { padding-block-start: 1.3rem; }
+  .site-nav a:is(:hover, [aria-current]) { color: var(--surface); }
+  .site-nav a[aria-current]::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: calc(-1 * var(--space-4));
+    block-size: 3px;
+    background: var(--accent);
+  }
+  .page-content { --container-width: var(--read-width); padding-block: var(--space-32) var(--space-48); }
+  .page-content.wide { --container-width: var(--page-width); }
+  .skip-link {
+    position: fixed;
+    inset: var(--space-8) auto auto var(--space-8);
+    z-index: 4;
+    padding: var(--space-8) var(--space-16);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    outline-color: var(--accent);
+  }
+  .skip-link:not(:focus) { clip-path: inset(50%); }
+  @media (min-width: 48rem) {
+    .site-header { position: sticky; inset-block-start: 0; z-index: 3; }
+    :global(html) { scroll-padding-block-start: calc(var(--header-height) + var(--space-8)); }
+  }
+  @media (width < 48rem) {
+    .page-content { padding-block-start: var(--space-24); }
+  }
+  @media (width < 36rem) {
+    .header-inner { gap: var(--space-16); }
+    .brand { font-size: var(--type-16); }
+    .site-nav {
+      margin-inline-end: calc(-1 * var(--gutter));
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .site-nav ul { gap: var(--space-4); padding-inline: var(--space-4) var(--gutter); }
+    .site-nav a { padding-inline: var(--space-4); font-size: var(--type-13); }
   }
 </style>
