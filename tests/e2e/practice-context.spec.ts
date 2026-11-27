@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { discoverProblems, type DiscoveredProblem } from '../support/problems';
+import { submitStructured } from '../support/workspace';
 
 // Section 1 of .notes/practice-study-plan.md: Practice remembers the list a learner filtered, and
 // Previous, Next, the position line, the way back and the header Practice link follow it. Without
@@ -58,7 +59,8 @@ function catalogNeighbours(problem: DiscoveredProblem) {
 
 async function expectBuiltLinks(page: Page, problem: DiscoveredProblem) {
   const { before, after } = catalogNeighbours(problem);
-  await expect(position(page)).toBeHidden();
+  const index = catalog.findIndex(({ id }) => id === problem.id);
+  await expect(position(page)).toHaveText(`All problems: ${index + 1} of ${catalog.length}`);
   if (before) await expect(previous(page)).toHaveText(before.data.title);
   else await expect(previous(page)).toBeHidden();
   if (after) await expect(next(page)).toHaveText(after.data.title);
@@ -182,4 +184,72 @@ test('with session storage blocked the list still filters and problem pages keep
   await expectBuiltLinks(page, listed[1]);
   await expect(headerPractice(page)).toHaveAttribute('href', prefix);
   expect(errors, 'page errors').toEqual([]);
+});
+
+// Diagnosis problems are structured, so a wrong answer through the page makes one Attempted and it
+// leaves an Unattempted list.
+const diagnoses = catalog.filter(({ kind }) => kind === 'diagnosis') as Parameters<typeof submitStructured>[1][];
+
+test('coming back to a row that has left the list points at the next row, or the one before the last', async ({ page }) => {
+  expect(diagnoses.length, 'diagnosis problems for the Unattempted list').toBeGreaterThanOrEqual(4);
+  const errors = watchErrors(page);
+  const backLink = () => page.getByRole('link', { name: 'Back to Diagnosis, Unattempted', exact: true });
+  await page.goto('?kind=diagnosis&status=unattempted');
+  await expect(rows(page)).toHaveCount(diagnoses.length);
+
+  await rows(page).nth(1).getByRole('link').click();
+  await expect(heading(page, diagnoses[1])).toBeVisible();
+  await submitStructured(page, diagnoses[1], 'decoy');
+  await backLink().click();
+  await expect(page).toHaveURL(new RegExp(`#${rowId(diagnoses[1])}$`));
+  await expect(rows(page)).toHaveCount(diagnoses.length - 1);
+  await expect(row(page, diagnoses[1])).toHaveCount(0);
+  await expect(row(page, diagnoses[2])).toHaveAttribute('data-current', '');
+  await expect(row(page, diagnoses[2]).getByRole('link')).toBeFocused();
+  await expect(row(page, diagnoses[2])).toBeInViewport();
+
+  const last = diagnoses.at(-1)!;
+  await rows(page).last().getByRole('link').click();
+  await expect(heading(page, last)).toBeVisible();
+  await submitStructured(page, last, 'decoy');
+  await backLink().click();
+  await expect(row(page, last)).toHaveCount(0);
+  await expect(row(page, diagnoses.at(-2)!)).toHaveAttribute('data-current', '');
+  await expect(row(page, diagnoses.at(-2)!).getByRole('link')).toBeFocused();
+  await expect(row(page, diagnoses.at(-2)!)).toBeInViewport();
+  await expect(page.locator('tr[data-current]')).toHaveCount(1);
+  expect(errors, 'page errors').toEqual([]);
+});
+
+test.describe('at 360px', () => {
+  test.use({ viewport: { width: 360, height: 800 } });
+
+  test('the folded filter summary and the title band count show a filter the header link restored', async ({ page }) => {
+    const errors = watchErrors(page);
+    const summary = page.locator('.filter-disclosure > summary');
+    const count = page.locator('.title-band .page-meta');
+    await page.goto(`?${query}`);
+    await expect(rows(page)).toHaveCount(listed.length);
+    // The folded disclosure hides the form from role queries, so its option names are read by CSS.
+    const names: string[] = [];
+    for (const topic of pair) {
+      const option = page.locator('.filter-body label.check-row', { has: page.locator(`input[value="${topic}"]`) });
+      names.push((await option.locator('span').first().textContent())!.trim());
+    }
+    await rows(page).first().getByRole('link').click();
+    await expect(heading(page, listed[0])).toBeVisible();
+
+    await headerPractice(page).click();
+    await expect(rows(page)).toHaveCount(listed.length);
+    await expect(summary).toBeVisible();
+    await expect(summary).toHaveText(`Filters: ${names.join(', ')}`);
+    await expect(count).toHaveText(`${listed.length} of ${catalog.length} problems`);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways scroll at 360px').toBe(360);
+
+    await page.getByRole('banner').getByRole('link', { name: 'POM Proof', exact: true }).click();
+    await expect(rows(page)).toHaveCount(catalog.length);
+    await expect(summary).toHaveText('Filters');
+    await expect(count).toHaveText(`${catalog.length} problems`);
+    expect(errors, 'page errors').toEqual([]);
+  });
 });

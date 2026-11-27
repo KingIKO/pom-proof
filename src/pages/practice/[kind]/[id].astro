@@ -20,13 +20,14 @@ export async function getStaticPaths() {
     params: { kind: entry.data.kind, id: entry.id.split('/').at(-1) },
     props: {
       entry,
+      position: { at: index + 1, total: problems.length },
       previous: index > 0 ? catalogProblem(problems[index - 1]) : undefined,
       next: index + 1 < problems.length ? catalogProblem(problems[index + 1]) : undefined,
     },
   }));
 }
 
-const { entry, previous, next } = Astro.props;
+const { entry, position, previous, next } = Astro.props;
 const problem: Problem = { ...entry.data, id: entry.id };
 const { Content } = await render(entry);
 const editorial = Astro.params.id ? await getEntry('editorials', Astro.params.id) : undefined;
@@ -61,9 +62,9 @@ const markedCode = 'items' in problem ? await highlightMarkedCode(problem.items)
         : <Structured client:load problem={problem} markedCode={markedCode} />}
     </section>
   </div>
-  {/* Built with catalog neighbours; the script below follows the list the learner last filtered. */}
+  {/* Built with the catalog position and neighbours; the script below follows the list the learner last filtered. */}
   <nav class="practice-neighbors" aria-label="Adjacent problems" data-practice-neighbors={problem.id}>
-    <p class="practice-position" data-practice-position hidden></p>
+    <p class="practice-position" data-practice-position>All problems: {position.at} of {position.total}</p>
     <p class="previous" hidden={!previous}>
       <span class="muted">Previous</span><a href={previous && problemUrl(previous.id)} rel="prev">{previous?.title}</a>
     </p>
@@ -99,7 +100,7 @@ const markedCode = 'items' in problem ? await highlightMarkedCode(problem.items)
 
   // Previous, Next, the position line and the way back follow the list the learner last saw on
   // Practice in this tab. Without that list, or when it does not hold this problem, the page keeps
-  // what was built: catalog neighbours and plain links.
+  // what was built: catalog neighbours, its catalog position and plain links.
   const nav = document.querySelector<HTMLElement>('[data-practice-neighbors]');
   if (nav) {
     const id = nav.dataset.practiceNeighbors!;
@@ -123,6 +124,7 @@ const markedCode = 'items' in problem ? await highlightMarkedCode(problem.items)
       };
       return { show, reset };
     });
+    const builtPosition = position.textContent;
     const builtBack = { href: back.getAttribute('href')!, text: back.textContent! };
     const builtCrumb = crumb?.getAttribute('href');
 
@@ -131,7 +133,7 @@ const markedCode = 'items' in problem ? await highlightMarkedCode(problem.items)
       const place = context && practicePlace(context, id);
       if (!context || !place) {
         sides.forEach(({ reset }) => reset());
-        position.hidden = true;
+        position.textContent = builtPosition;
         back.setAttribute('href', builtBack.href);
         back.textContent = builtBack.text;
         if (crumb && builtCrumb) crumb.setAttribute('href', builtCrumb);
@@ -140,7 +142,6 @@ const markedCode = 'items' in problem ? await highlightMarkedCode(problem.items)
       sides[0].show(place.previous);
       sides[1].show(place.next);
       position.textContent = `${context.label || 'All problems'}: ${place.position} of ${place.total}`;
-      position.hidden = false;
       const listHref = practiceListHref(context.query, id);
       back.href = listHref;
       back.textContent = context.label ? `Back to ${context.label}` : builtBack.text;

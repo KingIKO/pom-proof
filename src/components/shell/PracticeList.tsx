@@ -3,7 +3,8 @@ import type { CatalogProblem } from '../../lib/catalog';
 import type { ProgressAttempt } from '../../lib/contracts';
 import { difficultyLabel, kindLabel, problemStatus, statusLabel, topicLabel } from '../../lib/labels';
 import {
-  latestPracticeContext, practiceContextEvent, practiceLabel, practiceRowId, writePracticeContext, type PracticeContext,
+  latestPracticeContext, nearestShown, practiceContextEvent, practiceLabel, practiceRowId, readPracticeContext,
+  writePracticeContext, type PracticeContext,
 } from '../../lib/practice-context';
 import { bestScores, onProgressChange, readProgress } from '../../lib/progress';
 import { problemUrl } from '../../lib/url';
@@ -52,14 +53,19 @@ function readFilters(topics: readonly Option[]): Filters {
   return filters;
 }
 
-/** The filters as the list URL writes them, without the leading `?`. */
-function filterQuery(filters: Filters) {
-  const params = new URLSearchParams();
+/** Writes the filters into `params` the way the list URL holds them: one key per group, values comma-joined, empty keys removed. */
+function setFilterParams(params: URLSearchParams, filters: Filters) {
   for (const key of ['q', ...facets] as const) {
     const value = key === 'q' ? filters.q : filters[key].join(',');
     if (value) params.set(key, value);
+    else params.delete(key);
   }
-  return params.toString();
+  return params;
+}
+
+/** The filters as the list URL writes them, without the leading `?`. */
+function filterQuery(filters: Filters) {
+  return setFilterParams(new URLSearchParams(), filters).toString();
 }
 
 function filterLabel(filters: Filters) {
@@ -126,8 +132,8 @@ function nextProblem(problems: readonly PracticeTarget[], attempts: readonly Pro
   return recent?.problem ?? problems.find(({ id }) => scores.get(id) !== 1);
 }
 
-/** The problems the list shows right now, in its order; the whole catalog until the list reports its rows. */
-function useShownProblems(problems: PracticeTarget[]) {
+/** The list as this page shows it right now; null until the list reports its rows. */
+function useShownList() {
   const [context, setContext] = useState<PracticeContext | null>(null);
   useEffect(() => {
     setContext(latestPracticeContext());
@@ -135,7 +141,19 @@ function useShownProblems(problems: PracticeTarget[]) {
     window.addEventListener(practiceContextEvent, update);
     return () => window.removeEventListener(practiceContextEvent, update);
   }, []);
+  return context;
+}
+
+/** The problems the list shows right now, in its order; the whole catalog until the list reports its rows. */
+function useShownProblems(problems: PracticeTarget[]) {
+  const context = useShownList();
   return useMemo(() => context?.items.map(([id, title]) => ({ id, title })) ?? problems, [context, problems]);
+}
+
+/** The title band count: every problem, or how many of them the filters leave. */
+export function PracticeCount({ total }: { total: number }) {
+  const context = useShownList();
+  return <span class="num">{context?.query ? `${context.items.length} of ${total} problems` : `${total} problems`}</span>;
 }
 
 export function PracticeProgress({ problems }: { problems: PracticeTarget[] }) {
@@ -169,6 +187,13 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
   const searchField = useRef<HTMLInputElement>(null);
   const [markedRow, setMarkedRow] = useState<string | null>(null);
   const hashHandled = useRef(false);
+  const earlierList = useRef<PracticeContext | null>(null);
+
+  // The list stored when the learner left, read before this page replaces it, so a row that has
+  // since left the list (now solved under an Unattempted filter, say) can point to its neighbour.
+  useEffect(() => {
+    earlierList.current = readPracticeContext();
+  }, []);
 
   const rows = useMemo<Row[]>(() => {
     const scores = bestScores(attempts);
@@ -208,11 +233,7 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
   function applyFilters(next: Filters) {
     setFilters(next);
     const location = new URL(window.location.href);
-    for (const key of ['q', ...facets] as const) {
-      const value = key === 'q' ? next.q : next[key].join(',');
-      if (value) location.searchParams.set(key, value);
-      else location.searchParams.delete(key);
-    }
+    setFilterParams(location.searchParams, next);
     window.history.replaceState(window.history.state, '', location);
   }
 
@@ -257,22 +278,38 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
   }, [currentFilters, visibleIds]);
 
   // A link back from a problem names its row in the hash: bring that row to the middle and mark it.
+  // When that row has left the list, use the next one from the earlier list still shown, or the one before.
   useEffect(() => {
     if (!currentFilters || hashHandled.current) return;
     hashHandled.current = true;
     const hash = window.location.hash.slice(1);
-    const row = hash.startsWith('row-') ? document.getElementById(hash) : null;
+    if (!hash.startsWith('row-')) return;
+    let target = hash;
+    const earlier = earlierList.current;
+    const shown = new Set(visible.map(({ id }) => id));
+    if (!visible.some(({ id }) => practiceRowId(id) === hash) && earlier) {
+      const gone = earlier.items.find(([id]) => practiceRowId(id) === hash)?.[0];
+      const nearest = gone && nearestShown(earlier, gone, (id) => shown.has(id));
+      if (!nearest) return;
+      target = practiceRowId(nearest);
+    }
+    const row = document.getElementById(target);
     if (!row?.closest('.catalog-table')) return;
-    setMarkedRow(hash);
+    setMarkedRow(target);
     row.scrollIntoView({ block: 'center' });
     row.querySelector<HTMLAnchorElement>('.stretched-link')?.focus({ preventScroll: true });
   }, [currentFilters]);
+
+  const activeLabel = currentFilters ? filterLabel(currentFilters) : '';
 
   return (
     <div class="practice-layout">
       <aside class="filter-sidebar" aria-label="Practice sidebar">
         <details class="filter-disclosure" ref={disclosure} open>
-          <summary>Filters <span class="chevron" aria-hidden="true" /></summary>
+          <summary>
+            <span class="filter-summary">{activeLabel ? `Filters: ${activeLabel}` : 'Filters'}</span>
+            <span class="chevron" aria-hidden="true" />
+          </summary>
           <form class="filter-body" role="search" aria-label="Practice filters" onSubmit={(event) => event.preventDefault()}>
             <label for="practice-search" class="visually-hidden">Search</label>
             <input class="input" id="practice-search" type="search" name="q" ref={searchField}

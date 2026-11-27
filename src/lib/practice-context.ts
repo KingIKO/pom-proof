@@ -43,12 +43,12 @@ function sessionStore(): Pick<Storage, 'getItem' | 'setItem'> | null {
 
 /**
  * The list's name built from its filter values: topics first, then kind, difficulty, role and
- * status. More than two values become the first two plus a count. A search alone reads `Search: login`.
+ * status. More than two values become the first two plus a count. A search alone reads `Search “login”`.
  */
 export function practiceLabel({ q, topic, kind, difficulty, role, status }: LabelParts) {
   const values = [...topic, ...kind, ...difficulty, ...role, ...status];
   const search = q.trim();
-  if (search) values.push(`Search: ${search}`);
+  if (search) values.push(`Search “${search}”`);
   if (values.length > 2) return `${values[0]}, ${values[1]} and ${values.length - 2} more`;
   return values.join(', ');
 }
@@ -107,6 +107,18 @@ export function practicePlace({ items }: PracticeContext, id: string) {
     return item && { id: item[0], title: item[1] };
   };
   return { position: index + 1, total: items.length, previous: index > 0 ? at(-1) : undefined, next: at(1) };
+}
+
+/**
+ * The problem to point at when the one a learner came back from has left the list: the next one
+ * from the earlier list that is still shown, or else the closest shown one before it.
+ */
+export function nearestShown({ items }: PracticeContext, id: string, shown: (id: string) => boolean) {
+  const index = items.findIndex(([item]) => item === id);
+  if (index < 0) return undefined;
+  const after = items.slice(index + 1).find(([item]) => shown(item));
+  const before = items.slice(0, index).reverse().find(([item]) => shown(item));
+  return (after ?? before)?.[0];
 }
 
 /** The list row's element id, `row-<kind>-<slug>`. */

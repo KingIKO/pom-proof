@@ -44,6 +44,8 @@
 }
 
 .practice-layout summary::-webkit-details-marker { display: none; }
+.filter-disclosure > summary { gap: var(--space-12); }
+.filter-summary { min-inline-size: 0; overflow-wrap: anywhere; }
 .practice-layout summary .chevron, .practice-continue .chevron { margin-inline: .125rem; }
 .practice-layout .input { block-size: var(--control-height); }
 

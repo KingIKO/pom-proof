@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  decodePracticeContext, practiceContextEvent, practiceContextKey, practiceLabel, practiceListHref, practicePlace,
-  practiceRowId, readPracticeContext, writePracticeContext, type PracticeContext,
+  decodePracticeContext, nearestShown, practiceContextEvent, practiceContextKey, practiceLabel, practiceListHref,
+  practicePlace, practiceRowId, readPracticeContext, writePracticeContext, type PracticeContext,
 } from '../../src/lib/practice-context';
 
 // Expectations come from section 1 of .notes/practice-study-plan.md: the stored shape
@@ -42,9 +42,9 @@ describe('practiceLabel', () => {
     expect(practiceLabel({ ...none, topic: ['Playwright', 'API', 'CI'], difficulty: ['Hard'] })).toBe('Playwright, API and 2 more');
   });
 
-  it('reads a search alone as "Search: <text>" and counts it as one more value otherwise', () => {
-    expect(practiceLabel({ ...none, q: '  login ' })).toBe('Search: login');
-    expect(practiceLabel({ ...none, q: 'login', topic: ['Playwright'] })).toBe('Playwright, Search: login');
+  it('reads a search alone as Search “<text>” and counts it as one more value otherwise', () => {
+    expect(practiceLabel({ ...none, q: '  login ' })).toBe('Search “login”');
+    expect(practiceLabel({ ...none, q: 'button', topic: ['Playwright'] })).toBe('Playwright, Search “button”');
     expect(practiceLabel({ ...none, q: 'login', topic: ['Playwright', 'API'] })).toBe('Playwright, API and 1 more');
     expect(practiceLabel({ ...none, q: '   ' })).toBe('');
   });
@@ -69,6 +69,25 @@ describe('practicePlace', () => {
 
   it('has no neighbours when the list holds only this problem', () => {
     expect(practicePlace({ ...context, items: [items[0]] }, 'code/one')).toEqual({ position: 1, total: 1, previous: undefined, next: undefined });
+  });
+});
+
+describe('nearestShown', () => {
+  const five: PracticeContext = { ...context, items: [...items, ['code/four', 'Four'], ['sql/five', 'Five']] };
+  const showing = (...ids: string[]) => (id: string) => ids.includes(id);
+
+  it('points at the next problem from the earlier list that is still shown', () => {
+    expect(nearestShown(five, 'sql/two', showing('code/one', 'code/four', 'sql/five'))).toBe('code/four');
+  });
+
+  it('falls back to the closest shown problem before it when none after it is shown', () => {
+    expect(nearestShown(five, 'code/four', showing('code/one', 'sql/two'))).toBe('sql/two');
+    expect(nearestShown(five, 'sql/five', showing('code/one'))).toBe('code/one');
+  });
+
+  it('gives nothing when no other problem is shown or the problem was never listed', () => {
+    expect(nearestShown(five, 'sql/two', showing('sql/two'))).toBeUndefined();
+    expect(nearestShown(five, 'code/missing', showing('code/one'))).toBeUndefined();
   });
 });
 
