@@ -20,5 +20,5 @@ export async function GET() {
     ].join(' ').replace(/\s+/g, ' ').trim().toLowerCase();
     return [id, text];
   }));
-  return new Response(JSON.stringify(index), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+  return new Response(JSON.stringify(index), { headers: { 'Content-Type': 'application/json' } });
 }
