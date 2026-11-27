@@ -8,6 +8,7 @@ roles: [sdet, senior]
 items:
   - id: review
     type: line-marking
+    language: python
     prompt: "Mark every line with a problem."
     lines:
       - { id: l01, text: "import requests" }

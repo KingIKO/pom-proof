@@ -37,6 +37,12 @@
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     gap: var(--space-32);
   }
+  .workspace-grid:has(.statement .prose:not([hidden]) pre) {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 3fr);
+  }
+  .workspace-grid:has(.structured-code) {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+  }
 }
 
 .statement, .workspace { min-inline-size: 0; }
@@ -48,7 +54,8 @@
 }
 .statement-switch.tabs > button { min-block-size: 2.75rem; }
 
-.statement > .prose { padding: var(--workspace-inset); }
+.statement > .prose { max-inline-size: none; padding: var(--workspace-inset); }
+.statement > .prose > :not(pre) { max-inline-size: var(--prose); }
 .statement > noscript > p { margin: 0 var(--workspace-inset) var(--workspace-inset); }
 .statement-heading { margin-block: 0 var(--space-12); }
 .statement:has(.statement-switch:not([hidden])) .statement-heading {
@@ -68,7 +75,6 @@
   border-inline-start: 4px solid var(--divider);
 }
 .statement .prose :is(th, td) { overflow-wrap: anywhere; }
-.statement .prose pre { max-inline-size: 100%; }
 
 .workspace > h2 { margin: var(--space-12) 0 var(--space-12); }
 .workspace :where(fieldset, textarea, select, iframe) { min-inline-size: 0; max-inline-size: 100%; }

@@ -8,6 +8,7 @@ import { tags } from '@lezer/highlight';
 import { basicSetup } from 'codemirror';
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
+import { codeNumber, codeType } from './light-plus.mjs';
 import './editor.css';
 
 interface Props {
@@ -47,6 +48,10 @@ const theme = EditorView.theme({
   },
   '.cm-content': { caretColor: 'var(--text)', paddingBlock: 'var(--space-8)' },
   '.cm-line': { paddingInline: 'var(--space-8)' },
+  '.cm-lineWrapping .cm-line': {
+    paddingInlineStart: 'calc(var(--space-8) + 2ch)',
+    textIndent: '-2ch',
+  },
   '.cm-activeLine, .cm-activeLineGutter, .cm-tooltip, .cm-panels': {
     backgroundColor: 'var(--surface)',
     color: 'var(--text)',
@@ -58,14 +63,14 @@ const theme = EditorView.theme({
     borderRadius: 'var(--radius-control)',
   },
   '.cm-selectionMatch, .cm-searchMatch, &.cm-focused .cm-matchingBracket': {
-    backgroundColor: 'var(--badgeBg)',
+    backgroundColor: 'var(--codeSelection)',
   },
   '.cm-searchMatch-selected': { outline: 'var(--focus-width) solid var(--focus)' },
   '&.cm-focused .cm-nonmatchingBracket': { backgroundColor: 'transparent', textDecoration: 'underline' },
   '.cm-specialChar': { color: 'var(--text2)' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--text)' },
   '.cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-    backgroundColor: 'var(--badgeBg)',
+    backgroundColor: 'var(--codeSelection)',
   },
   '.cm-tooltip-autocomplete ul li[aria-selected]': {
     backgroundColor: 'var(--ink)',
@@ -78,9 +83,16 @@ const theme = EditorView.theme({
 });
 
 const highlighting = syntaxHighlighting(HighlightStyle.define([
-  { tag: [tags.keyword, tags.bool, tags.null], color: 'var(--badgeText)', fontWeight: 'var(--weight-bold)' },
-  { tag: tags.comment, color: 'var(--text2)' },
-  { tag: [tags.string, tags.regexp, tags.number], color: 'var(--easy)' },
+  { tag: [tags.operator, tags.punctuation], color: 'var(--text)' },
+  { tag: [tags.keyword, tags.bool, tags.null, tags.atom, tags.self], color: '#0000FF' },
+  { tag: [tags.controlKeyword, tags.moduleKeyword], color: '#AF00DB' },
+  { tag: [tags.string, tags.special(tags.string)], color: '#A31515' },
+  { tag: tags.regexp, color: '#811F3F' },
+  { tag: tags.number, color: codeNumber },
+  { tag: tags.comment, color: '#008000' },
+  { tag: [tags.propertyName, tags.variableName], color: '#001080' },
+  { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: '#795E26' },
+  { tag: [tags.typeName, tags.className, tags.definition(tags.className)], color: codeType },
 ]));
 
 export default function CodeEditor(props: Props) {
@@ -106,6 +118,7 @@ export default function CodeEditor(props: Props) {
         doc: current.value,
         extensions: [
           basicSetup,
+          EditorView.lineWrapping,
           theme,
           highlighting,
           language.current.of(languageSupport[current.language]()),

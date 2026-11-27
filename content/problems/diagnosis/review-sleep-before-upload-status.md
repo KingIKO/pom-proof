@@ -8,6 +8,7 @@ roles: [automation, sdet]
 items:
   - id: review
     type: line-marking
+    language: java
     prompt: "Mark every line with a problem."
     lines:
       - { id: l01, text: "@Test" }

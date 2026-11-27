@@ -8,6 +8,7 @@ roles: [manual-qa, automation]
 items:
   - id: claims
     type: line-marking
+    language: text
     prompt: Mark the draft lines that claim more than the evidence supports.
     lines:
       - { id: line-1, text: 'Staging, Chrome 136, build 421, test order PP104.' }
