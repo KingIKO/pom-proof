@@ -20,7 +20,7 @@ const fixturesOf = (result: GradeResult<'locator'>) => (result as { details: { f
 const names = ['original', 'reordered-actions', 'different-wrapper'];
 const located = (selector: string): Value => ({ by: 'expression', source: `page.locator(${JSON.stringify(selector)})` });
 const sample = discoverProblems().find(({ id }) => id === 'locator/refund-order-action');
-const playwrightOnly = 'This problem asks for a Playwright-style locator.';
+const playwrightOnly = 'This problem asks for a Playwright locator.';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('practice/locator/refund-order-action/');

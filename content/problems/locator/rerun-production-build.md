@@ -50,7 +50,7 @@ reference:
 decoy: { by: expression, source: "page.getByRole('row').filter({ hasText: 'Production' }).getByRole('button', { name: 'Rerun', exact: true }).nth(0)" }
 ---
 
-Use a Playwright-style locator, an expression that finds an element, to find `Rerun` for build `BLD-813`. Match the production build, the one for the live app. Find it under `Release checks`.
+Write a Playwright locator, code that starts with `page.` and finds an element, to find `Rerun` for build `BLD-813`. Match the production build, the one for the live app. Find it under `Release checks`.
 
 Staging, the test environment, can show the same build number. The rollback drill, a practice run for switching to an earlier version, can show an identical row. Make the locator match the section, environment, and build number.
 

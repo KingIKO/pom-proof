@@ -91,8 +91,8 @@ export default function Locator({ problem }: { problem: Problem<'locator'> }) {
           aria-describedby="locator-formats" spellcheck={false} autoComplete="off" autoCapitalize="off"
           onInput={(event) => setSource(event.currentTarget.value)} />
         <p class="muted" id="locator-formats">A locator tells a test how to find a page element. {problem.syntax
-          ? <>Use {locatorSyntaxLabel[problem.syntax]}{problem.syntax === 'xpath' && <>, such as <code>xpath=//button</code></>}.</>
-          : <>Use CSS, XPath, or a Playwright-style locator such as <code>page.getByRole('button')</code>.</>}
+          ? <>Use {locatorSyntaxLabel[problem.syntax]}{problem.syntax === 'xpath' && <>, such as <code>xpath=//button</code></>}{problem.syntax === 'playwright' && <>, such as <code>page.getByRole('button')</code></>}.</>
+          : <>Use CSS, XPath, or a Playwright locator, such as <code>page.getByRole('button')</code>.</>}
         </p>
       </div>
       <div class="engine-actions">

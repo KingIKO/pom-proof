@@ -46,7 +46,7 @@ reference:
 decoy: { by: expression, source: "page.getByRole('listitem').filter({ hasText: 'ops@north.example' }).getByRole('button', { name: 'Remove address', exact: true }).nth(0)" }
 ---
 
-Use a Playwright-style locator, an expression that finds an element, to find the `Remove address` button for `ops@north.example`. Find it in the `On-call rotation` group users can edit. The digest, a separate email summary, also goes to that address. A separate sample panel can repeat the whole rotation.
+Write a Playwright locator, code that starts with `page.` and finds an element, to find the `Remove address` button for `ops@north.example`. Find it in the `On-call rotation` group users can edit. The digest, a separate email summary, also goes to that address. A separate sample panel can repeat the whole rotation.
 
 The settings users can edit have the test ID `notification-settings`. A test ID is an identifier the app provides for tests.
 
