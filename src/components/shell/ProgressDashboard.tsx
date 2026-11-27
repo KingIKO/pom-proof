@@ -1,47 +1,40 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import type { CatalogProblem } from '../../lib/catalog';
-import { progressStorageKey, type Kind, type ProgressAttempt } from '../../lib/contracts';
+import { progressStorageKey, type Kind } from '../../lib/contracts';
 import { difficultyLabel, kindLabel } from '../../lib/labels';
-import { bestScores, createProgressStore, notifyProgressChange, onProgressChange, readProgress } from '../../lib/progress';
-import { problemUrl } from '../../lib/url';
-import { reviewStorageKey } from '../progress/useStudySnapshot';
+import { bestScores, createProgressStore, notifyProgressChange } from '../../lib/progress';
+import { calculateReadiness } from '../../lib/readiness';
+import { dueIds } from '../../lib/review';
+import { problemUrl, url } from '../../lib/url';
+import { RoundReadiness, WeakTopics } from '../progress/ReadinessOverview';
+import { reviewStorageKey, useStudySnapshot } from '../progress/useStudySnapshot';
 
 const kinds = Object.keys(kindLabel) as Kind[];
 const difficulties = Object.keys(difficultyLabel) as CatalogProblem['difficulty'][];
 const dateFormat = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' });
 const scoreFormat = new Intl.NumberFormat('en', { style: 'percent', maximumFractionDigits: 2 });
-const storageMessage = 'Progress could not be saved; check this browser’s storage settings and try again.';
+const storageMessage = 'Progress could not be saved; check the browser’s storage settings and try again.';
 
-export default function ProgressDashboard({ problems }: { problems: CatalogProblem[] }) {
-  const [storedAttempts, setAttempts] = useState<ProgressAttempt[] | null>(null);
-  const attempts = storedAttempts ?? [];
+export default function ProgressDashboard({ problems, questionIds }: { problems: CatalogProblem[]; questionIds: string[] }) {
+  const snapshot = useStudySnapshot();
+  const loaded = snapshot !== null;
+  const attempts = snapshot?.attempts ?? [];
   const [message, setMessage] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
   const resetDialog = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => {
-    const update = () => setAttempts(readProgress().attempts);
-    update();
-    const unsubscribe = onProgressChange(update);
-    window.addEventListener('pageshow', update);
-    return () => {
-      unsubscribe();
-      window.removeEventListener('pageshow', update);
-    };
-  }, []);
-
   function exportProgress() {
     try {
       const json = createProgressStore(window.localStorage).exportJson();
-      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      const downloadUrl = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
       const link = document.createElement('a');
-      link.href = url;
+      link.href = downloadUrl;
       link.download = 'pom-proof-progress.json';
       link.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
       setMessage('Progress exported.');
     } catch {
-      setMessage('Progress could not be exported; check this browser’s storage settings and try again.');
+      setMessage('Progress could not be exported; check the browser’s storage settings and try again.');
     }
   }
 
@@ -83,35 +76,94 @@ export default function ProgressDashboard({ problems }: { problems: CatalogProbl
   const scores = bestScores(attempts);
   const solved = problems.filter(({ id }) => scores.get(id) === 1);
   const recent = attempts.slice().reverse().sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt));
+  const { rounds, questions, needsPractice, unattempted } =
+    calculateReadiness(attempts, snapshot?.cards ?? {}, { problems, questionIds });
+  const queue = snapshot ? dueIds(questionIds) : [];
+  const due = snapshot ? queue.filter((id) => Object.hasOwn(snapshot.cards, id)).length : 0;
+  const unseen = queue.length - due;
   const counts = (rows: CatalogProblem[]) =>
     difficulties.map((difficulty) => rows.filter((problem) => problem.difficulty === difficulty).length);
 
   return (
-    <>
-      <div class="progress-actions" aria-label="Progress data" role="group">
-        <button type="button" disabled={storedAttempts === null} onClick={exportProgress}>Export</button>
-        <button type="button" disabled={storedAttempts === null} onClick={() => fileInput.current?.click()}>Import</button>
-        <input ref={fileInput} type="file" accept=".json,application/json" hidden aria-label="Choose progress file"
-          onChange={(event) => {
-            const file = event.currentTarget.files?.[0];
-            event.currentTarget.value = '';
-            if (file) void importProgress(file);
-          }} />
-        <button type="button" disabled={storedAttempts === null} onClick={() => resetDialog.current?.showModal()}>Reset</button>
+    <div class="progress-dashboard">
+      <dl class="progress-totals">
+        <div class="progress-tile" data-card>
+          <dt class="section-label">Problems</dt>
+          <dd class="num"><strong>{solved.length}</strong> of {problems.length} solved</dd>
+        </div>
+        <div class="progress-tile" data-card>
+          <dt class="section-label">Due for review</dt>
+          <dd class="num"><strong>{loaded ? due : '–'}</strong></dd>
+        </div>
+        <div class="progress-tile" data-card>
+          <dt class="section-label">Attempts</dt>
+          <dd class="num"><strong>{attempts.length}</strong></dd>
+        </div>
+      </dl>
+      <section class="callout review-overview" data-card aria-labelledby="review-heading">
+        <div>
+          <h2 id="review-heading">Review queue</h2>
+          {loaded && <p class="muted num">{due} due for review, {unseen} new</p>}
+        </div>
+        <a class="button outline" href={url('/questions/#review')}>Start review</a>
+      </section>
+      <div class="progress-layout">
+        <RoundReadiness rounds={rounds} questions={questions} loaded={loaded} />
+        <div class="progress-rail">
+          <WeakTopics needsPractice={needsPractice} unattempted={unattempted} hasProblems={problems.length > 0} loaded={loaded} />
+          <section class="progress-section" data-card aria-labelledby="saved-heading">
+            <h2 id="saved-heading">Saved progress</h2>
+            <div class="progress-actions" aria-label="Progress data" role="group">
+              <button class="button outline" type="button" disabled={!loaded} onClick={exportProgress}>Export</button>
+              <button class="button outline" type="button" disabled={!loaded} onClick={() => fileInput.current?.click()}>Import</button>
+              <input ref={fileInput} type="file" accept=".json,application/json" hidden aria-label="Choose progress file"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  event.currentTarget.value = '';
+                  if (file) void importProgress(file);
+                }} />
+              <button class="button danger" type="button" disabled={!loaded} onClick={() => resetDialog.current?.showModal()}>Reset</button>
+            </div>
+            <p class="muted">Progress is stored in this browser. Import replaces attempts and any question ratings included in the file.</p>
+            <p class="progress-message" role="status">{message}</p>
+          </section>
+        </div>
       </div>
-      <p class="muted progress-note">Progress is stored in this browser. Import replaces attempts and any question ratings included in the file.</p>
-      <p class="progress-message" role="status">{message}</p>
       <dialog ref={resetDialog} class="reset-dialog" aria-labelledby="reset-title" aria-describedby="reset-description">
         <h2 id="reset-title">Reset progress?</h2>
         <p id="reset-description">This deletes all attempts and question ratings in this browser. Exported files are kept.</p>
         <div class="progress-actions">
-          <button type="button" autoFocus onClick={() => resetDialog.current?.close()}>Keep progress</button>
-          <button type="button" onClick={resetProgress}>Reset progress</button>
+          <button class="button outline" type="button" autoFocus onClick={() => resetDialog.current?.close()}>Keep progress</button>
+          <button class="button danger" type="button" onClick={resetProgress}>Reset progress</button>
         </div>
       </dialog>
-      <section class="progress-section" aria-labelledby="solved-heading">
-        <h2 id="solved-heading">Solved problems</h2>
-        <p class="progress-total">{solved.length} of {problems.length} solved</p>
+      <section class="progress-section progress-table-section" data-card aria-labelledby="attempts-heading">
+        <header class="progress-section-heading">
+          <h2 id="attempts-heading">Recent attempts</h2>
+          {recent.length === 0 && <p class="muted">No attempts yet</p>}
+        </header>
+        {recent.length > 0 && (
+          <table class="attempts-table" aria-label="Recent attempts">
+            <thead>
+              <tr><th scope="col">Problem</th><th scope="col">Score</th><th scope="col">Submitted</th></tr>
+            </thead>
+            <tbody>
+              {recent.map(({ problemId, completedAt, score }, index) => {
+                const problem = catalogue.get(problemId);
+                return (
+                  <tr key={index}>
+                    <td>{problem ? <a href={problemUrl(problemId)}>{problem.title}</a> : problemId}</td>
+                    <td>{scoreFormat.format(score)}</td>
+                    <td><time dateTime={new Date(completedAt).toISOString()}>{dateFormat.format(new Date(completedAt))}</time></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </section>
+      <section class="progress-section progress-table-section" data-card aria-labelledby="solved-heading">
+        <header class="progress-section-heading"><h2 id="solved-heading">Solved problems</h2></header>
         <table class="solved-table" aria-label="Solved by kind and difficulty">
           <thead>
             <tr>
@@ -141,28 +193,6 @@ export default function ProgressDashboard({ problems }: { problems: CatalogProbl
           </tfoot>
         </table>
       </section>
-      <section class="progress-section" aria-labelledby="attempts-heading">
-        <h2 id="attempts-heading">Recent attempts</h2>
-        {recent.length === 0 ? <p class="muted">No attempts yet</p> : (
-          <table class="attempts-table" aria-label="Recent attempts">
-            <thead>
-              <tr><th scope="col">Problem</th><th scope="col">Score</th><th scope="col">Submitted</th></tr>
-            </thead>
-            <tbody>
-              {recent.map(({ problemId, completedAt, score }, index) => {
-                const problem = catalogue.get(problemId);
-                return (
-                  <tr key={index}>
-                    <td>{problem ? <a href={problemUrl(problemId)}>{problem.title}</a> : problemId}</td>
-                    <td>{scoreFormat.format(score)}</td>
-                    <td><time dateTime={new Date(completedAt).toISOString()}>{dateFormat.format(new Date(completedAt))}</time></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </section>
-    </>
+    </div>
   );
 }

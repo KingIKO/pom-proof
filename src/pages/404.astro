@@ -1,12 +1,19 @@
 ---
 import Base from '../layouts/Base.astro';
+import TitleBand from '../components/shell/TitleBand.astro';
 import { url } from '../lib/url';
 ---
 <Base title="Page not found">
-  <h1>Page not found</h1>
-  <p>The address may be wrong or the page may have moved.</p>
-  <ul>
-    <li><a href={url('/')}>Practice</a></li>
-    <li><a href={url('/questions/')}>Questions</a></li>
-  </ul>
+  <TitleBand slot="title-band" title="Page not found" meta="The address may be wrong or the page may have moved." narrow />
+  <nav class="recovery-links" aria-label="Find a section">
+    <a class="button outline" href={url('/')}>Practice</a>
+    <a class="button outline" href={url('/questions/')}>Questions</a>
+    <a class="button outline" href={url('/tracks/')}>Tracks</a>
+    <a class="button outline" href={url('/progress/')}>Progress</a>
+  </nav>
 </Base>
+
+<style>
+  .recovery-links { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+  .recovery-links .button { background: var(--surface); }
+</style>

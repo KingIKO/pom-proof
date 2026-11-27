@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import ProgressDashboard from '../../components/shell/ProgressDashboard';
-import ReadinessOverview from '../../components/progress/ReadinessOverview';
+import TitleBand from '../../components/shell/TitleBand.astro';
 import { catalogProblem, orderedProblems } from '../../lib/catalog';
 import '../../styles/progress.css';
 
@@ -10,9 +10,7 @@ const [entries, questions] = await Promise.all([orderedProblems(), getCollection
 const problems = entries.map(catalogProblem);
 const questionIds = questions.map(({ id }) => id);
 ---
-<Base title="Progress" section="progress">
-  <h1>Progress</h1>
-  <ReadinessOverview client:load problems={problems.map(({ id, kind, topic }) => ({ id, kind, topic }))} questionIds={questionIds} />
-  <h2>Saved progress</h2>
-  <ProgressDashboard client:load problems={problems} />
+<Base title="Progress" section="progress" wide>
+  <TitleBand slot="title-band" title="Progress" meta="Practice results and question review" />
+  <ProgressDashboard client:load problems={problems} questionIds={questionIds} />
 </Base>

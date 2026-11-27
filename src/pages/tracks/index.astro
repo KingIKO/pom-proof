@@ -1,5 +1,6 @@
 ---
 import { TracksList } from '../../components/tracks/TrackViews';
+import TitleBand from '../../components/shell/TitleBand.astro';
 import Base from '../../layouts/Base.astro';
 import { orderedTracks } from '../../lib/catalog';
 
@@ -9,8 +10,7 @@ const tracks = (await orderedTracks()).map(({ id, title, summary, sections }) =>
   questionIds: sections.flatMap(({ questions }) => questions.map((item) => item.id)),
 }));
 ---
-<Base title="Tracks" section="tracks">
-  <h1>Tracks</h1>
-  <p class="prose muted track-intro">Choose a role and work through its rounds in order.</p>
+<Base title="Tracks" section="tracks" wide>
+  <TitleBand slot="title-band" title="Tracks" meta="Choose a role and work through its rounds in order." />
   <TracksList client:load tracks={tracks} />
 </Base>

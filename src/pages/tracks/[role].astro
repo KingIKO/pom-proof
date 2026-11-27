@@ -1,8 +1,8 @@
 ---
 import { TrackSections } from '../../components/tracks/TrackViews';
+import TitleBand from '../../components/shell/TitleBand.astro';
 import Base from '../../layouts/Base.astro';
 import { orderedTracks } from '../../lib/catalog';
-import { url } from '../../lib/url';
 
 export async function getStaticPaths() {
   return (await orderedTracks()).map((track) => ({ params: { role: track.role }, props: { track } }));
@@ -11,8 +11,7 @@ export async function getStaticPaths() {
 const { track } = Astro.props;
 ---
 <Base title={track.title} section="tracks">
-  <p class="track-back"><a href={url('/tracks/')}>Back to tracks</a></p>
-  <h1>{track.title}</h1>
-  <p class="prose muted track-intro">{track.summary}</p>
+  <TitleBand slot="title-band" title={track.title} meta={track.summary} narrow
+    breadcrumbs={[{ label: 'POM Proof', href: '/' }, { label: 'Tracks', href: '/tracks/' }, { label: track.title }]} />
   <TrackSections client:load sections={track.sections} />
 </Base>
