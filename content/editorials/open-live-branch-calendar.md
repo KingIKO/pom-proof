@@ -2,14 +2,33 @@
 problem: locator/open-live-branch-calendar
 ---
 
+## What is going on
+
+The South Quay branch can keep two layouts in the DOM at once. Only the active layout exposes its calendar button to users. The inactive copy has the same label, and there is also a separate holiday calendar action. The test needs the branch appointment calendar the customer can actually open.
+
+## The fix
+
 ```ts
 page.getByRole('button', { name: 'Open South Quay calendar', exact: true })
 ```
 
-Role matching uses the button's accessible name and excludes hidden elements by default. `aria-label` keeps the name stable where the visible caption changes to `Calendrier`. The holiday action has a different name. Exact matching expresses that the test expects this named branch calendar rather than a family of calendar links.
+1. Find the button with the exact accessible name `Open South Quay calendar`.
 
-The plain CSS attribute selector finds one button in the original fixture. It also matches the copy inside the `hidden` container when the desktop layout is collapsed. The CSS-hidden version has the same problem: the class applies `display: none` to an ancestor, while the button itself still has the exact `aria-label` in the DOM. Adding a check for `hidden` on the button would miss both forms of ancestor hiding.
+   **Why:** In `collapsed-desktop-copy`, role matching excludes the button inside the `hidden` container by default. In `compact-layout-hidden-copy`, it also excludes the copy whose ancestor has `display: none`. The active button's `aria-label` keeps its name stable even though the visible caption becomes `Calendrier`. The holiday action has its own accessible name, so the exact match stays on the calendar requested.
 
-An interviewer wants to hear how you distinguished an element present in HTML from a control exposed to users. Here the UI uses actual hidden containers. If two visible buttons still shared the same accessible name, you would need a second piece of context, such as the named branch section, to establish one match.
+This is a case where the role lookup does two useful jobs. It matches the identity the app exposes to users of assistive technology and keeps hidden copies out of the result before the test tries to use the control.
 
-Sources: [Playwright locators](https://playwright.dev/docs/locators) and [Playwright best practices](https://playwright.dev/docs/best-practices). See the [role visibility option](https://playwright.dev/docs/api/class-page#page-get-by-role-option-include-hidden) for hidden element handling.
+## Why the tempting answer fails
+
+The plain CSS selector for a button with that `aria-label` finds one match originally. It finds two in `collapsed-desktop-copy` and `compact-layout-hidden-copy` because both copies are still in the markup. Checking for a `hidden` attribute on the button itself would miss both cases of ancestor hiding: one ancestor has the attribute and the other is hidden by a CSS class.
+
+## What the interviewer listens for
+
+Explain why an element found in HTML can be absent from the controls a user can choose. If two exposed buttons really shared this accessible name, add a second piece of context, such as a named branch section, to establish a single match.
+
+## Sources
+
+- [Playwright locators](https://playwright.dev/docs/locators)
+- [Playwright best practices](https://playwright.dev/docs/best-practices)
+- [Playwright role visibility option](https://playwright.dev/docs/api/class-page#page-get-by-role-option-include-hidden)
+- [MDN attribute selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/Attribute_selectors)

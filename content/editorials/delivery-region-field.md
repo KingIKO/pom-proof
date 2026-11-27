@@ -2,15 +2,36 @@
 problem: locator/delivery-region-field
 ---
 
+## What is going on
+
+Both address sections have a field called `Region`. The delivery value is used to estimate delivery dates, and the billing value belongs to a different address. Both fields can accept the same text. You need to identify the address group before filling its region, or a passing fill can leave the order with the wrong data.
+
+## The fix
+
 ```ts
 page.getByRole('group', { name: 'Delivery address', exact: true })
   .getByLabel('Region', { exact: true })
 ```
 
-The `fieldset` gives the delivery controls a group, and its `legend` gives that group a name. Scope to `Delivery address` before looking for the labeled input. The label matcher uses the whole label, so a new input called `Region code` does not match. A wrapper or a new field ID has no effect as long as the label still points to the input.
+1. Find the group named exactly `Delivery address`.
 
-The first input labeled `Region` is the delivery field on the original screen. When billing moves up, selecting the first match fills the billing field. Both inputs can accept the same text, so a test may run to completion with the wrong address data. In the version with `Region code`, an unqualified substring match would introduce another possible control.
+   **Why:** In `billing-first`, the fieldsets swap positions, but each legend still names its own group. Starting in the delivery group keeps the billing field out of the search even though it is labeled `Region` too.
 
-In an interview, explain how the markup solves the ambiguity the customer sees: each address section has a distinct heading even when individual field labels are repeated. Say what distinguishes the two saved values in an assertion. For example, a test can reopen the order and check the delivery address separately from the billing address.
+2. Find the field labeled exactly `Region` inside the delivery group.
 
-Sources: [Playwright locators](https://playwright.dev/docs/locators) and [Playwright best practices](https://playwright.dev/docs/best-practices).
+   **Why:** In `delivery-extra-field`, a substring match would include `Region code` as well. The full label excludes that input. The locator follows the label's association with the matching control, so a new ID or additional wrapper has no effect when the label and input still agree.
+
+## Why the tempting answer fails
+
+The first exact `Region` match is the delivery field in the original form. In `billing-first`, the same expression fills the billing region. Exact matching resolves which field name to use, yet the first match still depends on which address happens to be rendered first. Dropping `exact: true` in `delivery-extra-field` would introduce another possible control within delivery itself, so the two restrictions solve different problems.
+
+## What the interviewer listens for
+
+Explain how the fieldset and legend let the test distinguish the two addresses the same way a customer does. Reopen the order after saving and check the delivery region separately from the billing region so a swap cannot pass unnoticed.
+
+## Sources
+
+- [Playwright locators](https://playwright.dev/docs/locators)
+- [Playwright best practices](https://playwright.dev/docs/best-practices)
+- [MDN HTML fieldset](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/fieldset)
+- [MDN HTML label](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/label)
