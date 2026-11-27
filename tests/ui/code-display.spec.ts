@@ -95,6 +95,36 @@ async function expectExamplesFit(scope: Locator, question: DiscoveredQuestion) {
   }
 }
 
+/**
+ * Loads the self-hosted code face and reports whether it is ready, so no measurement runs on a
+ * fallback font. `document.fonts.ready` alone resolves early when the face was never requested.
+ */
+function codeFaceReady(box: Locator) {
+  return box.evaluate(async (pre) => {
+    const size = getComputedStyle(pre).fontSize;
+    const loaded = await document.fonts.load(`${size} "JetBrains Mono Variable"`, 'x');
+    return { loaded: loaded.map((face) => `${face.family} ${face.status}`), check: document.fonts.check(`${size} "JetBrains Mono Variable"`, 'x') };
+  });
+}
+
+/**
+ * Widths that decide whether a line fits: the first row's line box (the hanging indent only moves
+ * continuation rows), the code face's advance per character from a 100-character run, and the
+ * font size.
+ */
+function lineMetrics(box: Locator) {
+  return box.evaluate((pre) => {
+    const code = pre.querySelector('code')!;
+    const run = document.createElement('span');
+    run.style.whiteSpace = 'pre';
+    run.textContent = 'x'.repeat(100);
+    code.append(run);
+    const advance = run.getBoundingClientRect().width / 100;
+    run.remove();
+    return { lineBox: code.clientWidth, advance, fontSize: parseFloat(getComputedStyle(code).fontSize) };
+  });
+}
+
 /** Rows a line of `count` characters takes when appended to the code box, removed again afterwards. */
 function rowsFor(box: Locator, count: number) {
   return box.evaluate(async (pre, length) => {
@@ -124,14 +154,30 @@ for (const width of [1280, 1440]) {
   });
 }
 
-test(`a ${lineCap}-character line fits unwrapped in a bank card at 1280px, and a longer one wraps`, async ({ page }) => {
+// Chromium on desktop Linux places glyphs on whole pixels at a device scale factor of 1
+// (ShouldUseSubpixelPositioning in ui/gfx/font_render_params_linux.cc), so JetBrains Mono's 7.8px
+// advance at 13px becomes 8px there; Windows and macOS keep 7.8px. The cap must hold for the
+// widest of those, so the line box is checked against whole-pixel advances on every platform.
+test(`a ${lineCap}-character line fits unwrapped in a bank card at 1280px, even at whole-pixel advances, and a longer one wraps`, async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   const card = await openExamples(page, withExamples[0], 'card');
   const box = card.getByRole('figure').first().locator('pre');
   await expect(box).toBeVisible();
   const font = await box.locator('code').evaluate((code) => getComputedStyle(code).fontFamily);
-  expect(font, 'the code face').toMatch(/JetBrains Mono/);
-  expect(await rowsFor(box, lineCap), `${lineCap} characters`).toBeLessThan(1.05);
+  expect(font, 'the code face is declared').toMatch(/JetBrains Mono/);
+  const face = await codeFaceReady(box);
+  expect(face, 'the code face loaded before measuring').toEqual({ loaded: ['JetBrains Mono Variable loaded'], check: true });
+
+  const { lineBox, advance, fontSize } = await lineMetrics(box);
+  const rows = await rowsFor(box, lineCap);
+  const summary = `line box ${lineBox}px, advance ${advance}px at ${fontSize}px, ${lineCap} characters ${(advance * lineCap).toFixed(1)}px, ${rows} rows`;
+  console.log(`Bank card code width at 1280px: ${summary}`);
+  test.info().annotations.push({ type: 'code width at 1280px', description: summary });
+  // JetBrains Mono advances 0.6em; a fallback face would usually differ.
+  expect(advance / fontSize, `the measured advance is JetBrains Mono's 0.6em (${summary})`).toBeCloseTo(0.6, 1);
+  expect(rows, `${lineCap} characters on this platform (${summary})`).toBeLessThan(1.05);
+  expect(lineBox, `${lineCap} characters at a whole-pixel advance of ${Math.ceil(advance)}px (${summary})`)
+    .toBeGreaterThanOrEqual(lineCap * Math.ceil(advance));
   expect(await rowsFor(box, Math.round(lineCap * 1.3)), 'the plant: a line 30% past the cap').toBeGreaterThan(1.5);
 });
 

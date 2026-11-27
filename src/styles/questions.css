@@ -241,6 +241,10 @@
   .questions-layout .topic-rail .section-label { margin-block-end: var(--space-12); }
   .questions-layout .topic-links a { border-start-end-radius: var(--radius-control); border-end-end-radius: var(--radius-control); }
   .question-card { scroll-margin-block-start: 7rem; }
+  /* The 105-character authoring cap has to fit unwrapped in a bank card at 1280px where glyphs sit on
+     whole pixels (Chromium on Linux at scale 1 advances 8px instead of 7.8px). The code box reaches
+     into the card padding and keeps a smaller inset, which also lines its text up with the answer. */
+  .question-example > pre { margin-inline: calc(-1 * var(--space-8)); padding-inline: var(--space-8); }
 }
 @media (width >= 60rem) and (width <= 68rem) {
   .question-card { scroll-margin-block-start: 10rem; }
