@@ -343,6 +343,96 @@ test('Copy puts the shown variant on the clipboard and announces Copied', async 
   expect(await clipboard()).toBe(first.code.trimEnd());
 });
 
+// ----- every example on the bank page -----
+
+type ExampleCase = (typeof exampleCases)[number];
+const langsOf = ({ example }: ExampleCase) => example.variants.map(({ lang }) => lang);
+const variantOf = ({ example }: ExampleCase, lang: string) => example.variants.find((variant) => variant.lang === lang)!;
+const linesOf = (variant: ExampleVariant) => variant.code.trimEnd().split('\n').length;
+const multiCases = exampleCases.filter((item) => langsOf(item).length > 1);
+
+/** What every example on the bank page shows once `lang` is pressed (null: nothing pressed), keyed `<question id>#<index>`. */
+const expectedStates = (lang: string | null) => Object.fromEntries(exampleCases.map((item) => {
+  const langs = langsOf(item);
+  const shown = lang && langs.includes(lang) ? lang : langs[0];
+  return [`${item.question.id}#${item.index}`, { shown, pressed: langs.length > 1 ? [shown] : [] }];
+}));
+
+/** The shown and pressed language of every example on the page, keyed like expectedStates. */
+const exampleStates = (page: Page) => page.evaluate(() => Object.fromEntries(
+  [...document.querySelectorAll('[data-question-id]')].flatMap((row) => [...row.querySelectorAll('[data-code-example]')].map((figure, index) => [
+    `${row.getAttribute('data-question-id')}#${index}`,
+    {
+      shown: figure.querySelector('pre[data-example-code]')?.getAttribute('data-example-code') ?? null,
+      pressed: [...figure.querySelectorAll('[data-example-lang][aria-pressed="true"]')].map((button) => button.getAttribute('data-example-lang')),
+    },
+  ]))));
+
+/** Languages two or more examples offer after their first variant, so pressing one visibly switches several. */
+const pressable = switchableLanguages.filter((lang) => multiCases.filter((item) => langsOf(item).slice(1).includes(lang)).length >= 2);
+/** First a language some example lacks, so the fallback shows, then a second one. */
+const lacked = pressable.find((lang) => multiCases.some((item) => !langsOf(item).includes(lang)));
+const sweepLanguages = [lacked, pressable.find((lang) => lang !== lacked)];
+
+test('pressing a language switches every example on the page that has it, and the rest show their first variant', async ({ page }) => {
+  expect(lacked, 'a language several examples offer and one lacks').toBeDefined();
+  expect(sweepLanguages[1], 'a second language several examples offer').toBeDefined();
+  await page.goto('questions/');
+  await expect.poll(() => exampleStates(page)).toEqual(expectedStates(null));
+
+  const expanded = new Set<string>();
+  for (const lang of sweepLanguages as string[]) {
+    // Press it in one card and watch a second card that also offers it.
+    const [pressIn, watch] = multiCases.filter((item) => langsOf(item).slice(1).includes(lang) && !expanded.has(item.question.id));
+    expect(watch, `two unopened cards offering ${lang}`).toBeDefined();
+    const pressed = exampleParts(await expandQuestion(page, pressIn.question), pressIn.index);
+    const watched = exampleParts(await expandQuestion(page, watch.question), watch.index);
+    expanded.add(pressIn.question.id).add(watch.question.id);
+
+    await pressed.button(variantOf(pressIn, lang)).click();
+    await expectShown(watched, watch.example.variants, variantOf(watch, lang));
+    await expect.poll(() => exampleStates(page), { message: `every example after pressing ${lang}` }).toEqual(expectedStates(lang));
+    expect(await savedLanguage(page)).toBe(lang);
+  }
+});
+
+test('switching keeps the pressed button in place while an example above it changes height', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const offers = (item: ExampleCase) => ['python', 'java'].every((lang) => langsOf(item).includes(lang));
+  const gap = (item: ExampleCase, a: string, b: string) => Math.abs(linesOf(variantOf(item, a)) - linesOf(variantOf(item, b)));
+  // An upper example whose Java variant is at least 8 lines longer or shorter than both its first and its Python variant.
+  const upperAt = multiCases.findIndex((item) => offers(item) && langsOf(item)[0] !== 'java'
+    && gap(item, langsOf(item)[0], 'java') >= 8 && gap(item, 'java', 'python') >= 8);
+  const upper = multiCases[upperAt];
+  const lower = multiCases.slice(upperAt + 1).find((item) => offers(item) && item.question !== upper?.question);
+  expect(upper, 'an example whose variants differ by 8 lines').toBeDefined();
+  expect(lower, 'a later example offering Python and Java').toBeDefined();
+
+  await page.goto('questions/');
+  const above = exampleParts(await expandQuestion(page, upper!.question), upper!.index);
+  const below = exampleParts(await expandQuestion(page, lower!.question), lower!.index);
+  const height = () => above.figure.evaluate((figure) => figure.getBoundingClientRect().height);
+
+  for (const [step, lang, css] of [
+    ["with the browser's scroll anchoring", 'java', ''],
+    // Chromium's scroll anchoring can hide a missing compensation; with it off, only the page keeps the button still.
+    ['with scroll anchoring off', 'python', '* { overflow-anchor: none !important; }'],
+  ] as const) {
+    await test.step(step, async () => {
+      if (css) await page.addStyleTag({ content: css });
+      const button = below.button(variantOf(lower!, lang));
+      const top = () => button.evaluate((element) => element.getBoundingClientRect().top);
+      await button.evaluate((element) => window.scrollBy({ top: element.getBoundingClientRect().top - 500, behavior: 'instant' }));
+      const before = { top: await top(), height: await height() };
+      await button.click();
+      await expect(button).toHaveAttribute('aria-pressed', 'true');
+      const after = { top: await top(), height: await height() };
+      expect(Math.abs(after.height - before.height), 'the example above changed height').toBeGreaterThan(100);
+      expect(Math.abs(after.top - before.top), `the pressed button moved from ${before.top} to ${after.top}`).toBeLessThanOrEqual(1);
+    });
+  }
+});
+
 test('search does not match words that appear only in example code', async ({ page }) => {
   expect(switchable, 'a question with example code').toBeDefined();
   await page.goto('questions/');

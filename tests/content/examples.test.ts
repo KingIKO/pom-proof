@@ -479,15 +479,11 @@ function variantProblems(snippet: Snippet, batch: { python: Map<string, string[]
 const exampleTopics = ['java', 'python', 'javascript-typescript', 'sql', 'cypress', 'bdd'];
 const pending = 'pre-existing, to be extended in phase 5 content';
 
-/** Questions the rule applies to that may stay without an example, each with its reason. */
-const withoutExample: Record<string, string> = {
-  'ci-git-docker/docker-for-repeatable-tests': pending,
-  'ci-git-docker/git-merge-or-rebase': pending,
-  'ci-git-docker/parallelize-across-ci-jobs': pending,
-  'ci-git-docker/reports-and-failure-artifacts': pending,
-  'ci-git-docker/required-pull-request-tests': pending,
-  'ci-git-docker/secrets-for-test-jobs': pending,
-};
+/**
+ * Questions the rule applies to that may stay without an example, each with its reason. Empty
+ * since the phase 5 content gave every tooling question an example.
+ */
+const withoutExample: Record<string, string> = {};
 
 const needsExample = (question: DiscoveredQuestion) => exampleTopics.includes(question.folder) || question.frontmatter.type === 'tooling';
 
