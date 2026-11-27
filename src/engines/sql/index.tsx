@@ -13,7 +13,7 @@ const errorMessage = (error: unknown) => error instanceof Error ? error.message 
 
 function ResultTable({ table }: { table: SqlTable }) {
   return (
-    <div class="sql-table">
+    <div class="sql-table" role="region" aria-label="Visible result rows" tabIndex={0} data-card>
       <table>
         <caption>{table.values.length} {table.values.length === 1 ? 'row' : 'rows'}</caption>
         <thead>
@@ -83,34 +83,38 @@ export default function Sql({ problem }: { problem: Problem<'sql'> }) {
 
   return (
     <div data-engine="sql">
-      <h3>Schema</h3>
-      {schema && (
-        <dl class="sql-schema">
-          {schema.map(({ name, columns }) => (
-            <div key={name}>
-              <dt><strong><code>{name}</code></strong></dt>
-              <dd>{columns.map(({ name: column, type }, index) => (
-                <span key={column}>{index > 0 && ', '}<code>{column}{type && ` ${type}`}</code></span>
-              ))}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {!schema && <p class="muted">{schemaError ?? 'Loading schema…'}</p>}
-      <p>Run queries on the visible data. Submit checks both datasets.</p>
+      <div class="sql-schema-card" data-card>
+        <h3>Schema</h3>
+        {schema && (
+          <dl class="sql-schema">
+            {schema.map(({ name, columns }) => (
+              <div key={name}>
+                <dt><strong><code>{name}</code></strong></dt>
+                <dd>{columns.map(({ name: column, type }, index) => (
+                  <span key={column}>{index > 0 && ', '}<code>{column}{type && ` ${type}`}</code></span>
+                ))}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        {!schema && <p class="muted">{schemaError ?? 'Loading schema…'}</p>}
+      </div>
+      <p class="engine-hint">Run queries on the visible data. Submit checks both datasets.</p>
       <CodeEditor value={query} language="sql" label="SQL query" onChange={setQuery}
-        onRun={() => void execute('run')} />
+        onRun={() => void execute('run')} resetTo="" busy={busy}
+        toolbar={<span class="editor-language">Language: SQLite</span>} />
       <div class="engine-actions">
-        <button type="button" onClick={() => void execute('run')} disabled={busy}>Run</button>
-        <button class="primary" type="button" onClick={() => void execute('submit')} disabled={busy}>Submit</button>
+        <button class="button outline" type="button" onClick={() => void execute('run')} disabled={busy}>Run</button>
+        <button class="button primary" type="button" onClick={() => void execute('submit')} disabled={busy}>Submit</button>
       </div>
       {busy && <p class="muted" role="status">Running…</p>}
       <ResultPanel result={result} misses={misses} />
       {datasets && (
-        <ul class="sql-datasets">
+        <ul class="sql-datasets" data-card>
           {datasets.map(({ name, passed }) => (
             <li key={name} data-status={passed ? 'pass' : 'fail'}>
-              {name === 'seed' ? 'Visible dataset' : 'Hidden dataset'} {passed ? 'passed' : 'failed'}
+              <span>{name === 'seed' ? 'Visible dataset' : 'Hidden dataset'}</span>
+              <span class={`status-chip ${passed ? 'pass' : 'fail'}`}>{passed ? 'Pass' : 'Fail'}</span>
             </li>
           ))}
           {hiddenError && <li>{hiddenError}</li>}

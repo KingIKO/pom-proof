@@ -1,16 +1,32 @@
-.sql-schema {
-  margin-block: .75rem;
-}
+.sql-schema-card { margin-block-end: var(--space-12); padding: var(--space-12) var(--space-16); }
+.sql-schema-card h3, .sql-schema-card p { margin: 0; }
+.sql-schema { margin: var(--space-8) 0 0; }
+.sql-schema > div + div { margin-block-start: var(--space-8); }
+.sql-schema dd { margin: 0; color: var(--text2); font-size: var(--type-14); }
 
-.sql-schema > div { margin-block: .35rem; }
-.sql-schema dd { margin-inline-start: 0; }
-.sql-table { overflow-x: auto; }
+.sql-table { max-block-size: 18rem; overflow: auto; }
 .sql-table caption {
-  color: var(--muted);
+  padding: var(--space-8) var(--space-12);
+  color: var(--text2);
+  font-size: var(--type-14);
   text-align: start;
 }
+.sql-table :is(td, th) {
+  min-inline-size: 3rem;
+  padding: var(--space-8) var(--space-12);
+  border-block-end: 1px solid var(--divider);
+  border-inline-end: 1px solid var(--divider);
+  font-size: var(--type-14);
+}
+.sql-table :is(td, th):last-child { border-inline-end: 0; }
+.sql-table tbody tr:last-child td { border-block-end: 0; }
+.sql-table th {
+  position: sticky;
+  inset-block-start: 0;
+  background: var(--codeBg);
+}
 
-.sql-table td, .sql-table th { min-inline-size: 3rem; }
-.sql-datasets { padding-inline-start: 1.5rem; }
-.sql-datasets [data-status='pass'] { color: var(--pass); }
-.sql-datasets [data-status='fail'] { color: var(--fail); }
+.sql-datasets { list-style: none; padding: 0; }
+.sql-datasets li { padding: var(--space-8) var(--space-16); }
+.sql-datasets li[data-status] { display: flex; justify-content: space-between; gap: var(--space-12); }
+.sql-datasets li + li { border-block-start: 1px solid var(--divider); }

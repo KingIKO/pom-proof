@@ -1,24 +1,41 @@
 .mutation-modes {
   display: flex;
   flex-wrap: wrap;
-  gap: .25rem 1rem;
+  align-items: center;
+  gap: var(--space-4) var(--space-16);
   border: 0;
-  margin: 0;
+  margin: 0 0 var(--space-12);
   padding: 0;
 }
+.mutation-modes legend { padding: 0; font-size: var(--type-14); font-weight: var(--weight-bold); }
+.mutation-modes label { display: inline-flex; gap: var(--space-8); align-items: center; cursor: pointer; }
+.mutation-modes input { margin: 0; }
 
-.mutation-modes legend { padding: 0; font-weight: var(--strong); }
-.mutation-modes input { accent-color: var(--accent); }
-.mutation-table-scroll { overflow-x: auto; padding: 0 .25rem .25rem; }
+.mutation-table-card { padding: var(--space-12); }
+.mutation-table-card > p { margin: 0 0 var(--space-8); font-size: var(--type-14); }
+.mutation-table-card [data-add-row] { margin-block-start: var(--space-8); }
+.mutation-table-scroll { max-inline-size: 100%; overflow-x: auto; padding: var(--space-4); }
+.mutation-table-scroll :is(td, th) { padding: var(--space-4); }
+.mutation-table-scroll th { color: var(--text2); font-size: var(--type-14); }
+.mutation-table-scroll :is(input, select) { min-inline-size: 4.5rem; }
+.mutation-table-scroll .input { padding-inline: var(--space-8); }
+.mutation-table-scroll .code-font { min-inline-size: 9.5rem; font-size: var(--type-13); }
 
-.mutation-workspace :is(input:not([type="radio"]), select, button:not(.primary)) {
-  padding: .35rem .45rem;
-  border: var(--rule);
-  border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink);
+@media (width < 36rem) {
+  .mutation-table-scroll :is(td, th) { padding-inline: calc(var(--space-4) / 2); }
+  .mutation-table-scroll :is(th, .button) { font-size: var(--type-13); }
+  .mutation-table-scroll th { overflow-wrap: anywhere; }
+  .mutation-table-scroll :is(.input, .button) { padding-inline: var(--space-4); }
+  .mutation-table-scroll :is(input, select):not(.code-font) { min-inline-size: 2.75rem; }
 }
 
-.mutation-table-scroll :is(input, select) { inline-size: 100%; min-inline-size: 5.5rem; }
-.mutation-workspace button { margin-block-start: .65rem; }
-.mutation-table-scroll button { margin: 0; }
+.mutation-outcomes { list-style: none; padding: 0; }
+.mutation-outcomes li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-12);
+  padding: var(--space-8) var(--space-16);
+}
+.mutation-outcomes li + li { border-block-start: 1px solid var(--divider); }
+.mutation-outcomes .status-chip { flex: none; }

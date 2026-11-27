@@ -40,14 +40,14 @@ function ParamControl({ param, label, value, change }: {
 }) {
   if (param.type === 'boolean' || param.type === 'enum') {
     const options = param.type === 'boolean' ? ['true', 'false'] : param.values;
-    return <select aria-label={label} value={value} onChange={(event) => change(event.currentTarget.value)}>
+    return <select class="input" aria-label={label} value={value} onChange={(event) => change(event.currentTarget.value)}>
       <option value="">Choose…</option>
       {options.map((option) => <option key={option} value={option}>{option}</option>)}
     </select>;
   }
-  if (param.type === 'number') return <input aria-label={label} type="number" step="any" value={value}
+  if (param.type === 'number') return <input class="input" aria-label={label} type="number" step="any" value={value}
     onInput={(event) => change(event.currentTarget.value)} />;
-  return <input aria-label={label} type="text" value={value} onInput={(event) => change(event.currentTarget.value)} />;
+  return <input class="input" aria-label={label} type="text" value={value} onInput={(event) => change(event.currentTarget.value)} />;
 }
 
 function resultMisses(result: GradeResult<'test-design'> | null) {
@@ -132,7 +132,7 @@ export default function Mutation({ problem }: { problem: Problem<'test-design'> 
         <label><input type="radio" name="mutation-mode" checked={mode === 'table'} onChange={() => setMode('table')} /> Table</label>
         <label><input type="radio" name="mutation-mode" checked={mode === 'code'} onChange={() => setMode('code')} /> Code</label>
       </fieldset>}
-      {mode === 'table' && params ? <div ref={rowsPanel}>
+      {mode === 'table' && params ? <div class="mutation-table-card" ref={rowsPanel} data-card>
         <p id="expected-format" class="muted">Enter each expected result as JSON, such as <code>450</code>, <code>true</code>, or <code>"free"</code>.</p>
         <div class="mutation-table-scroll">
           <table aria-label="Test rows">
@@ -148,25 +148,32 @@ export default function Mutation({ problem }: { problem: Problem<'test-design'> 
                   ...current, args: current.args.map((arg, position) => column === position ? value : arg),
                 }))}
               /></td>)}
-              <td><input type="text" aria-label={`Expected result, row ${index + 1}`} aria-describedby="expected-format"
+              <td><input class="input code-font" type="text" aria-label={`Expected result, row ${index + 1}`} aria-describedby="expected-format"
                 value={row.expected} onInput={(event) => {
                   const expected = event.currentTarget.value;
                   updateRow(row.id, (current) => ({ ...current, expected }));
                 }} /></td>
-              <td><button type="button" aria-label={`Remove row ${index + 1}`} onClick={() => removeRow(index)}>Remove</button></td>
+              <td><button class="button quiet" type="button" aria-label={`Remove row ${index + 1}`} onClick={() => removeRow(index)}>Remove</button></td>
             </tr>)}</tbody>
           </table>
         </div>
-        <button type="button" data-add-row onClick={addRow}>Add row</button>
+        <button class="button outline" type="button" data-add-row onClick={addRow}>Add row</button>
       </div> : Editor ? <>
         <p class="muted">Throw an error when an assertion fails.</p>
         <Editor label="Test function" language="js" value={source} onChange={setSource} onRun={() => void submit()} />
       </> : <p class="muted" role="status">{editor === 'unavailable' ? 'Unable to load the editor; reload the page.' : 'Loading editor…'}</p>}
-      <button class="primary" type="submit" disabled={busy || (mode === 'code' && !Editor)}>{busy ? 'Checking…' : 'Submit'}</button>
+      <div class="engine-actions">
+        <button class="button primary" type="submit" disabled={busy || (mode === 'code' && !Editor)}>{busy ? 'Checking…' : 'Submit'}</button>
+      </div>
     </form>
     <ResultPanel result={result} busy={busy} misses={resultMisses(result)} />
-    {result?.status === 'graded' && result.details.validOnReference && <ul aria-label="Faulty versions">
-      {result.details.mutants.map(({ name, killed }) => <li key={name}>{name}: {killed ? 'Caught' : 'Not caught'}</li>)}
+    {result?.status === 'graded' && result.details.validOnReference && <ul class="mutation-outcomes" aria-label="Faulty versions" data-card>
+      {result.details.mutants.map(({ name, killed }) => (
+        <li key={name}>
+          <span>{name}</span>
+          <span class={`status-chip ${killed ? 'pass' : 'fail'}`}>{killed ? 'Caught' : 'Not caught'}</span>
+        </li>
+      ))}
     </ul>}
   </div>;
 }

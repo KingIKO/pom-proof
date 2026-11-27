@@ -45,47 +45,49 @@ export default function Code({ problem }: { problem: Problem<'code'> }) {
 
   return (
     <div data-engine="code">
-      <p>
+      <p class="engine-hint">
         {language === 'python' ? <>Define <code>{pythonName(problem.exportName)}</code>.</>
           : <>Export <code>{problem.exportName}</code>.</>}
         {' '}Run checks the visible inputs. Submit checks every input.
       </p>
-      <p>
-        <label>
-          Language{' '}
-          <select disabled={busy} value={language} onChange={(event) => {
-            const next = event.currentTarget.value;
-            if (next === 'js' || next === 'ts' || next === 'python') {
-              setLanguage(next);
-              setReport(null);
-            }
-          }}>
-            <option value="js">JavaScript</option>
-            <option value="ts">TypeScript</option>
-            <option value="python">Python</option>
-          </select>
-        </label>
-      </p>
       <CodeEditor key={language} value={source} language={language} label="Solution code"
         onChange={(value) => setDrafts((previous) => ({ ...previous, [language]: value }))}
-        onRun={() => void execute('run')} />
+        onRun={() => void execute('run')} resetTo={problem.starters[language]} busy={busy}
+        toolbar={<label class="editor-language">
+          Language{' '}
+          <span class="select-field">
+            <select class="input" disabled={busy} value={language} onChange={(event) => {
+              const next = event.currentTarget.value;
+              if (next === 'js' || next === 'ts' || next === 'python') {
+                setLanguage(next);
+                setReport(null);
+              }
+            }}>
+              <option value="js">JavaScript</option>
+              <option value="ts">TypeScript</option>
+              <option value="python">Python</option>
+            </select>
+            <span class="chevron" aria-hidden="true"></span>
+          </span>
+        </label>} />
       <div class="engine-actions">
-        <button type="button" onClick={() => void execute('run')} disabled={busy}>Run</button>
-        <button class="primary" type="button" onClick={() => void execute('submit')} disabled={busy}>Submit</button>
+        <button class="button outline" type="button" onClick={() => void execute('run')} disabled={busy}>Run</button>
+        <button class="button primary" type="button" onClick={() => void execute('submit')} disabled={busy}>Submit</button>
       </div>
       {busy && <p class="muted" role="status">
         {loadingPython ? 'Loading Python, about 6 MB, first run only' : 'Running…'}
       </p>}
       {report?.mode === 'run' && result?.status === 'graded'
-        ? <p role="status" class="result" data-status={result.score === 1 ? 'pass' : 'fail'}>
+        ? <p role="status" class="result code-run-result" data-card data-status={result.score === 1 ? 'pass' : 'fail'}>
           {vectors.filter(({ passed }) => passed).length} of {vectors.length} visible checks passed
         </p>
         : <ResultPanel result={result} />}
-      {checks && <ol class="code-checks">
+      {checks && <ol class="code-checks" data-card>
         {checks.map((check, index) => (
           <li key={vectors[index].name}>
             <p class="check-mark" data-status={check.passed ? 'pass' : 'fail'}>
-              <strong>{vectors[index].name} {check.passed ? 'passed' : 'failed'}</strong>
+              <strong>{vectors[index].name}</strong>
+              <span class={`status-chip ${check.passed ? 'pass' : 'fail'}`}>{check.passed ? 'Pass' : 'Fail'}</span>
             </p>
             {check.visible && (
               <dl>
