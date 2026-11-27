@@ -101,6 +101,9 @@
   padding-block-start: var(--space-16);
 }
 .practice-neighbors p { display: grid; gap: var(--space-4); margin: 0; overflow-wrap: anywhere; }
-.practice-neighbors span, .practice-return { font-size: var(--type-14); }
+.practice-neighbors [hidden] { display: none; }
+.practice-neighbors span, .practice-return, .practice-position { font-size: var(--type-14); }
+.practice-position { grid-column: 1 / -1; color: var(--text2); font-variant-numeric: tabular-nums; }
+.practice-neighbors .previous { grid-column: 1; }
 .practice-neighbors .next { grid-column: 2; text-align: end; }
-.practice-return { grid-column: 1 / -1; justify-self: center; }
+.practice-return { grid-column: 1 / -1; justify-self: center; max-inline-size: 100%; overflow-wrap: anywhere; text-align: center; }

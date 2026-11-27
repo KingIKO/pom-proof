@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { CatalogProblem } from '../../lib/catalog';
 import type { ProgressAttempt } from '../../lib/contracts';
 import { difficultyLabel, kindLabel, problemStatus, statusLabel, topicLabel } from '../../lib/labels';
+import {
+  latestPracticeContext, practiceContextEvent, practiceLabel, practiceRowId, writePracticeContext, type PracticeContext,
+} from '../../lib/practice-context';
 import { bestScores, onProgressChange, readProgress } from '../../lib/progress';
 import { problemUrl } from '../../lib/url';
 
@@ -47,6 +50,29 @@ function readFilters(topics: readonly Option[]): Filters {
       : Object.hasOwn(groups[key].options, value));
   }
   return filters;
+}
+
+/** The filters as the list URL writes them, without the leading `?`. */
+function filterQuery(filters: Filters) {
+  const params = new URLSearchParams();
+  for (const key of ['q', ...facets] as const) {
+    const value = key === 'q' ? filters.q : filters[key].join(',');
+    if (value) params.set(key, value);
+  }
+  return params.toString();
+}
+
+function filterLabel(filters: Filters) {
+  const names = (key: Exclude<Facet, 'topic'>) =>
+    filters[key].map((value) => (groups[key].options as Record<string, string>)[value] ?? value);
+  return practiceLabel({
+    q: filters.q,
+    topic: filters.topic.map(displayTopic),
+    kind: names('kind'),
+    difficulty: names('difficulty'),
+    role: names('role'),
+    status: names('status'),
+  });
 }
 
 function facetValues(problem: Row, key: Facet): readonly string[] {
@@ -100,11 +126,24 @@ function nextProblem(problems: readonly PracticeTarget[], attempts: readonly Pro
   return recent?.problem ?? problems.find(({ id }) => scores.get(id) !== 1);
 }
 
+/** The problems the list shows right now, in its order; the whole catalog until the list reports its rows. */
+function useShownProblems(problems: PracticeTarget[]) {
+  const [context, setContext] = useState<PracticeContext | null>(null);
+  useEffect(() => {
+    setContext(latestPracticeContext());
+    const update = (event: Event) => setContext((event as CustomEvent<PracticeContext>).detail);
+    window.addEventListener(practiceContextEvent, update);
+    return () => window.removeEventListener(practiceContextEvent, update);
+  }, []);
+  return useMemo(() => context?.items.map(([id, title]) => ({ id, title })) ?? problems, [context, problems]);
+}
+
 export function PracticeProgress({ problems }: { problems: PracticeTarget[] }) {
   const attempts = useAttempts();
+  const shown = useShownProblems(problems);
   const scores = bestScores(attempts);
   const solved = problems.filter(({ id }) => scores.get(id) === 1).length;
-  const next = nextProblem(problems, attempts, scores);
+  const next = nextProblem(shown, attempts, scores);
 
   return (
     <div class="practice-actions">
@@ -128,6 +167,8 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
   const disclosure = useRef<HTMLDetailsElement>(null);
   const moreTopics = useRef<HTMLDetailsElement>(null);
   const searchField = useRef<HTMLInputElement>(null);
+  const [markedRow, setMarkedRow] = useState<string | null>(null);
+  const hashHandled = useRef(false);
 
   const rows = useMemo<Row[]>(() => {
     const scores = bestScores(attempts);
@@ -203,6 +244,29 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
     facets.every((key) => !filters[key].length || facetValues(row, key).some((value) => filters[key].includes(value))) &&
     (!search || [row.title, displayTopic(row.topic), topicLabel(row.topic), kindLabel[row.kind]]
       .some((part) => part.toLowerCase().includes(search))));
+  const visibleIds = visible.map(({ id }) => id).join(' ');
+
+  // Other pages follow this list: Previous, Next, the position line, the way back and Continue.
+  useEffect(() => {
+    if (!currentFilters) return;
+    writePracticeContext({
+      query: filterQuery(currentFilters),
+      label: filterLabel(currentFilters),
+      items: visible.map(({ id, title }) => [id, title]),
+    });
+  }, [currentFilters, visibleIds]);
+
+  // A link back from a problem names its row in the hash: bring that row to the middle and mark it.
+  useEffect(() => {
+    if (!currentFilters || hashHandled.current) return;
+    hashHandled.current = true;
+    const hash = window.location.hash.slice(1);
+    const row = hash.startsWith('row-') ? document.getElementById(hash) : null;
+    if (!row?.closest('.catalog-table')) return;
+    setMarkedRow(hash);
+    row.scrollIntoView({ block: 'center' });
+    row.querySelector<HTMLAnchorElement>('.stretched-link')?.focus({ preventScroll: true });
+  }, [currentFilters]);
 
   return (
     <div class="practice-layout">
@@ -240,25 +304,31 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
               </tr>
             </thead>
             <tbody role="rowgroup">
-              {visible.map(({ id, title, kind, topic, difficulty, minutes, status }) => (
-                <tr class="row-card" data-card="" key={id} role="row">
-                  <td role="cell">
-                    <h2 class="catalog-title"><a class="stretched-link" href={problemUrl(id)}>{title}</a></h2>
-                    <p class="catalog-meta">
-                      <span class={`catalog-difficulty difficulty ${difficulty}`}>{difficultyLabel[difficulty]}</span>
-                      <span class="catalog-kind">{kindLabel[kind]}</span>
-                      <span class="catalog-topic">{displayTopic(topic)}</span>
-                      <span class="catalog-minutes num">{minutes} min</span>
-                    </p>
-                  </td>
-                  <td class="catalog-action" role="cell">
-                    <span class="catalog-status">
-                      {status !== 'unattempted' && <span class={`chip ${status}`} data-chip="">{statusLabel[status]}</span>}
-                    </span>
-                    {status === 'unattempted' && <span class="button outline" aria-hidden="true">Solve</span>}
-                  </td>
-                </tr>
-              ))}
+              {visible.map(({ id, title, kind, topic, difficulty, minutes, status }) => {
+                const rowId = practiceRowId(id);
+                const marked = rowId === markedRow;
+                return (
+                  <tr class="row-card" data-card="" key={id} id={rowId} role="row" data-current={marked ? '' : undefined}>
+                    <td role="cell">
+                      <h2 class="catalog-title">
+                        <a class="stretched-link" href={problemUrl(id)} aria-current={marked ? 'true' : undefined}>{title}</a>
+                      </h2>
+                      <p class="catalog-meta">
+                        <span class={`catalog-difficulty difficulty ${difficulty}`}>{difficultyLabel[difficulty]}</span>
+                        <span class="catalog-kind">{kindLabel[kind]}</span>
+                        <span class="catalog-topic">{displayTopic(topic)}</span>
+                        <span class="catalog-minutes num">{minutes} min</span>
+                      </p>
+                    </td>
+                    <td class="catalog-action" role="cell">
+                      <span class="catalog-status">
+                        {status !== 'unattempted' && <span class={`chip ${status}`} data-chip="">{statusLabel[status]}</span>}
+                      </span>
+                      {status === 'unattempted' && <span class="button outline" aria-hidden="true">Solve</span>}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         ) : (

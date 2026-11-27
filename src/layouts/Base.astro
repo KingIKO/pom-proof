@@ -35,7 +35,11 @@ const nav = [
           <ul>
             {nav.map(({ id, label, href }) => (
               <li>
-                <a href={href} aria-current={id === section ? (Astro.url.pathname === href ? 'page' : 'location') : undefined}>
+                <a
+                  href={href}
+                  aria-current={id === section ? (Astro.url.pathname === href ? 'page' : 'location') : undefined}
+                  data-practice-home={id === 'practice' ? '' : undefined}
+                >
                   {label}
                 </a>
               </li>
@@ -52,6 +56,24 @@ const nav = [
     </main>
   </body>
 </html>
+
+<script>
+  import { practiceContextEvent, practiceListHref, readPracticeContext, type PracticeContext } from '../lib/practice-context';
+
+  // The header Practice link reopens the list with the filters last used in this tab.
+  // The brand link stays plain, so it always opens every problem.
+  const home = document.querySelector<HTMLAnchorElement>('a[data-practice-home]');
+  if (home) {
+    const update = (context = readPracticeContext()) => {
+      home.href = practiceListHref(context?.query);
+    };
+    update();
+    window.addEventListener(practiceContextEvent, (event) => update((event as CustomEvent<PracticeContext>).detail));
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) update();
+    });
+  }
+</script>
 
 <style>
   .site-header {

@@ -61,13 +61,15 @@ const markedCode = 'items' in problem ? await highlightMarkedCode(problem.items)
         : <Structured client:load problem={problem} markedCode={markedCode} />}
     </section>
   </div>
-  <nav class="practice-neighbors" aria-label="Adjacent problems">
-    {previous && (
-      <p class="previous"><span class="muted">Previous</span><a href={problemUrl(previous.id)} rel="prev">{previous.title}</a></p>
-    )}
-    {next && (
-      <p class="next"><span class="muted">Next</span><a href={problemUrl(next.id)} rel="next">{next.title}</a></p>
-    )}
+  {/* Built with catalog neighbours; the script below follows the list the learner last filtered. */}
+  <nav class="practice-neighbors" aria-label="Adjacent problems" data-practice-neighbors={problem.id}>
+    <p class="practice-position" data-practice-position hidden></p>
+    <p class="previous" hidden={!previous}>
+      <span class="muted">Previous</span><a href={previous && problemUrl(previous.id)} rel="prev">{previous?.title}</a>
+    </p>
+    <p class="next" hidden={!next}>
+      <span class="muted">Next</span><a href={next && problemUrl(next.id)} rel="next">{next?.title}</a>
+    </p>
     <a class="practice-return" href={url('/')}>Back to practice</a>
   </nav>
 </Base>
@@ -88,5 +90,66 @@ const markedCode = 'items' in problem ? await highlightMarkedCode(problem.items)
     onProgressChange(update);
     window.addEventListener('pageshow', update);
     update();
+  }
+</script>
+
+<script>
+  import { practiceListHref, practicePlace, readPracticeContext, type Neighbour } from '../../../lib/practice-context';
+  import { problemUrl, url } from '../../../lib/url';
+
+  // Previous, Next, the position line and the way back follow the list the learner last saw on
+  // Practice in this tab. Without that list, or when it does not hold this problem, the page keeps
+  // what was built: catalog neighbours and plain links.
+  const nav = document.querySelector<HTMLElement>('[data-practice-neighbors]');
+  if (nav) {
+    const id = nav.dataset.practiceNeighbors!;
+    const position = nav.querySelector<HTMLElement>('[data-practice-position]')!;
+    const back = nav.querySelector<HTMLAnchorElement>('a.practice-return')!;
+    const crumb = document.querySelector<HTMLAnchorElement>(`.breadcrumb a[href="${url('/')}"]`);
+    const sides = (['prev', 'next'] as const).map((rel) => {
+      const link = nav.querySelector<HTMLAnchorElement>(`a[rel="${rel}"]`)!;
+      const built = { hidden: link.parentElement!.hidden, href: link.getAttribute('href'), title: link.textContent };
+      const show = (target: Neighbour | undefined) => {
+        link.parentElement!.hidden = !target;
+        if (target) link.href = problemUrl(target.id);
+        else link.removeAttribute('href');
+        link.textContent = target?.title ?? '';
+      };
+      const reset = () => {
+        link.parentElement!.hidden = built.hidden;
+        if (built.href) link.setAttribute('href', built.href);
+        else link.removeAttribute('href');
+        link.textContent = built.title;
+      };
+      return { show, reset };
+    });
+    const builtBack = { href: back.getAttribute('href')!, text: back.textContent! };
+    const builtCrumb = crumb?.getAttribute('href');
+
+    const follow = () => {
+      const context = readPracticeContext();
+      const place = context && practicePlace(context, id);
+      if (!context || !place) {
+        sides.forEach(({ reset }) => reset());
+        position.hidden = true;
+        back.setAttribute('href', builtBack.href);
+        back.textContent = builtBack.text;
+        if (crumb && builtCrumb) crumb.setAttribute('href', builtCrumb);
+        return;
+      }
+      sides[0].show(place.previous);
+      sides[1].show(place.next);
+      position.textContent = `${context.label || 'All problems'}: ${place.position} of ${place.total}`;
+      position.hidden = false;
+      const listHref = practiceListHref(context.query, id);
+      back.href = listHref;
+      back.textContent = context.label ? `Back to ${context.label}` : builtBack.text;
+      if (crumb) crumb.href = listHref;
+    };
+    follow();
+    // A page restored from the back-forward cache picks up a list changed in the meantime.
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) follow();
+    });
   }
 </script>
