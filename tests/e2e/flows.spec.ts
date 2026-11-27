@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { progressStorageKey } from '../../src/lib/contracts';
+import { difficultyLabel, kindLabel } from '../../src/lib/labels';
 import { discoverProblems, root, type DiscoveredProblem } from '../support/problems';
 import { openWorkspace, replaceEditor, resultPanel, submitStructured } from '../support/workspace';
 
@@ -23,31 +24,49 @@ async function solveBugReport(page: Page) {
   await submitStructured(page, bugReport, 'reference');
 }
 
-test('list filters are reflected in the URL and survive a reload', async ({ page }) => {
+const filters = (page: Page) => page.getByRole('search', { name: 'Practice filters' });
+const box = (page: Page, group: string, label: string) =>
+  filters(page).getByRole('group', { name: group }).getByRole('checkbox', { name: label, exact: true });
+const param = (page: Page, key: string) => new URL(page.url()).searchParams.get(key);
+const shown = (page: Page) => page.getByRole('status').filter({ hasText: /^\d+ problems? shown$/ });
+
+test('list filters are checkbox groups reflected in the URL, comma-joined, and survive a reload', async ({ page }) => {
   await page.goto('');
   await expect(rows(page)).toHaveCount(problems.length);
+  await expect(shown(page)).toHaveText(`${problems.length} problems shown`);
 
-  const kind = page.getByRole('combobox', { name: /^Kind\b/ });
-  const difficulty = page.getByRole('combobox', { name: /^Difficulty\b/ });
-  await kind.selectOption('sql');
-  await expect(page).toHaveURL(/[?&]kind=sql(?:&|$)/);
   const sql = problems.filter((problem) => problem.kind === 'sql');
+  const codeOnes = problems.filter((problem) => problem.kind === 'code');
+  await box(page, 'Kind', 'SQL').check();
+  await expect.poll(() => param(page, 'kind')).toBe('sql');
   await expect(rows(page)).toHaveCount(sql.length);
   await expect(rows(page).locator('.catalog-kind')).toHaveText(sql.map(() => 'SQL'));
 
-  await difficulty.selectOption(sql[0].data.difficulty);
-  await expect(page).toHaveURL(new RegExp(`[?&]difficulty=${sql[0].data.difficulty}(?:&|$)`));
-  const both = sql.filter((problem) => problem.data.difficulty === sql[0].data.difficulty);
+  // A second value in one group widens the match and joins the URL value with a comma.
+  await box(page, 'Kind', 'Code').check();
+  await expect.poll(() => param(page, 'kind')).toBe('sql,code');
+  await expect(rows(page)).toHaveCount(sql.length + codeOnes.length);
+  await expect(shown(page)).toHaveText(`${sql.length + codeOnes.length} problems shown`);
+  await box(page, 'Kind', 'Code').uncheck();
+  await expect.poll(() => param(page, 'kind')).toBe('sql');
+
+  // A value in another group narrows it.
+  const level = sql[0].data.difficulty;
+  await box(page, 'Difficulty', difficultyLabel[level]).check();
+  await expect.poll(() => param(page, 'difficulty')).toBe(level);
+  const both = sql.filter((problem) => problem.data.difficulty === level);
+  await expect(rows(page)).toHaveCount(both.length);
 
   await page.reload();
-  await expect(kind).toHaveValue('sql');
-  await expect(difficulty).toHaveValue(sql[0].data.difficulty);
+  await expect(box(page, 'Kind', 'SQL')).toBeChecked();
+  await expect(box(page, 'Difficulty', difficultyLabel[level])).toBeChecked();
+  await expect(box(page, 'Kind', 'Code')).not.toBeChecked();
   await expect(rows(page)).toHaveCount(both.length);
   await expect(rowFor(page, sql[0].data.title)).toHaveCount(1);
 
-  await kind.selectOption('');
-  await difficulty.selectOption('');
-  await expect(page).not.toHaveURL(/[?&](?:kind|difficulty)=/);
+  await box(page, 'Kind', 'SQL').uncheck();
+  await box(page, 'Difficulty', difficultyLabel[level]).uncheck();
+  await expect.poll(() => new URL(page.url()).search).not.toMatch(/[?&](?:kind|difficulty)=/);
   await expect(rows(page)).toHaveCount(problems.length);
 
   const search = page.getByRole('searchbox', { name: 'Search' });
@@ -58,6 +77,29 @@ test('list filters are reflected in the URL and survive a reload', async ({ page
   await expect(search).toHaveValue(code.data.title);
   await expect(rows(page)).toHaveCount(1);
   await expect(rowFor(page, code.data.title)).toHaveCount(1);
+});
+
+test('single-value and comma-joined filter links filter the list on load', async ({ page }) => {
+  const sql = problems.filter((problem) => problem.kind === 'sql');
+  const easySql = sql.filter((problem) => problem.data.difficulty === 'easy');
+  const sqlOrCode = problems.filter((problem) => problem.kind === 'sql' || problem.kind === 'code');
+  expect(easySql.length, 'an easy SQL problem').toBeGreaterThan(0);
+
+  // Links shared before the checkbox groups carry one value per key.
+  await page.goto('?kind=sql&difficulty=easy');
+  await expect(box(page, 'Kind', kindLabel.sql)).toBeChecked();
+  await expect(box(page, 'Difficulty', difficultyLabel.easy)).toBeChecked();
+  await expect(rows(page)).toHaveCount(easySql.length);
+  await expect(rows(page).locator('.catalog-kind')).toHaveText(easySql.map(() => kindLabel.sql));
+
+  await page.goto('?kind=sql,code');
+  await expect(box(page, 'Kind', kindLabel.sql)).toBeChecked();
+  await expect(box(page, 'Kind', kindLabel.code)).toBeChecked();
+  await expect(rows(page)).toHaveCount(sqlOrCode.length);
+
+  const topic = sql[0].data.topic;
+  await page.goto(`?topic=${topic}`);
+  await expect(rows(page)).toHaveCount(problems.filter((problem) => problem.data.topic === topic).length);
 });
 
 test('a solve marks the problem Solved in the list and a miss marks it Attempted', async ({ page }) => {

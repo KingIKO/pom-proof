@@ -1,0 +1,54 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  answer: CollectionEntry<'questions'>['data'];
+  recall?: boolean;
+  cardId?: string;
+}
+
+const { answer, recall, cardId } = Astro.props;
+const sources = answer.sources ?? [];
+const Heading = recall ? 'h2' : 'h3';
+const body = await Astro.slots.render('default');
+const anchors = new Map<string, string>();
+const inlineBody = cardId ? body.replace(/(<h[1-6]\b[^>]*?\sid=")([^"]+)"/g, (_, start: string, id: string) => {
+  const anchor = `answer:${cardId}:${id}`;
+  anchors.set(id, anchor);
+  return `${start}${anchor}"`;
+}).replace(/(\shref="#)([^"]+)"/g, (match, start: string, id: string) =>
+  anchors.has(id) ? `${start}${anchors.get(id)}"` : match) : body;
+---
+
+<div class="question-answer-copy">
+  <p class="question-answer-lead" data-question-search><strong>{answer.oneLine}</strong></p>
+  {recall && <h2 class="visually-hidden">Full answer</h2>}
+  <div class="question-answer-body" data-question-search><Fragment set:html={inlineBody} /></div>
+</div>
+<div class="question-evidence">
+  <section class="question-answer-section">
+    <Heading class="section-label">What they look for</Heading>
+    <ul class="question-look-list" data-question-search>
+      {answer.looksFor.map((item) => <li>{item}</li>)}
+    </ul>
+  </section>
+  <section class="question-answer-section">
+    <Heading class="section-label">They'll ask next</Heading>
+    {answer.followUps.map(({ question, answer: followUpAnswer }) => (
+      <details class="question-follow-up" name={recall ? 'question-follow-ups' : undefined}>
+        <summary><span data-question-search>{question}</span><span class="chevron" aria-hidden="true"></span></summary>
+        <p class="callout" data-card data-question-search>{followUpAnswer}</p>
+      </details>
+    ))}
+  </section>
+</div>
+<aside class="callout trap" data-card aria-label="The trap">
+  <Heading class="section-label">The trap</Heading>
+  <p data-question-search>{answer.trap}</p>
+</aside>
+{sources.length > 0 && (
+  <p class="question-sources">
+    <span>{sources.length === 1 ? 'Source' : 'Sources'}</span>
+    {sources.map(({ label, url }) => <a href={url}>{label}</a>)}
+  </p>
+)}

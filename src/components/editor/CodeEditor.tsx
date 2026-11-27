@@ -6,6 +6,7 @@ import { Annotation, Compartment, EditorState, Prec, Transaction } from '@codemi
 import { EditorView, keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { basicSetup } from 'codemirror';
+import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import './editor.css';
 
@@ -16,6 +17,9 @@ interface Props {
   label: string;
   onRun?(): void;
   minLines?: number;
+  toolbar?: ComponentChildren;
+  resetTo?: string;
+  busy?: boolean;
 }
 
 const languageSupport = {
@@ -28,43 +32,44 @@ const languageSupport = {
 const setValue = Annotation.define<boolean>();
 
 const theme = EditorView.theme({
-  '&': { backgroundColor: 'var(--paper)', color: 'var(--ink)', fontSize: '.94rem' },
-  '&.cm-focused': { outline: '2px solid var(--accent)', outlineOffset: '-2px' },
+  '&': { backgroundColor: 'var(--codeBg)', color: 'var(--text)', fontSize: 'var(--type-14)' },
+  '&.cm-focused': { outline: 'var(--focus-width) solid var(--focus)', outlineOffset: '-2px' },
   '.cm-scroller': {
     fontFamily: 'var(--font-code)',
     lineHeight: '1.5',
-    minHeight: 'calc(var(--editor-lines) * 1.5em + 8px)',
+    minHeight: 'calc(var(--editor-lines) * 1.5em + 2 * var(--space-8))',
     maxHeight: '28rem',
   },
   '.cm-gutters': {
-    backgroundColor: 'var(--surface)',
-    color: 'var(--muted)',
-    borderRight: 'var(--rule)',
+    backgroundColor: 'var(--codeBg)',
+    color: 'var(--text2)',
+    borderRight: '1px solid var(--divider)',
   },
+  '.cm-content': { caretColor: 'var(--text)', paddingBlock: 'var(--space-8)' },
+  '.cm-line': { paddingInline: 'var(--space-8)' },
   '.cm-activeLine, .cm-activeLineGutter, .cm-tooltip, .cm-panels': {
     backgroundColor: 'var(--surface)',
-    color: 'var(--ink)',
+    color: 'var(--text)',
   },
-  '.cm-button, .cm-button:active, .cm-textfield': {
-    background: 'var(--paper)',
-    color: 'var(--ink)',
-    border: '1px solid var(--control-line, var(--line))',
-    borderRadius: 'var(--radius)',
+  '.cm-button, .cm-button:active, .cm-textfield, .cm-foldPlaceholder': {
+    background: 'var(--surface)',
+    color: 'var(--text)',
+    border: '1px solid var(--borderControl)',
+    borderRadius: 'var(--radius-control)',
   },
   '.cm-selectionMatch, .cm-searchMatch, &.cm-focused .cm-matchingBracket': {
-    backgroundColor: 'var(--surface)',
+    backgroundColor: 'var(--badgeBg)',
   },
-  '.cm-searchMatch-selected': { outline: '1px solid var(--accent)' },
+  '.cm-searchMatch-selected': { outline: 'var(--focus-width) solid var(--focus)' },
   '&.cm-focused .cm-nonmatchingBracket': { backgroundColor: 'transparent', textDecoration: 'underline' },
-  '.cm-specialChar': { color: 'var(--muted)' },
-  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--ink)' },
-  '.cm-content': { caretColor: 'var(--ink)' },
+  '.cm-specialChar': { color: 'var(--text2)' },
+  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--text)' },
   '.cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-    backgroundColor: 'color-mix(in srgb, var(--accent) 20%, var(--paper))',
+    backgroundColor: 'var(--badgeBg)',
   },
   '.cm-tooltip-autocomplete ul li[aria-selected]': {
     backgroundColor: 'var(--ink)',
-    color: 'var(--paper)',
+    color: 'var(--surface)',
   },
   '.cm-completionIcon': { display: 'none' },
   '@media (prefers-reduced-motion: reduce)': {
@@ -73,9 +78,9 @@ const theme = EditorView.theme({
 });
 
 const highlighting = syntaxHighlighting(HighlightStyle.define([
-  { tag: [tags.keyword, tags.bool, tags.null], fontWeight: 'var(--strong)' },
-  { tag: tags.comment, color: 'var(--muted)' },
-  { tag: [tags.string, tags.regexp, tags.number], color: 'var(--muted)' },
+  { tag: [tags.keyword, tags.bool, tags.null], color: 'var(--badgeText)', fontWeight: 'var(--weight-bold)' },
+  { tag: tags.comment, color: 'var(--text2)' },
+  { tag: [tags.string, tags.regexp, tags.number], color: 'var(--easy)' },
 ]));
 
 export default function CodeEditor(props: Props) {
@@ -146,5 +151,20 @@ export default function CodeEditor(props: Props) {
     }
   }, [props.value]);
 
-  return <div class="code-editor" ref={parent} style={{ '--editor-lines': props.minLines ?? 8 }} />;
+  function reset() {
+    const editor = view.current;
+    if (editor && props.resetTo !== undefined) {
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: props.resetTo } });
+      editor.focus();
+    }
+  }
+
+  return <div class="editor-card" data-card>
+    {(props.toolbar || props.resetTo !== undefined) && <div class="editor-toolbar">
+      {props.toolbar}
+      {props.resetTo !== undefined && <button class="button danger" type="button"
+        disabled={props.busy || props.value === props.resetTo} onClick={reset}>Reset</button>}
+    </div>}
+    <div class="code-editor" ref={parent} style={{ '--editor-lines': props.minLines ?? 8 }} />
+  </div>;
 }

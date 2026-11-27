@@ -1,0 +1,81 @@
+---
+import { url } from '../../lib/url';
+
+interface Props {
+  title: string;
+  meta?: string;
+  breadcrumbs?: readonly { label: string; href?: Parameters<typeof url>[0] }[];
+  narrow?: boolean;
+}
+
+const { title, meta, narrow, breadcrumbs = [{ label: 'POM Proof', href: '/' }, { label: title }] } = Astro.props;
+const actions = Astro.slots.has('actions');
+const tabs = Astro.slots.has('tabs');
+---
+<div class="title-band">
+  <div class:list={['container', 'title-inner', { narrow }]}>
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        {breadcrumbs.map(({ label, href }, index) => (
+          <li>
+            {index > 0 && <span class="chevron right" aria-hidden="true"></span>}
+            {href ? <a href={url(href)}>{label}</a> : <span aria-current={index === breadcrumbs.length - 1 ? 'page' : undefined}>{label}</span>}
+          </li>
+        ))}
+      </ol>
+    </nav>
+    <div class="title-row">
+      <div class="title-copy">
+        <h1>{title}</h1>
+        {(meta || Astro.slots.has('meta')) && <div class="page-meta"><slot name="meta">{meta}</slot></div>}
+      </div>
+      {actions && <div class="title-actions"><slot name="actions" /></div>}
+    </div>
+    {tabs && <div class="title-tabs"><slot name="tabs" /></div>}
+  </div>
+</div>
+
+<style>
+  .title-band { background: var(--surface); border-block-end: 1px solid var(--divider); }
+  .title-inner { padding-block: var(--space-24); }
+  .title-inner.narrow { --container-width: var(--read-width); }
+  .title-inner:has(.title-tabs) { padding-block-end: 0; }
+  .breadcrumb {
+    margin-block-end: var(--space-8);
+    color: var(--text3);
+    font-size: var(--type-13);
+    line-height: 1.25;
+  }
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4) var(--space-12);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .breadcrumb li { display: inline-flex; align-items: center; gap: var(--space-8); }
+  .breadcrumb a { color: var(--text2); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .title-row, .title-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-12) var(--space-24);
+  }
+  .title-row { justify-content: space-between; }
+  .title-copy { min-inline-size: 0; }
+  h1 {
+    margin: 0;
+    font-size: var(--type-32);
+    font-weight: var(--weight-bold);
+    line-height: 1.15;
+    letter-spacing: -.025em;
+    overflow-wrap: anywhere;
+  }
+  .page-meta { margin-block-start: var(--space-8); color: var(--text2); font-size: var(--type-14); }
+  .title-tabs { margin-block-start: var(--space-12); }
+  @media (width < 48rem) {
+    .title-inner { padding-block-start: var(--space-16); }
+  }
+</style>

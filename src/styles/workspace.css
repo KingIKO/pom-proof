@@ -1,47 +1,100 @@
-.practice-heading { margin-block-end: 1.2rem; }
-.practice-heading h1 { margin-block-end: .35em; }
-.back-link { font-size: .875rem; margin: 0 0 .8rem; }
-.practice-meta {
+.workspace-meta {
   display: flex;
-  align-items: baseline;
   flex-wrap: wrap;
-  gap: .15rem .9rem;
-  font-size: .875rem;
-  margin: 0;
+  gap: var(--space-4) var(--space-8);
 }
-.practice-meta span { border-inline-start: var(--rule); padding-inline-start: .9rem; }
 
-.workspace-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); border-block-start: var(--rule); }
-.statement, .workspace { min-inline-size: 0; padding-block-start: .9rem; }
-.statement { padding-inline-end: clamp(1.25rem, 3vw, 2.5rem); }
-.workspace { border-inline-start: var(--rule); padding-inline-start: clamp(1.25rem, 3vw, 2.5rem); }
-.workspace > h2:first-child, .statement-heading { margin-block: .25rem .8rem; }
-.workspace :where(fieldset, textarea, select, iframe) { min-inline-size: 0; max-inline-size: 100%; }
-.workspace :where(p, li, legend) { overflow-wrap: anywhere; }
-.statement-switch:not([hidden]) { display: flex; flex-wrap: wrap; gap: .4rem; margin-block-end: .8rem; }
-.statement-switch button[aria-pressed="true"] { background: var(--surface); font-weight: var(--strong); }
-.has-switch .statement-heading { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+.workspace-meta > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-8);
+  overflow-wrap: anywhere;
+}
+
+.workspace-meta > span + span::before {
+  content: "·";
+  color: var(--text3);
+}
+
+@media (width < 36rem) {
+  .workspace-meta > span:last-child { flex-basis: 100%; }
+  .workspace-meta > span:last-child::before { content: none; }
+}
+
+.workspace-status.attempted { color: var(--badgeText); }
+
+.workspace-grid {
+  --workspace-inset: var(--space-16);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-24);
+}
+
+@media (min-width: 64rem) {
+  .workspace-grid {
+    --workspace-inset: var(--space-24);
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--space-32);
+  }
+}
+
+.statement, .workspace { min-inline-size: 0; }
+.statement-switch[hidden] { display: none; }
+.statement-switch:not([hidden]) {
+  display: flex;
+  padding-inline: var(--workspace-inset);
+  border-block-end: 1px solid var(--divider);
+}
+.statement-switch.tabs > button { min-block-size: 2.75rem; }
+
+.statement > .prose { padding: var(--workspace-inset); }
+.statement > noscript > p { margin: 0 var(--workspace-inset) var(--workspace-inset); }
+.statement-heading { margin-block: 0 var(--space-12); }
+.statement:has(.statement-switch:not([hidden])) .statement-heading {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
 .statement .prose > :first-child + p { margin-block-start: 0; }
+.statement .prose > :last-child { margin-block-end: 0; }
+.statement .prose :is(ol, ul) { padding-inline-start: var(--space-24); }
+.statement .prose blockquote {
+  margin-inline: 0;
+  padding-inline-start: var(--space-12);
+  border-inline-start: 4px solid var(--divider);
+}
+.statement .prose :is(th, td) { overflow-wrap: anywhere; }
+.statement .prose pre { max-inline-size: 100%; }
+
+.workspace > h2 { margin: var(--space-12) 0 var(--space-12); }
+.workspace :where(fieldset, textarea, select, iframe) { min-inline-size: 0; max-inline-size: 100%; }
+.workspace :where(p, li, legend, dd) { overflow-wrap: anywhere; }
+.engine-hint { margin-block: 0 var(--space-12); color: var(--text2); font-size: var(--type-14); }
+
+.engine-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-block: var(--space-12);
+}
+
+.engine-actions > .button { min-inline-size: 5rem; }
 
 .practice-neighbors {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .8rem;
-  border-block-start: var(--rule);
-  margin-block-start: 1.5rem;
-  padding-block-start: .8rem;
+  align-items: start;
+  gap: var(--space-16) var(--space-24);
+  border-block-start: 1px solid var(--divider);
+  margin-block-start: var(--space-32);
+  padding-block-start: var(--space-16);
 }
-.practice-neighbors p { display: grid; align-content: start; gap: .1rem; margin: 0; }
-.practice-neighbors span { font-size: .875rem; }
+.practice-neighbors p { display: grid; gap: var(--space-4); margin: 0; overflow-wrap: anywhere; }
+.practice-neighbors span, .practice-return { font-size: var(--type-14); }
 .practice-neighbors .next { grid-column: 2; text-align: end; }
-
-@media (max-width: 56.25rem) {
-  .workspace-grid { grid-template-columns: minmax(0, 1fr); }
-  .statement, .workspace { padding-inline: 0; }
-  .workspace { border-inline-start: 0; border-block-start: var(--rule); margin-block-start: .7rem; }
-}
-@media (max-width: 32rem) {
-  .practice-meta span { flex-basis: 100%; border: 0; padding-inline: 0; }
-  .statement .prose :is(th, td) { padding: .4rem .3rem; }
-  .workspace :where(button, select, input:not([type='radio'], [type='checkbox'])) { min-block-size: 2.75rem; }
-}
+.practice-return { grid-column: 1 / -1; justify-self: center; }

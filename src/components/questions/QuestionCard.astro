@@ -1,0 +1,47 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import AnswerContent from './AnswerContent.astro';
+import { questionLevels, questionTopics, questionUrl, ratings } from './questions';
+
+interface Props {
+  entry: CollectionEntry<'questions'>;
+  number: number;
+}
+
+const { entry, number } = Astro.props;
+const { id, data } = entry;
+const { Content } = await render(entry);
+const slug = id.split('/')[1];
+---
+
+<li data-question-id={id} data-topic={data.topic} data-role={data.roles.join(' ')}
+  data-level={data.level} data-type={data.type}>
+  <details class="question-card" id={slug} data-card>
+    <summary class="question-head">
+      <span class="question-number num" data-chip aria-hidden="true">{String(number).padStart(2, '0')}</span>
+      <h2 data-question-search>{data.title}</h2>
+      <span class="question-meta">
+        <span class="chip" data-chip data-question-search>{questionTopics[data.topic]}</span>
+        <span class="chip question-level" data-chip>{questionLevels[data.level]}</span>
+      </span>
+      <span class="question-status status-chip num" data-review-state>New</span>
+      <span class="plus-minus" data-chip aria-hidden="true"></span>
+    </summary>
+    <div class="question-answer">
+      <AnswerContent answer={data} cardId={slug}><Content /></AnswerContent>
+      <div class="question-answer-actions">
+        <div class="question-ratings" role="group" aria-label="Rate your answer" data-bank-control hidden>
+          <span>Rate your answer</span>
+          {ratings.map(({ id, label }) => (
+            <button class="button outline" type="button" data-rating={id} aria-pressed="false">{label}</button>
+          ))}
+        </div>
+        <div class="question-answer-links">
+          <a class="button quiet" href={questionUrl(id)} data-question-permalink>Open page</a>
+          <button class="button quiet" type="button" data-question-copy data-bank-control hidden>Copy link</button>
+        </div>
+        <p class="question-feedback" role="status" data-question-feedback hidden></p>
+      </div>
+    </div>
+  </details>
+</li>

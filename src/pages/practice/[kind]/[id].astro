@@ -2,6 +2,7 @@
 import { getEntry, render } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import ProblemStatement from '../../../components/shell/ProblemStatement.astro';
+import TitleBand from '../../../components/shell/TitleBand.astro';
 import Structured from '../../../engines/structured/index';
 import Mutation from '../../../engines/mutation/index';
 import Locator from '../../../engines/locator/index';
@@ -29,16 +30,21 @@ const problem: Problem = { ...entry.data, id: entry.id };
 const { Content } = await render(entry);
 const editorial = Astro.params.id ? await getEntry('editorials', Astro.params.id) : undefined;
 const Editorial = editorial ? (await render(editorial)).Content : undefined;
-const meta = [kindLabel[problem.kind], topicLabel(problem.topic), difficultyLabel[problem.difficulty], `${problem.minutes} min`];
 ---
 <Base title={problem.title} section="practice" wide>
-  <header class="practice-heading">
-    <p class="back-link"><a href={url('/')}>Back to practice</a></p>
-    <h1>{problem.title}</h1>
-    <p class="muted practice-meta">
-      {meta.join(' · ')} <span>{problem.roles.map((role) => roleLabel[role]).join(', ')}</span>
-    </p>
-  </header>
+  <TitleBand
+    slot="title-band"
+    title={problem.title}
+    breadcrumbs={[{ label: 'Practice', href: '/' }, { label: kindLabel[problem.kind] }]}
+  >
+    <div slot="meta" class="workspace-meta">
+      <span class:list={['difficulty', problem.difficulty]}>{difficultyLabel[problem.difficulty]}</span>
+      <span>{topicLabel(problem.topic)}</span>
+      <span class="num">{problem.minutes} min</span>
+      <span>{problem.roles.map((role) => roleLabel[role]).join(', ')}</span>
+    </div>
+    <span slot="actions" class="status-chip workspace-status" data-workspace-status={problem.id}>Unattempted</span>
+  </TitleBand>
   <div class="workspace-grid">
     <ProblemStatement problemId={problem.id} editorialHref={editorial && url(`/editorials/${editorial.id}/`)}>
       <Content />
@@ -53,14 +59,32 @@ const meta = [kindLabel[problem.kind], topicLabel(problem.topic), difficultyLabe
         : <Structured client:load problem={problem} />}
     </section>
   </div>
-  {(previous || next) && (
-    <nav class="practice-neighbors" aria-label="Adjacent problems">
-      {previous && (
-        <p class="previous"><span class="muted">Previous</span><a href={problemUrl(previous.id)} rel="prev">{previous.title}</a></p>
-      )}
-      {next && (
-        <p class="next"><span class="muted">Next</span><a href={problemUrl(next.id)} rel="next">{next.title}</a></p>
-      )}
-    </nav>
-  )}
+  <nav class="practice-neighbors" aria-label="Adjacent problems">
+    {previous && (
+      <p class="previous"><span class="muted">Previous</span><a href={problemUrl(previous.id)} rel="prev">{previous.title}</a></p>
+    )}
+    {next && (
+      <p class="next"><span class="muted">Next</span><a href={problemUrl(next.id)} rel="next">{next.title}</a></p>
+    )}
+    <a class="practice-return" href={url('/')}>Back to practice</a>
+  </nav>
 </Base>
+
+<script>
+  import { problemStatus, statusLabel } from '../../../lib/labels';
+  import { bestScores, onProgressChange, readProgress } from '../../../lib/progress';
+
+  const badge = document.querySelector<HTMLElement>('[data-workspace-status]');
+  if (badge) {
+    const id = badge.dataset.workspaceStatus!;
+    const update = () => {
+      const status = problemStatus(bestScores(readProgress().attempts).get(id));
+      badge.textContent = statusLabel[status];
+      badge.classList.toggle('solved', status === 'solved');
+      badge.classList.toggle('attempted', status === 'attempted');
+    };
+    onProgressChange(update);
+    window.addEventListener('pageshow', update);
+    update();
+  }
+</script>

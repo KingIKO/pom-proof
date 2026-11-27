@@ -41,48 +41,51 @@ async function expectNoSeriousViolations(page: Page, testInfo: TestInfo, state: 
   ).toEqual([]);
 }
 
-for (const scheme of ['light', 'dark'] as const) {
-  for (const { name, url, status } of pages) {
-    test(`${scheme}: ${name} has no serious or critical axe violations`, async ({ page }, testInfo) => {
-      await page.emulateMedia({ colorScheme: scheme });
-      await open(page, url, status);
-      await expectNoSeriousViolations(page, testInfo, name);
-    });
-  }
-
-  test(`${scheme}: structured result states have no serious or critical axe violations`, async ({ page }, testInfo) => {
-    // An empty scenario submit leaves its single-choice item unanswered, which is an invalid answer.
-    const problem = workspaces.find((candidate) => candidate.kind === 'scenario') as Parameters<typeof submitStructured>[1];
-    expect(problem.data.items.some(({ type }) => type === 'single-choice'), 'the scenario sample has a single-choice item').toBe(true);
-    await page.emulateMedia({ colorScheme: scheme });
-    await openWorkspace(page, problem);
-    await page.getByRole('region', { name: 'Workspace' }).getByRole('button', { name: 'Submit', exact: true }).click();
-    await expect(resultPanel(page, 'Not graded')).toBeVisible();
-    await expectNoSeriousViolations(page, testInfo, 'not graded');
-    await submitStructured(page, problem, 'decoy');
-    await expectNoSeriousViolations(page, testInfo, 'fail');
-    await page.getByRole('region', { name: 'Workspace' }).getByRole('button', { name: 'Try again', exact: true }).click();
-    await submitStructured(page, problem, 'reference');
-    await expectNoSeriousViolations(page, testInfo, 'pass');
-  });
-
-  test(`${scheme}: a revealed question answer has no serious or critical axe violations`, async ({ page }, testInfo) => {
-    await page.emulateMedia({ colorScheme: scheme });
-    await open(page, 'questions/playwright/independent-checkout-contexts/');
-    await page.getByText('Show answer').click();
-    await expect(page.getByRole('group', { name: 'Rate your answer' })).toBeVisible();
-    await expectNoSeriousViolations(page, testInfo, 'revealed answer');
-  });
-
-  test(`${scheme}: code run results have no serious or critical axe violations`, async ({ page }, testInfo) => {
-    const problem = workspaces.find((candidate) => candidate.kind === 'code')!;
-    await page.emulateMedia({ colorScheme: scheme });
-    await openWorkspace(page, problem);
-    await page.getByRole('button', { name: 'Run', exact: true }).click();
-    await expect(page.locator('.code-checks')).toBeVisible();
-    await expectNoSeriousViolations(page, testInfo, 'code checks');
+// Light theme only (redesign plan, owner decision 2026-11-27).
+for (const { name, url, status } of pages) {
+  test(`${name} has no serious or critical axe violations`, async ({ page }, testInfo) => {
+    await open(page, url, status);
+    await expectNoSeriousViolations(page, testInfo, name);
   });
 }
+
+test('structured result states have no serious or critical axe violations', async ({ page }, testInfo) => {
+  // An empty scenario submit leaves its single-choice item unanswered, which is an invalid answer.
+  const problem = workspaces.find((candidate) => candidate.kind === 'scenario') as Parameters<typeof submitStructured>[1];
+  expect(problem.data.items.some(({ type }) => type === 'single-choice'), 'the scenario sample has a single-choice item').toBe(true);
+  await openWorkspace(page, problem);
+  await page.getByRole('region', { name: 'Workspace' }).getByRole('button', { name: 'Submit', exact: true }).click();
+  await expect(resultPanel(page, 'Not graded')).toBeVisible();
+  await expectNoSeriousViolations(page, testInfo, 'not graded');
+  await submitStructured(page, problem, 'decoy');
+  await expectNoSeriousViolations(page, testInfo, 'fail');
+  await page.getByRole('region', { name: 'Workspace' }).getByRole('button', { name: 'Try again', exact: true }).click();
+  await submitStructured(page, problem, 'reference');
+  await expectNoSeriousViolations(page, testInfo, 'pass');
+});
+
+test('a revealed question answer has no serious or critical axe violations', async ({ page }, testInfo) => {
+  await open(page, 'questions/playwright/independent-checkout-contexts/');
+  await page.getByText('Show answer').click();
+  await expect(page.getByRole('group', { name: 'Rate your answer' })).toBeVisible();
+  await expectNoSeriousViolations(page, testInfo, 'revealed answer');
+});
+
+test('an expanded question card in the bank has no serious or critical axe violations', async ({ page }, testInfo) => {
+  await open(page, 'questions/');
+  const card = page.getByRole('list', { name: 'Questions' }).getByRole('listitem').first();
+  await card.locator('summary').first().click();
+  await expect(card.getByRole('group', { name: 'Rate your answer' })).toBeVisible();
+  await expectNoSeriousViolations(page, testInfo, 'expanded card');
+});
+
+test('code run results have no serious or critical axe violations', async ({ page }, testInfo) => {
+  const problem = workspaces.find((candidate) => candidate.kind === 'code')!;
+  await openWorkspace(page, problem);
+  await page.getByRole('button', { name: 'Run', exact: true }).click();
+  await expect(page.locator('.code-checks')).toBeVisible();
+  await expectNoSeriousViolations(page, testInfo, 'code checks');
+});
 
 /**
  * Whether the focused element or a wrapper shows a ring. CodeMirror outlines

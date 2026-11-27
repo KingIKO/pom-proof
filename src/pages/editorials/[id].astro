@@ -1,8 +1,9 @@
 ---
 import { getCollection, getEntry, render, type CollectionEntry } from 'astro:content';
 import CodeSamples from '../../components/shell/CodeSamples.astro';
+import TitleBand from '../../components/shell/TitleBand.astro';
 import Base from '../../layouts/Base.astro';
-import { url } from '../../lib/url';
+import { problemUrl } from '../../lib/url';
 
 export async function getStaticPaths() {
   return (await getCollection('editorials')).map((entry) => ({
@@ -15,11 +16,23 @@ const { entry } = Astro.props as { entry: CollectionEntry<'editorials'> };
 const problem = await getEntry(entry.data.problem);
 if (!problem) throw new Error(`Editorial "${entry.id}" references missing problem "${entry.data.problem.id}"`);
 const { Content } = await render(entry);
+const title = `${problem.data.title}: solution`;
 ---
-<Base title={`${problem.data.title}: solution`} section="practice">
-  <article class="prose">
-    <p><a href={url(`/practice/${problem.id}/`)}>Back to exercise</a></p>
-    <h1>{problem.data.title}: solution</h1>
-    <CodeSamples><Content /></CodeSamples>
+<Base title={title} section="practice">
+  <TitleBand slot="title-band" title={title} narrow
+    breadcrumbs={[{ label: 'POM Proof', href: '/' }, { label: 'Practice', href: '/' }, { label: 'Solution' }]}>
+    <a slot="actions" class="button outline" href={problemUrl(problem.id)}>Back to exercise</a>
+  </TitleBand>
+  <article class="editorial-card" data-card>
+    <div class="prose"><CodeSamples><Content /></CodeSamples></div>
   </article>
 </Base>
+
+<style>
+  .editorial-card { padding: var(--space-24); }
+  .editorial-card .prose > :global(:first-child) { margin-block-start: 0; }
+  .editorial-card .prose > :global(:last-child) { margin-block-end: 0; }
+  @media (width < 36rem) {
+    .editorial-card { padding: var(--space-16); }
+  }
+</style>

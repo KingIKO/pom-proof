@@ -28,7 +28,7 @@ export default function ResultPanel(props: { result: GradeResult | null; busy?: 
   const mark = { pass: 'Pass', fail: 'Fail', warn: 'Not graded' }[status];
 
   return (
-    <section class="result" role="status" aria-busy={busy} data-status={status}>
+    <section class="result" role="status" aria-busy={busy} data-status={status} data-card>
       <div key={result.status === 'graded' ? `${status}:${result.score}:${misses?.join('\n') ?? ''}` : status} class="result-content">
         <p>
           <strong>{mark}</strong>

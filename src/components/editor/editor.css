@@ -1,16 +1,29 @@
+.editor-card { min-inline-size: 0; }
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8) var(--space-12);
+  flex-wrap: wrap;
+  padding: var(--space-8) var(--space-12);
+  border-block-end: 1px solid var(--divider);
+}
+.editor-language {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  color: var(--text2);
+  font-size: var(--type-14);
+  font-weight: var(--weight-medium);
+}
 .code-editor {
-  border: 1px solid var(--control-line, var(--line));
-  border-radius: var(--radius);
-  min-width: 0;
+  min-inline-size: 0;
+  border-radius: inherit;
   overflow: hidden;
   overflow-wrap: normal;
 }
-
-.engine-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .5rem;
-  margin-block: .75rem;
+.editor-toolbar + .code-editor {
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
 }
-
-.engine-actions button:disabled { opacity: .65; }

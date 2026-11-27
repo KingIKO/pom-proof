@@ -117,10 +117,14 @@ for (const path of ['this-page-does-not-exist/', 'practice/code/no-such-problem/
     expect(response?.status(), `/${path} status`).toBe(404);
     await expect(page).toHaveTitle('Page not found | POM Proof');
     await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
+    await expect(page.locator('main > .title-band h1'), 'the heading sits in the title band').toHaveText('Page not found');
     await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveCount(4);
+    // The four sections, linked from the page body as well as the header.
     const main = page.getByRole('main');
     await expect(main.getByRole('link', { name: 'Practice', exact: true })).toHaveAttribute('href', prefix);
     await expect(main.getByRole('link', { name: 'Questions', exact: true })).toHaveAttribute('href', `${prefix}questions/`);
+    await expect(main.getByRole('link', { name: 'Tracks', exact: true })).toHaveAttribute('href', `${prefix}tracks/`);
+    await expect(main.getByRole('link', { name: 'Progress', exact: true })).toHaveAttribute('href', `${prefix}progress/`);
     // Styles load from the base at any depth, so the page is drawn with the site's own stylesheet.
     expect(await page.evaluate(() => document.styleSheets.length), 'stylesheets on the 404 page').toBeGreaterThan(0);
     expect(failures, 'failed requests on the 404 page').toEqual([]);

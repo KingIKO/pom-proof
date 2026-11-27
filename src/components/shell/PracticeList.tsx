@@ -1,35 +1,98 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { CatalogProblem } from '../../lib/catalog';
-import { difficultyLabel, kindLabel, problemStatus, roleLabel, statusLabel, topicLabel } from '../../lib/labels';
-import { bestScores, onProgressChange, readProgress } from '../../lib/progress';
 import type { ProgressAttempt } from '../../lib/contracts';
+import { difficultyLabel, kindLabel, problemStatus, statusLabel, topicLabel } from '../../lib/labels';
+import { bestScores, onProgressChange, readProgress } from '../../lib/progress';
 import { problemUrl } from '../../lib/url';
 
-const facets = {
-  kind: { label: 'Kind', options: kindLabel },
-  difficulty: { label: 'Difficulty', options: difficultyLabel },
-  role: { label: 'Role', options: roleLabel },
+const groups = {
   status: { label: 'Status', options: statusLabel },
+  difficulty: { label: 'Difficulty', options: difficultyLabel },
+  kind: { label: 'Kind', options: kindLabel },
+  role: {
+    label: 'Role',
+    options: {
+      'manual-qa': 'Manual QA',
+      automation: 'Automation',
+      sdet: 'SDET',
+      senior: 'Senior',
+    } satisfies Record<CatalogProblem['roles'][number], string>,
+  },
+  topic: { label: 'Topic', options: {} },
 };
-const filterKeys = Object.keys(facets) as Array<keyof typeof facets>;
-const initialFilters = { q: '', kind: '', difficulty: '', role: '', status: '' };
-type Filters = typeof initialFilters;
+type Facet = keyof typeof groups;
+type Filters = { q: string } & Record<Facet, string[]>;
+type Option = { value: string; label: string; count: number };
+type Row = CatalogProblem & { status: ReturnType<typeof problemStatus> };
+type PracticeTarget = Pick<CatalogProblem, 'id' | 'title'>;
 
-function readFilters(): Filters {
+const facets = Object.keys(groups) as Facet[];
+const emptyFilters: Filters = { q: '', status: [], difficulty: [], kind: [], role: [], topic: [] };
+const topicLimit = 8;
+const topicLabels = new Map([
+  ['api', 'API'],
+  ['api-testing', 'API testing'],
+  ['ci', 'CI'],
+  ['date-time', 'Date and time'],
+]);
+const displayTopic = (topic: string) => topicLabels.get(topic) ?? topicLabel(topic);
+
+function readFilters(topics: readonly Option[]): Filters {
   const params = new URLSearchParams(window.location.search);
-  const filters = { ...initialFilters, q: params.get('q') ?? '' };
-  for (const key of filterKeys) {
-    const value = params.get(key);
-    if (value && Object.hasOwn(facets[key].options, value)) filters[key] = value;
+  const filters = { ...emptyFilters, q: params.get('q') ?? '' };
+  for (const key of facets) {
+    const values = new Set(params.get(key)?.split(',') ?? []);
+    filters[key] = [...values].filter((value) => key === 'topic'
+      ? topics.some((topic) => topic.value === value)
+      : Object.hasOwn(groups[key].options, value));
   }
   return filters;
 }
 
-function nextProblem(problems: CatalogProblem[], attempts: ProgressAttempt[], scores: ReturnType<typeof bestScores>) {
-  const catalogue = new Map(problems.map((problem) => [problem.id, problem]));
-  let recent: { problem: CatalogProblem; date: number } | undefined;
+function facetValues(problem: Row, key: Facet): readonly string[] {
+  return key === 'role' ? problem.roles : [problem[key]];
+}
+
+function countValues<T>(rows: readonly T[], values: (row: T) => readonly string[]) {
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    for (const value of values(row)) counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function filterOptions(rows: readonly Row[], key: Exclude<Facet, 'topic'>): Option[] {
+  const counts = countValues(rows, (row) => facetValues(row, key));
+  return Object.entries(groups[key].options)
+    .map(([value, label]) => ({ value, label, count: counts.get(value) ?? 0 }));
+}
+
+function topicOptions(problems: readonly CatalogProblem[]): Option[] {
+  return [...countValues(problems, ({ topic }) => [topic])]
+    .sort(([a, countA], [b, countB]) => countB - countA || a.localeCompare(b, 'en'))
+    .map(([value, count]) => ({ value, label: displayTopic(value), count }));
+}
+
+function useAttempts() {
+  const [attempts, setAttempts] = useState<ProgressAttempt[]>([]);
+  useEffect(() => {
+    const update = () => setAttempts(readProgress().attempts);
+    update();
+    const unsubscribe = onProgressChange(update);
+    window.addEventListener('pageshow', update);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('pageshow', update);
+    };
+  }, []);
+  return attempts;
+}
+
+function nextProblem(problems: readonly PracticeTarget[], attempts: readonly ProgressAttempt[], scores: ReturnType<typeof bestScores>) {
+  const catalog = new Map(problems.map((problem) => [problem.id, problem]));
+  let recent: { problem: PracticeTarget; date: number } | undefined;
   for (const { problemId, completedAt } of attempts) {
-    const problem = catalogue.get(problemId);
+    const problem = catalog.get(problemId);
     if (!problem || scores.get(problemId) === 1) continue;
     const date = Date.parse(completedAt);
     if (!recent || date >= recent.date) recent = { problem, date };
@@ -37,93 +100,174 @@ function nextProblem(problems: CatalogProblem[], attempts: ProgressAttempt[], sc
   return recent?.problem ?? problems.find(({ id }) => scores.get(id) !== 1);
 }
 
+export function PracticeProgress({ problems }: { problems: PracticeTarget[] }) {
+  const attempts = useAttempts();
+  const scores = bestScores(attempts);
+  const solved = problems.filter(({ id }) => scores.get(id) === 1).length;
+  const next = nextProblem(problems, attempts, scores);
+
+  return (
+    <div class="practice-actions">
+      <div class="progress-meter practice-progress">
+        <span id="practice-solved"><strong>{solved}</strong> of {problems.length} solved</span>
+        <progress class="progress-bar" aria-labelledby="practice-solved" value={solved} max={problems.length} />
+      </div>
+      {next && (
+        <a class="button primary practice-continue" href={problemUrl(next.id)} aria-label={`Continue: ${next.title}`}>
+          Continue <span class="chevron right" aria-hidden="true" />
+        </a>
+      )}
+    </div>
+  );
+}
+
 export default function PracticeList({ problems }: { problems: CatalogProblem[] }) {
   const [currentFilters, setFilters] = useState<Filters | null>(null);
-  const filters = currentFilters ?? initialFilters;
-  const [attempts, setAttempts] = useState<ProgressAttempt[]>([]);
+  const filters = currentFilters ?? emptyFilters;
+  const attempts = useAttempts();
+  const disclosure = useRef<HTMLDetailsElement>(null);
+  const moreTopics = useRef<HTMLDetailsElement>(null);
+  const searchField = useRef<HTMLInputElement>(null);
+
+  const rows = useMemo<Row[]>(() => {
+    const scores = bestScores(attempts);
+    return problems.map((problem) => ({ ...problem, status: problemStatus(scores.get(problem.id)) }));
+  }, [problems, attempts]);
+  const options = useMemo(() => ({
+    status: filterOptions(rows, 'status'),
+    difficulty: filterOptions(rows, 'difficulty'),
+    kind: filterOptions(rows, 'kind'),
+    role: filterOptions(rows, 'role'),
+  }), [rows]);
+  const topics = useMemo(() => topicOptions(problems), [problems]);
+
   useEffect(() => {
-    const updateProgress = () => setAttempts(readProgress().attempts);
-    const updateFilters = () => setFilters(readFilters());
-    updateProgress();
-    updateFilters();
-    const unsubscribe = onProgressChange(updateProgress);
-    window.addEventListener('popstate', updateFilters);
-    window.addEventListener('pageshow', updateProgress);
-    return () => {
-      unsubscribe();
-      window.removeEventListener('popstate', updateFilters);
-      window.removeEventListener('pageshow', updateProgress);
+    const wide = window.matchMedia('(min-width: 60rem)');
+    const syncDisclosure = () => {
+      if (disclosure.current) disclosure.current.open = wide.matches;
     };
+    syncDisclosure();
+    wide.addEventListener('change', syncDisclosure);
+    return () => wide.removeEventListener('change', syncDisclosure);
   }, []);
 
-  function changeFilter(key: keyof Filters, value: string) {
-    setFilters((current) => ({ ...(current ?? initialFilters), [key]: value }));
+  useEffect(() => {
+    const update = () => {
+      const restored = readFilters(topics);
+      setFilters(restored);
+      if (moreTopics.current && topics.slice(topicLimit).some(({ value }) => restored.topic.includes(value))) {
+        moreTopics.current.open = true;
+      }
+    };
+    update();
+    window.addEventListener('popstate', update);
+    return () => window.removeEventListener('popstate', update);
+  }, [topics]);
+
+  function applyFilters(next: Filters) {
+    setFilters(next);
     const location = new URL(window.location.href);
-    if (value) location.searchParams.set(key, value);
-    else location.searchParams.delete(key);
+    for (const key of ['q', ...facets] as const) {
+      const value = key === 'q' ? next.q : next[key].join(',');
+      if (value) location.searchParams.set(key, value);
+      else location.searchParams.delete(key);
+    }
     window.history.replaceState(window.history.state, '', location);
   }
 
-  const scores = bestScores(attempts);
-  const next = nextProblem(problems, attempts, scores);
+  function clearFilters() {
+    applyFilters(emptyFilters);
+    if (disclosure.current?.open) searchField.current?.focus();
+    else disclosure.current?.querySelector('summary')?.focus();
+  }
+
+  function checkbox(key: Facet, { value, label, count }: Option) {
+    const selected = filters[key];
+    const countId = `practice-${key}-${value}-count`;
+    return (
+      <label class="check-row" key={value}>
+        <input type="checkbox" name={key} value={value} checked={selected.includes(value)}
+          disabled={currentFilters === null} aria-describedby={countId}
+          onChange={({ currentTarget }) => applyFilters({
+            ...filters,
+            [key]: currentTarget.checked ? [...selected, value] : selected.filter((item) => item !== value),
+          })} />
+        <span>{label}</span>
+        <span class="count" id={countId} aria-hidden="true">{count}<span class="visually-hidden"> {count === 1 ? 'problem' : 'problems'}</span></span>
+      </label>
+    );
+  }
+
   const search = filters.q.trim().toLowerCase();
-  const visible = problems.filter(({ id, kind, difficulty, roles, title, topic }) =>
-    (!filters.kind || filters.kind === kind) &&
-    (!filters.difficulty || filters.difficulty === difficulty) &&
-    (!filters.role || roles.some((role) => role === filters.role)) &&
-    (!filters.status || filters.status === problemStatus(scores.get(id))) &&
-    (!search || [title, topicLabel(topic), kindLabel[kind]].some((part) => part.toLowerCase().includes(search))));
+  const visible = rows.filter((row) =>
+    facets.every((key) => !filters[key].length || facetValues(row, key).some((value) => filters[key].includes(value))) &&
+    (!search || [row.title, displayTopic(row.topic), topicLabel(row.topic), kindLabel[row.kind]]
+      .some((part) => part.toLowerCase().includes(search))));
 
   return (
-    <>
-      {next && <p class="continue"><span>Continue</span> <a href={problemUrl(next.id)}>{next.title}</a></p>}
-      <form class="practice-filters" role="search" aria-label="Practice filters" onSubmit={(event) => event.preventDefault()}>
-        <label>
-          Search
-          <input type="search" name="q" value={filters.q} disabled={currentFilters === null}
-            onInput={(event) => changeFilter('q', event.currentTarget.value)} />
-        </label>
-        {filterKeys.map((key) => (
-          <label key={key}>
-            {facets[key].label}
-            <select name={key} value={filters[key]} disabled={currentFilters === null}
-              onChange={(event) => changeFilter(key, event.currentTarget.value)}>
-              <option value="">All</option>
-              {Object.entries(facets[key].options).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
-          </label>
-        ))}
-      </form>
-      <p class="visually-hidden" role="status">{visible.length} {visible.length === 1 ? 'problem' : 'problems'} shown</p>
-      {visible.length > 0 ? (
-        <table class="catalog-table" role="table" aria-label="Practice problems">
-          <thead role="rowgroup">
-            <tr role="row">
-              <th scope="col" role="columnheader">Status</th>
-              <th scope="col" role="columnheader">Title</th>
-              <th scope="col" role="columnheader">Kind</th>
-              <th scope="col" role="columnheader">Topic</th>
-              <th scope="col" role="columnheader">Difficulty</th>
-              <th scope="col" role="columnheader">Minutes</th>
-            </tr>
-          </thead>
-          <tbody role="rowgroup">
-            {visible.map(({ id, title, kind, topic, difficulty, minutes }) => {
-              const status = problemStatus(scores.get(id));
-              return (
-                <tr key={id} role="row">
-                  <td class="catalog-status" role="cell">{status !== 'unattempted' && statusLabel[status]}</td>
-                  <td class="catalog-title" role="cell"><a href={problemUrl(id)}>{title}</a></td>
-                  <td class="catalog-kind" role="cell">{kindLabel[kind]}</td>
-                  <td class="catalog-topic" role="cell">{topicLabel(topic)}</td>
-                  <td class="catalog-difficulty" role="cell">{difficultyLabel[difficulty]}</td>
-                  <td class="catalog-minutes" role="cell">{minutes}<span> min</span></td>
+    <div class="practice-layout">
+      <aside class="filter-sidebar" aria-label="Practice sidebar">
+        <details class="filter-disclosure" ref={disclosure} open>
+          <summary>Filters <span class="chevron" aria-hidden="true" /></summary>
+          <form class="filter-body" role="search" aria-label="Practice filters" onSubmit={(event) => event.preventDefault()}>
+            <label for="practice-search" class="visually-hidden">Search</label>
+            <input class="input" id="practice-search" type="search" name="q" ref={searchField}
+              placeholder="Search problems" value={filters.q} disabled={currentFilters === null}
+              onInput={({ currentTarget }) => applyFilters({ ...filters, q: currentTarget.value })} />
+            {facets.map((key) => (
+              <fieldset class="filter-group" key={key}>
+                <legend>{groups[key].label}</legend>
+                {(key === 'topic' ? topics.slice(0, topicLimit) : options[key]).map((option) => checkbox(key, option))}
+                {key === 'topic' && topics.length > topicLimit && (
+                  <details class="more-topics" ref={moreTopics}>
+                    <summary>More topics <span class="chevron" aria-hidden="true" /></summary>
+                    {topics.slice(topicLimit).map((option) => checkbox(key, option))}
+                  </details>
+                )}
+              </fieldset>
+            ))}
+          </form>
+        </details>
+      </aside>
+      <div class="practice-results">
+        <p class="visually-hidden" role="status">{visible.length} {visible.length === 1 ? 'problem' : 'problems'} shown</p>
+        {visible.length > 0 ? (
+          <table class="catalog-table" role="table" aria-label="Practice problems">
+            <thead class="visually-hidden" role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">Problem</th>
+                <th scope="col" role="columnheader">Status</th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              {visible.map(({ id, title, kind, topic, difficulty, minutes, status }) => (
+                <tr class="row-card" data-card="" key={id} role="row">
+                  <td role="cell">
+                    <h2 class="catalog-title"><a class="stretched-link" href={problemUrl(id)}>{title}</a></h2>
+                    <p class="catalog-meta">
+                      <span class={`catalog-difficulty difficulty ${difficulty}`}>{difficultyLabel[difficulty]}</span>
+                      <span class="catalog-kind">{kindLabel[kind]}</span>
+                      <span class="catalog-topic">{displayTopic(topic)}</span>
+                      <span class="catalog-minutes num">{minutes} min</span>
+                    </p>
+                  </td>
+                  <td class="catalog-action" role="cell">
+                    <span class="catalog-status">
+                      {status !== 'unattempted' && <span class={`chip ${status}`} data-chip="">{statusLabel[status]}</span>}
+                    </span>
+                    {status === 'unattempted' && <span class="button outline" aria-hidden="true">Solve</span>}
+                  </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      ) : <p class="empty-state">No matching problems</p>}
-    </>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div class="empty-state" data-card="">
+            <p>No matching problems</p>
+            <button type="button" class="button outline" onClick={clearFilters}>Clear filters</button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

@@ -2,7 +2,9 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import QuestionAnswer from '../../../components/questions/QuestionAnswer.astro';
 import { questionLevels, questionListUrl, questionTopics, questionTypes } from '../../../components/questions/questions';
+import TitleBand from '../../../components/shell/TitleBand.astro';
 import Base from '../../../layouts/Base.astro';
+import '../../../styles/questions.css';
 
 export async function getStaticPaths() {
   return (await getCollection('questions')).map((entry) => {
@@ -21,15 +23,16 @@ const { title, topic, level, type } = entry.data;
 ---
 
 <Base title={title} section="questions">
-  <article class="prose">
-    <p class="back"><a href={questionListUrl} data-questions-back>Back to questions</a></p>
-    <h1>{title}</h1>
-    <p class="muted metadata">{questionTopics[topic]} · {questionLevels[level]} · {questionTypes[type]}</p>
+  <TitleBand slot="title-band" title={title} narrow
+    breadcrumbs={[{ label: 'POM Proof', href: '/' }, { label: 'Questions' }]}>
+    <div slot="meta" class="question-meta">
+      <span class="chip" data-chip>{questionTopics[topic]}</span>
+      <span class="chip question-level" data-chip>{questionLevels[level]}</span>
+      <span class="chip question-level" data-chip>{questionTypes[type]}</span>
+    </div>
+    <a slot="actions" class="button outline" href={questionListUrl} data-questions-back>Back to questions</a>
+  </TitleBand>
+  <article class="question-recall">
     <QuestionAnswer id={entry.id} answer={entry.data}><Content /></QuestionAnswer>
   </article>
 </Base>
-
-<style>
-  .back { font-size: .9rem; margin: 0 0 1rem; }
-  .metadata { font-size: .9rem; margin-block: 0 1rem; }
-</style>

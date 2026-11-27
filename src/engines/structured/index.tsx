@@ -61,6 +61,7 @@ function Ordering({ item, picks, onChange }: {
             <span>{choices.get(pick)}</span>
             <div class="structured-moves">
               <button
+                class="button outline"
                 id={buttonId(pick, -1)}
                 type="button"
                 aria-label={`Move up: ${choices.get(pick)}`}
@@ -70,6 +71,7 @@ function Ordering({ item, picks, onChange }: {
                 Move up
               </button>
               <button
+                class="button outline"
                 id={buttonId(pick, 1)}
                 type="button"
                 aria-label={`Move down: ${choices.get(pick)}`}
@@ -101,11 +103,12 @@ function Controls({ item, name, value, onChange }: {
         {item.lines.map((line, index) => (
           <li key={line.id}>
             <button
+              class="button structured-line"
               type="button"
               aria-pressed={picks.includes(line.id)}
               onClick={() => onChange(toggle(picks, line.id))}
             >
-              <span><span class="visually-hidden">Line </span>{index + 1}</span>{' '}
+              <span class="structured-line-number"><span class="visually-hidden">Line </span>{index + 1}</span>{' '}
               <code>{line.text}</code>
             </button>
           </li>
@@ -126,7 +129,7 @@ function Controls({ item, name, value, onChange }: {
       <ul class="structured-options">
         {item.choices.map((choice) => (
           <li key={choice.id}>
-            <label>
+            <label class="structured-option">
               <input
                 type={single ? 'radio' : 'checkbox'}
                 name={name}
@@ -221,10 +224,11 @@ export default function Structured({ problem }: { problem: StructuredProblem }) 
       onSubmit={(event) => event.preventDefault()}
     >
       {problem.kind === 'scenario' && (
-        <div class="structured-scratch">
+        <div class="structured-scratch" data-card>
           <label for={`${id}-scratch`}>Write your own ideas first</label>
           <p id={`${id}-scratch-hint`} class="muted">Notes are not graded.</p>
           <textarea
+            class="input"
             id={`${id}-scratch`}
             aria-describedby={`${id}-scratch-hint`}
             rows={4}
@@ -234,30 +238,36 @@ export default function Structured({ problem }: { problem: StructuredProblem }) 
           />
         </div>
       )}
-      <div ref={itemsRef} key={attempt}>
+      <div class="structured-items" ref={itemsRef} key={attempt}>
         {problem.items.map((item) => {
           const name = `${id}-${item.id}`;
           return (
-            <fieldset key={item.id} disabled={!ready || graded} aria-describedby={item.type === 'budgeted-pick' ? `${name}-budget` : undefined}>
-              <legend>{item.prompt}</legend>
-              <Controls
-                item={item}
-                name={name}
-                value={values[item.id]}
-                onChange={(value) => update(item.id, value)}
-              />
-              {graded && <RightAnswer item={item} value={problem.reference[item.id]} />}
-            </fieldset>
+            <div key={item.id} class="structured-item" data-card>
+              <fieldset disabled={!ready || graded} aria-describedby={item.type === 'budgeted-pick' ? `${name}-budget` : undefined}>
+                <legend>{item.prompt}</legend>
+                <Controls
+                  item={item}
+                  name={name}
+                  value={values[item.id]}
+                  onChange={(value) => update(item.id, value)}
+                />
+                {graded && <RightAnswer item={item} value={problem.reference[item.id]} />}
+              </fieldset>
+            </div>
           );
         })}
       </div>
-      {!graded && <button class="primary" type="button" disabled={!ready} onClick={submit}>Submit</button>}
+      {!graded && <div class="engine-actions">
+        <button class="button primary" type="button" disabled={!ready} onClick={submit}>Submit</button>
+      </div>}
       {result !== null && (
         <div ref={resultRef} tabIndex={-1}>
           <ResultPanel result={result} misses={misses} />
         </div>
       )}
-      {graded && <button type="button" onClick={retry}>Try again</button>}
+      {graded && <div class="engine-actions">
+        <button class="button outline" type="button" onClick={retry}>Try again</button>
+      </div>}
     </form>
   );
 }

@@ -37,17 +37,20 @@ function Fixture({ fixture, title, source, syntax, live }: {
     return () => highlights.forEach((highlight) => highlight.cancel());
   }, [loaded, source, syntax]);
 
-  return <section aria-label={title}>
-    <iframe
-      ref={frame}
-      class="locator-fixture"
-      title={title}
-      tabIndex={-1}
-      aria-hidden="true"
-      sandbox="allow-same-origin"
-      srcDoc={fixtureSrcDoc(fixture, true)}
-      onLoad={readFrame}
-    />
+  return <section class="locator-fixture-card" aria-label={title} data-card>
+    <figure>
+      <figcaption>{live ? <h3>{title}</h3> : title}</figcaption>
+      <iframe
+        ref={frame}
+        class="locator-fixture"
+        title={title}
+        tabIndex={-1}
+        aria-hidden="true"
+        sandbox="allow-same-origin"
+        srcDoc={fixtureSrcDoc(fixture, true)}
+        onLoad={readFrame}
+      />
+    </figure>
     {live && <p class="muted" role="status">{preview || (!source.trim() ? 'Enter a locator to see matches.' : '')}</p>}
     {html !== null && <details>
       <summary>Show fixture HTML</summary>
@@ -82,26 +85,29 @@ export default function Locator({ problem }: { problem: Problem<'locator'> }) {
 
   return <div class="locator-workspace">
     <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
-      <label for="locator-expression">Locator expression</label>
-      <input id="locator-expression" type="text" value={source}
-        aria-describedby="locator-formats" spellcheck={false} autoComplete="off" autoCapitalize="off"
-        onInput={(event) => setSource(event.currentTarget.value)} />
-      <p class="muted" id="locator-formats">{problem.syntax
-        ? <>Use {locatorSyntaxLabel[problem.syntax]}{problem.syntax === 'xpath' && <>, such as <code>xpath=//button</code></>}.</>
-        : <>Use CSS, XPath, or a Playwright-style locator such as <code>page.getByRole('button')</code>.</>}
-      </p>
-      <button class="primary" type="submit" disabled={busy}>{busy ? 'Checking…' : 'Submit'}</button>
+      <div class="locator-field" data-card>
+        <label for="locator-expression">Locator expression</label>
+        <input id="locator-expression" class="input code-font" type="text" value={source}
+          aria-describedby="locator-formats" spellcheck={false} autoComplete="off" autoCapitalize="off"
+          onInput={(event) => setSource(event.currentTarget.value)} />
+        <p class="muted" id="locator-formats">{problem.syntax
+          ? <>Use {locatorSyntaxLabel[problem.syntax]}{problem.syntax === 'xpath' && <>, such as <code>xpath=//button</code></>}.</>
+          : <>Use CSS, XPath, or a Playwright-style locator such as <code>page.getByRole('button')</code>.</>}
+        </p>
+      </div>
+      <div class="engine-actions">
+        <button class="button primary" type="submit" disabled={busy}>{busy ? 'Checking…' : 'Submit'}</button>
+      </div>
     </form>
-    <h3>Original fixture</h3>
-    <Fixture title="Original fixture" fixture={problem.fixture} source={source} syntax={problem.syntax} live />
     <ResultPanel result={result} busy={busy} misses={misses} />
     {details?.warnings.map((warning) => <p class="locator-warning" key={warning}>Warning: {warning}</p>)}
+    <Fixture title="Original fixture" fixture={problem.fixture} source={source} syntax={problem.syntax} live />
     {submitted !== undefined && <section aria-labelledby="locator-variants">
       <h3 id="locator-variants">Fixture variants</h3>
-      {problem.variants.map(({ name, fixture }) => <div class="locator-variant" key={name}>
-        <p>{name}</p>
-        <Fixture title={name} fixture={fixture} source={submitted} syntax={problem.syntax} />
-      </div>)}
+      <div class="locator-variants-grid">
+        {problem.variants.map(({ name, fixture }) =>
+          <Fixture key={name} title={name} fixture={fixture} source={submitted} syntax={problem.syntax} />)}
+      </div>
     </section>}
   </div>;
 }

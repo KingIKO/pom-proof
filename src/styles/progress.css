@@ -1,57 +1,145 @@
-.progress-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
-.progress-note, .progress-message { font-size: .875rem; }
-.progress-note { margin: .6rem 0 0; }
-.progress-message { margin: 0; }
-.progress-message:not(:empty) { margin-block-start: .35rem; }
-.progress-section { margin-block-start: 1.5rem; }
-.progress-section h2 { margin-block: 0 .35rem; }
-.progress-total { margin: 0 0 .65rem; color: var(--muted); }
+.progress-dashboard { display: grid; gap: var(--space-24); }
+.progress-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-16);
+  margin: 0;
+}
+.progress-tile { padding: var(--space-16) var(--space-24); }
+.progress-tile dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+  color: var(--text2);
+  font-size: var(--type-14);
+}
+.progress-tile strong {
+  color: var(--text);
+  font-size: var(--type-32);
+  line-height: 1.15;
+}
+
 .review-overview {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: .15rem .85rem;
+  gap: var(--space-12) var(--space-24);
+  padding: var(--space-16) var(--space-24);
 }
-.review-overview :is(h2, p) { margin: 0; }
-.weak-topics { padding: 0; list-style: none; margin-block: .55rem; }
-.weak-topics li {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: .1rem .65rem;
-  padding-block: .2rem;
-}
-.unattempted-details summary { width: fit-content; padding-block: .25rem; color: var(--accent); cursor: pointer; }
-.unattempted-topics { columns: 3 11rem; column-gap: 1.25rem; }
-.unattempted-topics li { break-inside: avoid; }
+.review-overview h2 { margin: 0; }
+.review-overview p { margin: var(--space-4) 0 0; font-size: var(--type-14); }
+.review-overview .button { background: var(--surface); }
 
-.progress-section table { font-size: .9375rem; }
-.progress-section thead { background: var(--surface); border-block-start: var(--rule); }
-.solved-table :is(th, td):not(:first-child), .attempts-table :is(th, td):nth-child(2),
-.readiness-table :is(th, td):last-child {
+.progress-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rail-width);
+  gap: var(--gutter);
+  align-items: start;
+}
+.progress-rail { display: grid; gap: var(--space-16); min-inline-size: 0; }
+.progress-section { min-inline-size: 0; padding: var(--space-16); }
+.progress-section h2, .reset-dialog h2 { margin: 0; }
+.progress-section p {
+  margin: var(--space-8) 0 0;
+  font-size: var(--type-14);
+}
+.progress-section > .progress-message:empty { margin: 0; }
+.progress-section .progress-actions { margin-block-start: var(--space-12); }
+.progress-actions { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+
+.weak-topics { display: grid; list-style: none; margin: var(--space-8) 0 0; padding: 0; }
+.weak-topics > li {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+  padding-block: var(--space-8);
+  font-size: var(--type-14);
+  overflow-wrap: anywhere;
+}
+.weak-topics:not(.unattempted-topics) > li + li { border-block-start: 1px solid var(--divider); }
+.weak-topics > li > span { font-size: var(--type-13); }
+.unattempted-details { margin-block-start: var(--space-12); }
+.unattempted-details summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  width: fit-content;
+  min-block-size: var(--control-height);
+  color: var(--link);
+  font-size: var(--type-14);
+  font-weight: var(--weight-medium);
+  list-style: none;
+  cursor: pointer;
+}
+.unattempted-details summary::-webkit-details-marker { display: none; }
+.unattempted-details summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+.unattempted-details .chevron { margin-inline: 2px; }
+.unattempted-topics { margin-block-start: 0; }
+.unattempted-topics > li { padding-block: var(--space-4); }
+
+.progress-table-section { padding: 0; }
+.progress-section-heading { padding: var(--space-16) var(--space-24); }
+.progress-section table { table-layout: fixed; font-size: var(--type-14); }
+.progress-section thead {
+  border-block-start: 1px solid var(--divider);
+  background: var(--canvas);
+  color: var(--text2);
+}
+.progress-section :is(th, td) {
+  padding: var(--space-8) var(--space-12);
+  overflow-wrap: anywhere;
+}
+.progress-section :is(th, td):first-child { padding-inline-start: var(--space-24); }
+.progress-section :is(th, td):last-child { padding-inline-end: var(--space-24); }
+.progress-section table > :last-child > tr:last-child > * { border-block-end: 0; }
+.readiness-table th:first-child { width: 30%; }
+.readiness-table th:last-child { width: 38%; }
+.readiness-table td { font-variant-numeric: tabular-nums; }
+.readiness-table .progress-meter { grid-template-columns: minmax(0, 1fr) minmax(4.25em, auto); }
+.readiness-table :is(th:last-child, .progress-meter span),
+.solved-table :is(th, td):not(:first-child), .attempts-table :is(th, td):nth-child(2) {
   text-align: end;
   font-variant-numeric: tabular-nums;
 }
-:is(.solved-table, .readiness-table) tbody th { font-weight: var(--regular); }
-.solved-table tfoot td { font-weight: var(--strong); }
-.attempts-table tbody td { overflow-wrap: anywhere; }
-.attempts-table :is(th, td):last-child { width: 30%; padding-inline-start: 1rem; }
+:is(.solved-table, .readiness-table) tbody th { font-weight: var(--weight-medium); }
+.solved-table th:first-child { width: 34%; }
+.solved-table tfoot td { font-weight: var(--weight-bold); }
+.attempts-table th:first-child { width: 52%; }
+.attempts-table th:last-child { width: 28%; }
+.attempts-table time { font-variant-numeric: tabular-nums; }
 
 .reset-dialog {
-  inline-size: min(calc(100% - 2rem), 27rem);
-  padding: 1.25rem;
-  color: var(--ink);
-  background: var(--paper);
-  border: var(--rule);
-  border-radius: var(--radius);
+  inline-size: min(100% - 2 * var(--gutter), 27rem);
+  padding: var(--space-24);
 }
-.reset-dialog::backdrop { background: rgb(0 0 0 / 45%); }
-.reset-dialog h2 { margin-block: 0 .45rem; }
-.reset-dialog .progress-actions { margin-block-start: .9rem; }
+.reset-dialog::backdrop { background: color-mix(in srgb, var(--ink) 45%, transparent); }
+.reset-dialog .progress-actions {
+  justify-content: flex-end;
+  margin-block-start: var(--space-16);
+}
 
-@media (max-width: 32rem) {
-  .progress-section table { font-size: .875rem; }
-  .progress-section :is(th, td) { padding-inline: .25rem; }
-  .attempts-table :is(th, td):last-child { padding-inline-start: .5rem; }
-  .unattempted-topics { columns: 2; }
+@media (width < 60rem) {
+  .progress-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-16); }
+  .progress-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}
+@media (width < 36rem) {
+  .progress-dashboard { gap: var(--space-16); }
+  .progress-totals { gap: var(--space-8); }
+  .progress-tile { padding: var(--space-12); }
+  .progress-tile strong { font-size: var(--type-24); }
+  .review-overview, .progress-section-heading { padding: var(--space-16); }
+  .progress-rail { grid-template-columns: minmax(0, 1fr); }
+  .progress-section table { font-size: var(--type-13); }
+  .progress-section :is(th, td) { padding-inline: var(--space-8); }
+  .progress-section :is(th, td):first-child { padding-inline-start: var(--space-12); }
+  .progress-section :is(th, td):last-child { padding-inline-end: var(--space-12); }
+  .readiness-table th:last-child { width: 34%; }
+  .readiness-table .progress-meter { gap: var(--space-4); }
+  .solved-table th:first-child { width: 30%; }
+  .solved-table :is(th, td):not(:first-child, :last-child) { padding-inline: var(--space-4); }
+  .attempts-table th:first-child { width: 48%; }
+  .attempts-table th:last-child { width: 32%; }
 }

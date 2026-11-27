@@ -8,15 +8,15 @@ interface Props {
 
 const { problemId, editorialHref } = Astro.props;
 ---
-<div class="statement" data-statement={problemId}>
+<div class="statement" data-card data-statement={problemId}>
   {editorialHref && (
-    <div class="statement-switch" role="group" aria-label="Reading pane" hidden>
+    <div class="statement-switch tabs" role="group" aria-label="Reading pane" hidden>
       <button type="button" aria-controls="problem-statement" aria-pressed="true">Problem</button>
       <button type="button" aria-controls="problem-editorial" aria-pressed="false">Show editorial</button>
     </div>
   )}
   <article id="problem-statement" class="prose">
-    <h2 class:list={editorialHref && 'statement-heading'}>Problem</h2>
+    <h2 class="statement-heading">Problem</h2>
     <CodeSamples><slot /></CodeSamples>
   </article>
   {editorialHref && (
@@ -60,6 +60,5 @@ const { problemId, editorialHref } = Astro.props;
     window.addEventListener('pageshow', updateLabel);
     updateLabel();
     switcher.hidden = false;
-    statement.classList.add('has-switch');
   }
 </script>

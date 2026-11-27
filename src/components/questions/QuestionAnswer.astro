@@ -1,5 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import AnswerContent from './AnswerContent.astro';
+import { ratings } from './questions';
 
 interface Props {
   id: string;
@@ -7,55 +9,28 @@ interface Props {
 }
 
 const { id, answer } = Astro.props;
-const sources = answer.sources ?? [];
-const ratings = [
-  { key: '1', id: 'missed', label: 'Missed' },
-  { key: '2', id: 'shaky', label: 'Shaky' },
-  { key: '3', id: 'solid', label: 'Solid' },
-];
 ---
 
-<p class="muted"><strong>Think first.</strong> Say your answer out loud before reading the example.</p>
-<details class="answer" data-answer data-id={id}>
+<p class="question-recall-prompt muted"><strong>Think first.</strong> Say your answer out loud before reading the example.</p>
+<details class="question-recall-card" data-card data-answer data-id={id}>
   <summary aria-keyshortcuts="Space">
-    <span class="show-label">Show answer</span>
-    <span class="hide-label">Hide answer</span>
-    <span class="muted shortcut" aria-hidden="true" data-space-key hidden>Space</span>
+    <span class="question-show-label">Show answer</span>
+    <span class="question-hide-label">Hide answer</span>
+    <span class="question-shortcut" aria-hidden="true" data-space-key hidden>Space</span>
+    <span class="plus-minus" aria-hidden="true" data-chip></span>
   </summary>
-  <div class="answer-body">
-    <p class="one-line"><strong>{answer.oneLine}</strong></p>
-    <h2>Full answer</h2>
-    <slot />
-
-    <h2>What interviewers look for</h2>
-    <ul>{answer.looksFor.map((item) => <li>{item}</li>)}</ul>
-
-    <h2>The trap</h2>
-    <p>{answer.trap}</p>
-
-    <h2>Follow-ups</h2>
-    {answer.followUps.map(({ question, answer: followUpAnswer }) => (
-      <details class="follow-up" name="question-follow-ups">
-        <summary>{question}</summary>
-        <p>{followUpAnswer}</p>
-      </details>
-    ))}
-
-    {sources.length > 0 && (
-      <>
-        <h2>Sources</h2>
-        <ul>{sources.map(({ label, url }) => <li><a href={url}>{label}</a></li>)}</ul>
-      </>
-    )}
-
-    <div class="rating" role="group" aria-label="Rate your answer" data-ratings hidden>
-      <h2>Rate your answer</h2>
-      {ratings.map(({ key, id, label }) => (
-        <button type="button" data-rating={id} aria-keyshortcuts={key}>
-          <kbd aria-hidden="true">{key}</kbd> {label}
-        </button>
-      ))}
-      <p role="alert" data-rating-error hidden></p>
+  <div class="question-answer">
+    <AnswerContent answer={answer} recall><slot /></AnswerContent>
+    <div class="question-answer-actions" data-ratings hidden>
+      <div class="question-ratings" role="group" aria-label="Rate your answer">
+        <span>Rate your answer</span>
+        {ratings.map(({ key, id, label }) => (
+          <button class="button outline" type="button" data-rating={id} aria-keyshortcuts={key}>
+            <kbd aria-hidden="true">{key}</kbd> {label}
+          </button>
+        ))}
+      </div>
+      <p class="question-feedback" role="alert" data-rating-error hidden></p>
     </div>
   </div>
 </details>
@@ -122,24 +97,3 @@ const ratings = [
     });
   }
 </script>
-
-<style>
-  .answer {
-    margin-block-start: 1rem;
-    border-block: var(--rule);
-  }
-  summary { cursor: pointer; overflow-wrap: anywhere; }
-  .answer > summary { padding-block: .65rem; color: var(--accent); }
-  .answer[open] .show-label, .answer:not([open]) .hide-label { display: none; }
-  .shortcut { margin-inline-start: .65rem; font-size: .85em; font-weight: var(--regular); }
-  .answer-body { padding-block: 0 1rem; }
-  .one-line { margin-block: .4rem .8rem; }
-  .answer-body h2 { margin-block-start: 1.2rem; }
-  .answer-body ul { padding-inline-start: 1.3rem; }
-  .follow-up { border-block-end: var(--rule); }
-  .follow-up > summary { padding-block: .45rem; }
-  .follow-up > p { margin-block: 0 .65rem; }
-  .rating { border-block-start: var(--rule); margin-block-start: 1.25rem; }
-  .rating button { margin: 0 .35rem .35rem 0; }
-  kbd { font: .9em var(--font-code); color: var(--muted); margin-inline-end: .15rem; }
-</style>

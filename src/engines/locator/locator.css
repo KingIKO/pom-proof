@@ -1,26 +1,25 @@
-.locator-workspace label {
-  display: block;
-  font-weight: var(--strong);
-  margin-block-end: .25rem;
-}
+.locator-field { padding: var(--space-16); }
+.locator-field label { display: block; margin-block-end: var(--space-8); font-weight: var(--weight-bold); }
+.locator-field input { background: var(--codeBg); }
+.locator-field p { margin: var(--space-8) 0 0; font-size: var(--type-14); }
 
-.locator-workspace input {
-  inline-size: 100%;
-  padding: .4rem .55rem;
-  border: var(--rule);
-  border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-code);
-}
-
+.locator-fixture-card { min-inline-size: 0; padding: var(--space-12) var(--space-16); }
+.locator-fixture-card figure { margin: 0; }
+.locator-fixture-card figcaption { margin-block-end: var(--space-8); font-weight: var(--weight-bold); }
+.locator-fixture-card h3, .locator-fixture-card pre { margin: 0; }
+.locator-fixture-card details { margin-block-start: var(--space-8); font-size: var(--type-14); }
+.locator-fixture-card details[open] summary { margin-block-end: var(--space-8); }
+.locator-fixture-card summary { color: var(--link); cursor: pointer; }
+.locator-fixture-card p { margin: var(--space-8) 0 0; font-size: var(--type-14); }
 .locator-fixture {
+  --accent: var(--focus);
   display: block;
   inline-size: 100%;
   block-size: 9rem;
-  border: var(--rule);
-  border-radius: var(--radius);
+  border: 1px solid var(--borderCard);
+  border-radius: var(--radius-control);
 }
+.locator-fixture-card .locator-fixture { block-size: 13rem; }
 
 .locator-measurement {
   position: fixed;
@@ -31,4 +30,7 @@
 }
 
 .locator-warning { color: var(--warn); }
-.locator-variant + .locator-variant { margin-block-start: 1rem; }
+.locator-variants-grid { display: grid; gap: var(--space-12); }
+@media (min-width: 48rem) {
+  .locator-variants-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
