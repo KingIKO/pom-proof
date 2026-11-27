@@ -1,5 +1,5 @@
 ---
-title: "Rank tests by total runtime"
+title: "List the tests with the longest total run times"
 kind: code
 topic: reporting
 difficulty: medium
@@ -91,6 +91,10 @@ decoy:
     }
 ---
 
-A CI report lists one `{name, ms}` row for each run. Sum the integer milliseconds across all rows with the same case-sensitive test name. Return at most `limit` rows of `{name, totalMs}`, sorted by descending total. For equal totals, compare names in ascending ASCII text order. Names are nonempty ASCII strings. Milliseconds and the limit are nonnegative safe integers, and every test's total is also safe. A limit of zero or an empty report yields no rows.
+A continuous integration (CI) report shows the results of automated checks. It lists one `{name, ms}` row for each test run. Add the whole milliseconds from rows with the same test name. Match names exactly, including letter case. Names are nonempty ASCII strings.
 
-`slowestTestTotals([{"name":"cart","ms":31},{"name":"auth","ms":52},{"name":"cart","ms":30}], 2)` returns `[{"name":"cart","totalMs":61},{"name":"auth","totalMs":52}]`. Leave the inputs unchanged.
+Return at most `limit` rows of `{name, totalMs}`. Put the largest totals first. If totals tie, sort the names in ascending ASCII text order, using the ASCII number for each character.
+
+The times and the limit are whole numbers of zero or more. They and each test's total fit the safe integer range, where JavaScript can store each integer exactly. If the report is empty or the limit is zero, return no rows.
+
+For example, `slowestTestTotals([{"name":"cart","ms":31},{"name":"auth","ms":52},{"name":"cart","ms":30}], 2)` returns `[{"name":"cart","totalMs":61},{"name":"auth","totalMs":52}]`. Leave the inputs unchanged.

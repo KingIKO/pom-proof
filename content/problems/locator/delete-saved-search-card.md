@@ -1,5 +1,5 @@
 ---
-title: Find the delete action for a saved search
+title: Find the Delete button on a saved search card
 kind: locator
 topic: playwright
 difficulty: medium
@@ -39,6 +39,6 @@ reference:
 decoy: { by: css, selector: 'li:first-child article footer > button:nth-child(2)' }
 ---
 
-Find the `Delete` button for saved search `SR-518`. The search title is editable and another card can share it. The search code is visible on the card and stays unique.
+Find the `Delete` button on the card for saved search `SR-518`. Users can edit the search title. Another card can show the same title. The search code appears on the card and stays unique.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

@@ -1,5 +1,5 @@
 ---
-title: Find the slowest recorded test runs per suite
+title: Show the longest recorded test runs in each suite
 kind: sql
 topic: ranking
 difficulty: medium
@@ -50,6 +50,6 @@ decoy:
     ORDER BY suite, run_id;
 ---
 
-The test timing report lists the run or runs with the largest recorded duration in each suite. Include every tied run, even if two tied runs are for the same case. Ignore `NULL` durations and omit suites with no recorded durations.
+For each suite, or group of tests, find the longest recorded run time. Ignore times of `NULL`, which means no time was recorded. If a suite has no recorded times, leave it out. Include every run that took the longest time in its suite. Include ties even if two runs are for the same test case.
 
-Return `suite`, `case_id`, `run_id`, `duration_ms`, in that column order. Sort by `suite` ascending, then `run_id` ascending.
+Return `suite`, `case_id`, `run_id`, and `duration_ms` in that order. Sort by `suite`, then `run_id`, both in ascending order.

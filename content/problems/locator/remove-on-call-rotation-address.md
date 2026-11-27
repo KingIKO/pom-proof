@@ -1,5 +1,5 @@
 ---
-title: Find the address removal action for the on-call rotation
+title: Find the button that removes an on-call email address
 kind: locator
 syntax: playwright
 topic: playwright
@@ -46,6 +46,8 @@ reference:
 decoy: { by: expression, source: "page.getByRole('listitem').filter({ hasText: 'ops@north.example' }).getByRole('button', { name: 'Remove address', exact: true }).nth(0)" }
 ---
 
-Use a Playwright-style expression to find the `Remove address` button for `ops@north.example` in the live `On-call rotation`. The digest also receives mail at that address, and a separate sample panel can repeat the entire rotation. The editable settings have the app test ID `notification-settings`.
+Use a Playwright-style locator, an expression that finds an element, to find the `Remove address` button for `ops@north.example`. Find it in the `On-call rotation` group users can edit. The digest, a separate email summary, also goes to that address. A separate sample panel can repeat the whole rotation.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+The settings users can edit have the test ID `notification-settings`. A test ID is an identifier the app provides for tests.
+
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

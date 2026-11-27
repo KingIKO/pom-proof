@@ -1,5 +1,5 @@
 ---
-title: Report a shipment email held back by the queue
+title: Report a shipment email that waits too long in the queue
 kind: bug-report
 topic: defect-reporting
 difficulty: medium
@@ -8,59 +8,59 @@ roles: [manual-qa, automation, sdet]
 items:
   - id: severity
     type: single-choice
-    prompt: Which severity fits a late email with correct tracking in the app?
+    prompt: How serious is the delay if tracking still works in the app?
     choices:
-      - { id: s4, text: "S4, cosmetic only" }
-      - { id: s1, text: "S1, lost shipment or tracking data" }
-      - { id: s3, text: "S3, secondary channel impaired while primary status works" }
-      - { id: s2, text: "S2, tracking blocked in all supported channels" }
+      - { id: s4, text: "S4: The problem affects only the appearance of the information." }
+      - { id: s1, text: "S1: The problem involves lost shipment or tracking data." }
+      - { id: s3, text: "S3: A secondary channel has trouble, but app tracking works." }
+      - { id: s2, text: "S2: Tracking is unavailable through every supported channel." }
   - id: priority
     type: single-choice
-    prompt: What fix priority follows the repeated-delay policy?
+    prompt: What priority fits the evidence under the policy for single and repeated delays?
     choices:
-      - { id: p2, text: "P2, next planned release" }
-      - { id: p1, text: "P1, current sprint" }
-      - { id: p0, text: "P0, incident response now" }
+      - { id: p2, text: "P2: Fix it in the next planned release." }
+      - { id: p1, text: "P1: Fix it during the current sprint." }
+      - { id: p0, text: "P0: Start the incident response right away." }
   - id: component
     type: single-choice
-    prompt: Which component best matches the interval where the delay appears?
+    prompt: Which part of the system handles the period where the delay occurs?
     choices:
-      - { id: carrier, text: "Carrier tracking import" }
-      - { id: inbox, text: "Customer in-app inbox" }
-      - { id: provider, text: "External mail delivery after provider acceptance" }
-      - { id: queue, text: "Outbound notification queue" }
+      - { id: carrier, text: "The process that imports tracking from the carrier" }
+      - { id: inbox, text: "The inbox customers see in the app" }
+      - { id: provider, text: "Email delivery after the outside provider accepts the message" }
+      - { id: queue, text: "The queue of notifications that are waiting to send" }
   - id: title
     type: single-choice
-    prompt: Which title captures the symptom without guessing why?
+    prompt: Which title says what happened without guessing the cause?
     choices:
-      - { id: blame, text: "Worker team is failing to pick up email jobs" }
-      - { id: vague, text: "Shipment notifications are bad" }
-      - { id: precise, text: "Shipment email waits over 20 minutes before provider acceptance" }
-      - { id: long, text: "Build 313 in staging placed three test shipment emails in the notification queue at 10:00 UTC and the provider accepted them 22 minutes later although the in-app inbox updated at once" }
+      - { id: blame, text: "The worker team is failing to pick up email jobs" }
+      - { id: vague, text: "Something is wrong with the notifications about shipped orders" }
+      - { id: precise, text: "Shipment email waits over 20 minutes before the provider accepts it" }
+      - { id: long, text: "Staging build 313 queued three test shipment emails at 10:00 UTC and updated the in-app inbox at once. The provider accepted the emails 22 minutes later." }
   - id: steps
     type: ordering
-    prompt: Order the run from a fresh shipment event through the timing calculation.
+    prompt: Put the steps in order from marking the order shipped to measuring the delay.
     choices:
-      - { id: record, text: "Record the enqueue time and the appearance of tracking in the app." }
-      - { id: compare, text: "Calculate elapsed time against the five-minute target." }
-      - { id: send, text: "Mark the fixture order shipped with shipment email enabled." }
-      - { id: receipt, text: "Capture the provider-accepted event for that shipment email." }
+      - { id: record, text: "Note when the email joins the queue and when app tracking appears." }
+      - { id: compare, text: "Work out how much time passed and compare it with the five-minute target." }
+      - { id: send, text: "With shipment email turned on, mark the test order shipped." }
+      - { id: receipt, text: "Record the event where the provider accepts the shipment email." }
   - id: missing
     type: multi-select
-    prompt: Which missing details help a developer correlate the slow queue interval?
+    prompt: Which missing details would help a developer trace the wait in the queue?
     choices:
-      - { id: correlation, text: "Test shipment, queue job, and provider request IDs" }
-      - { id: count, text: "Number of affected test shipments" }
-      - { id: attempts, text: "Redacted job attempt history across the wait" }
-      - { id: target, text: "Promised maximum time to provider acceptance" }
+      - { id: correlation, text: "The test shipment, queue job and provider request IDs" }
+      - { id: count, text: "The number of test shipments that had the delay" }
+      - { id: attempts, text: "The job's attempts during the wait, with private details removed" }
+      - { id: target, text: "The maximum promised time until the provider accepts email" }
   - id: expected
     type: single-choice
-    prompt: What expected versus actual result belongs in the ticket?
+    prompt: Which expected and actual results belong in the report?
     choices:
-      - { id: app, text: "Expected tracking immediately in the app; actual no tracking ever appears." }
-      - { id: mail, text: "Expected provider acceptance within five minutes; actual acceptance follows enqueue by 22 minutes." }
-      - { id: reject, text: "Expected the provider to accept delivery; actual the provider permanently rejects the address." }
-      - { id: arrival, text: "Expected inbox arrival within five minutes of provider acceptance; actual arrival follows acceptance by 22 minutes." }
+      - { id: app, text: "Tracking should appear in the app right away. Instead, tracking never appears." }
+      - { id: mail, text: "The provider should accept email within five minutes of queuing. Instead, it takes 22 minutes." }
+      - { id: reject, text: "The provider should accept the email for delivery. Instead, it permanently rejects the address." }
+      - { id: arrival, text: "The email should reach the inbox within five minutes of acceptance. Instead, it takes 22 minutes." }
 reference:
   severity: s3
   priority: p1
@@ -79,8 +79,21 @@ decoy:
   expected: arrival
 ---
 
-> Tracking appeared in the app, but my shipment email was much later.
+> I saw tracking in the app. I got my shipment email much later.
 
-Staging build 313, Chrome 137, fixture mailbox, shipment email enabled. For each of three test orders, the notification log shows enqueue at 10:00 UTC and provider acceptance at 10:22 UTC. A screenshot shows tracking already visible in the app. The service target is five minutes from enqueue to provider acceptance. Production impact is unknown.
+The test used staging build 313 in Chrome 137 with a test mailbox and shipment email turned on. Staging is the test environment. The queue holds messages waiting to go to the email provider.
 
-Severity: S1 lost shipment or tracking data; S2 tracking unavailable in all supported channels; S3 secondary channel impaired while primary status works; S4 cosmetic only. Priority: P0 incident response for production tracking outages; P1 current sprint for a repeated service-target miss; P2 next release for one unconfirmed delay.
+For each of three test orders, the notification log shows that the app queued the email at 10:00 UTC. The provider accepted each email at 10:22 UTC. A screenshot shows tracking was already visible in the app. The target is five minutes from joining the queue to the provider accepting the email. The effect on the live system is unknown.
+
+Severity tells how serious the bug is:
+
+- S1: Lost shipment or tracking data.
+- S2: Tracking is unavailable through every supported channel, or way to get tracking.
+- S3: A secondary channel has trouble. The main status channel still works.
+- S4: Only appearance is affected.
+
+Priority tells when to fix it:
+
+- P0: If live tracking is down, start the incident response.
+- P1: If the delay repeatedly exceeds the target, fix it this sprint, the team's current work period.
+- P2: If there is only one unconfirmed delay, deal with it in the next release.

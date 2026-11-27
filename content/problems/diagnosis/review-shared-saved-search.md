@@ -27,12 +27,12 @@ items:
       - { id: l15, text: "});" }
   - id: category
     type: single-choice
-    prompt: "What makes the removal test fail when run on its own?"
+    prompt: "Why does the removal test fail when it runs on its own?"
     choices:
       - { id: isolation, text: "The removal test gets its record ID from an earlier test rather than its own setup." }
-      - { id: persistence, text: "A browser context must be reused before an account can remove any searches." }
-      - { id: heading, text: "The success message should be located by heading instead of status." }
-      - { id: coverage, text: "The file uses two tests for actions that touch the same feature." }
+      - { id: persistence, text: "An account can remove searches only after a browser context has been reused." }
+      - { id: heading, text: "The test should find the success message by its heading role, not its status role." }
+      - { id: coverage, text: "The file uses two separate tests for actions that touch the same feature." }
 reference:
   review: [l03, l06, l12]
   category: isolation
@@ -41,4 +41,6 @@ decoy:
   category: isolation
 ---
 
-Both tests use authenticated pages. Each is intended to run independently in CI. The `searches` test fixture creates records and cleans them up when the test ends. Mark the statements that create or consume the dependency; leave test declarations unmarked.
+Both tests use pages that are already signed in. Each test is meant to run on its own in CI. A fixture is a helper that Playwright sets up and passes to a test. The `searches` test fixture creates records and cleans them up when the test ends. A browser context is an isolated browser session with its own cookies.
+
+Mark the statements that create the dependency between the tests or use it. Leave the test declarations unmarked.

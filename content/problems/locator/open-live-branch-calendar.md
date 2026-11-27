@@ -1,5 +1,5 @@
 ---
-title: Find the visible appointment calendar action
+title: Find the visible button for the appointment calendar
 kind: locator
 topic: playwright
 difficulty: medium
@@ -36,6 +36,6 @@ reference:
 decoy: { by: css, selector: 'button[aria-label="Open South Quay calendar"]' }
 ---
 
-Find the visible action named `Open South Quay calendar`. The app can keep an alternate layout in the DOM with a duplicate button. That layout is hidden as a whole. The holiday calendar is a separate action.
+Find the visible button named `Open South Quay calendar`. The app can keep another layout with a duplicate button in the DOM, the page structure the browser uses. It hides that whole layout. A different button opens the holiday calendar.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

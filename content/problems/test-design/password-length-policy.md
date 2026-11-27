@@ -1,5 +1,5 @@
 ---
-title: Check the password length rule
+title: Check how the form counts password length
 kind: test-design
 topic: boundary-testing
 difficulty: medium
@@ -7,7 +7,7 @@ minutes: 9
 roles: [manual-qa, automation, sdet]
 exportName: meetsPasswordLength
 params:
-  - { name: password, type: string, label: Password }
+  - { name: password, type: string, label: Password entered }
 implementation: |
   export function meetsPasswordLength(password) {
     const length = [...password].length;
@@ -15,42 +15,42 @@ implementation: |
   }
 mutants:
   - name: accepts-short-password
-    teaches: Try a password immediately below the minimum length.
+    teaches: Use a password one code point shorter than the minimum.
     implementation: |
       export function meetsPasswordLength(password) {
         const length = [...password].length;
         return length >= 11 && length <= 64;
       }
   - name: excludes-minimum-length
-    teaches: Try a password exactly at the minimum length.
+    teaches: Use a password with exactly the fewest code points allowed.
     implementation: |
       export function meetsPasswordLength(password) {
         const length = [...password].length;
         return length > 12 && length <= 64;
       }
   - name: excludes-maximum-length
-    teaches: Try a password exactly at the maximum length.
+    teaches: Use a password with exactly the most code points allowed.
     implementation: |
       export function meetsPasswordLength(password) {
         const length = [...password].length;
         return length >= 12 && length < 64;
       }
   - name: accepts-long-password
-    teaches: Try a password immediately above the maximum length.
+    teaches: Use a password one code point longer than the maximum.
     implementation: |
       export function meetsPasswordLength(password) {
         const length = [...password].length;
         return length >= 12 && length <= 65;
       }
   - name: trims-before-counting
-    teaches: Try a password whose eligibility depends on counting outer spaces.
+    teaches: Use a password that passes only if you count its spaces at the ends.
     implementation: |
       export function meetsPasswordLength(password) {
         const length = [...password.trim()].length;
         return length >= 12 && length <= 64;
       }
   - name: counts-utf16-units
-    teaches: Use a supplementary Unicode letter near a length boundary.
+    teaches: In a password near either length limit, use a supplementary Unicode letter such as 𠮷.
     implementation: |
       export function meetsPasswordLength(password) {
         const length = password.length;
@@ -87,6 +87,8 @@ decoy:
     - { args: ['aaaaaaaaaaaa'], expected: true }
 ---
 
-The password change form calls `meetsPasswordLength(password)` with the string as entered. Return `true` for 12 through 64 Unicode code points inclusive and `false` for any other length. Count every code point, including leading and trailing spaces. For example, `𠮷` is one code point. The function checks length only and imposes no character requirements.
+The password change form passes the password to the `meetsPasswordLength(password)` function exactly as entered. A Unicode code point is a number assigned to a character, such as a letter or a space. For example, `𠮷` is one code point. Count every code point, including spaces at either end.
 
-Enter test rows or write a JavaScript `export function test(meetsPasswordLength)` that throws on an unexpected result.
+For lengths from 12 through 64, including both ends, the function returns `true`. For any other length, the function returns `false`. The function checks only length. It has no rules about which characters are allowed.
+
+Enter test rows or write the JavaScript function `export function test(meetsPasswordLength)`. If the result differs from what you expected, throw an error.

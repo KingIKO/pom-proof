@@ -1,5 +1,5 @@
 ---
-title: Find the pickup location search
+title: Find the field for searching pickup locations
 kind: locator
 topic: playwright
 difficulty: easy
@@ -33,6 +33,6 @@ reference:
 decoy: { by: expression, source: "page.getByRole('searchbox').nth(0)" }
 ---
 
-Find the pickup search input using its placeholder `City or postcode`. The return lookup may use the longer placeholder `City or postcode for returns`.
+Find the pickup search field by its placeholder, the hint shown before the user types. Its placeholder is `City or postcode`. The search field for returns may use the longer hint `City or postcode for returns`.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

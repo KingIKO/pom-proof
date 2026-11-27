@@ -1,5 +1,5 @@
 ---
-title: Test the delivery fee boundary
+title: Check where the delivery fee changes
 kind: test-design
 topic: boundary-testing
 difficulty: medium
@@ -7,8 +7,8 @@ minutes: 10
 roles: [manual-qa, automation, sdet]
 exportName: quoteFee
 params:
-  - { name: subtotalCents, type: number, label: Subtotal (cents) }
-  - { name: zone, type: enum, label: Zone, values: [local, remote] }
+  - { name: subtotalCents, type: number, label: Order subtotal (cents) }
+  - { name: zone, type: enum, label: Delivery zone, values: [local, remote] }
 implementation: |
   export function quoteFee(subtotalCents, zone) {
     if (zone === 'remote') return 900;
@@ -16,21 +16,21 @@ implementation: |
   }
 mutants:
   - name: excludes-threshold
-    teaches: Check the exact free-delivery threshold.
+    teaches: Test the exact subtotal where delivery becomes free.
     implementation: |
       export function quoteFee(subtotalCents, zone) {
         if (zone === 'remote') return 900;
         return subtotalCents > 5000 ? 0 : 450;
       }
   - name: includes-one-cent-below
-    teaches: Check the charged side immediately below the threshold.
+    teaches: Use a subtotal one cent below the free-delivery cutoff.
     implementation: |
       export function quoteFee(subtotalCents, zone) {
         if (zone === 'remote') return 900;
         return subtotalCents >= 4999 ? 0 : 450;
       }
   - name: waives-remote-fee
-    teaches: Cross the subtotal threshold with the remote-zone rule.
+    teaches: Check the remote delivery fee at subtotals on both sides of the cutoff.
     implementation: |
       export function quoteFee(subtotalCents, zone) {
         if (subtotalCents >= 5000) return 0;
@@ -58,6 +58,6 @@ decoy:
     }
 ---
 
-The delivery quote module accepts a subtotal in integer cents and a zone. A `local` order costs 450 cents to deliver below 5,000 cents and is free from 5,000 cents. Every `remote` order costs 900 cents to deliver.
+The delivery quote uses the order subtotal in whole cents and the delivery zone. A `local` order below 5,000 cents costs 450 cents to deliver. From 5,000 cents up, local delivery is free. Every `remote` order costs 900 cents to deliver.
 
-Fill the table with inputs and expected fees, or write a JavaScript `export function test(quoteFee)` that throws on a failed assertion. Your checks must pass against the real function and catch each faulty version.
+Fill the table with inputs and expected fees, or write the JavaScript function `export function test(quoteFee)`. If a fee differs from what you expected, throw an error. Your checks must pass with the real function and catch each faulty version.

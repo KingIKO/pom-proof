@@ -1,5 +1,5 @@
 ---
-title: Test booking across a clock change
+title: Test bookings when the venue's clocks change
 kind: scenario
 topic: booking
 difficulty: hard
@@ -8,53 +8,53 @@ roles: [automation, sdet, senior]
 items:
   - id: clarify
     type: multi-select
-    prompt: Which answers tell you what appointment times can be booked?
+    prompt: Which answers tell you which appointment times customers can book?
     choices:
-      - { id: display, text: Which time zone is shown on confirmation when the device uses a different zone? }
-      - { id: icon, text: Which calendar icon should the booking button use? }
-      - { id: marketing, text: Which city should be named in the launch email? }
-      - { id: transitions, text: How are missing spring times and repeated autumn times represented to customers? }
+      - { id: display, text: "When the device uses a different time zone, which zone does the confirmation show?" }
+      - { id: icon, text: "Which calendar icon should appear on the button that books a class?" }
+      - { id: marketing, text: "Which city name should appear in the email that announces the launch?" }
+      - { id: transitions, text: "How do customers see the missing spring times and the repeated autumn times?" }
   - id: risk
     type: budgeted-pick
-    prompt: Spend up to 13 minutes checking that each displayed slot maps to the right instant.
+    prompt: You have up to 13 minutes. Choose checks that each slot on screen leads to the right instant.
     budget: 13
     choices:
-      - { id: gap, cost: 5, text: Check that the spring gap does not produce a selectable appointment. }
-      - { id: fold, cost: 8, text: Compare both repeated autumn slots and follow the second into the booking confirmation. }
-      - { id: format, cost: 5, text: Compare the calendar's month headings across two languages. }
-      - { id: afternoon, cost: 7, text: Book a normal afternoon appointment on a week without a clock change. }
+      - { id: gap, cost: 5, text: "Check that no appointment can be selected inside the spring gap of skipped times." }
+      - { id: fold, cost: 8, text: "Compare the two repeated autumn slots, then book the second and follow it to confirmation." }
+      - { id: format, cost: 5, text: "Compare the month headings in the calendar when it is shown in two languages." }
+      - { id: afternoon, cost: 7, text: "Book a normal afternoon appointment in a week that has no clock change." }
   - id: layer
     type: single-choice
-    prompt: Which layer first checks that the pure conversion helper returns no possible instants for a spring gap time?
+    prompt: Which kind of test first checks that the pure conversion helper returns no possible instants for a time in the spring gap?
     choices:
-      - { id: api, text: API }
-      - { id: manual, text: Manual exploratory }
-      - { id: ui, text: UI }
-      - { id: unit, text: Unit }
+      - { id: api, text: "An API test" }
+      - { id: manual, text: "A manual exploratory test" }
+      - { id: ui, text: "An automated UI test" }
+      - { id: unit, text: "A unit test" }
   - id: fold-layer
     type: single-choice
-    prompt: Which layer first proves the two rendered autumn slots are distinguishable and booking the second confirms the right one?
+    prompt: Which kind of test first shows that the two autumn slots on screen can be told apart and that booking the second confirms that slot?
     choices:
-      - { id: ui, text: "UI" }
-      - { id: manual, text: "Manual exploratory" }
-      - { id: api, text: "API" }
-      - { id: unit, text: "Unit" }
+      - { id: ui, text: "An automated UI test" }
+      - { id: manual, text: "A manual exploratory test" }
+      - { id: api, text: "An API test" }
+      - { id: unit, text: "A unit test" }
   - id: stop
     type: single-choice
-    prompt: Which result stops the release?
+    prompt: Which result should stop the release?
     choices:
-      - { id: long, text: The zone label wraps without clipping in a narrow viewport. }
-      - { id: wrong-instant, text: Selecting the second repeated slot confirms the instant for the first slot. }
-      - { id: gap, text: The spring calendar skips a time that never occurs at the venue. }
-      - { id: format, text: The confirmation uses a 24-hour clock in its supported locale. }
+      - { id: long, text: "In a narrow window, the time zone label wraps and none of its text is cut off." }
+      - { id: wrong-instant, text: "Selecting the second of the repeated slots confirms the instant of the first slot." }
+      - { id: gap, text: "The spring calendar leaves out a time that never happens at the venue." }
+      - { id: format, text: "For its supported locale (language and region), the confirmation uses a 24-hour clock." }
   - id: order
     type: ordering
-    prompt: Order the run so the recorded expected instant is independent of the service response.
+    prompt: Put the steps in order. Record the expected instant in a way that does not depend on the service's response.
     choices:
-      - { id: compare, text: Compare the confirmed instant with the recorded expectation. }
-      - { id: book, text: Book the slot labeled as the second occurrence. }
-      - { id: fixture, text: Load the venue fixture with both autumn occurrences available. }
-      - { id: expected, text: Identify the second occurrence from the fixture's zone and record its expected instant before booking. }
+      - { id: compare, text: "Compare the confirmed instant with the expected instant you recorded." }
+      - { id: book, text: "Book the slot that is labeled as the second occurrence of that time." }
+      - { id: fixture, text: "Load the venue fixture with both autumn occurrences open for booking." }
+      - { id: expected, text: "Before booking, record the second occurrence's expected instant using the fixture's time zone." }
 reference:
   clarify: [display, transitions]
   risk: [gap, fold]
@@ -71,6 +71,8 @@ decoy:
   order: [fixture, book, expected, compare]
 ---
 
-A class booking app lists appointments in the venue's local time. It hides times skipped by the spring clock change. When two autumn slots have the same local time, the user must be able to tell them apart and the selected slot must retain its exact instant through confirmation.
+A class booking app lists appointments in the venue's local time. It hides times that the spring clock change skips. In autumn, the clock repeats some times, so two slots can have the same local time.
 
-The ticket leaves the customer-facing zone labels and repeated-time notation open. Staging has spring and autumn fixtures with authoritative expected instants and a pure time conversion helper.
+When that happens, the user must be able to tell the two slots apart. The selected slot must also keep its exact instant through confirmation. An instant is the single moment in time that a slot stands for, whatever the local clock shows.
+
+The ticket leaves two things open. One is how time zone labels look to customers. The other is how repeated times are marked. Staging has spring and autumn fixtures, which are prepared test data with trusted expected instants. It also has a pure time conversion helper, which returns a result from its inputs alone without calling a service.

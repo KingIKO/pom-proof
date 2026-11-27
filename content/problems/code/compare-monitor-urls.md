@@ -1,5 +1,5 @@
 ---
-title: "Compare monitoring target URLs"
+title: "Check if two monitored URLs match"
 kind: code
 topic: api
 difficulty: medium
@@ -119,8 +119,12 @@ decoy:
     }
 ---
 
-A synthetic monitor compares addresses using a small fixture rule. Each input is a valid absolute HTTP or HTTPS URL in this subset: ASCII DNS hostname, optional port without leading zeroes, no credentials, optional path beginning with `/`, optional query, and optional fragment. Inputs contain no whitespace.
+A synthetic monitor runs a test to check a service. Here it compares web addresses using only the rules below. Each input is a valid absolute HTTP or HTTPS URL, so it includes the scheme and hostname. The scheme says which protocol the address uses. The hostname is an ASCII name, such as `qa.example.test`, in the Domain Name System (DNS).
 
-Compare scheme and hostname without regard to ASCII case. Treat HTTP port 80 and HTTPS port 443 as omitted. An absent path is `/`. Ignore everything from the first `#` onward. Compare the remaining path and query verbatim, including an empty query marker `?`, percent escapes, slash placement, and parameter order. Return a boolean. The fixture never asks you to resolve redirects or decide whether two different query strings reach the same resource.
+A URL may have a port, the number for the connection, with no leading zeroes. It may have a path starting with `/`, a query starting with `?`, or a fragment starting with `#`. No input contains credentials, such as a username or password. No input contains whitespace, such as spaces or tabs.
 
-`compareMonitorUrls("HTTPS://QA.EXAMPLE.test/ping#badge", "https://qa.example.test/ping")` returns `true`. Leave the inputs unchanged.
+Ignore ASCII letter case in the scheme and hostname. Treat HTTP port 80 and HTTPS port 443 as if they were missing. Compare other ports as written. If a path is missing, use `/`. Ignore the first `#` and everything after it.
+
+Compare the remaining path and query exactly as written. Keep an empty query marker `?`, percent escapes such as `%20`, slash placement, and the order of query parameters. Return a boolean, `true` for a match and `false` otherwise. The test inputs never require you to follow redirects or decide if different queries reach the same resource.
+
+For example, `compareMonitorUrls("HTTPS://QA.EXAMPLE.test/ping#badge", "https://qa.example.test/ping")` returns `true`. Leave the inputs unchanged.

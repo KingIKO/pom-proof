@@ -25,12 +25,12 @@ items:
       - { id: l12, text: "        assert response.status_code == 200, preset" }
   - id: category
     type: single-choice
-    prompt: "Which problem can leave the whole check green when all returned column lists are wrong?"
+    prompt: "Which problem can let the whole check pass even when every returned column list is wrong?"
     choices:
-      - { id: base, text: "The base URL is injected by a pytest fixture." }
-      - { id: combine, text: "The test reports only the first failed preset." }
-      - { id: timeout, text: "The request uses an explicit timeout." }
-      - { id: status, text: "The assertion checks HTTP status and ignores the expected columns." }
+      - { id: base, text: "A pytest fixture supplies the base URL to the test." }
+      - { id: combine, text: "The test reports only the first preset that fails." }
+      - { id: timeout, text: "The request sets its timeout explicitly." }
+      - { id: status, text: "The assertion checks the HTTP status but ignores the expected columns." }
 reference:
   review: [l08, l12]
   category: status
@@ -39,4 +39,4 @@ decoy:
   category: status
 ---
 
-The endpoint returns JSON with a `columns` field. The team needs one result per preset in CI, even when an earlier preset fails. Each result must check both HTTP status and the exact ordered columns. `api_base` and `auth_headers` come from existing fixtures.
+For each export preset, the endpoint returns JSON with a `columns` field. In CI, the team needs one result for each preset, even when an earlier preset fails. Each result must check both the HTTP status and the exact columns in their order. The `api_base` and `auth_headers` values come from existing fixtures. A fixture is a helper that pytest sets up and passes to the test.

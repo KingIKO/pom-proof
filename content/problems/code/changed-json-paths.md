@@ -1,5 +1,5 @@
 ---
-title: "Report changed JSON paths"
+title: "Find where two JSON values differ"
 kind: code
 topic: api
 difficulty: hard
@@ -203,8 +203,16 @@ decoy:
     }
 ---
 
-A response snapshot test needs the paths where two parsed JSON values differ. Recurse into both sides only if both are objects or both are arrays. Compare object keys by exact spelling and array items by zero-based position. When a member is missing from either side, report its path once and do not also report descendants. When the sides have different JSON types or different primitive values, report the current path once. Ignore object key order, and compare numbers by numeric value. Integers fit the safe integer range.
+A response snapshot test compares saved response data with another response. The inputs are two already parsed JSON values. Each can be an object, an array, or a primitive value such as a string or number. Report the paths, or locations, where the values differ.
 
-Use JSON Pointer paths: the root is the empty string, each member adds `/` followed by its key or index, and literal `~` and `/` in keys are escaped as `~0` and `~1`. Return distinct paths sorted by ascending Unicode code point order of the escaped path. Strings and keys contain valid Unicode scalar values. Equal inputs return an empty array.
+Look inside a pair of values only when both are objects or both are arrays. For objects, match keys by exact spelling and ignore key order. For arrays, match items by position, counting from zero. If either side is missing a key or item, report that path once. Do not report paths inside the missing value.
 
-`changedJsonPaths({"cart":{"qty":1}}, {"cart":{"qty":2,"coupon":null}})` returns `["/cart/coupon","/cart/qty"]`. Leave the inputs unchanged.
+If the JSON types differ, report the current path once. Do the same if two primitive values, such as strings or numbers, differ. Compare numbers by value. Integers fit the safe integer range, where JavaScript can store each integer exactly.
+
+Use JSON Pointer, a format for naming a location in JSON. The root, or whole value, has an empty string for its path. For each level, add `/` followed by the key or array index. In keys, write a literal `~` as `~0` and a literal `/` as `~1`.
+
+A Unicode code point is a number that identifies a unit of text. Strings and keys contain valid Unicode scalar values: code points that exclude the numbers reserved for joining two parts of a character.
+
+Return each path once. Sort the escaped paths from lowest to highest Unicode code point, comparing from left to right. If the inputs are equal, return an empty array.
+
+For example, `changedJsonPaths({"cart":{"qty":1}}, {"cart":{"qty":2,"coupon":null}})` returns `["/cart/coupon","/cart/qty"]`. Leave the inputs unchanged.

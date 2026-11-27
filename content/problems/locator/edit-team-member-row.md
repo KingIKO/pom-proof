@@ -1,5 +1,5 @@
 ---
-title: Find the edit action for a team member
+title: Find Edit on the right team member's row
 kind: locator
 topic: playwright
 difficulty: medium
@@ -43,6 +43,6 @@ reference:
 decoy: { by: expression, source: "page.getByRole('button', { name: 'Edit', exact: true }).nth(0)" }
 ---
 
-Find the `Edit` button for the team member `dana.song@example.test`. Display names can repeat, but this address identifies one member. Work from the member row so the locator still works after sorting.
+Find the `Edit` button in the row for the team member `dana.song@example.test`. Members can share a display name, but this address identifies one member. Start from the member's row. That keeps the locator, the expression that finds the button, working after the table is sorted.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

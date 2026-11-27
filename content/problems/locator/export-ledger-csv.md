@@ -1,5 +1,5 @@
 ---
-title: Find the ledger CSV export
+title: Find the button that exports the ledger as CSV
 kind: locator
 topic: playwright
 difficulty: easy
@@ -42,6 +42,6 @@ reference:
 decoy: { by: expression, source: "page.getByRole('button', { name: 'Export', exact: true }).nth(0)" }
 ---
 
-The ledger toolbar uses the same button text for several formats. Find the CSV export using the app's test ID contract. The format test IDs stay the same across layouts and locales.
+The ledger toolbar shows the same button text for several file formats. Find the export for comma-separated values (CSV). Use the app's test IDs, the identifiers it gives to buttons for tests. Each format's test ID stays the same when the layout, language, or region changes.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

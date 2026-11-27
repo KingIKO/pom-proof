@@ -1,5 +1,5 @@
 ---
-title: Find the recovery code sign-in link
+title: Find the link for signing in with a recovery code
 kind: locator
 topic: playwright
 difficulty: easy
@@ -34,6 +34,6 @@ reference:
 decoy: { by: expression, source: "page.getByRole('link', { name: 'Use a recovery code' })" }
 ---
 
-The sign-in screen links to the recovery code form and may also show help links. Find the link named `Use a recovery code` that takes the user to code entry.
+The sign-in screen links to a form where users can enter a recovery code to sign in. The screen may also show links to help pages. Find the link named `Use a recovery code` that opens the form.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

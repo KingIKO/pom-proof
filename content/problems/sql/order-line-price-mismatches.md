@@ -1,5 +1,5 @@
 ---
-title: Find order lines with a missing or different catalog price
+title: Find order lines whose prices are missing or do not match the catalog
 kind: sql
 topic: data-integrity
 difficulty: medium
@@ -45,6 +45,8 @@ decoy:
     ORDER BY l.order_id, l.line_id;
 ---
 
-In this checkout QA batch, the catalog is frozen and no discounts apply. Every order line points to an existing product and should copy its current price. Flag each line whose stored price differs from that product price or is `NULL`. A stored price of zero is valid when the product price is also zero.
+In this set of checkout tests, catalog prices stay fixed. No discounts apply. Each order line, or entry on an order, points to a product that exists. The line should store that product's current price.
 
-Return `order_id`, `line_id`, `stored_price_cents`, `catalog_price_cents`, in that column order. Sort by `order_id` ascending, then `line_id` ascending.
+Report a line if its stored price differs from the product price. Also report it if the stored price is `NULL`, meaning missing. If both prices are zero, the price matches.
+
+Return `order_id`, `line_id`, `stored_price_cents`, and `catalog_price_cents` in that order. Sort by `order_id`, then `line_id`, both in ascending order.

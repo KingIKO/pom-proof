@@ -1,5 +1,5 @@
 ---
-title: Report a calendar invite for the wrong occurrence
+title: Report an invite for the earlier of two time slots
 kind: bug-report
 topic: defect-reporting
 difficulty: hard
@@ -8,59 +8,59 @@ roles: [automation, sdet, senior]
 items:
   - id: severity
     type: single-choice
-    prompt: Which severity reflects the supported way to recover?
+    prompt: How serious is the bug given the other way to find the right time?
     choices:
-      - { id: s1, text: "S1, confirmed booking data lost permanently" }
-      - { id: s3, text: "S3, secondary path wrong with a documented route to complete the task" }
-      - { id: s2, text: "S2, appointment cannot be kept using a supported route" }
-      - { id: s4, text: "S4, visual formatting only" }
+      - { id: s1, text: "S1: The system permanently loses data for a confirmed booking." }
+      - { id: s3, text: "S3: A secondary route is wrong, but a documented route works." }
+      - { id: s2, text: "S2: No supported route lets a customer keep their appointment." }
+      - { id: s4, text: "S4: The issue affects only how the information is formatted." }
   - id: priority
     type: single-choice
-    prompt: Which priority fits the scheduled appointments?
+    prompt: When should the team fix the invite given the appointment dates?
     choices:
-      - { id: p2, text: "P2, fix after the affected appointment window" }
-      - { id: p0, text: "P0, halt all booking today" }
-      - { id: p1, text: "P1, fix before the autumn appointments" }
+      - { id: p2, text: "P2: Fix it after the affected appointments." }
+      - { id: p0, text: "P0: Stop all booking today." }
+      - { id: p1, text: "P1: Fix it before the autumn appointments." }
   - id: component
     type: single-choice
-    prompt: Where should triage begin given the recorded booking instant?
+    prompt: Given the time saved with the booking, where should you look first?
     choices:
-      - { id: slots, text: "Slot availability" }
-      - { id: invite, text: "Calendar invite generation" }
-      - { id: login, text: "Venue staff sign-in" }
-      - { id: storage, text: "Booking persistence" }
+      - { id: slots, text: "The check for open slots" }
+      - { id: invite, text: "The code that creates invites" }
+      - { id: login, text: "The venue staff sign-in page" }
+      - { id: storage, text: "The code that saves bookings" }
   - id: title
     type: single-choice
-    prompt: Which title conveys the precise mismatch?
+    prompt: Which title names exactly how the times differ?
     choices:
-      - { id: long, text: "Staging build 812 calendar invite for a New York second 01:30 appointment on November 1 opens at the first 01:30 even though the booking audit timestamp is correct" }
-      - { id: precise, text: "Calendar invite opens at the earlier 01:30 for the second booking" }
-      - { id: blame, text: "Calendar developer ignored the fall clock change" }
-      - { id: vague, text: "Calendar appointment issue" }
+      - { id: long, text: "On staging build 812, the invite for the second New York 01:30 on November 1 opens at the first 01:30. The booking audit shows the right time." }
+      - { id: precise, text: "Calendar invite opens at the first 01:30 for the second slot" }
+      - { id: blame, text: "The calendar developer overlooked the clock change in the fall" }
+      - { id: vague, text: "Something is wrong with the time in the calendar invite" }
   - id: steps
     type: ordering
-    prompt: Order the path that compares the invite with the booked instant.
+    prompt: Put the steps for comparing the invite and booking times in order.
     choices:
-      - { id: confirm, text: "Confirm the slot marked as the second 01:30 occurrence." }
-      - { id: compare, text: "Compare the invite's start instant with the one retained by the booking." }
-      - { id: open, text: "Open the fixture venue calendar for November 1, 2026." }
-      - { id: download, text: "Open the calendar attachment for that confirmation." }
+      - { id: confirm, text: "Confirm the slot marked as the second 01:30." }
+      - { id: compare, text: "Compare the invite start time with the stored booking time." }
+      - { id: open, text: "Open the test venue's calendar for November 1, 2026." }
+      - { id: download, text: "Open the calendar file attached to the booking confirmation." }
   - id: missing
     type: multi-select
-    prompt: Which missing artifacts would tie the invite symptom to the tested booking?
+    prompt: Which missing records would connect the wrong invite time to this booking?
     choices:
-      - { id: file, text: "Redacted invite file, including its actual start field" }
-      - { id: date, text: "Venue date and time zone" }
-      - { id: version, text: "Staging build" }
-      - { id: ids, text: "Test booking and notification identifiers" }
+      - { id: file, text: "The invite file without private details, but with its start field" }
+      - { id: date, text: "The date and time zone at the venue" }
+      - { id: version, text: "The build number for the staging app" }
+      - { id: ids, text: "The IDs of the test booking and notification" }
   - id: expected
     type: single-choice
-    prompt: Which result should be recorded?
+    prompt: Which expected and actual results belong in the report?
     choices:
-      - { id: unavailable, text: "Expected the second slot to appear; actual only one slot can be booked." }
-      - { id: equal, text: "Expected invite and booking at 06:30 UTC; actual the invite opens at 05:30 UTC and the booking stays at 06:30 UTC." }
-      - { id: offset, text: "Expected a 05:30 UTC booking; actual both systems move the booking to 06:30 UTC." }
-      - { id: absent, text: "Expected a calendar attachment; actual no attachment arrives." }
+      - { id: unavailable, text: "The calendar should show the second slot. Instead, it lets the user book only one slot." }
+      - { id: equal, text: "Both times should be 06:30 UTC. Instead, the invite opens at 05:30 UTC, and the booking stays at 06:30 UTC." }
+      - { id: offset, text: "The booking should be at 05:30 UTC. Instead, both systems move it to 06:30 UTC." }
+      - { id: absent, text: "The confirmation should include a calendar file for the booking. Instead, no file arrives." }
 reference:
   severity: s3
   priority: p1
@@ -79,8 +79,23 @@ decoy:
   expected: equal
 ---
 
-> I booked the second 01:30 class. The calendar attachment shows the earlier one even though my booking page is right.
+> I booked the second 01:30 class. My booking page shows the right time. The calendar file shows the earlier slot.
 
-Staging build 812, Firefox 138, America/New_York venue, November 1, 2026. Screenshot: confirmed second 01:30. The booking audit stores `06:30 UTC`; the opened calendar entry shows `05:30 UTC`. The attachment itself was not saved. Invitations must preserve the booked instant. The booking page is the documented way to verify the correct time. Do not wait until the autumn appointment window to fix bad invites.
+The test used staging build 812 in Firefox 138. Staging is the test environment. The venue uses the `America/New_York` time zone. The screenshot confirms the second 01:30 slot on November 1, 2026.
 
-Severity: S1 confirmed booking data permanently lost; S2 appointment cannot be kept via a supported route; S3 secondary path wrong with a documented route; S4 formatting only. Priority: P0 halt booking for lost or unusable bookings; P1 before the affected appointments for incorrect invites with a workaround; P2 defer past the appointment window for appearance issues.
+The booking audit, or record of booking activity, stores `06:30 UTC`. UTC gives both systems one time standard to compare. The opened calendar entry shows `05:30 UTC`. No one saved the calendar file itself.
+
+Invites must keep the exact booked time. The documented way to check the correct time is the booking page. Fix bad invites before the autumn appointments.
+
+Severity tells how serious the bug is:
+
+- S1: The system permanently loses confirmed booking data.
+- S2: No supported route lets users keep the appointment.
+- S3: A secondary route gives the wrong result. A documented route still works.
+- S4: Only the formatting is wrong.
+
+Priority tells when to fix it:
+
+- P0: If bookings are lost or unusable, stop all booking.
+- P1: If invites are wrong and a workaround exists, fix them before the affected appointments.
+- P2: If only appearance is affected, fix it after the appointments.

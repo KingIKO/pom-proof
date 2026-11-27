@@ -1,5 +1,5 @@
 ---
-title: Test refunds after a lost response
+title: Test what happens when a refund reply goes missing
 kind: scenario
 topic: payments
 difficulty: hard
@@ -8,53 +8,53 @@ roles: [automation, sdet, senior]
 items:
   - id: clarify
     type: multi-select
-    prompt: Which answers define what a retry and a second partial refund should do?
+    prompt: Which answers tell you what a retry and a second partial refund should do?
     choices:
-      - { id: comment, text: Is the button's internal design name Refund or Issue refund? }
-      - { id: identity, text: What identifies the original refund operation across retries? }
-      - { id: balance, text: "What event releases a reservation if the provider eventually refuses the refund?" }
-      - { id: logo, text: Which provider logo appears on the help page? }
+      - { id: comment, text: "In the internal design files, is the button named Refund or Issue refund?" }
+      - { id: identity, text: "What marks a retry as the same refund operation as the original one?" }
+      - { id: balance, text: "If the provider later refuses the refund, which event releases the reserved amount?" }
+      - { id: logo, text: "Which logo of the payment provider appears on the help page?" }
   - id: risk
     type: budgeted-pick
-    prompt: Spend up to 15 minutes on duplicate and excess money movement.
+    prompt: You have up to 15 minutes. Choose checks for money that moves twice or moves more than it should.
     budget: 15
     choices:
-      - { id: email, cost: 6, text: Compare sandbox refund email wording for two order types. }
-      - { id: uncertain, cost: 9, text: "Let the provider record a partial refund, lose the reply, and retry the same operation." }
-      - { id: currency, cost: 5, text: Verify currency labels on the completed refunds list. }
-      - { id: remaining, cost: 6, text: "With a refund pending, give a separate refund amount that exceeds the unreserved balance." }
+      - { id: email, cost: 6, text: "Compare the wording of sandbox refund emails for two types of order." }
+      - { id: uncertain, cost: 9, text: "Let the provider record a partial refund, lose its reply, and retry the same operation." }
+      - { id: currency, cost: 5, text: "Check the currency labels next to each amount on the list of completed refunds." }
+      - { id: remaining, cost: 6, text: "While one refund is pending, request a separate refund larger than the unreserved balance." }
   - id: layer
     type: single-choice
-    prompt: Which layer first verifies the application operation, provider record, and balance together in the sandbox?
+    prompt: Which kind of test first checks the app's operation, the provider's record, and the balance together in the sandbox?
     choices:
-      - { id: ui, text: UI }
-      - { id: unit, text: Unit }
-      - { id: api, text: API }
-      - { id: manual, text: Manual exploratory }
+      - { id: ui, text: "An automated UI test" }
+      - { id: unit, text: "A unit test" }
+      - { id: api, text: "An API test" }
+      - { id: manual, text: "A manual exploratory test" }
   - id: balance-layer
     type: single-choice
-    prompt: Which layer first tests the pure rule that compares a new refund amount with unreserved balance?
+    prompt: Which kind of test first checks the pure rule that compares a new refund amount with the unreserved balance?
     choices:
-      - { id: api, text: "API" }
-      - { id: manual, text: "Manual exploratory" }
-      - { id: unit, text: "Unit" }
-      - { id: ui, text: "UI" }
+      - { id: api, text: "An API test" }
+      - { id: manual, text: "A manual exploratory test" }
+      - { id: unit, text: "A unit test" }
+      - { id: ui, text: "An automated UI test" }
   - id: stop
     type: single-choice
-    prompt: Which outcome stops rollout?
+    prompt: Which result should stop the rollout?
     choices:
-      - { id: recorded-twice, text: One operation creates two monetary refunds at the sandbox provider. }
-      - { id: pending, text: The dashboard reports an unknown outcome as pending as required. }
-      - { id: history, text: The history shows a partial refund before the original charge in newest-first order. }
-      - { id: delay, text: The test ledger settles within the stated reconciliation time. }
+      - { id: recorded-twice, text: "One operation creates two refunds of money at the sandbox provider." }
+      - { id: pending, text: "As required, the dashboard reports an unknown outcome as pending." }
+      - { id: history, text: "In newest-first order, the history lists a partial refund before the original charge." }
+      - { id: delay, text: "The test ledger settles within the stated time for reconciliation." }
   - id: order
     type: ordering
-    prompt: Order the run that tests a response lost after the provider records the refund.
+    prompt: Put the steps in order. The run tests a reply that is lost after the provider records the refund.
     choices:
-      - { id: retry, text: Retry through the application with the original operation ID. }
-      - { id: reconcile, text: Reconcile provider refund IDs and the application's final balance. }
-      - { id: inject, text: Submit one refund and hold its successful reply until the application times out. }
-      - { id: seed, text: Create a settled sandbox charge and record its amount and available balance. }
+      - { id: retry, text: "Retry through the app with the original operation ID." }
+      - { id: reconcile, text: "Reconcile the provider's refund IDs with the app's final balance." }
+      - { id: inject, text: "Submit one refund and hold its successful reply until the app times out." }
+      - { id: seed, text: "Create a settled sandbox charge and record its amount and available balance." }
 reference:
   clarify: [identity, balance]
   risk: [uncertain, remaining]
@@ -71,6 +71,6 @@ decoy:
   order: [seed, inject, retry, reconcile]
 ---
 
-A store supports partial refunds. The sandbox can hold a successful provider reply until the app times out. Repeating the same known operation must produce at most one financial refund, and a pending refund reserves its share of the balance. Subsequent refunds cannot exceed the unreserved amount.
+A store supports partial refunds, which return only part of a payment. The provider's sandbox, a test payment system that moves no real money, can hold a successful reply until the app times out. If the app repeats the same known operation, it must create at most one financial refund. A pending refund reserves its share of the balance. Later refunds cannot go over the unreserved amount.
 
-The ticket omits the operation identity contract and the balance state shown during reconciliation. The amount check is a pure helper that takes the balance and reservation amounts. The team can answer the open questions before the timed checks begin.
+The ticket leaves out the operation identity contract, the rule for what counts as the same refund operation. It also leaves out the balance state shown during reconciliation, when the app matches its records with the provider's. The amount check is a pure helper that takes the balance and reservation amounts as inputs. The team can answer the open questions before the timed checks begin.

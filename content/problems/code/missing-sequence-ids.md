@@ -1,5 +1,5 @@
 ---
-title: "Find missing capture IDs"
+title: "Find which reserved capture IDs are missing"
 kind: code
 topic: test-data
 difficulty: easy
@@ -88,6 +88,8 @@ decoy:
     }
 ---
 
-A test collector reserves capture IDs from `first` through `last`, inclusive. The received list is unsorted and can contain repeats and IDs from other runs. Return the reserved IDs that never appear, in ascending order. All values are nonnegative safe integers. The reservation contains at most 200 IDs when nonempty. If `first > last`, there was no reservation, so return an empty array.
+A tool that collects test captures reserves their IDs from `first` through `last`, including both ends. If `first > last`, the tool reserved no IDs, so return an empty array. Otherwise, the range holds at most 200 IDs.
 
-`missingSequenceIds([14,11,12,14], 11, 14)` returns `[13]`. Leave the inputs unchanged.
+The collector receives IDs in no particular order. The list can contain repeats and IDs from other runs. Return the reserved IDs that never appear, from smallest to largest. All values are whole numbers of zero or more. They fit the safe integer range, where JavaScript can store each integer exactly.
+
+For example, `missingSequenceIds([14,11,12,14], 11, 14)` returns `[13]`. Leave the inputs unchanged.

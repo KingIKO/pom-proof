@@ -1,5 +1,5 @@
 ---
-title: Find the enabled resume action for a regional job
+title: Find the Resume button users can click for a scheduled job
 kind: locator
 syntax: css
 topic: playwright
@@ -42,6 +42,8 @@ reference: { by: css, selector: 'tbody[data-queue="scheduled"] tr:has(> td[data-
 decoy: { by: css, selector: 'tbody[data-queue="scheduled"] tr:first-child button[data-action="resume"]' }
 ---
 
-Use CSS to find the enabled Resume button for the `eu-west` job in the `scheduled` queue. Manual jobs can share the same region, and a locked scheduled job can have a disabled Resume button. The queue and region use stable codes. Action attributes also stay fixed across locales.
+Use a CSS selector, a pattern that matches page elements, to find the Resume button users can click. Look for the `eu-west` job in the `scheduled` queue, the list of scheduled jobs. Manual jobs can share that region. A locked scheduled job can show a disabled Resume button.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+The codes for the queue and region stay the same. The values that identify button actions also stay the same across languages and regions.
+
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

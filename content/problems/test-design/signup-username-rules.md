@@ -1,5 +1,5 @@
 ---
-title: Check public usernames at signup
+title: Check which public usernames signup accepts
 kind: test-design
 topic: string-validation
 difficulty: medium
@@ -7,7 +7,7 @@ minutes: 10
 roles: [manual-qa, automation, sdet]
 exportName: isSignupName
 params:
-  - { name: name, type: string, label: Username }
+  - { name: name, type: string, label: Public username }
 implementation: |
   export function isSignupName(name) {
     return name.length >= 4 && name.length <= 16
@@ -16,7 +16,7 @@ implementation: |
   }
 mutants:
   - name: excludes-shortest-name
-    teaches: Try the shortest allowed name using only valid letters.
+    teaches: Use only allowed letters to make the shortest valid name.
     implementation: |
       export function isSignupName(name) {
         return name.length > 4 && name.length <= 16
@@ -24,7 +24,7 @@ mutants:
           && name.includes('__') === false && name.endsWith('_') === false;
       }
   - name: accepts-overlength-name
-    teaches: Try a name one letter beyond the length limit with no other violations.
+    teaches: Use a name one letter longer than the limit. Follow all the other rules.
     implementation: |
       export function isSignupName(name) {
         return name.length >= 4 && name.length <= 17
@@ -32,7 +32,7 @@ mutants:
           && name.includes('__') === false && name.endsWith('_') === false;
       }
   - name: accepts-uppercase-inside-name
-    teaches: Put an uppercase letter after a valid opening letter.
+    teaches: Start with an allowed letter and follow it with an uppercase letter.
     implementation: |
       export function isSignupName(name) {
         return name.length >= 4 && name.length <= 16
@@ -40,7 +40,7 @@ mutants:
           && name.includes('__') === false && name.endsWith('_') === false;
       }
   - name: starts-with-digit
-    teaches: Move an otherwise allowed digit to the start of a valid-length name.
+    teaches: Use a name of an allowed length. Move a digit that would otherwise be allowed to the start.
     implementation: |
       export function isSignupName(name) {
         return name.length >= 4 && name.length <= 16
@@ -48,7 +48,7 @@ mutants:
           && name.includes('__') === false && name.endsWith('_') === false;
       }
   - name: accepts-adjacent-underscores
-    teaches: Put adjacent underscores inside an otherwise valid name.
+    teaches: Put two underscores side by side inside an otherwise valid name.
     implementation: |
       export function isSignupName(name) {
         return name.length >= 4 && name.length <= 16
@@ -56,7 +56,7 @@ mutants:
           && name.endsWith('_') === false;
       }
   - name: accepts-trailing-underscore
-    teaches: Put one underscore at the end to isolate its position from repetition.
+    teaches: Put just one underscore at the end. That way the test checks its position without repeating it.
     implementation: |
       export function isSignupName(name) {
         return name.length >= 4 && name.length <= 16
@@ -98,11 +98,13 @@ decoy:
     - { args: [Mira7], expected: false }
 ---
 
-A community site validates the public username before checking whether it is taken. `isSignupName(name)` checks only the string format. It returns `true` if the string meets all these rules and `false` otherwise:
+A community site checks whether a public username has the right format before it checks whether someone has taken the name. The `isSignupName(name)` function checks only the format of the text. If the name meets every rule below, the function returns `true`. If any rule fails, it returns `false`.
 
-- The name is 4 through 16 characters inclusive.
-- The first character is an ASCII lowercase letter (`a` through `z`).
-- Every later character is an ASCII lowercase letter, an ASCII digit (`0` through `9`), or an underscore.
-- Underscores cannot be adjacent, and the last character cannot be an underscore.
+- The name is 4 through 16 characters long, including both limits.
+- The first character must be an ASCII lowercase letter (`a` through `z`). ASCII is the basic character set that includes the English alphabet and digits.
+- After the first letter, use only ASCII lowercase letters, ASCII digits (`0` through `9`), or underscores.
+- Keep underscores apart. The last character cannot be an underscore.
 
-Check the string as entered. Do not trim it or change its case. Enter test rows or write a JavaScript `export function test(isSignupName)` that throws on an unexpected result.
+Check the text exactly as entered. Keep any spaces at the ends. Leave uppercase and lowercase letters as they are.
+
+Enter test rows or write the JavaScript function `export function test(isSignupName)`. If the result differs from what you expected, throw an error.

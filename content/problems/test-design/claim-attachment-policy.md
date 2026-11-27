@@ -1,5 +1,5 @@
 ---
-title: Check upload options for claim attachments
+title: Check which files a claimant can attach
 kind: test-design
 topic: combinatorial-testing
 difficulty: hard
@@ -7,9 +7,9 @@ minutes: 14
 roles: [manual-qa, automation, sdet, senior]
 exportName: canAttach
 params:
-  - { name: fileName, type: string, label: File name }
-  - { name: picker, type: enum, label: Picker, values: [browse, camera] }
-  - { name: verified, type: boolean, label: Claimant verified }
+  - { name: fileName, type: string, label: Name of file }
+  - { name: picker, type: enum, label: How the file was chosen, values: [browse, camera] }
+  - { name: verified, type: boolean, label: Identity verified }
 implementation: |
   export function canAttach(fileName, picker, verified) {
     const dot = fileName.lastIndexOf('.');
@@ -20,7 +20,7 @@ implementation: |
   }
 mutants:
   - name: allows-camera-pdf
-    teaches: Try a PDF from the camera with a verified claimant.
+    teaches: Choose a PDF with the camera after the claimant verifies their identity.
     implementation: |
       export function canAttach(fileName, picker, verified) {
         const dot = fileName.lastIndexOf('.');
@@ -30,7 +30,7 @@ mutants:
         return extension === 'pdf' && verified;
       }
   - name: allows-unverified-pdf
-    teaches: Try a PDF from the file browser with an unverified claimant.
+    teaches: Choose a PDF with the file browser before the claimant verifies their identity.
     implementation: |
       export function canAttach(fileName, picker, verified) {
         const dot = fileName.lastIndexOf('.');
@@ -40,7 +40,7 @@ mutants:
         return extension === 'pdf' && picker === 'browse';
       }
   - name: requires-verification-for-images
-    teaches: Try an allowed image before the claimant verifies their identity.
+    teaches: Choose an image of an allowed type before the claimant proves their identity.
     implementation: |
       export function canAttach(fileName, picker, verified) {
         const dot = fileName.lastIndexOf('.');
@@ -50,7 +50,7 @@ mutants:
         return extension === 'pdf' && picker === 'browse' && verified;
       }
   - name: compares-case-sensitively
-    teaches: Change the case of a supported extension while keeping the upload options valid.
+    teaches: Switch letters in an allowed extension between uppercase and lowercase. Keep the other upload options valid.
     implementation: |
       export function canAttach(fileName, picker, verified) {
         const dot = fileName.lastIndexOf('.');
@@ -60,7 +60,7 @@ mutants:
         return extension === 'pdf' && picker === 'browse' && verified;
       }
   - name: reads-first-dot
-    teaches: Try a name with an extra dot before a supported final extension.
+    teaches: Add an extra dot in the name before an allowed extension.
     implementation: |
       export function canAttach(fileName, picker, verified) {
         const dot = fileName.indexOf('.');
@@ -70,7 +70,7 @@ mutants:
         return extension === 'pdf' && picker === 'browse' && verified;
       }
   - name: accepts-empty-stem
-    teaches: Try a bare supported extension with no file name before its dot.
+    teaches: Use a dot and an allowed extension with nothing before the dot.
     implementation: |
       export function canAttach(fileName, picker, verified) {
         const dot = fileName.lastIndexOf('.');
@@ -80,7 +80,7 @@ mutants:
         return extension === 'pdf' && picker === 'browse' && verified;
       }
   - name: omits-jpg-support
-    teaches: Test both allowed image extensions as separate inputs.
+    teaches: Run a separate test for each allowed image extension.
     implementation: |
       export function canAttach(fileName, picker, verified) {
         const dot = fileName.lastIndexOf('.');
@@ -126,11 +126,13 @@ decoy:
     - { args: [notes.txt, browse, true], expected: false }
 ---
 
-A claims app has two attachment pickers, `browse` and `camera`. Test `canAttach(fileName, picker, verified)`, which returns `true` if the policy allows the attachment and `false` otherwise. It receives a file name without a directory path, one of the two pickers, and whether the claimant has verified their identity.
+A claims app lets users choose an attachment in two ways: `browse` to select a file or `camera` to use the camera. The `canAttach(fileName, picker, verified)` function takes a file name without its folder path. It also takes the way the user chose the file and whether the claimant verified their identity.
 
-Use the part after the last dot as the extension, ignoring letter case. There must be at least one character before that dot. A name without a dot, a name ending in a dot, and all extensions other than `png`, `jpg`, and `pdf` are rejected.
+The extension is the part of the file name after its last dot. Treat uppercase and lowercase letters in the extension the same. Reject names with no dot or with a dot at the end. At least one character must come before the last dot. The only allowed extensions are `png`, `jpg`, and `pdf`.
 
-- `png` and `jpg` are accepted with either picker, regardless of verification.
-- `pdf` is accepted only through `browse` for a verified claimant.
+- The function accepts `png` and `jpg` with either method. The claimant can use these types without verifying their identity.
+- For `pdf`, the claimant must verify their identity and use `browse`.
 
-The function checks the attachment options and file name only. Enter test rows or write a JavaScript `export function test(canAttach)` that throws on an unexpected result.
+The function checks only the attachment options and file name. If the rules allow the file, it returns `true`. Otherwise it returns `false`.
+
+Enter test rows or write the JavaScript function `export function test(canAttach)`. If the result differs from what you expected, throw an error.

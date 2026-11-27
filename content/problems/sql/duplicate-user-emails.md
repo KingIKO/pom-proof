@@ -1,5 +1,5 @@
 ---
-title: Find email addresses shared by multiple users
+title: Find email addresses that appear on more than one user row
 kind: sql
 topic: data-integrity
 difficulty: medium
@@ -37,6 +37,8 @@ decoy:
     ORDER BY normalized_email;
 ---
 
-The account import treats an email address as unique across users, ignoring ASCII letter case throughout the address. Flag each non-`NULL` address that appears on more than one user row under that rule. Return the address in lowercase and count all matching users. Do not apply any other normalization.
+The account import expects each email address to belong to only one user. Ignore ASCII letter case across the whole address. Make no other changes to the address. Skip `NULL` values, which mean the address is missing.
 
-Return `normalized_email`, `user_count`, in that column order. Sort by `normalized_email` ascending.
+If an address appears on more than one user row under that rule, return it in lowercase. Count all users with that address.
+
+Return `normalized_email` first and `user_count` second. Sort by `normalized_email` in ascending order.

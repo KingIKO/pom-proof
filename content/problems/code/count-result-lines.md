@@ -1,5 +1,5 @@
 ---
-title: "Count test result lines"
+title: "Count pass, fail, and skip tags"
 kind: code
 topic: reporting
 difficulty: easy
@@ -101,6 +101,8 @@ decoy:
     }
 ---
 
-A report importer receives one short tag per array entry. Strip only ASCII spaces from both ends, then count exact `PASS`, `FAIL`, and `SKIP` tags. The input entries contain no line breaks and may contain other characters, including tabs. Ignore unknown tags, blank entries, and lowercase tags. Return the integer counts under the keys `passed`, `failed`, and `skipped`. Include all three keys even if their counts are zero.
+A report importer reads one short tag per array entry. An entry has no line breaks, but it may contain tabs or other characters. Remove only ordinary ASCII space characters from both ends of each entry.
 
-`countResultLines(["PASS","FAIL","PASS","SKIP"])` returns `{"passed":2,"failed":1,"skipped":1}`. Leave the inputs unchanged.
+Count only exact matches for `PASS`, `FAIL`, and `SKIP`. Ignore blank entries, unknown tags, and lowercase tags. Return whole-number counts under the keys `passed`, `failed`, and `skipped`. Include all three keys even when a count is zero.
+
+For example, `countResultLines(["PASS","FAIL","PASS","SKIP"])` returns `{"passed":2,"failed":1,"skipped":1}`. Leave the inputs unchanged.

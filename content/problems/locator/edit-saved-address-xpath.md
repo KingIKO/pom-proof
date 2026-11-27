@@ -1,5 +1,5 @@
 ---
-title: Find the edit action for a saved address
+title: Find the Edit button in a saved address row
 kind: locator
 syntax: xpath
 topic: playwright
@@ -38,6 +38,6 @@ reference: { by: xpath, selector: "//th[normalize-space(.)='Studio 14']/followin
 decoy: { by: xpath, selector: '//tbody/tr[1]/td[2]/button[1]' }
 ---
 
-Use XPath to find the `Edit` button in the row headed `Studio 14`. The row header stays before its action cell, but the number of columns may change. `Studio 140` is a different address.
+Use XPath, a language for finding elements in a page, to find the `Edit` button in the row headed `Studio 14`. The row's heading always comes before the cell with its button. The number of columns may change. `Studio 140` is a different address.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

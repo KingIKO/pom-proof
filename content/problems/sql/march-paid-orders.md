@@ -1,5 +1,5 @@
 ---
-title: Find paid orders placed in March
+title: Match paid March orders to the monthly export
 kind: sql
 topic: date-time
 difficulty: easy
@@ -37,6 +37,6 @@ decoy:
     WHERE status = 'paid' AND placed_at BETWEEN '2026-03-01' AND '2026-03-31';
 ---
 
-Reconcile a monthly export for paid orders placed in March 2026, UTC. `placed_at` is either `NULL` or `YYYY-MM-DD HH:MM:SS` text in UTC. Include the full month, from the start of March 1 through the end of March 31. Exclude missing timestamps and orders whose status is not `paid`.
+Check the monthly export against paid orders placed in March 2026, using UTC. The `placed_at` column holds a time as `YYYY-MM-DD HH:MM:SS` text in UTC, or `NULL` if the time is missing. Include the full month, from the start of March 1 through the end of March 31. Leave out orders with no timestamp or a status other than `paid`.
 
-Return `order_id`, `placed_at`, `total_cents`, in that column order. Row order does not matter.
+Return `order_id`, `placed_at`, and `total_cents` in that order. Rows can appear in any order.

@@ -25,12 +25,12 @@ items:
       - { id: l13, text: "});" }
   - id: category
     type: single-choice
-    prompt: "What can cause a false pass here?"
+    prompt: "What can make this test pass when it should fail?"
     choices:
-      - { id: message, text: "The suite expects a visible permission message from a denied action." }
+      - { id: message, text: "The suite expects a denied action to show a visible permission message." }
       - { id: access, text: "The test uses the analyst fixture instead of an admin page." }
-      - { id: locator, text: "The test uses button and alert roles instead of selectors." }
-      - { id: suppression, text: "The catch converts a failed interaction or assertion into a log message and lets the test pass." }
+      - { id: locator, text: "The test finds elements by button and alert roles instead of selectors." }
+      - { id: suppression, text: "The `catch` turns a failed action or assertion into a log message and lets the test pass." }
 reference:
   review: [l11]
   category: suppression
@@ -39,4 +39,6 @@ decoy:
   category: message
 ---
 
-Product requirements call for a visible removal button, then a `Permission denied` alert when an analyst presses it. The analyst fixture seeds and owns member `m20`. Mark the statement that turns a thrown error into a pass; do not mark the surrounding control-flow syntax.
+The product requirements call for a visible removal button. When an analyst presses it, a `Permission denied` alert must appear. A fixture is a helper that Playwright sets up and passes to a test. The analyst fixture creates member `m20` and owns that record.
+
+Mark the statement that turns a thrown error into a pass. Do not mark the control-flow syntax around it, such as the `try` and `catch` lines.

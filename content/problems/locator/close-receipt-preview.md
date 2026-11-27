@@ -1,5 +1,5 @@
 ---
-title: Find the receipt preview close button
+title: Find the button that closes the receipt preview
 kind: locator
 topic: playwright
 difficulty: easy
@@ -39,6 +39,6 @@ reference:
 decoy: { by: css, selector: '.css-x184h' }
 ---
 
-The receipt preview has an icon-only close button. Find the button that closes the entire preview, leaving any download notice alone.
+The button that closes the whole receipt preview shows only an icon. Find that button. Leave any download notice alone.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

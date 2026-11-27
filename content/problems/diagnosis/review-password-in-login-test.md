@@ -24,12 +24,12 @@ items:
       - { id: l12, text: "});" }
   - id: category
     type: single-choice
-    prompt: "Which issue should block the merge?"
+    prompt: "Which issue should stop this change from being merged?"
     choices:
-      - { id: login, text: "The test signs in through the UI although sign-in is the behavior under test." }
-      - { id: secrets, text: "An account password is stored in test source." }
-      - { id: check, text: "The test checks both the destination URL and the heading." }
-      - { id: role, text: "The account has read access instead of admin access." }
+      - { id: login, text: "The test signs in through the UI, even though sign-in is the behavior under test." }
+      - { id: secrets, text: "An account password is stored in the test's source code." }
+      - { id: check, text: "The test checks both the destination URL and the page heading." }
+      - { id: role, text: "The account has read access rather than admin access." }
 reference:
   review: [l03]
   category: secrets
@@ -38,4 +38,4 @@ decoy:
   category: secrets
 ---
 
-The reports reader is a least-privilege test account. The email address is a documented, non-secret fixture name. In the PR scenario the password literal represents a working CI credential, though the value shown here is fictional. The sign-in flow is the behavior being tested.
+The reports reader is a least-privilege test account, which means it has only the access it needs. Its email address is a documented test fixture name and is not secret. In this pull request (PR), the password written in the code stands for a working CI credential. The value shown here is made up. The sign-in flow is the behavior under test.

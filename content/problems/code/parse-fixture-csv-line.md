@@ -1,5 +1,5 @@
 ---
-title: "Parse a CSV fixture row"
+title: "Read the fields in one CSV test row"
 kind: code
 topic: parsing
 difficulty: medium
@@ -175,8 +175,12 @@ decoy:
     }
 ---
 
-Parse one CSV fixture row with no line breaks. Return its fields as strings, or `null` if the row is malformed. Outside a quoted field, a comma separates fields. An unquoted field may contain any non-comma character except `"`. A quoted field must start with `"` at the first character of the field. Inside it, commas are data and each `""` pair means one literal quote. A closing quote must be followed by a comma or the end of the row, with no padding.
+Read one row of comma-separated values (CSV) from a test fixture, a set of test inputs. The row has no line breaks. Return its fields as strings. If the row breaks any of the rules below, return `null`.
 
-Preserve all data spaces. Leading, trailing, and consecutive commas create empty fields. An empty row contains one empty field. A quote inside an unquoted value, text after a closing quote, and an unclosed quoted field are all malformed.
+Outside quotes, a comma separates fields. In an unquoted field, any character except a comma or `"` is allowed. A quoted field must start with `"` as its first character. Inside quotes, a comma is part of the value. Each `""` pair inside a quoted field represents one quote in the value.
 
-`parseFixtureCsvLine("sku, 42,ready")` returns `["sku"," 42","ready"]`. Leave the inputs unchanged.
+A quoted field must have a closing quote. A comma or the end of the row must come right after the closing quote, with no spaces or other text in between. Keep all spaces that are part of field values.
+
+A comma at the start or end creates an empty field. Commas next to each other also create empty fields. An empty row has one empty field.
+
+For example, `parseFixtureCsvLine("sku, 42,ready")` returns `["sku"," 42","ready"]`. Leave the inputs unchanged.

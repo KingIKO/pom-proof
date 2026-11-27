@@ -1,5 +1,5 @@
 ---
-title: "Redact a card field in a test log"
+title: "Hide card digits in a test log"
 kind: code
 topic: privacy
 difficulty: easy
@@ -84,6 +84,10 @@ decoy:
     }
 ---
 
-A processor test log can include synthetic payment numbers. A field is one token separated from the next by literal ASCII spaces. For each token that is exactly `card=` followed by 13 to 19 ASCII digits, replace all but its last four digits with one asterisk per replaced digit. Leave all other characters, tokens, and spacing unchanged. Matching is case-sensitive. Tabs and punctuation are part of a token, and lines contain no line breaks. This is an exercise on a known log format, not a general payment-data detector.
+A payment processor's test log can contain made-up card numbers. A token, or field, is a piece of the line separated by ordinary ASCII spaces. Tabs and punctuation stay inside a token. The input contains no line breaks.
 
-`redactLogCardField("case=checkout card=4111111111111111 status=simulated")` returns `"case=checkout card=************1111 status=simulated"`. Leave the inputs unchanged.
+Match every token made up of exactly `card=` followed by 13 to 19 ASCII digits. Match letter case exactly. For each match, leave its last four digits visible. Replace each earlier digit with one asterisk. Leave all other characters, fields, and spacing unchanged.
+
+These rules apply only to this log format. They do not detect payment data in general.
+
+For example, `redactLogCardField("case=checkout card=4111111111111111 status=simulated")` returns `"case=checkout card=************1111 status=simulated"`. Leave the inputs unchanged.

@@ -1,5 +1,5 @@
 ---
-title: Find duplicate audit event fingerprints
+title: Find repeated events in an audit import
 kind: sql
 topic: aggregation
 difficulty: easy
@@ -41,6 +41,8 @@ decoy:
     HAVING COUNT(*) > 1;
 ---
 
-An audit import may repeat the same event under a new `event_id`. For this check, a duplicate fingerprint is the same `user_id`, `action`, and `occurred_at`. Two `NULL` user IDs match for this check. Return one row for each fingerprint that occurs at least twice, with the total number of copies, including the first.
+An audit import may repeat an event with a new `event_id`. For this check, the fingerprint is the combination of `user_id`, `action`, and `occurred_at`. When both user IDs are `NULL`, meaning missing, treat them as a match.
 
-Return `user_id`, `action`, `occurred_at`, `copies`, in that column order. Row order does not matter.
+If a fingerprint appears at least twice, return one row for it. Count all copies, including the first.
+
+Return `user_id`, `action`, `occurred_at`, and `copies` in that order. Rows can appear in any order.

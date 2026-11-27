@@ -1,5 +1,5 @@
 ---
-title: Assign orders to value buckets
+title: Label each order by its total
 kind: sql
 topic: aggregation
 difficulty: easy
@@ -37,6 +37,8 @@ decoy:
     FROM orders;
 ---
 
-Check the value label displayed for each order. A missing total is `unknown`. A known total under 5,000 cents is `small`, a total from 5,000 through 19,999 cents is `standard`, and a total of at least 20,000 cents is `high`. Include every order.
+Check the value label the app shows for each order. Include every order, even if its total is missing. If the total is missing, use `unknown`.
 
-Return `order_id`, `value_bucket`, in that column order. Row order does not matter.
+If the total is under 5,000 cents, use `small`. If it is from 5,000 through 19,999 cents, use `standard`. If it is at least 20,000 cents, use `high`.
+
+Return `order_id` first and `value_bucket` second. Rows can appear in any order.

@@ -8,28 +8,28 @@ roles: [automation, sdet, senior]
 items:
   - id: cause
     type: single-choice
-    prompt: Where does the observed timeout start?
+    prompt: Where does the timeout in the log start?
     choices:
       - { id: frontend-route, text: The browser sends a tax request before a Playwright route can intercept it. }
-      - { id: upstream, text: The checkout server is calling the live tax provider and times out there. }
-      - { id: visibility, text: A loaded quote is hidden by checkout CSS. }
-      - { id: locator, text: The test uses the wrong test ID to locate a posted tax amount. }
+      - { id: upstream, text: The checkout server calls the live tax provider and times out waiting for it. }
+      - { id: visibility, text: Checkout CSS hides a quote that has already loaded. }
+      - { id: locator, text: The test finds the posted tax amount with the wrong test ID. }
   - id: fix
     type: single-choice
-    prompt: How should this test keep covering the real checkout endpoint without depending on the provider?
+    prompt: How can this test keep covering the real checkout endpoint without depending on the provider?
     choices:
-      - { id: page-route, text: Intercept the provider hostname with page.route in the browser test. }
-      - { id: retries, text: Retry checkout twice whenever the provider is slow. }
-      - { id: wait, text: Raise the visible tax total assertion timeout above the provider deadline. }
-      - { id: server-stub, text: Point the test server's tax adapter at a controlled provider stub and keep a separate sandbox integration check. }
+      - { id: page-route, text: "Use `page.route` in the browser test to intercept requests to the provider hostname." }
+      - { id: retries, text: "Whenever the tax provider responds slowly, retry the checkout request twice." }
+      - { id: wait, text: Raise the timeout for the check on the visible tax total above the provider's deadline. }
+      - { id: server-stub, text: "Use a controlled stub in the test server's tax adapter and test the sandbox separately." }
   - id: evidence
     type: multi-select
     prompt: Which observations would confirm the diagnosis and exercise the fix?
     choices:
-      - { id: correlated, text: The browser request and the outbound provider timeout share the same server trace ID. }
-      - { id: wait-green, text: A rerun with a longer assertion timeout passes once. }
-      - { id: stubbed, text: "With the controlled provider, the real checkout endpoint returns the seeded quote and the browser displays it." }
-      - { id: cached, text: A local run hits a cached quote and never calls the provider. }
+      - { id: correlated, text: The browser request and the outgoing provider timeout share the same server trace ID. }
+      - { id: wait-green, text: A rerun passes once when the assertion on the displayed tax total has a longer timeout. }
+      - { id: stubbed, text: "With the controlled provider, the browser shows the seeded quote from the real checkout endpoint." }
+      - { id: cached, text: On a local run the server gets the quote from its cache without calling the tax provider. }
 reference:
   cause: upstream
   fix: server-stub
@@ -40,7 +40,11 @@ decoy:
   evidence: [correlated, wait-green]
 ---
 
-This test covers the checkout endpoint that asks a tax provider for a quote and maps the provider response to the tax line in the order summary. Local runs usually hit a warm cache. CI starts with an empty cache and its checkout server points at the live provider.
+This test covers the checkout endpoint, the address where the browser requests a quote. The checkout server asks a tax provider for the quote. It uses the reply to fill the tax line in the order summary. A warm cache already holds saved results. Local runs usually find the quote in the cache.
+
+CI is the automated system that runs the tests. It starts with an empty cache. Its checkout server uses the live tax provider.
+
+The tax adapter is the server code that talks to the provider. A stub is a stand-in service that returns fixed answers. A sandbox is the provider's test environment. A trace ID links the log lines for one request.
 
 ```ts
 await page.goto('/checkout');

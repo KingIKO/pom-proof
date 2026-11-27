@@ -1,5 +1,5 @@
 ---
-title: Find a waiting backup status
+title: Find the status for a backup waiting for storage
 kind: locator
 syntax: xpath
 topic: playwright
@@ -40,6 +40,6 @@ reference: { by: xpath, selector: "//span[normalize-space(.)='Waiting for storag
 decoy: { by: xpath, selector: "//ul/li[1]/span" }
 ---
 
-Use XPath to find the status `span` whose full caption is `Waiting for storage`. A revised status component can add whitespace or put part of the caption inside another element. A separate status may say `Waiting for storage approval`.
+Use XPath, a language for finding elements in a page, to find the `span` that displays the backup status. Its full text must be `Waiting for storage`. The status can have extra whitespace, such as spaces, or have part of its text inside another element. A separate status may say `Waiting for storage approval`.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

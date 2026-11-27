@@ -1,5 +1,5 @@
 ---
-title: "List config leaf paths"
+title: "List paths to the settings in a JSON object"
 kind: code
 topic: test-data
 difficulty: medium
@@ -125,6 +125,10 @@ decoy:
     }
 ---
 
-A configuration audit needs the dot-separated paths to leaf settings in a JSON object. Recurse into nonempty objects only. Treat arrays of any size, `null`, primitives, and empty objects below the root as leaves. The empty root produces no paths. Object keys are nonempty ASCII strings containing letters, digits, underscores, or hyphens, so a dot always separates path segments. Return the paths sorted by ascending ASCII text order.
+A configuration audit checks settings in a JSON object. List the path to each leaf, a value where you stop looking deeper. Join the keys along each path with dots.
 
-`flattenConfigKeys({"beta":{"banner":true,"timeout":200},"staging":false})` returns `["beta.banner","beta.timeout","staging"]`. Leave the inputs unchanged.
+Look deeper only inside objects that have keys. Below the top-level object, stop at arrays of any size, `null`, basic values like numbers, and empty objects. If the top-level object is empty, return no paths.
+
+Each key is nonempty and contains only ASCII letters, digits, underscores, or hyphens. A dot always separates path parts because a key cannot contain a dot. Sort the paths by ascending ASCII text order, using the ASCII number for each character.
+
+For example, `flattenConfigKeys({"beta":{"banner":true,"timeout":200},"staging":false})` returns `["beta.banner","beta.timeout","staging"]`. Leave the inputs unchanged.

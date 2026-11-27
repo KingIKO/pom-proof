@@ -1,5 +1,5 @@
 ---
-title: Review a sleep before upload status
+title: Review a fixed wait before checking upload status
 kind: diagnosis
 topic: test-code-review
 difficulty: easy
@@ -29,7 +29,7 @@ items:
     prompt: "What is the most serious problem in this change?"
     choices:
       - { id: sync, text: "The test guesses when an asynchronous upload will finish." }
-      - { id: scope, text: "The test covers filename display as well as upload status." }
+      - { id: scope, text: "The test checks the displayed filename as well as the upload status." }
       - { id: locators, text: "The test uses stable IDs instead of XPath to find form elements." }
       - { id: setup, text: "The test does not start the driver inside the test method." }
 reference:
@@ -40,4 +40,8 @@ decoy:
   category: sync
 ---
 
-The fixture provides a driver, a base URL and an absolute path to a valid PDF. The status node exists from page load and initially reads `Ready`. Uploading replaces that text with `Uploaded`, which guarantees the filename is already rendered. Review the synchronization statements. The method's `throws` clause can be cleaned up with the sleep; leave the signature unmarked.
+The test fixture provides a driver, a base URL and an absolute path to a valid PDF. The driver is the WebDriver object that controls the browser. The status element exists from page load and first reads `Ready`.
+
+The upload is asynchronous: the browser can keep working while the upload runs in the background. The upload replaces the status text with `Uploaded`. That change guarantees that the filename is already on screen.
+
+Review the statements that handle timing, which is called synchronization. The method's `throws` clause can be removed along with the sleep. Leave the method signature unmarked.

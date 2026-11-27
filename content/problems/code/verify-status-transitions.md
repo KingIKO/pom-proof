@@ -1,5 +1,5 @@
 ---
-title: "Flag invalid polling transitions"
+title: "Find status steps the polling test does not allow"
 kind: code
 topic: api
 difficulty: easy
@@ -88,6 +88,8 @@ decoy:
     }
 ---
 
-An API test records HTTP status codes in polling order. A fixture lists allowed directed transitions as `[previous, next]` pairs. Return the zero-based indices of later statuses whose immediately preceding transition is not allowed, in ascending order. Check every adjacent pair even after an invalid transition. A repeated status requires its own allowed pair. A trace with fewer than two statuses returns an empty array. Both arguments contain fixture-supplied integer codes.
+An API test polls, or checks repeatedly, and records the HTTP status code from each response in order. The test data lists allowed transitions, or steps from one status to the next, as `[previous, next]` pairs. The order in a pair matters. Both inputs use whole-number status codes supplied by the test data.
 
-`verifyStatusTransitions([202,202,200], [[202,202],[202,200]])` returns `[]`. Leave the inputs unchanged.
+Check every pair of neighboring statuses, even after you find a pair that is not allowed. If a status repeats, the pair from that status to itself still needs to be allowed. For each disallowed pair, return the later status's position, counting from zero. Put the positions in ascending order. If there are fewer than two statuses, return an empty array.
+
+For example, `verifyStatusTransitions([202,202,200], [[202,202],[202,200]])` returns `[]`. Leave the inputs unchanged.

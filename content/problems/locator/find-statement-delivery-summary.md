@@ -1,5 +1,5 @@
 ---
-title: Find the paper statement delivery summary
+title: Find the delivery description for paper statements
 kind: locator
 syntax: xpath
 topic: playwright
@@ -38,6 +38,6 @@ reference: { by: xpath, selector: "//dt[normalize-space(.)='Paper statement']/fo
 decoy: { by: xpath, selector: '//dl/dd[1]' }
 ---
 
-Use XPath to find the `dd` immediately after the term `Paper statement`. Its description may be translated, and each term and description may be wrapped together in a `div`.
+Use XPath, a language for finding elements in a page, to find the `dd` description element right after the term `Paper statement`. The app may translate the description. It may also put each term and its description together in a `div` container.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

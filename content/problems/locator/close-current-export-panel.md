@@ -1,5 +1,5 @@
 ---
-title: Find the close button in the open export dialog
+title: Find the button that closes the open export history dialog
 kind: locator
 syntax: css
 topic: playwright
@@ -38,6 +38,6 @@ reference: { by: css, selector: 'dialog[open][data-panel="exports"] button[value
 decoy: { by: css, selector: 'dialog[data-panel="exports"] button[value="close"]' }
 ---
 
-Use CSS to find the close button in the open export history dialog. The app can preload a closed copy of the same dialog and use it on the next open. Panel and button values stay the same in each locale.
+Use a CSS selector, a pattern that matches page elements, to find the close button in the open export history dialog. A dialog is a panel the app opens for a specific task. The app can load a closed copy in advance and use it the next time someone opens the dialog. The values on the panel and button stay the same across languages and regions.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

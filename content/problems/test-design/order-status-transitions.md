@@ -1,5 +1,5 @@
 ---
-title: Check which actions change an order status
+title: Check when an order changes status
 kind: test-design
 topic: state-transitions
 difficulty: medium
@@ -7,8 +7,8 @@ minutes: 11
 roles: [manual-qa, automation, sdet]
 exportName: nextOrderStatus
 params:
-  - { name: status, type: enum, label: Current status, values: [awaiting-payment, paid, shipped, delivered, cancelled] }
-  - { name: action, type: enum, label: Action, values: [capture, ship, deliver, cancel] }
+  - { name: status, type: enum, label: Current order status, values: [awaiting-payment, paid, shipped, delivered, cancelled] }
+  - { name: action, type: enum, label: Action to take, values: [capture, ship, deliver, cancel] }
 implementation: |
   export function nextOrderStatus(status, action) {
     if (status === 'awaiting-payment' && action === 'capture') return 'paid';
@@ -19,7 +19,7 @@ implementation: |
   }
 mutants:
   - name: ships-before-payment
-    teaches: Try fulfillment actions before the payment requirement is met.
+    teaches: Try shipping or delivering the order before the service collects payment.
     implementation: |
       export function nextOrderStatus(status, action) {
         if (status === 'awaiting-payment' && action === 'capture') return 'paid';
@@ -29,7 +29,7 @@ mutants:
         return status;
       }
   - name: refuses-unpaid-cancellation
-    teaches: Compare cancellation on either side of payment capture.
+    teaches: Try canceling before payment and after payment. Compare the results.
     implementation: |
       export function nextOrderStatus(status, action) {
         if (status === 'awaiting-payment' && action === 'capture') return 'paid';
@@ -39,7 +39,7 @@ mutants:
         return status;
       }
   - name: refuses-paid-cancellation
-    teaches: Check that payment capture does not remove a valid way to cancel.
+    teaches: Check that you can still cancel the order after the service collects payment.
     implementation: |
       export function nextOrderStatus(status, action) {
         if (status === 'awaiting-payment' && action === 'capture') return 'paid';
@@ -49,7 +49,7 @@ mutants:
         return status;
       }
   - name: cancels-after-shipment
-    teaches: Check that cancellation stops changing the status once fulfillment starts.
+    teaches: Once shipping starts, check that canceling no longer changes the status.
     implementation: |
       export function nextOrderStatus(status, action) {
         if (status === 'awaiting-payment' && action === 'capture') return 'paid';
@@ -59,7 +59,7 @@ mutants:
         return status;
       }
   - name: drops-delivery-event
-    teaches: Assert the final transition on the successful fulfillment path.
+    teaches: Check that delivering a shipped order gives it the delivered status.
     implementation: |
       export function nextOrderStatus(status, action) {
         if (status === 'awaiting-payment' && action === 'capture') return 'paid';
@@ -68,7 +68,7 @@ mutants:
         return status;
       }
   - name: reopens-cancelled-order
-    teaches: Try events that arrive late and check that terminal statuses hold.
+    teaches: After an order reaches a final status, check that late events leave it unchanged.
     implementation: |
       export function nextOrderStatus(status, action) {
         if ((status === 'awaiting-payment' || status === 'cancelled') && action === 'capture') return 'paid';
@@ -111,7 +111,7 @@ decoy:
     - { args: [shipped, deliver], expected: delivered }
 ---
 
-The order service computes one change at a time with `nextOrderStatus(status, action)`. The function returns the next status as a string.
+The order service uses the `nextOrderStatus(status, action)` function to work out one change at a time. The function returns the next status as text. The `capture` action means the service collects payment.
 
 | Current status | Action | Next status |
 | --- | --- | --- |
@@ -121,6 +121,6 @@ The order service computes one change at a time with `nextOrderStatus(status, ac
 | `awaiting-payment` | `cancel` | `cancelled` |
 | `paid` | `cancel` | `cancelled` |
 
-Every other combination of the listed statuses and actions returns the current status unchanged. In particular, `delivered` and `cancelled` are terminal.
+If the current status and action do not match a row, the function returns the same status. The `delivered` and `cancelled` statuses are terminal, meaning no action can change them.
 
-Enter test rows or write a JavaScript `export function test(nextOrderStatus)` that throws on an unexpected result.
+Enter test rows or write the JavaScript function `export function test(nextOrderStatus)`. If the status differs from what you expected, throw an error.

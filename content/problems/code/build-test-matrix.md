@@ -1,5 +1,5 @@
 ---
-title: "Build an ordered test matrix"
+title: "List test setting combinations in order"
 kind: code
 topic: test-data
 difficulty: medium
@@ -104,6 +104,10 @@ decoy:
     }
 ---
 
-A QA runner receives ordered lists of possible values for each test parameter. Return every tuple that picks one value per axis, with positions in axis order. Within each axis, remove exact duplicate strings while keeping the first occurrence. Generate tuples with the first axis changing slowest and the last axis changing fastest. If any axis is empty, there are no tuples. If there are zero axes, return one empty tuple to represent the default run.
+A test runner gets an ordered list of possible values for each test setting. Each list is an axis of the test matrix. In each axis, keep only the first copy of each exact string.
 
-`buildTestMatrix([["firefox","chromium"],["en","fr"]])` returns `[["firefox","en"],["firefox","fr"],["chromium","en"],["chromium","fr"]]`. Leave the inputs unchanged.
+Return every tuple, a list with one value from each axis. Put the values inside each tuple in axis order. Across the results, change the first axis slowest and the last axis fastest.
+
+If any axis is empty, return no tuples. If there are zero axes, return one empty tuple for the default run.
+
+For example, `buildTestMatrix([["firefox","chromium"],["en","fr"]])` returns `[["firefox","en"],["firefox","fr"],["chromium","en"],["chromium","fr"]]`. Leave the inputs unchanged.

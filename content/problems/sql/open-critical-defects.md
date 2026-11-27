@@ -1,5 +1,5 @@
 ---
-title: List open critical defects with their test case titles
+title: Show open critical defects and any linked test titles
 kind: sql
 topic: joins
 difficulty: easy
@@ -46,6 +46,6 @@ decoy:
     ORDER BY d.defect_id;
 ---
 
-A triage report needs all defects with severity `critical` and status `open`. The separate `in_progress` status is outside this report. A defect can be filed without a linked test case. Keep it in the report and show a `NULL` title when it has no link.
+A triage report helps the team decide which defects to address. Include all defects with severity `critical` and status `open`. Leave out defects with status `in_progress`. If a defect has no linked test case, keep the defect and return `NULL` for the title.
 
-Return `defect_id`, `summary`, `case_title`, in that column order. Sort by `defect_id` ascending.
+Return `defect_id`, `summary`, and `case_title` in that order. Sort by `defect_id` in ascending order.

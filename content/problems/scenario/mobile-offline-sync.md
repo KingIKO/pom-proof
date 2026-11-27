@@ -1,5 +1,5 @@
 ---
-title: Test offline edits after reconnect
+title: Test whether offline edits survive a restart and reconnect
 kind: scenario
 topic: mobile-sync
 difficulty: hard
@@ -8,52 +8,52 @@ roles: [manual-qa, automation, sdet, senior]
 items:
   - id: clarify
     type: multi-select
-    prompt: What would you ask before testing offline edits on a device?
+    prompt: What would you ask before you test offline edits on a device?
     choices:
-      - { id: badge, text: "Should the offline badge sit above or below the navigation bar?" }
-      - { id: animation, text: "Should the reconnect indicator fade in or appear at once?" }
-      - { id: durability, text: "Which pending edits must survive app closure or a device restart?" }
-      - { id: conflict, text: "What should the worker and user see when a server update conflicts with the saved edit?" }
+      - { id: badge, text: "Should the offline badge sit above the navigation bar or below it?" }
+      - { id: animation, text: "Should the reconnect indicator fade in, or should it appear at once?" }
+      - { id: durability, text: "Which pending edits must survive closing the app or restarting the device?" }
+      - { id: conflict, text: "When a server update conflicts with the saved edit, what should the worker and user see?" }
   - id: risk
     type: budgeted-pick
-    prompt: Spend up to 15 minutes on preventing lost edits after interruption and conflict.
+    prompt: You have up to 15 minutes. Choose checks that catch lost edits after an interruption or a conflict.
     budget: 15
     choices:
-      - { id: restart, cost: 8, text: "Save offline and close the app, then reopen before reconnecting and check the server copy." }
-      - { id: conflict, cost: 7, text: "Save offline over a version changed by dispatch and check that the conflict retains the local edit." }
-      - { id: theme, cost: 5, text: "Compare the offline indicator in dark and light modes." }
-      - { id: online, cost: 7, text: "Edit two records over a stable connection on another supported phone." }
+      - { id: restart, cost: 8, text: "Save offline, close and reopen the app before reconnecting, then check the server copy." }
+      - { id: conflict, cost: 7, text: "Check that saving offline over dispatch's changed version keeps the local edit." }
+      - { id: theme, cost: 5, text: "Compare the look of the offline indicator in the app's dark and light modes." }
+      - { id: online, cost: 7, text: "On another supported phone, edit two records while the connection stays stable." }
   - id: layer
     type: single-choice
-    prompt: Which layer first investigates real-device lifecycle and reconnection combinations when no device automation is available?
+    prompt: When no device automation is available, which kind of test first explores combinations of app closing, restarts, and reconnection on a real device?
     choices:
-      - { id: api, text: "API" }
-      - { id: manual, text: "Manual exploratory" }
-      - { id: ui, text: "UI automation" }
-      - { id: unit, text: "Unit" }
+      - { id: api, text: "An API test" }
+      - { id: manual, text: "A manual exploratory test" }
+      - { id: ui, text: "An automated UI test" }
+      - { id: unit, text: "A unit test" }
   - id: conflict-layer
     type: single-choice
-    prompt: Which layer first checks that the pure sync reducer retains an edit when its base version differs from dispatch's version?
+    prompt: The edit started from a different version than the one dispatch saved. Which kind of test first checks whether the pure sync reducer keeps the edit?
     choices:
-      - { id: unit, text: "Unit" }
-      - { id: ui, text: "UI automation" }
-      - { id: manual, text: "Manual exploratory" }
-      - { id: api, text: "API" }
+      - { id: unit, text: "A unit test" }
+      - { id: ui, text: "An automated UI test" }
+      - { id: manual, text: "A manual exploratory test" }
+      - { id: api, text: "An API test" }
   - id: stop
     type: single-choice
-    prompt: Which result stops rollout?
+    prompt: Which result should stop the rollout?
     choices:
-      - { id: data, text: "A saved offline edit disappears after closing and reopening the app." }
-      - { id: pending, text: "A pending edit remains visible until the device reconnects." }
-      - { id: label, text: "The offline banner uses the same wording after reopening." }
-      - { id: conflict, text: "A conflicting edit stays available for the user to resolve." }
+      - { id: data, text: "A saved offline edit is gone after the app is closed and reopened." }
+      - { id: pending, text: "A pending edit stays visible on the phone until the device reconnects." }
+      - { id: label, text: "The offline banner shows the same wording as before after the app reopens." }
+      - { id: conflict, text: "A conflicting edit stays available on the phone so the user can resolve it." }
   - id: order
     type: ordering
-    prompt: Order the test that isolates persistence before network sync.
+    prompt: Put the steps in order. The test checks that the edit is saved on the device before any network sync.
     choices:
-      - { id: reconnect, text: "Reconnect after confirming the pending edit is still present." }
-      - { id: reopen, text: "Close and reopen offline, then read the pending value." }
-      - { id: verify, text: "After sync completes, open an independent online view and check the saved value." }
+      - { id: reconnect, text: "Reconnect once you have confirmed the pending edit is still there." }
+      - { id: reopen, text: "While still offline, close and reopen the app, then read the pending value." }
+      - { id: verify, text: "After the sync finishes, open a separate online view and check the saved value." }
       - { id: save, text: "Take the device offline, save a fixture edit, and record the pending value." }
 reference:
   clarify: [durability, conflict]
@@ -71,6 +71,6 @@ decoy:
   order: [save, reconnect, reopen, verify]
 ---
 
-Field staff edit work orders on a phone without coverage. An acknowledged offline edit must survive closing and reopening the app. If dispatch changed the work order first, the conflict must preserve the local edit for resolution rather than discarding it.
+Field staff edit work orders on a phone with no network coverage. When the app confirms an offline edit as saved, that edit must survive closing and reopening the app. If the dispatch team changes the same work order first, there is a conflict. The app must keep the local edit so someone can resolve the conflict.
 
-The ticket leaves restart coverage and conflict details open. A real test device and an independent online view are available today. Device automation is unavailable. A pure sync reducer decides which pending edits to keep from their versions and the server result.
+The ticket leaves open which restarts must be covered and how conflicts work. Today you have a real test device and a separate online view of the data. No device automation is available. The sync reducer is a pure function, so it works only from its inputs. It looks at the versions of pending edits and the server result, and decides which edits to keep.

@@ -1,5 +1,5 @@
 ---
-title: Find the highest earners in each department
+title: Find everyone who earns their department's highest salary
 kind: sql
 topic: ranking
 difficulty: medium
@@ -49,6 +49,6 @@ decoy:
     ORDER BY d.department_id, e.employee_id;
 ---
 
-Check a department payroll report against the employee export. For each department with a known salary, find every employee whose known salary is the highest in that department. Omit unassigned employees and departments with no known salary. Include all ties.
+Use the employee export to check a department payroll report. Leave out employees with no department. If a department has no recorded salaries, leave it out. For each other department, find the highest recorded salary. Include every employee in the department with that salary.
 
-Return `department_id`, `department_name`, `employee_id`, `employee_name`, `salary_cents`, in that column order. Sort by `department_id` ascending, then `employee_id` ascending.
+Return `department_id`, `department_name`, `employee_id`, `employee_name`, and `salary_cents` in that order. Sort by `department_id`, then `employee_id`, both in ascending order.

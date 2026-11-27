@@ -1,5 +1,5 @@
 ---
-title: "Choose the smallest regression suite"
+title: "Cover every required check with the fewest tests"
 kind: code
 topic: test-design
 difficulty: hard
@@ -153,8 +153,10 @@ decoy:
     }
 ---
 
-A release needs to cover every required check label using the fewest available tests. Each test has an `id` and a `covers` list of check labels. Match labels exactly, ignore repeated labels, and ignore any label that is absent from `required`. Each test can be selected at most once. Return the chosen IDs in ascending ASCII text order. If several suites use the same smallest number of tests, return the one whose sorted list comes first when compared from left to right.
+A release needs a regression suite, a group of tests that check whether existing behavior still works. Choose the fewest available tests that cover every required check label. Each test has an `id` and a `covers` list of check labels. Match labels exactly and keep only one copy of each label. Ignore labels that do not appear in `required`.
 
-Return `null` if no suite covers all the required labels. An empty requirement list needs no tests and returns an empty list. This exact scheduler handles small fixtures with at most 12 tests and unique nonempty ASCII test IDs.
+Choose each test at most once. Return the chosen IDs in ascending ASCII text order, using the ASCII number for each character. If several suites tie for fewest tests, compare their sorted ID lists from left to right. Return the list that sorts first.
 
-`smallestRegressionSuite([{"id":"only","covers":["auth","cart"]},{"id":"auth","covers":["auth"]}], ["cart","auth"])` returns `["only"]`. Leave the inputs unchanged.
+If no suite covers every required label, return `null`. If there are no required labels, return an empty list. This exercise asks for an exact answer and uses test inputs with at most 12 tests. Each test ID is unique, nonempty, and written in ASCII.
+
+For example, `smallestRegressionSuite([{"id":"only","covers":["auth","cart"]},{"id":"auth","covers":["auth"]}], ["cart","auth"])` returns `["only"]`. Leave the inputs unchanged.

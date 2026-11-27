@@ -1,5 +1,5 @@
 ---
-title: "Deduplicate a test run queue"
+title: "Remove repeated test IDs from a rerun queue"
 kind: code
 topic: test-data
 difficulty: easy
@@ -67,6 +67,8 @@ decoy:
     }
 ---
 
-Several suites nominate test case IDs for a shared rerun queue. Return the distinct IDs in first-occurrence order. Match strings exactly, including case, whitespace, and Unicode spelling. IDs can be empty strings, and an empty input returns an empty array. Do not sort the queue or normalize IDs.
+Several groups of tests share a list of test cases to run again. Return each case ID once, in the order it first appears. Match IDs exactly, including letter case and how the text is written in Unicode. Spaces, tabs, and all other whitespace must match too.
 
-`dedupeCaseIds(["api-1","api-1","api-2"])` returns `["api-1","api-2"]`. Leave the inputs unchanged.
+An ID can be an empty string. If the input is empty, return an empty array. Do not sort the queue or change the spelling or format of IDs.
+
+For example, `dedupeCaseIds(["api-1","api-1","api-2"])` returns `["api-1","api-2"]`. Leave the inputs unchanged.

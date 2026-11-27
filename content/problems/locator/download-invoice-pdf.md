@@ -1,5 +1,5 @@
 ---
-title: Find the invoice PDF download
+title: Find the link that downloads the invoice PDF
 kind: locator
 syntax: css
 topic: playwright
@@ -40,6 +40,6 @@ reference: { by: css, selector: 'a[download="IV-638.pdf"]' }
 decoy: { by: css, selector: 'a[href="/billing/iv-638/pdf?key=728b"]' }
 ---
 
-Use CSS to find the link that downloads `IV-638.pdf`. The filename stays fixed for this invoice. The link's signed URL changes when the page refreshes.
+Use a CSS selector, a pattern that matches page elements, to find the link that downloads `IV-638.pdf`. The filename stays the same for this invoice. The signed URL, the web address with access details, changes when the page reloads.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

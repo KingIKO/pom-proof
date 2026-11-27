@@ -1,5 +1,5 @@
 ---
-title: "Compare release versions"
+title: "Decide which release version ranks higher"
 kind: code
 topic: ci
 difficulty: medium
@@ -167,8 +167,14 @@ decoy:
     }
 ---
 
-Compare two valid Semantic Versioning 2.0.0 strings. Return `-1` if the left version has lower precedence, `1` if it has higher precedence, or `0` if they tie. Ignore build metadata after `+`.
+Both inputs follow Semantic Versioning 2.0.0, a standard for writing and ranking release versions. If the left version ranks lower, return `-1`. If it ranks higher, return `1`. If they tie, return `0`. Ignore build metadata, the extra build details after `+`.
 
-Compare major, minor, and patch as integers in that order. For equal core versions, a release without a prerelease has higher precedence. Compare prerelease identifiers left to right: two numeric identifiers use integer order, a numeric identifier ranks below every nonnumeric one, and two nonnumeric identifiers use ASCII text order. If all shared identifiers are equal, the shorter list ranks lower. Numeric parts may exceed JavaScript's safe integer range, so keep exact ordering without converting them to floating-point values.
+Compare the major, minor, and patch numbers as whole numbers, in that order. Any numeric part may exceed JavaScript's safe integer range, including major, minor, and patch. Within that range, JavaScript's usual number type can represent every integer exactly. Keep the order exact without converting numeric parts to floating-point numbers.
 
-`compareReleaseVersions("1.10.0", "1.9.9")` returns `1`. Leave the inputs unchanged.
+A prerelease label starts after a hyphen that follows the patch number. It ends before any build metadata. If the major, minor, and patch numbers tie, a version without a prerelease label ranks higher than one with a label.
+
+Compare the dot-separated parts of the prerelease label from left to right. These parts are called identifiers. If both parts are numeric, compare them as whole numbers. A numeric part ranks below any nonnumeric part. If neither part is numeric, compare them in ASCII text order, using the ASCII number for each character.
+
+If all shared parts match, the shorter list ranks lower.
+
+For example, `compareReleaseVersions("1.10.0", "1.9.9")` returns `1`. Leave the inputs unchanged.

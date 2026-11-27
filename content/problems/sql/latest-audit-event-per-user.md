@@ -1,5 +1,5 @@
 ---
-title: Find the latest audit event for each user
+title: Show each user's most recent audit event
 kind: sql
 topic: ranking
 difficulty: hard
@@ -45,6 +45,6 @@ decoy:
     ORDER BY u.user_id, e.event_id;
 ---
 
-Build an audit summary with one row per user. Choose the event with the latest `occurred_at` for that user. If several events have that timestamp, choose the one with the greatest `event_id` among them. Timestamps use `YYYY-MM-DD HH:MM:SS` in UTC. Include users with no events and return `NULL` for all three event fields for them.
+The audit summary needs one row per user. Choose that user's event with the latest time in `occurred_at`. If events tie for latest, choose the one with the largest `event_id`. Timestamps store UTC time as `YYYY-MM-DD HH:MM:SS`.
 
-Return `user_id`, `event_id`, `action`, `occurred_at`, in that column order. Sort by `user_id` ascending.
+If a user has no events, include them with `NULL` in all three event fields. Return `user_id`, `event_id`, `action`, and `occurred_at` in that order. Sort by `user_id` in ascending order.

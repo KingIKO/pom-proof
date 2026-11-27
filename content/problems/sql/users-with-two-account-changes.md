@@ -1,5 +1,5 @@
 ---
-title: Find users who changed both email and password
+title: List users who changed their email and their password
 kind: sql
 topic: aggregation
 difficulty: medium
@@ -40,6 +40,6 @@ decoy:
     HAVING COUNT(*) >= 2;
 ---
 
-An account settings audit needs the users who have at least one `email_changed` event and at least one `password_changed` event. The events can occur in either order. Repeated events of one type do not replace a missing event of the other type. Return one row per qualifying user.
+The account settings audit looks for two types of changes. A user qualifies if they have at least one `email_changed` event and at least one `password_changed` event. The changes can happen in either order. If a user has only one type of change, repeats of that type do not count for the other. Return one row per qualifying user.
 
-Return only `user_id`. Row order does not matter.
+Return only `user_id`. Rows can appear in any order.

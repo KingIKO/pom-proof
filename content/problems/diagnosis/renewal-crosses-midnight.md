@@ -10,26 +10,26 @@ items:
     type: single-choice
     prompt: Why does CI show June 2?
     choices:
-      - { id: seeded-offset, text: The CI job seeds a renewal one day later. }
-      - { id: cache, text: A previous invoice is still cached in the browser. }
+      - { id: seeded-offset, text: The CI job creates a renewal date that is one day later. }
+      - { id: cache, text: The browser still has an earlier invoice in its cache. }
       - { id: locale, text: An English locale converts June 1 to June 2. }
       - { id: viewer-zone, text: The same instant falls on different local dates in the two browser time zones. }
   - id: fix
     type: single-choice
-    prompt: How should this New York display test be made repeatable?
+    prompt: How can this test of the New York display give the same result on every run?
     choices:
       - { id: ci-text, text: Accept June 2 in CI and June 1 on developer machines. }
-      - { id: pin-zone, text: Keep the fixed timestamp and set the browser context time zone to America/New_York. }
-      - { id: zone-locale, text: Set the browser locale to en-US and keep the browser time zone inherited from the machine. }
-      - { id: midday, text: Move the seed timestamp to midday UTC so the dates agree. }
+      - { id: pin-zone, text: Keep the timestamp fixed and set the context time zone to America/New_York. }
+      - { id: zone-locale, text: Keep the machine's time zone and set the browser locale to en-US. }
+      - { id: midday, text: Move the fixed timestamp to midday UTC so that both dates agree. }
   - id: evidence
     type: multi-select
     prompt: Which observations would confirm the diagnosis?
     choices:
-      - { id: same-instant, text: Both browsers receive the same timestamp but report UTC and America/New_York respectively. }
-      - { id: locale-only, text: Both browsers report the same English locale. }
+      - { id: same-instant, text: "The same timestamp reaches both browsers, but CI reports UTC and the local browser reports America/New_York." }
+      - { id: locale-only, text: The browser in CI and the one on the developer machine both report the same English locale. }
       - { id: swap-zone, text: "On the same runner, changing only the context time zone changes June 2 to June 1." }
-      - { id: late-rerun, text: The test passes when the job is scheduled for a different hour. }
+      - { id: late-rerun, text: The test passes when the CI job is scheduled to run at a different hour of the day. }
 reference:
   cause: viewer-zone
   fix: pin-zone
@@ -40,7 +40,7 @@ decoy:
   evidence: [same-instant, locale-only]
 ---
 
-The account page formats `renewalAt` in the viewer's browser time zone, as required. This test is intended to check the date seen by a New York viewer near midnight. The project sets `locale: 'en-US'` and leaves `timezoneId` unset.
+As required, the account page formats the `renewalAt` timestamp in the viewer's browser time zone. This test should check the date that a New York viewer sees near midnight. The project sets `locale: 'en-US'`, and the locale controls language and date format. It leaves the `timezoneId` setting unset. A browser context is an isolated browser session with its own settings, such as its time zone.
 
 ```ts
 await page.route('**/api/billing/summary', (route) =>

@@ -1,5 +1,5 @@
 ---
-title: Find the current billing link in account settings
+title: Find the link for the current billing page in account settings
 kind: locator
 syntax: css
 topic: playwright
@@ -37,6 +37,6 @@ reference: { by: css, selector: 'nav[data-nav="account-settings"] a[aria-current
 decoy: { by: css, selector: 'a[href="/accounts/personal/billing"]' }
 ---
 
-Use CSS to find the link marked as the current billing page within account settings. A separate navigation menu can also mark its own billing link as current. Account and locale segments can change, but billing overview links in this app keep the `/billing` suffix.
+Use a CSS selector, a pattern that matches page elements, to find the link marked as the current billing page in account settings. Another menu can also mark its billing link as current. The parts of the address for the account and locale may change. The locale is the language or region. Billing overview links in this app always end in `/billing`.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

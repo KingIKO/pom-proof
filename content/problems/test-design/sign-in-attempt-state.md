@@ -1,5 +1,5 @@
 ---
-title: Check account lockout and reset
+title: Check when an account locks and how to reset it
 kind: test-design
 topic: state-transitions
 difficulty: hard
@@ -7,9 +7,9 @@ minutes: 13
 roles: [manual-qa, automation, sdet, senior]
 exportName: nextSignInState
 params:
-  - { name: status, type: enum, label: Account status, values: [active, locked] }
-  - { name: failures, type: number, label: Consecutive failures }
-  - { name: event, type: enum, label: Event, values: [password-mismatch, password-match, reset-complete] }
+  - { name: status, type: enum, label: Starting account status, values: [active, locked] }
+  - { name: failures, type: number, label: Wrong passwords in a row }
+  - { name: event, type: enum, label: What happened, values: [password-mismatch, password-match, reset-complete] }
 implementation: |
   export function nextSignInState(status, failures, event) {
     if (event === 'reset-complete') return ['active', 0];
@@ -20,7 +20,7 @@ implementation: |
   }
 mutants:
   - name: locks-one-failure-early
-    teaches: Try the last counted failure that must leave the account active.
+    teaches: Check the last wrong password attempt before the account locks.
     implementation: |
       export function nextSignInState(status, failures, event) {
         if (event === 'reset-complete') return ['active', 0];
@@ -30,7 +30,7 @@ mutants:
         return [count >= 3 ? 'locked' : 'active', count];
       }
   - name: locks-one-failure-late
-    teaches: Try a failure that brings the streak exactly to the lockout threshold.
+    teaches: Use a wrong password attempt that makes the count reach the lockout limit.
     implementation: |
       export function nextSignInState(status, failures, event) {
         if (event === 'reset-complete') return ['active', 0];
@@ -40,7 +40,7 @@ mutants:
         return [count > 4 ? 'locked' : 'active', count];
       }
   - name: retains-failures-after-match
-    teaches: Start with a nonzero streak on an active account and then submit a matching password.
+    teaches: Start with an active account that has a positive failure count. Then submit the correct password.
     implementation: |
       export function nextSignInState(status, failures, event) {
         if (event === 'reset-complete') return ['active', 0];
@@ -50,7 +50,7 @@ mutants:
         return [count >= 4 ? 'locked' : 'active', count];
       }
   - name: ignores-reset-while-locked
-    teaches: Exercise account recovery after the threshold and check both result fields.
+    teaches: After the account locks, reset the password. Check the resulting status and count.
     implementation: |
       export function nextSignInState(status, failures, event) {
         if (status === 'locked') return ['locked', failures];
@@ -60,7 +60,7 @@ mutants:
         return [count >= 4 ? 'locked' : 'active', count];
       }
   - name: counts-failures-while-locked
-    teaches: Compare the counts returned for password events after lockout.
+    teaches: After the account locks, compare the counts for correct and wrong password attempts.
     implementation: |
       export function nextSignInState(status, failures, event) {
         if (event === 'reset-complete') return ['active', 0];
@@ -70,7 +70,7 @@ mutants:
         return [count >= 4 ? 'locked' : 'active', count];
       }
   - name: retains-active-streak-on-reset
-    teaches: Complete a password reset on an active account with failures already counted.
+    teaches: Start with an active account that has a positive failure count. Complete a password reset.
     implementation: |
       export function nextSignInState(status, failures, event) {
         if (event === 'reset-complete') return ['active', status === 'locked' ? 0 : failures];
@@ -115,11 +115,13 @@ decoy:
     - { args: [locked, 4, reset-complete], expected: [active, 0] }
 ---
 
-`nextSignInState(status, failures, event)` models one account event at a time. The input failure count is a whole number from 0 to 3 for `active` and is always 4 for `locked`. The function returns a JSON array with the new status first and the new count second, such as `["active", 0]`.
+The `nextSignInState(status, failures, event)` function handles one account event at a time. For `active`, the starting count of wrong passwords in a row is a whole number from 0 to 3. For `locked`, the count is always 4.
 
-- On an active account, `password-mismatch` adds one to the count. The fourth consecutive mismatch sets the status to `locked`.
-- On an active account, `password-match` leaves the account active and resets the count to zero.
-- On a locked account, either password event leaves the status and count unchanged.
-- On either status, `reset-complete` sets the account to `active` and the count to zero. The event represents a completed password reset.
+The function returns a JSON array, an ordered list written in brackets. It lists the new status first and the new count second. For example, `["active", 0]` shows an active account with no failures.
 
-Enter test rows or write a JavaScript `export function test(nextSignInState)` that throws on an unexpected result.
+- If the account is active, `password-mismatch` adds one to the count. A fourth wrong password in a row sets the status to `locked`.
+- If the account is active, `password-match` keeps it active. The event also resets the count to zero.
+- If the account is locked, a correct or wrong password leaves both the status and count unchanged.
+- The `reset-complete` event means the person finished resetting their password. With either starting status, this sets the account to `active` and the count to zero.
+
+Enter test rows or write the JavaScript function `export function test(nextSignInState)`. If the result differs from what you expected, throw an error.

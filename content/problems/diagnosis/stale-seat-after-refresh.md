@@ -1,5 +1,5 @@
 ---
-title: A seat button goes stale after refresh
+title: A seat button click fails after the map refreshes
 kind: diagnosis
 topic: selenium
 difficulty: medium
@@ -10,26 +10,26 @@ items:
     type: single-choice
     prompt: What makes the click fail?
     choices:
-      - { id: sold, text: The refreshed result marks seat B12 as sold. }
-      - { id: blocked, text: A loading overlay intercepts the click on the new seat. }
-      - { id: detached, text: The saved WebElement points to a node removed during refresh. }
+      - { id: sold, text: The refreshed seat data marks seat B12 as sold. }
+      - { id: blocked, text: A loading overlay catches the click meant for the new seat. }
+      - { id: detached, text: "The saved `WebElement` points to a node that the refresh removed." }
       - { id: session, text: The click is sent to an expired WebDriver session. }
   - id: fix
     type: single-choice
-    prompt: Which fix targets the right seat after refresh?
+    prompt: Which fix clicks the right seat after the refresh?
     choices:
-      - { id: reacquire, text: "Wait for the new seat map version, then find B12 again by its stable ID and click it." }
-      - { id: sleep, text: Sleep after refreshing and click the saved WebElement. }
-      - { id: retry-handle, text: Retry click on the saved WebElement if the stale exception is thrown. }
-      - { id: before, text: "Click B12 before refreshing, then use the refreshed map to check the result." }
+      - { id: reacquire, text: "Once the new map version loads, find B12 again by its stable ID and click it." }
+      - { id: sleep, text: "Sleep after the refresh, then click the saved `WebElement`." }
+      - { id: retry-handle, text: "If the stale element exception is thrown, retry the click on the saved `WebElement`." }
+      - { id: before, text: "Click B12 before the refresh, then use the refreshed map to check the result." }
   - id: evidence
     type: multi-select
     prompt: Which observations would confirm the diagnosis?
     choices:
-      - { id: stable-id, text: A fresh lookup of B12 in version 43 returns a different element reference that clicks successfully. }
-      - { id: ids, text: The stable seat ID is listed in both API responses. }
-      - { id: detached-node, text: A DOM capture shows the old node disconnected and a new node under the same seat ID. }
-      - { id: running, text: The driver accepts a request for the current window handle. }
+      - { id: stable-id, text: "When the test finds B12 in version 43, it gets a new element reference. The click works." }
+      - { id: ids, text: "The API responses cover the map before and after refresh. Both responses list the same stable seat ID." }
+      - { id: detached-node, text: "A snapshot of the DOM shows the old element detached. Its replacement has the same seat ID." }
+      - { id: running, text: "The driver receives a request for the current window handle, its ID for the window. It accepts the request." }
 reference:
   cause: detached
   fix: reacquire
@@ -40,7 +40,9 @@ decoy:
   evidence: [ids, detached-node]
 ---
 
-The refresh button fetches current seat availability. The map exposes the loaded version in `data-version`; the test is meant to reserve B12 from the refreshed map. No other test uses this screening.
+The refresh button asks the server which seats are available. The seat map shows its loaded version in the `data-version` attribute, a field on the page. The test must reserve B12 from the refreshed map. No other test uses this screening.
+
+The DOM is the browser's tree of page elements. A `WebElement` is Selenium's saved reference to one node, or element, in that tree. Selenium calls a reference stale when its node is no longer in the page. WebDriver sends commands between the test and the browser. The API is the interface the page uses to request seat data.
 
 ```java
 By seat = By.cssSelector("[data-seat='B12']");

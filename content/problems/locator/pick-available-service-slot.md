@@ -1,5 +1,5 @@
 ---
-title: Find the available service slot input
+title: Find the service slot a user can still select
 kind: locator
 syntax: css
 topic: playwright
@@ -39,6 +39,8 @@ reference: { by: css, selector: 'input[type="radio"][name="service-slot"][value=
 decoy: { by: css, selector: 'input[name="service-slot"][value="slot-1400"]' }
 ---
 
-Use CSS to find the enabled 14:00 radio input in `service-slot`. The app stores the same time value for every repair team at that hour. Booked inputs stay in the list and can be disabled individually or through their fieldset.
+Use a CSS selector, a pattern that matches page elements, to find the 14:00 option in `service-slot` that users can still select. The time choices are radio inputs, which let the user pick one option from the group. The app stores the same time value for every repair team at that hour.
 
-The `data-fixture-target` marker belongs to this exercise and is not part of the app.
+Booked options stay in the list. The app can disable the input itself or its fieldset, the container that groups form controls.
+
+Only this exercise uses the `data-fixture-target` marker. The app does not include it.

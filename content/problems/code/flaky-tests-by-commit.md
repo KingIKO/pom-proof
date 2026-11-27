@@ -1,5 +1,5 @@
 ---
-title: "Find flaky tests on the same commit"
+title: "Find tests that pass and fail on the same commit"
 kind: code
 topic: reporting
 difficulty: medium
@@ -122,6 +122,10 @@ decoy:
     }
 ---
 
-A test is flaky for this report if it both passed and failed on the same commit. Each run is a `{test, commit, outcome}` row with an exact case-sensitive test name and commit ID. Rows are in arrival order. Ignore skips. List the qualifying test names once, ordered by the arrival of the row that first proves each test flaky. A pass and fail on different commits do not qualify.
+For this report, a test is flaky if it both passes and fails on the same commit, or saved version of the code. A pass and a failure on different commits do not count. Ignore skipped runs.
 
-`flakyTestsByCommit([{"test":"cart","commit":"c1","outcome":"fail"},{"test":"cart","commit":"c1","outcome":"pass"}])` returns `["cart"]`. Leave the inputs unchanged.
+Each `{test, commit, outcome}` row describes one run. The rows are in the order they arrived. Match each test name and commit ID exactly, including letter case.
+
+List each qualifying test name once. Order the names by the first row that shows each test has both a pass and a failure on one commit.
+
+For example, `flakyTestsByCommit([{"test":"cart","commit":"c1","outcome":"fail"},{"test":"cart","commit":"c1","outcome":"pass"}])` returns `["cart"]`. Leave the inputs unchanged.
