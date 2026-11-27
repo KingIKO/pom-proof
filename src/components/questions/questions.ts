@@ -84,6 +84,11 @@ export const ratings = [
 
 export const filterNames = ['q', 'topic', 'role', 'level', 'type'] as const;
 export const questionListUrl = url('/questions/');
+export const questionSearchUrl = url('/questions/search.json');
+
+export function questionFragmentUrl(id: string) {
+  return url(`/questions/fragments/${id}/`);
+}
 
 export function questionUrl(id: string) {
   return url(`/questions/${id}/`);

@@ -8,13 +8,30 @@ function readPreference() {
   }
 }
 
-export function setupCodeExamples() {
-  const examples = [...document.querySelectorAll<HTMLElement>('[data-code-example]')].flatMap((figure) => {
+const examples = new Map<HTMLElement, (lang: string | null) => void>();
+let preference = readPreference();
+
+function apply(lang: string | null | undefined) {
+  if (lang === undefined) return;
+  preference = lang;
+  for (const select of examples.values()) select(lang);
+}
+
+window.addEventListener('storage', (event) => {
+  if (event.key === preferenceKey || event.key === null) apply(readPreference());
+});
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) apply(readPreference());
+});
+
+export function setupCodeExamples(root: ParentNode = document) {
+  for (const figure of root.querySelectorAll<HTMLElement>('[data-code-example]')) {
+    if (examples.has(figure)) continue;
     const first = figure.querySelector<HTMLPreElement>('pre[data-example-code]');
     const label = figure.querySelector<HTMLElement>('figcaption [data-example-label]');
     const status = figure.querySelector<HTMLElement>('[data-example-status]');
     const copy = figure.querySelector<HTMLButtonElement>('[data-example-copy]');
-    if (!first || !label || !status || !copy) return [];
+    if (!first || !label || !status || !copy) continue;
 
     const group = figure.querySelector<HTMLElement>('[data-example-languages]');
     const buttons = [...figure.querySelectorAll<HTMLButtonElement>('[data-example-lang]')];
@@ -52,14 +69,8 @@ export function setupCodeExamples() {
     });
     copy.hidden = false;
     if (group) group.hidden = false;
-    return [{ buttons, select }];
-  });
-
-  const apply = (lang: string | null | undefined) => {
-    if (lang !== undefined) for (const example of examples) example.select(lang);
-  };
-
-  for (const { buttons } of examples) {
+    examples.set(figure, select);
+    select(preference ?? null);
     for (const button of buttons) {
       button.addEventListener('click', () => {
         const lang = button.dataset.exampleLang;
@@ -76,12 +87,4 @@ export function setupCodeExamples() {
       });
     }
   }
-
-  apply(readPreference());
-  window.addEventListener('storage', (event) => {
-    if (event.key === preferenceKey || event.key === null) apply(readPreference());
-  });
-  window.addEventListener('pageshow', (event) => {
-    if (event.persisted) apply(readPreference());
-  });
 }

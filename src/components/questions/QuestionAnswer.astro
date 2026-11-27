@@ -37,11 +37,13 @@ const { id, answer } = Astro.props;
 
 <script>
   import { dueIds, rate, type Rating } from '../../lib/review';
+  import { setupCodeExamples } from './code-examples';
   import { filterParams, questionListUrl, questionUrl, remainingSession, withParams } from './questions';
 
   const answer = document.querySelector<HTMLDetailsElement>('[data-answer]');
   const reveal = answer?.querySelector('summary');
   if (answer && reveal) {
+    setupCodeExamples(answer);
     const id = answer.dataset.id ?? '';
     const params = new URLSearchParams(window.location.search);
     const filters = filterParams(params);

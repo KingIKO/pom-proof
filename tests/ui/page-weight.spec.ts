@@ -76,6 +76,10 @@ for (const { name, url, status } of light) {
     const weight = record(testInfo, name, entries);
     expect(entries.length, 'requests were recorded').toBeGreaterThan(0);
     expect(weight.heavy, 'heavy library requests').toEqual([]);
+    if (url === 'questions/') {
+      expect(entries.map(({ url }) => new URL(url).pathname).filter((path) =>
+        /\/questions\/(?:fragments\/|search\.json)/.test(path)), 'requests before opening a card or entering a search').toEqual([]);
+    }
   });
 }
 
