@@ -3,6 +3,7 @@ import type { GradeResult, Problem, StructuredKind } from '../../lib/contracts';
 import { recordResult, useGradeHook } from '../../lib/workspace';
 import ResultPanel from '../../components/shell/ResultPanel';
 import { budgetSpent, grade } from './grade';
+import type { MarkedCode } from './highlight';
 import './workspace.css';
 
 type StructuredProblem = Problem<StructuredKind>;
@@ -89,11 +90,12 @@ function Ordering({ item, picks, onChange }: {
   );
 }
 
-function Controls({ item, name, value, onChange }: {
+function Controls({ item, name, value, onChange, code }: {
   item: Item;
   name: string;
   value: Values[string] | undefined;
   onChange: Update;
+  code?: MarkedCode[string];
 }) {
   const picks = Array.isArray(value) ? value : [];
   if (item.type === 'ordering') return <Ordering item={item} picks={picks} onChange={onChange} />;
@@ -109,7 +111,8 @@ function Controls({ item, name, value, onChange }: {
               onClick={() => onChange(toggle(picks, line.id))}
             >
               <span class="structured-line-number"><span class="visually-hidden">Line </span>{index + 1}</span>{' '}
-              <code>{line.text}</code>
+              <code>{code?.[index].map(([text, color], token) =>
+                color ? <span key={token} style={{ color }}>{text}</span> : text) ?? line.text}</code>
             </button>
           </li>
         ))}
@@ -169,7 +172,7 @@ function RightAnswer({ item, value }: { item: Item; value: Values[string] }) {
   );
 }
 
-export default function Structured({ problem }: { problem: StructuredProblem }) {
+export default function Structured({ problem, markedCode }: { problem: StructuredProblem; markedCode: MarkedCode }) {
   useGradeHook<StructuredKind>(problem, grade);
   const id = useId();
   const [ready, setReady] = useState(false);
@@ -250,6 +253,7 @@ export default function Structured({ problem }: { problem: StructuredProblem }) 
                   name={name}
                   value={values[item.id]}
                   onChange={(value) => update(item.id, value)}
+                  code={markedCode[item.id]}
                 />
                 {graded && <RightAnswer item={item} value={problem.reference[item.id]} />}
               </fieldset>

@@ -20,7 +20,12 @@ const structuredItem = z.discriminatedUnion('type', [
     budget: z.number().int().positive(),
     choices: z.array(option.extend({ cost: z.number().int().positive() })).min(2),
   }),
-  z.strictObject({ ...item, type: z.literal('line-marking'), lines: z.array(option.extend({ text: source })).min(2) }),
+  z.strictObject({
+    ...item,
+    type: z.literal('line-marking'),
+    language: z.enum(['ts', 'js', 'python', 'java', 'text']).optional(),
+    lines: z.array(option.extend({ text: source })).min(2),
+  }),
 ]);
 
 const structuredAnswer = z.record(idSchema, z.union([idSchema, z.array(idSchema)]));

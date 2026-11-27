@@ -4,6 +4,7 @@ import Base from '../../../layouts/Base.astro';
 import ProblemStatement from '../../../components/shell/ProblemStatement.astro';
 import TitleBand from '../../../components/shell/TitleBand.astro';
 import Structured from '../../../engines/structured/index';
+import { highlightMarkedCode } from '../../../engines/structured/highlight';
 import Mutation from '../../../engines/mutation/index';
 import Locator from '../../../engines/locator/index';
 import Sql from '../../../engines/sql/index';
@@ -30,6 +31,7 @@ const problem: Problem = { ...entry.data, id: entry.id };
 const { Content } = await render(entry);
 const editorial = Astro.params.id ? await getEntry('editorials', Astro.params.id) : undefined;
 const Editorial = editorial ? (await render(editorial)).Content : undefined;
+const markedCode = 'items' in problem ? await highlightMarkedCode(problem.items) : {};
 ---
 <Base title={problem.title} section="practice" wide>
   <TitleBand
@@ -56,7 +58,7 @@ const Editorial = editorial ? (await render(editorial)).Content : undefined;
         : problem.kind === 'locator' ? <Locator client:load problem={problem} />
         : problem.kind === 'sql' ? <Sql client:load problem={problem} />
         : problem.kind === 'code' ? <Code client:load problem={problem} />
-        : <Structured client:load problem={problem} />}
+        : <Structured client:load problem={problem} markedCode={markedCode} />}
     </section>
   </div>
   <nav class="practice-neighbors" aria-label="Adjacent problems">

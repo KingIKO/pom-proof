@@ -51,6 +51,7 @@
   --fail: #BE123C;
   --warn: #A04808;
   --codeBg: var(--canvas);
+  --codeSelection: color-mix(in srgb, var(--badgeBg) 50%, var(--codeBg));
   --passTint: color-mix(in srgb, var(--pass) 8%, var(--surface));
   --failTint: color-mix(in srgb, var(--fail) 8%, var(--surface));
   --warnTint: color-mix(in srgb, var(--warn) 9%, var(--surface));
@@ -181,10 +182,23 @@ pre, code, kbd, samp, .code-font {
 pre, code { font-size: .94em; }
 pre {
   padding: .8rem;
-  overflow: auto;
+  font-size: var(--type-13);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   background: var(--codeBg);
   border: var(--rule);
   border-radius: var(--radius-panel);
+}
+pre > code { font-size: inherit; }
+.astro-code { color: #000; }
+.astro-code > code { display: block; white-space: normal; }
+.astro-code .line, .structured-code .structured-line > code {
+  display: block;
+  min-block-size: 1lh;
+  padding-inline-start: 2ch;
+  text-indent: -2ch;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 table { width: 100%; border-collapse: collapse; }

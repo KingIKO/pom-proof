@@ -1,7 +1,9 @@
 ---
 const markdown = await Astro.slots.render('default');
 let sample = 0;
-const html = markdown.replace(/<pre>(?=<code[\s>])/g, () =>
-  `<pre tabindex="0" role="region" aria-label="Code sample ${++sample}">`);
+const html = markdown.replace(/<pre\b([^>]*)>(?=\s*<code\b)/g, (_, attributes: string) => {
+  const kept = attributes.replace(/\s+(?:tabindex|role|aria-label)=(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+  return `<pre${kept} tabindex="0" role="region" aria-label="Code sample ${++sample}">`;
+});
 ---
 <Fragment set:html={html} />
