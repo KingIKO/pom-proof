@@ -20,7 +20,7 @@ export function catalogProblem({ id, data }: ProblemEntry): CatalogProblem {
 function requireNestedId(id: string, folder: string, collection: string) {
   const [actualFolder, slug, ...extra] = id.split('/');
   if (actualFolder !== folder || !idSchema.safeParse(slug).success || extra.length) {
-    throw new Error(`Invalid ${collection} id "${id}"; expected "${folder}/<id>"`);
+    throw new Error(`Invalid ${collection} id "${id}". Expected "${folder}/<id>".`);
   }
   return slug;
 }

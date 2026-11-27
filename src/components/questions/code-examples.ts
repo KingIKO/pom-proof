@@ -64,7 +64,7 @@ export function setupCodeExamples(root: ParentNode = document) {
         await navigator.clipboard.writeText(shown.querySelector('code')?.textContent ?? '');
         if (current === shown) status.textContent = 'Copied';
       } catch {
-        if (current === shown) status.textContent = 'Could not copy; select the code to copy it.';
+        if (current === shown) status.textContent = 'Could not copy the code. Select it and copy it yourself.';
       }
     });
     copy.hidden = false;

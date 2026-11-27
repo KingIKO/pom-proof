@@ -46,9 +46,9 @@ export default function Code({ problem }: { problem: Problem<'code'> }) {
   return (
     <div data-engine="code">
       <p class="engine-hint">
-        {language === 'python' ? <>Define <code>{pythonName(problem.exportName)}</code>.</>
-          : <>Export <code>{problem.exportName}</code>.</>}
-        {' '}Run checks the visible inputs. Submit checks every input.
+        {language === 'python' ? <>Define the function <code>{pythonName(problem.exportName)}</code>.</>
+          : <>Export the function <code>{problem.exportName}</code> so the checks can call it.</>}
+        {' '}Run checks only the inputs you can see in the results. Submit checks every input.
       </p>
       <CodeEditor key={language} value={source} language={language} label="Solution code"
         onChange={(value) => setDrafts((previous) => ({ ...previous, [language]: value }))}

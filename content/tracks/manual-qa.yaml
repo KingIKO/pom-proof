@@ -1,9 +1,9 @@
 title: Manual QA
 role: manual-qa
-summary: Practice designing tests from requirements, checking the data behind the screen, and explaining which risks matter at release.
+summary: Use requirements to plan tests. Check the data behind what the screen shows. Explain which risks matter when deciding whether to release.
 sections:
   - title: "Week 1: Test cases and reproducible bug reports"
-    note: Write expected and actual behavior so someone else can run the check and verify the fix.
+    note: In each test case, describe what you expect to happen. In the bug report, say what happened instead. Give someone else enough detail to repeat the check and see if the fix works.
     problems:
       - scenario/login-lockout
       - bug-report/refund-duplicate-receipts
@@ -18,7 +18,7 @@ sections:
       - bug-reports/defect-lifecycle-and-retest
       - agile/definition-of-done-vs-acceptance
   - title: "Week 2: Boundaries and decision tables"
-    note: Use table mode to show what happens just below, at, and above a limit, then cover combinations of rules.
+    note: Use table mode to check a value just below the limit, the limit itself, and a value just above it. A decision table shows the result for each combination of rules. Use it to check how the rules work together.
     problems:
       - test-design/booking-ticket-limits
       - test-design/cart-discount-codes
@@ -36,7 +36,7 @@ sections:
       - fundamentals/static-testing
       - agile/bdd-discount-example
   - title: "Week 3: SQL for checking records"
-    note: Match each query to the expected records, then check missing rows and counts before drawing a conclusion.
+    note: SQL lets you ask a database for records. Compare what each query returns with the records you expect. Before you decide what the results mean, check for missing rows and count the rows you got.
     problems:
       - sql/open-critical-defects
       - sql/march-paid-orders
@@ -51,8 +51,8 @@ sections:
       - api/negative-api-tests
       - api/pagination-coverage
       - test-design/reconcile-filtered-report-export
-  - title: "Week 4: State changes and exploratory follow-up"
-    note: Follow the state before and after each action, including when a response arrives late or a user tries again.
+  - title: "Week 4: How the app changes as you test"
+    note: Check the app's state, or what is true at that moment, before and after each action. Explore what changes if a response arrives late or a user tries again.
     problems:
       - test-design/password-length-policy
       - test-design/signup-username-rules
@@ -70,8 +70,8 @@ sections:
       - test-design/error-guessing-profile-settings
       - fundamentals/exploratory-testing
       - bug-reports/report-an-intermittent-bug
-  - title: "Week 5: Data discrepancies and triage"
-    note: Reconcile the evidence from different sources and write a report that makes the discrepancy reproducible.
+  - title: "Week 5: Find data mismatches and decide what to do"
+    note: Compare evidence from different sources to see where the data disagrees. Write a report that lets someone else see the same mismatch. Use the evidence to help decide what to check or fix first.
     problems:
       - sql/duplicate-audit-events
       - sql/duplicate-user-emails
@@ -89,8 +89,8 @@ sections:
       - agile/regression-around-shared-search
       - api/undocumented-api
       - fundamentals/defect-clustering
-  - title: "Week 6: High-risk coverage and release decisions"
-    note: Explain what could harm users, what evidence still matters, and which risks would remain at release.
+  - title: "Week 6: Test the biggest risks before release"
+    note: Explain what could harm users. Say what evidence still matters and which risks would remain if the team released.
     problems:
       - scenario/last-pickup-slot
       - test-design/claim-attachment-policy

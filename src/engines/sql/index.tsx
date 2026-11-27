@@ -84,7 +84,7 @@ export default function Sql({ problem }: { problem: Problem<'sql'> }) {
   return (
     <div data-engine="sql">
       <div class="sql-schema-card" data-card>
-        <h3>Schema</h3>
+        <h3>Tables and columns</h3>
         {schema && (
           <dl class="sql-schema">
             {schema.map(({ name, columns }) => (
@@ -97,9 +97,9 @@ export default function Sql({ problem }: { problem: Problem<'sql'> }) {
             ))}
           </dl>
         )}
-        {!schema && <p class="muted">{schemaError ?? 'Loading schema…'}</p>}
+        {!schema && <p class="muted">{schemaError ?? 'Loading table definitions…'}</p>}
       </div>
-      <p class="engine-hint">Run queries on the visible data. Submit checks both datasets.</p>
+      <p class="engine-hint">Run shows what your query returns on the visible data. Submit checks your result on both the visible and hidden data.</p>
       <CodeEditor value={query} language="sql" label="SQL query" onChange={setQuery}
         onRun={() => void execute('run')} resetTo="" busy={busy}
         toolbar={<span class="editor-language">Language: SQLite</span>} />

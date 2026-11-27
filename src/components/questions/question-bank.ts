@@ -327,7 +327,7 @@ export function setupQuestionBank(bank: HTMLElement) {
         try {
           state = rate(id, rating.id, reviewedAt);
         } catch {
-          feedback(message, 'Rating could not be saved; check browser storage and try again.');
+          feedback(message, 'The browser could not save your rating. Check its storage settings and try again.');
           return;
         }
         rated.set(id, state.last);
@@ -341,7 +341,7 @@ export function setupQuestionBank(bank: HTMLElement) {
         await navigator.clipboard.writeText(link.href);
         feedback(message, 'Link copied');
       } catch {
-        feedback(message, 'Link could not be copied; open the question page and copy its address.');
+        feedback(message, 'Could not copy the link. Open the question page and copy the address from your browser.');
       }
     });
   }

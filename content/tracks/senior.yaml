@@ -1,9 +1,9 @@
 title: Senior and lead QA
 role: senior
-summary: Practice setting coverage and release criteria, reviewing tests, and making quality decisions that involve multiple teams.
+summary: Decide what the tests should cover and what must be true before release. Practice reviewing tests. Make decisions about software quality with other teams.
 sections:
-  - title: "Week 1: Strategy, scope, and exit criteria"
-    note: Start with the user impact and available evidence, then decide what would change the release recommendation.
+  - title: "Week 1: Plan what to test and when to stop"
+    note: Start with how the issue affects users and what the team knows so far. Exit criteria are the conditions for ending testing. Decide what would make you change your advice about releasing.
     problems:
       - bug-report/partner-name-launch-header
       - bug-report/benefits-form-focus-trap
@@ -16,8 +16,8 @@ sections:
       - fundamentals/entry-exit-criteria
       - agile/three-amigos-waitlist
       - leadership/test-strategy-for-new-product
-  - title: "Week 2: Review design and coverage tradeoffs"
-    note: Ask what evidence a test produces, what it duplicates, and which rules or combinations it misses.
+  - title: "Week 2: Review how tests work and what they cover"
+    note: Ask what each test shows. Check which other tests show the same thing. Look for rules or combinations the tests miss.
     problems:
       - diagnosis/review-duplicated-draft-setup
       - diagnosis/review-payment-provider-ui
@@ -30,8 +30,8 @@ sections:
       - test-design/decision-table-pickup-eligibility
       - fundamentals/testing-depends-on-context
       - leadership/balance-feedback-speed-and-coverage
-  - title: "Week 3: Recurring failures and incident evidence"
-    note: Separate the first symptom from the cause, agree who owns the fix, and define how to measure whether it worked.
+  - title: "Week 3: Investigate failures that keep happening"
+    note: Tell the first sign of trouble apart from what caused it. Agree on who will fix the issue. Decide how to measure whether the fix worked.
     problems:
       - diagnosis/review-shared-saved-search
       - diagnosis/notification-tests-share-account
@@ -43,8 +43,8 @@ sections:
       - flaky-tests/quarantine-with-an-owner
       - flaky-tests/measure-first-attempt-flake
       - agile/retrospective-shared-test-data
-  - title: "Week 4: Risk across service and client boundaries"
-    note: Reason about customers who see an old state, retry a completed action, or move between time zones.
+  - title: "Week 4: Risks between apps and the services they use"
+    note: Work out what happens if a customer sees outdated information. Check what happens if a customer retries an action that already finished. Check what happens when a customer moves between time zones.
     problems:
       - diagnosis/review-swallowed-permission-failure
       - scenario/role-change-permissions
@@ -60,7 +60,7 @@ sections:
       - api/token-expiry
       - api/mock-vs-real-dependencies
   - title: "Week 5: Release gates and rollback evidence"
-    note: Make a recommendation with incomplete evidence, then explain how to detect and respond to a failed rollout.
+    note: Release gates are checks a change must pass before it reaches users. Say whether you would release when the evidence is incomplete. Explain how you would spot and respond to a failed rollout, including what would show that a rollback worked.
     problems:
       - scenario/feature-flag-release-strategy
       - scenario/data-migration-ci-gates
@@ -73,7 +73,7 @@ sections:
       - behavioral/push-back-on-a-release
       - ci-git-docker/parity-where-it-matters
   - title: "Week 6: Lead the response and improve the system"
-    note: Use the rounds to practice assigning ownership, explaining tradeoffs to partners, and choosing what to measure after the fix.
+    note: In these rounds, practice deciding who handles each part of the response. Explain to your partners what each option costs or gives up. Decide what to measure after the fix.
     problems:
       - diagnosis/tax-quote-provider-timeout
       - test-design/monthly-renewal-date
