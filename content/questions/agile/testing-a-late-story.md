@@ -14,6 +14,15 @@ trap: Calling a rushed happy-path pass enough and leaving the rest of the testin
 followUps:
   - question: What evidence do you leave for the next sprint?
     answer: I record the build, the cases I ran, and their results. I also note the checks I couldn't run so the next person knows where to pick up.
+  - question: What if stories arrive late in every sprint?
+    answer: >-
+      I'd bring sprint dates, counts of late stories, and time left to test to the retrospective.
+      I'd propose thinner slices and getting the first testable build out sooner, then compare the dates.
+  - question: The account shows promotional mail is off, but the order receipt never reaches the test inbox. What evidence would you take to the sprint review?
+    answer: >-
+      I'd bring the build, the saved preference, and the test order ID. I'd trace the order to see
+      whether the mail worker queued its receipt. The unit result for saving the preference can stand;
+      the required receipt still failed, so I'd leave the change out of the Increment.
 sources:
   - label: Scrum Guide on sprint scope and quality
     url: https://scrumguides.org/scrum-guide.html#the-sprint

@@ -14,12 +14,21 @@ trap: "Doing every check through the browser or removing browser checks simply t
 followUps:
   - question: "How do you decide which UI tests to keep?"
     answer: "I keep the ones that would fail for a real user-visible regression the lower-level checks can't see, such as a disabled submit button."
+  - question: Six browser runs fail on the same delivery cutoff. Which checks would you move, and which would you keep?
+    answer: >-
+      I'd move the cutoff variations to tests of the rule and keep the handoff check for checkout's
+      use of fulfilment dates. The pickup confirmation still needs its browser check. I'd compare
+      runtime and first-attempt failures before and after the move.
 sources:
   - label: "ISTQB CTFL v4.0.1, section 5.1.6"
     url: https://www.istqb.org/certifications/certified-tester-foundation-level
+  - label: The testing trophy, an integration-heavy alternative
+    url: https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications
 ---
 
 I start with the simplest test that can catch the failure. A pricing rule usually needs many inputs, and those cases are fast to run and diagnose when I can call the calculation directly. I use integration checks where components may disagree about the data they exchange. Then I keep end-to-end checks for customer journeys where the whole setup matters. The right mix depends on where bugs appear and how confidently we can diagnose a failure.
+
+The testing trophy puts more weight on integration tests, which can make sense if most failures occur at handoffs.
 
 ### Example
 

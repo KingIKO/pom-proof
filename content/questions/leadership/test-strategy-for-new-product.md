@@ -14,6 +14,11 @@ trap: Presenting a list of test types without tying any of them to a launch deci
 followUps:
   - question: What do you cut if the timeline is halved?
     answer: I'd protect coverage for irreversible actions, permissions, and recovery, then make the lower-risk gaps explicit to the release owner.
+  - question: How would operations know whether the booking pilot should expand?
+    answer: >-
+      Give operations a named owner and a way to see when cancelled slots stay held. Before the
+      pilot I'd make the rollback rehearsal a release requirement, run it with synthetic appointments
+      in staging, and check that recovery still works at the expected booking volume.
 ---
 
 I led QA for a new clinic booking portal with six weeks to launch. I interviewed support and product to learn which failures were hardest to recover from. Double bookings and confirmations sent to the wrong person topped the list. I put overlap rules in service tests and used a few browser flows for booking and cancellation. I asked operations to rehearse a rollback with synthetic appointments.

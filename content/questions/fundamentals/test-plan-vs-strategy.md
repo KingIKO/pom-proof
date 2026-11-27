@@ -14,6 +14,11 @@ trap: "Calling a list of test cases a complete plan when it omits environment, o
 followUps:
   - question: "What changes first if the release date moves up?"
     answer: "I'd update the plan with revised timing and scope, then flag any risks we can no longer cover under the existing approach."
+  - question: What would you look for before asking someone to use the plan on release day?
+    answer: >-
+      I'd expect objectives, scope, assumptions, owners, dates, environments and test data. It should
+      also say when checks can start or finish and where to report results. For an excluded case,
+      I'd look for what could still fail and who is prepared to accept that risk.
 sources:
   - label: "ISTQB CTFL v4.0.1, section 5.1.1"
     url: https://www.istqb.org/certifications/certified-tester-foundation-level
