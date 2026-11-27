@@ -1,0 +1,39 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import AnswerContent from '../../../../components/questions/AnswerContent.astro';
+import { questionUrl, ratings } from '../../../../components/questions/questions';
+
+export const partial = true;
+
+export async function getStaticPaths() {
+  return (await getCollection('questions')).map((entry) => {
+    const [topic, id] = entry.id.split('/');
+    return { params: { topic, id }, props: { entry } };
+  });
+}
+
+interface Props {
+  entry: CollectionEntry<'questions'>;
+}
+
+const { entry } = Astro.props;
+const { id, data } = entry;
+const { Content } = await render(entry);
+const slug = id.split('/')[1];
+---
+<div data-question-fragment={id}>
+  <AnswerContent answer={data} cardId={slug} cardTitleId={`question-title:${slug}`}><Content /></AnswerContent>
+  <div class="question-answer-actions">
+    <div class="question-ratings" role="group" aria-label="Rate your answer">
+      <span>Rate your answer</span>
+      {ratings.map(({ id, label }) => (
+        <button class="button outline" type="button" data-rating={id} aria-pressed="false">{label}</button>
+      ))}
+    </div>
+    <div class="question-answer-links">
+      <a class="button quiet" href={questionUrl(id)} data-question-permalink>Open page</a>
+      <button class="button quiet" type="button" data-question-copy>Copy link</button>
+    </div>
+    <p class="question-feedback" role="status" data-question-feedback hidden></p>
+  </div>
+</div>

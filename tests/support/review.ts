@@ -46,7 +46,7 @@ export function questionRow(page: Page, question: DiscoveredQuestion) {
 
 export const reviewState = (page: Page, question: DiscoveredQuestion) => questionRow(page, question).locator('[data-review-state]');
 
-/** Expands a bank card by its summary and waits for the inline answer's lead line. */
+/** Expands a bank card and waits for the lead line, whether fetched or from the no-JS fallback. */
 export async function expandQuestion(page: Page, question: DiscoveredQuestion) {
   const card = questionRow(page, question);
   await expect(card).toHaveCount(1);
@@ -55,6 +55,22 @@ export async function expandQuestion(page: Page, question: DiscoveredQuestion) {
   await card.getByRole('heading', { level: 2, name: questionTitle(question), exact: true }).click();
   await expect(oneLine).toBeVisible();
   return card;
+}
+
+/** Opens the selected bank cards and waits for their fetched answer bodies. */
+export async function openQuestionCards(page: Page, ids: string[]) {
+  const unique = [...new Set(ids)];
+  await expect(page.locator('[data-question-filters]')).toBeVisible();
+  await page.evaluate((ids) => {
+    const selected = new Set(ids);
+    for (const row of document.querySelectorAll<HTMLElement>('[data-question-id]')) {
+      if (row.dataset.questionId && selected.has(row.dataset.questionId)) {
+        row.querySelector<HTMLDetailsElement>('details.question-card')!.open = true;
+      }
+    }
+  }, unique);
+  await expect(page.locator('details.question-card[open] [data-question-content] .question-answer-body'))
+    .toHaveCount(unique.length);
 }
 
 /** The stored review cards, read straight from the browser. */

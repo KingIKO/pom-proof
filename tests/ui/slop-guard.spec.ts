@@ -43,7 +43,9 @@ function pageSamples() {
   const tracks = readdirSync(join(root, 'content', 'tracks')).filter((file) => /\.ya?ml$/.test(file)).sort();
   const routes = readdirSync(pages, { recursive: true, encoding: 'utf8' })
     .filter((file) => /\.(astro|md|mdx|html)$/.test(file))
-    .map((file) => file.split(sep).join('/').replace(/\.\w+$/, '').replace(/(^|\/)index$/, ''));
+    .map((file) => file.split(sep).join('/').replace(/\.\w+$/, '').replace(/(^|\/)index$/, ''))
+    // The fragments are checked in their host page by the expanded-card scans below.
+    .filter((route) => route !== 'questions/fragments/[topic]/[id]');
   return routes.map((route): { route: string; urls: string[]; status: number; walk?: string } => {
     if (!route.includes('[')) {
       if (route === '404') return { route, urls: ['this-page-does-not-exist/'], status: 404 };

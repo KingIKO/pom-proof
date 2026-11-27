@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { discoverQuestions, exampleCodeName, questionExamples, type DiscoveredQuestion } from '../support/questions';
+import { openQuestionCards } from '../support/review';
 
 const receipt = 'practice/diagnosis/receipt-recalculates-after-hard-wait/';
 const review = 'practice/diagnosis/review-swallowed-permission-failure/';
@@ -74,6 +75,7 @@ async function openExamples(page: Page, question: DiscoveredQuestion, where: 'ca
     await page.goto(`questions/#${question.slug}`);
     const card = page.locator(`[data-question-id="${question.id}"]`);
     await expect(card.locator('details').first()).toHaveAttribute('open', '');
+    await expect(card.locator('.question-answer-body')).toBeVisible();
     return card;
   }
   await page.goto(question.path);
@@ -168,8 +170,7 @@ for (const width of [1280, 1440]) {
   test(`every example variant fits without sideways scroll in the bank at ${width}px, and the question page box is no narrower`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('questions/');
-    await page.evaluate(() => document.querySelectorAll<HTMLDetailsElement>('[data-question-id]:has([data-code-example]) details.question-card')
-      .forEach((card) => { card.open = true; }));
+    await openQuestionCards(page, withExamples.map(({ id }) => id));
 
     const seen = new Set<string>();
     const problems: string[] = [];

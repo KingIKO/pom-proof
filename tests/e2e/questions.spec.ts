@@ -3,7 +3,7 @@ import {
   discoverQuestions, exampleCodeName, questionExamples, questionTitle, questionTopics, switchableLanguages,
   type DiscoveredQuestion, type ExampleVariant,
 } from '../support/questions';
-import { expandQuestion, openQuestion, questionRow, questionsInListOrder, rateByKeyboard, reviewState, storedCards } from '../support/review';
+import { expandQuestion, openQuestion, openQuestionCards, questionRow, questionsInListOrder, rateByKeyboard, reviewState, storedCards } from '../support/review';
 
 const questions = questionsInListOrder(discoverQuestions());
 const start = new Date('2026-11-26T09:00:00.000Z');
@@ -88,8 +88,82 @@ test('Review due questions shows due cards first, then new ones, and skips cards
 type FollowUp = { question: string; answer: string };
 const followUps = (question: DiscoveredQuestion) => (question.frontmatter.followUps ?? []) as FollowUp[];
 const sample = questions.find((question) => followUps(question).length > 0 && typeof question.frontmatter.trap === 'string');
+const fragmentPath = (question: DiscoveredQuestion) => `/pom-proof/questions/fragments/${question.id}/`;
 
-test('expanding a bank card shows the answer inline, rates it there, and links to its page', async ({ page }) => {
+test('the bank HTML keeps card summaries and fallback links, with no full answers', async ({ request }) => {
+  const response = await request.get('questions/');
+  expect(response.status()).toBe(200);
+  const html = await response.text();
+  expect(html.match(/data-question-id=/g)).toHaveLength(questions.length);
+  expect(html).toContain(`<a class="button quiet" href="/pom-proof/${sample!.path}">Open page</a>`);
+  expect(html).not.toMatch(/question-answer-body|question-evidence|data-code-example|data-rating=/);
+  expect(html).not.toContain(String(sample!.frontmatter.trap));
+});
+
+test('a bank answer loads only when opened and keeps its content and focus across repeated opens', async ({ page }) => {
+  const question = sample!;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const requests: string[] = [];
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith('/pom-proof/questions/fragments/')) requests.push(path);
+  });
+  await page.route(`**${fragmentPath(question)}`, async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto('questions/');
+  await expect(page.getByRole('button', { name: 'Review due questions' })).toBeVisible();
+  const card = questionRow(page, question);
+  const summary = card.locator('.question-head');
+  const body = card.locator('.question-answer-body');
+  expect(requests).toEqual([]);
+  await expect(body).toHaveCount(0);
+  try {
+    await summary.press('Space');
+    await expect(card.getByRole('status')).toHaveText('Loading answer…');
+    await expect.poll(() => requests).toEqual([fragmentPath(question)]);
+    await summary.press('Space');
+    await expect(card.getByRole('status')).toBeHidden();
+    await summary.press('Space');
+    await expect(card.getByRole('status')).toHaveText('Loading answer…');
+  } finally {
+    release();
+  }
+  await expect(body).toBeVisible();
+  await expect(summary).toBeFocused();
+  const [followUp] = followUps(question);
+  await card.getByText(followUp.question, { exact: true }).click();
+  await summary.press('Space');
+  await expect(body).toBeHidden();
+  await summary.press('Space');
+  await expect(card.getByText(followUp.answer, { exact: true })).toBeVisible();
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  expect(requests).toEqual([fragmentPath(question)]);
+});
+
+test('a failed answer fetch leaves a link to the full page and can retry on reopen', async ({ page }) => {
+  const question = sample!;
+  const pattern = `**${fragmentPath(question)}`;
+  await page.route(pattern, (route) => route.fulfill({ status: 503, body: '<h1>Unavailable</h1>' }));
+  await page.goto(`questions/?topic=${question.folder}`);
+  await expect(page.getByRole('button', { name: 'Review due questions' })).toBeVisible();
+  const card = questionRow(page, question);
+  const summary = card.locator('.question-head');
+  await summary.click();
+  await expect(card.getByRole('status')).toHaveText('Answer could not load.');
+  await expect(card.getByRole('link', { name: 'Open page', exact: true })).toHaveAttribute('href',
+    `/pom-proof/${question.path}?topic=${question.folder}`);
+  await expect(card.getByText('Unavailable')).toHaveCount(0);
+  await page.unroute(pattern);
+  await summary.click();
+  await summary.click();
+  await expect(card.locator('.question-answer-body')).toBeVisible();
+  await expect(card.getByText('Answer could not load.')).toHaveCount(0);
+});
+
+test('expanding a bank card loads the answer, rates it there, and links to its page', async ({ page }) => {
   expect(sample, 'a question with follow-ups and a trap').toBeDefined();
   const question = sample!;
   await page.clock.install({ time: start });
@@ -101,7 +175,8 @@ test('expanding a bank card shows the answer inline, rates it there, and links t
   const card = await expandQuestion(page, question);
   await expect(card.getByText('What they look for', { exact: true })).toBeVisible();
   for (const item of question.frontmatter.looksFor as string[]) await expect(card.getByText(item, { exact: true }).first()).toBeVisible();
-  await expect(card.getByRole('complementary', { name: 'The trap' })).toContainText(String(question.frontmatter.trap));
+  await expect(card.getByRole('complementary', { name: `The trap ${questionTitle(question)}`, exact: true }))
+    .toContainText(String(question.frontmatter.trap));
   await expect(card.getByText("They'll ask next", { exact: true })).toBeVisible();
 
   const [followUp] = followUps(question);
@@ -151,13 +226,20 @@ test('rapidly double-clicking Solid rates a bank card only once per visit', asyn
   await expect(feedback).toHaveText('Rated Solid. Next review in 3 days.');
 });
 
-test('a deep link opens its card in the list', async ({ page }) => {
+test('a deep link opens and loads its card in the list', async ({ page, context }) => {
   const question = questions.at(-1)!;
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const fragment = page.waitForResponse((response) => new URL(response.url()).pathname === fragmentPath(question));
   await page.goto(`questions/#${question.slug}`);
   const card = questionRow(page, question);
+  expect((await fragment).status()).toBe(200);
   await expect(card.locator('details').first()).toHaveAttribute('open', '');
   await expect(card.getByText(String(question.frontmatter.oneLine), { exact: true })).toBeVisible();
+  await expect(card.locator('.question-answer-body')).toBeVisible();
   await expect(card.getByRole('heading', { level: 2, name: questionTitle(question), exact: true })).toBeInViewport();
+  await card.getByRole('button', { name: 'Copy link' }).click();
+  await expect(card.locator('[data-question-feedback]')).toHaveText('Link copied');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(page.url());
 });
 
 /** The text search can match: title, lead, looks-for, trap, follow-ups and body, but not example code. */
@@ -165,7 +247,8 @@ const searchFields = (question: DiscoveredQuestion) => {
   const { title, oneLine, looksFor, trap } = question.frontmatter;
   return {
     trap: String(trap ?? ''),
-    body: question.body.replace(/\]\([^)]*\)|https?:\/\/\S+/g, ' '),
+    body: question.body.replace(/^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1[ \t\r]*$/gm, ' ')
+      .replace(/\]\([^)]*\)|https?:\/\/\S+/g, ' '),
     rest: [title, oneLine, ...((looksFor ?? []) as string[]), ...followUps(question).flatMap(({ question: ask, answer }) => [ask, answer])].join(' '),
   };
 };
@@ -196,6 +279,11 @@ function wordOnlyIn(field: 'trap' | 'body', labels: string[]) {
 
 for (const field of ['trap', 'body'] as const) {
   test(`search finds a question by a word only its ${field} has`, async ({ page }) => {
+    const indexRequests: string[] = [];
+    page.on('request', (request) => {
+      const path = new URL(request.url()).pathname;
+      if (path.endsWith('/search.json')) indexRequests.push(path);
+    });
     await page.goto('questions/');
     const labels = await topicLabels(page);
     expect(labels.length, 'topic chip labels').toBe(questionTopics.length);
@@ -206,10 +294,75 @@ for (const field of ['trap', 'body'] as const) {
     await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe(match!.term);
     await expect(page.getByRole('list', { name: 'Questions' }).getByRole('listitem').filter({ visible: true })
       .filter({ has: page.getByRole('heading', { level: 2 }) })).toHaveCount(1);
-    await expect(questionRow(page, match!.question)).toBeVisible();
+    const row = questionRow(page, match!.question);
+    await expect(row).toBeVisible();
     await expect(page.getByRole('status').filter({ hasText: /^\d+ shown$/ })).toHaveText('1 shown');
+    await expect(row.locator('.question-answer-body')).toHaveCount(0);
+    const card = await expandQuestion(page, match!.question);
+    const mark = card.locator(field === 'body' ? '.question-answer-body mark' : '.trap mark').first();
+    await expect(mark).toHaveText(new RegExp(`^${match!.term}$`, 'i'));
+    await search.fill('');
+    await expect(mark).toHaveCount(0);
+    await search.fill(match!.term);
+    await expect(mark).toHaveText(new RegExp(`^${match!.term}$`, 'i'));
+    expect(indexRequests).toEqual(['/pom-proof/questions/search.json']);
   });
 }
+
+test('an answer-only query survives an incoming deep link', async ({ page }) => {
+  await page.goto('questions/');
+  const match = wordOnlyIn('body', await topicLabels(page))!;
+  await page.goto(`questions/?q=${match.term}#${match.question.slug}`);
+  const card = questionRow(page, match.question);
+  await expect(card.locator('.question-answer-body mark').first()).toHaveText(new RegExp(`^${match.term}$`, 'i'));
+  await expect(page.getByRole('status').filter({ hasText: /^\d+ shown$/ })).toHaveText('1 shown');
+  expect(new URL(page.url()).searchParams.get('q')).toBe(match.term);
+});
+
+test('a delayed index applies the latest query and highlights an answer opened while waiting', async ({ page }) => {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  await page.route('**/questions/search.json', async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto('questions/');
+  const labels = await topicLabels(page);
+  const first = wordOnlyIn('body', labels)!;
+  const latest = wordOnlyIn('trap', labels)!;
+  const search = page.getByRole('searchbox', { name: `Search ${questions.length} questions` });
+  const count = page.locator('[data-question-count]');
+  try {
+    await search.fill(first.term);
+    await expect(count).toHaveText('Loading search…');
+    await search.fill(latest.term);
+    const card = await expandQuestion(page, latest.question);
+    await expect(card.locator('mark')).toHaveCount(0);
+  } finally {
+    release();
+  }
+  await expect(count).toHaveText('1 shown');
+  await expect(questionRow(page, latest.question).locator('.trap mark').first())
+    .toHaveText(new RegExp(`^${latest.term}$`, 'i'));
+  expect(new URL(page.url()).searchParams.get('q')).toBe(latest.term);
+});
+
+test('a failed index keeps title search working and retries on the next search', async ({ page }) => {
+  const pattern = '**/questions/search.json';
+  await page.route(pattern, (route) => route.fulfill({ status: 503, body: '' }));
+  await page.goto('questions/');
+  const search = page.getByRole('searchbox', { name: `Search ${questions.length} questions` });
+  const count = page.locator('[data-question-count]');
+  await search.fill(questionTitle(sample!));
+  await expect(count).toHaveText('1 shown. Answer search unavailable.');
+  await expect(questionRow(page, sample!)).toBeVisible();
+  await page.unroute(pattern);
+
+  const match = wordOnlyIn('body', await topicLabels(page))!;
+  await search.fill(match.term);
+  await expect(count).toHaveText('1 shown');
+  await expect(questionRow(page, match.question)).toBeVisible();
+});
 
 // ----- code examples -----
 
@@ -252,6 +405,17 @@ const savedLanguage = (page: Page) => page.evaluate((key) => localStorage.getIte
 test('content has a switchable example and a single-language one', () => {
   expect(switchable, 'an example with two or more variants').toBeDefined();
   expect(single, 'an example with one variant').toBeDefined();
+});
+
+test('the static fragment serves the shared answer without page chrome or scripts', async ({ request }) => {
+  const { question } = switchable!;
+  const response = await request.get(fragmentPath(question), { maxRedirects: 0 });
+  expect(response.status()).toBe(200);
+  const html = await response.text();
+  expect(html).toContain(`data-question-fragment="${question.id}"`);
+  expect(html).toContain('class="question-answer-body"');
+  expect(html).toContain('data-code-example');
+  expect(html).not.toMatch(/<!doctype|<(?:html|head|body|script)\b/i);
 });
 
 test('the example language persists across a reload and onto the question page', async ({ page }) => {
@@ -378,19 +542,22 @@ test('pressing a language switches every example on the page that has it, and th
   expect(lacked, 'a language several examples offer and one lacks').toBeDefined();
   expect(sweepLanguages[1], 'a second language several examples offer').toBeDefined();
   await page.goto('questions/');
+  await openQuestionCards(page, exampleCases.map(({ question }) => question.id));
   await expect.poll(() => exampleStates(page)).toEqual(expectedStates(null));
 
-  const expanded = new Set<string>();
+  const checked = new Set<string>();
   for (const lang of sweepLanguages as string[]) {
     // Press it in one card and watch a second card that also offers it.
-    const [pressIn, watch] = multiCases.filter((item) => langsOf(item).slice(1).includes(lang) && !expanded.has(item.question.id));
-    expect(watch, `two unopened cards offering ${lang}`).toBeDefined();
-    const pressed = exampleParts(await expandQuestion(page, pressIn.question), pressIn.index);
-    const watched = exampleParts(await expandQuestion(page, watch.question), watch.index);
-    expanded.add(pressIn.question.id).add(watch.question.id);
+    const candidates = multiCases.filter((item) => langsOf(item).slice(1).includes(lang) && !checked.has(item.question.id));
+    const [pressIn] = candidates;
+    const watch = candidates.find(({ question }) => question.id !== pressIn?.question.id);
+    expect(watch, `two distinct cards to check for ${lang}`).toBeDefined();
+    const pressed = exampleParts(questionRow(page, pressIn.question), pressIn.index);
+    const watched = exampleParts(questionRow(page, watch!.question), watch!.index);
+    checked.add(pressIn.question.id).add(watch!.question.id);
 
     await pressed.button(variantOf(pressIn, lang)).click();
-    await expectShown(watched, watch.example.variants, variantOf(watch, lang));
+    await expectShown(watched, watch!.example.variants, variantOf(watch!, lang));
     await expect.poll(() => exampleStates(page), { message: `every example after pressing ${lang}` }).toEqual(expectedStates(lang));
     expect(await savedLanguage(page)).toBe(lang);
   }
@@ -458,8 +625,9 @@ test.describe('without JavaScript', () => {
 
   test('an example shows its first variant, without language buttons or Copy', async ({ page }) => {
     const { question, example, index } = switchable!;
-    await page.goto('questions/');
-    const parts = exampleParts(await expandQuestion(page, question), index);
+    await page.goto(question.path);
+    await page.getByText('Show answer').click();
+    const parts = exampleParts(page.locator('[data-answer]'), index);
     await expect(parts.code(example.variants[0])).toBeVisible();
     await expect(parts.code(example.variants[0])).toContainText(telltale(example.variants[0]));
     for (const variant of example.variants.slice(1)) await expect(parts.code(variant)).toHaveCount(0);
@@ -467,15 +635,20 @@ test.describe('without JavaScript', () => {
     await expect(parts.copy).toBeHidden();
   });
 
-  test('a card and its first follow-up still expand', async ({ page }) => {
+  test('the bank shows a lead and opens the full page, where the answer and follow-up still expand', async ({ page }) => {
     expect(sample, 'a question with follow-ups').toBeDefined();
     await page.goto('questions/');
     const card = await expandQuestion(page, sample!);
+    await expect(card.locator('.question-answer-body')).toHaveCount(0);
+    const link = card.getByRole('link', { name: 'Open page', exact: true });
+    await expect(link).toHaveAttribute('href', `/pom-proof/${sample!.path}`);
+    await link.click();
+    await page.getByText('Show answer').click();
+    const answer = page.locator('[data-answer]');
     const [followUp] = followUps(sample!);
-    await expect(card.getByText(followUp.answer, { exact: true })).toBeHidden();
-    await card.getByText(followUp.question, { exact: true }).click();
-    await expect(card.getByText(followUp.answer, { exact: true })).toBeVisible();
-    await expect(card.getByRole('link', { name: 'Open page', exact: true })).toHaveAttribute('href', `/pom-proof/${sample!.path}`);
+    await expect(answer.getByText(followUp.answer, { exact: true })).toBeHidden();
+    await answer.getByText(followUp.question, { exact: true }).click();
+    await expect(answer.getByText(followUp.answer, { exact: true })).toBeVisible();
   });
 });
 
