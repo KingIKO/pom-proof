@@ -2,10 +2,44 @@
 problem: scenario/password-reset-links
 ---
 
-Ask when a link expires and whether a newer request invalidates older links. Both answers change which links should work. The sender label matters to someone reading the email, but learning it does not tell you whether the service should accept a second request.
+## What is going on
 
-Spend five minutes on reuse and six on expiry. Open the link for a test account, complete the reset, and submit the same link with a different candidate password. Then check that valid sign-in still uses the first replacement and the second candidate was never written. Use a separate issued link for the clock check so the expired result cannot be explained by prior use.
+The reset service changes how it stores and consumes links. A used or expired link must leave the account unchanged. An error page cannot tell you whether a password was written before the error.
 
-An API integration test can exercise both the stored link state and the resulting account state; a page that shows an error could still leave a bad write behind. Cover the pure expiry comparison with a small unit table, then use the staging clock to check the service respects it. Reuse that changes the password again stops release. The decoy spends the expiry budget on a mail delivery sweep.
+## The answer
 
-An interviewer wants a postcondition after the rejected attempt. The [OWASP forgot password guidance](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html) gives context for single use and expiry.
+1. Ask whether a new request invalidates older unused links, how long a link lasts, and when the clock starts.
+
+   **Why:** Both rules can invalidate links, and a test needs to know which one caused a particular denial.
+
+2. Spend five minutes resetting once and checking that reuse cannot change the password again. Spend six advancing the staging clock past expiry and checking that a separate link leaves the password unchanged.
+
+   **Why:** One check detects a consumed link staying valid. The unused link isolates expiry from prior use, which could otherwise explain the same denial.
+
+3. Use an API integration test for consumption and reuse.
+
+   **Why:** The request exercises both stored link state and the account write. A refusal on screen could hide an incorrect write.
+
+4. Use a small unit table for the pure time comparison, with inputs before, at, and after expiry.
+
+   **Why:** The table isolates the exact comparison. The staging clock check separately proves that the service respects that calculation.
+
+5. Stop release if a consumed link changes the password again.
+
+   **Why:** Anyone who still has that supposedly spent link could change access to the account again.
+
+6. Request a link for an isolated account, set the first replacement with that link, submit the same link with a different candidate, then verify the first replacement still works and the second does not.
+
+   **Why:** The first reset establishes a consumed link and a known good password. A different candidate makes an unintended second write observable.
+
+## Why the tempting answer fails
+
+The sender label helps readers recognize the email but does not define link acceptance. A mail delivery sweep spends the expiry budget without testing expiry. A UI refusal cannot prove persisted consumption, and a broad API check is less direct than a unit table for the pure comparison.
+
+## What the interviewer listens for
+
+Name the account state you assert after a rejected attempt and explain how you isolate reuse from expiry.
+
+## Sources
+
+- [OWASP forgot password guidance](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)

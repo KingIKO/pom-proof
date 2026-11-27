@@ -2,10 +2,44 @@
 problem: scenario/autocomplete-response-order
 ---
 
-Ask when a query becomes eligible and what can be selected while a newer request is pending. The team might keep the last list visible during loading or clear it immediately. Either policy can still satisfy the stated rule once the current response has rendered.
+## What is going on
 
-Use six minutes on inverted arrival order and four on clearing. Hold the first eligible response, render results for the longer query, then deliver the held reply. The first and second response fixtures should have different product IDs. Assert the displayed list and use Enter to verify the destination. Check clearing separately; that path has no new nonempty response to replace an old render.
+Search suggestions can return in a different order from the requests that produced them. Once the current list appears, the old reply must leave it alone. Clearing the query must close the list even if a reply is on its way.
 
-Run it at the UI layer so the test sees both what is rendered and what the keyboard selects. The decoy checks plausible results under fast responses, but nothing forces the ordering problem found in production networks. Stop if the older reply makes Enter open the old result; that changes user intent into a wrong action.
+## The answer
 
-In a Playwright TypeScript test, use `page.route()` to hold the first query and `route.fulfill()` to deliver its fixture reply afterward. See [Playwright's network guide](https://playwright.dev/docs/network). An interviewer wants controlled timing and an assertion that captures what a customer actually selects.
+1. Ask the minimum eligible query length, what happens below it, and whether old suggestions may remain visible or selectable while a newer request is pending.
+
+   **Why:** A field can keep or clear the old list during loading and still honor the rule after the new list renders. Without the pending-state policy, the test could reject a valid design.
+
+2. Spend six minutes delivering the latest reply first and the older reply last. Spend four clearing the field while a reply is held and checking that the list stays empty.
+
+   **Why:** The first check gives an old reply a chance to overwrite the current list. The second has no newer nonempty response to restore an empty search.
+
+3. Check the inverted replies at the UI layer, asserting the list and what Enter opens.
+
+   **Why:** The list can look correct while the keyboard handler still points at an old product.
+
+4. Check clearing at the UI layer too.
+
+   **Why:** A request test can show that a reply arrived. It cannot show whether that reply reopened the rendered list.
+
+5. Stop release if Enter opens an old product after the new list has appeared.
+
+   **Why:** The customer acts on one result and the application opens another.
+
+6. Type the first eligible query and hold its reply. Type the longer query, deliver its reply and see its list, then deliver the older reply and verify the same list and Enter destination. Use different product IDs. In Playwright TypeScript, use `page.route()` and `route.fulfill()` to control delivery.
+
+   **Why:** Observing the new list first establishes what the late reply might overwrite. Different IDs make an incorrect destination visible even if labels look alike.
+
+## Why the tempting answer fails
+
+Magnifier style leaves pending selection undefined. Fast common-product fixtures can pass without ever reversing the reply order a slower network can produce.
+
+## What the interviewer listens for
+
+Control timing and verify the customer's selected destination, not just the text they saw.
+
+## Sources
+
+- [Playwright's network guide](https://playwright.dev/docs/network)

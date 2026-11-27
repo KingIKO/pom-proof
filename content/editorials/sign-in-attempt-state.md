@@ -2,12 +2,36 @@
 problem: test-design/sign-in-attempt-state
 ---
 
-Start an active account with two failures and send a mismatch. The result must be `["active", 3]`. Start with three and send the same event. This time the result must be `["locked", 4]`. The two rows bracket the lockout point. Checking both the status and the count matters: a locked account could look correct while its stored count is wrong.
+## What is going on
 
-Use an active account with a nonzero streak to test a password match and a completed reset. Each should clear the streak. A locked account should ignore both password events and keep its count unchanged. A completed reset is different from either password event: it returns the account to active with zero failures.
+This is state transition testing of one account event at a time. The result has two fields. A locked account can look correct even when its failure count is wrong.
 
-The weaker answer tries an ordinary first mismatch, a match from a clean account, and reset from a locked account. It catches a reset that never gets past the locked state. A match from a clean account can't show whether the function actually clears a counter, and a first mismatch can't reveal an off-by-one lockout.
+## The answer
 
-An interviewer listens for the difference between testing this one-event function and testing a sequence in the application. A follow-up integration check can send failures, complete a reset, and show that the next mismatch starts a fresh streak.
+1. Submit `password-mismatch` to active accounts with zero, two, and three failures. Expect `["active", 1]`, `["active", 3]`, and `["locked", 4]` respectively.
 
-Source: [ISTQB CTFL Syllabus v4.0.1, section 4.2.4, state transition testing](https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf).
+   **Why:** The last active result catches the mutant that locks one failure early. The fourth mismatch catches the one that locks late. Starting from zero provides a normal increment to compare with the threshold behavior.
+
+2. From active with three failures, apply `password-match`. From active with two failures, apply `reset-complete`. Expect `["active", 0]` in both cases.
+
+   **Why:** Starting with a nonzero streak exposes two separate mutants: one keeps failures after a match, the other keeps them after a reset on an active account.
+
+3. From locked with four failures, apply each password event and expect `["locked", 4]`.
+
+   **Why:** Checking the count catches the mutant that increments on mismatch even while locked. Checking the status also proves a matching password cannot change it.
+
+4. From locked with four failures, apply `reset-complete` and expect `["active", 0]`.
+
+   **Why:** This catches the mutant that ignores reset while locked. The count must clear as well, or the next mismatch would use stale failures.
+
+## Why the tempting answer fails
+
+The first mismatch and locked reset are useful, and the reset catches recovery that leaves the account locked. But the first mismatch cannot reveal an off-by-one threshold, and a match from zero cannot tell you whether any failures were cleared. There is also no password event while locked.
+
+## What the interviewer listens for
+
+Distinguish one-event assertions from an application sequence. A follow-up integration test can send failures, complete a reset, and show that the next mismatch starts a fresh streak.
+
+## Sources
+
+- [ISTQB CTFL Syllabus v4.0.1, section 4.2.4, state transition testing](https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf)
