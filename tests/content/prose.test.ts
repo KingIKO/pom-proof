@@ -24,10 +24,10 @@ const banned = new RegExp(`\\b(?:${[
   'empower(?:s|ed|ing|ment)?', 'streamlin(?:e|es|ed|ing)', 'game[- ]?changers?',
 ].join('|')})\\b`, 'gi');
 
-/** Frontmatter keys whose values are code or test data rather than prose. */
+/** Frontmatter keys whose values are code or test data rather than prose; `code` holds question example variants. */
 const codeKeys = new Set([
   'implementation', 'fixture', 'schema', 'seed', 'alteredSeed', 'source', 'query', 'selector',
-  'starters', 'solutions', 'args', 'expected', 'rows',
+  'starters', 'solutions', 'args', 'expected', 'rows', 'code',
 ]);
 
 /** Ranges [start, end) of a text that hold code. */
@@ -241,6 +241,26 @@ describe('the prose scanner catches planted mistakes', () => {
     ['a word that only contains a banned word', 'The unrobustified harnessmaker realmy.\n'],
   ])('allows %s', (_name, text) => {
     expect(rules(scanContent('planted.md', text))).toEqual([]);
+  });
+
+  const example = (field: string) => `---\ntitle: Fine\nexamples:\n  - title: Refunds\n    variants:\n      - lang: ts\n${field}\n---\n\nText.\n`;
+
+  it('allows an exclamation mark in example code', () => {
+    const text = example('        label: Playwright Test (TypeScript)\n        code: |\n          if (!response.ok()) throw new Error("bad");\n          expect(a !== b).toBe(true);');
+    expect(rules(scanContent('planted.md', text))).toEqual([]);
+  });
+
+  it.each([
+    ['a banned word in example code', '        label: Playwright Test (TypeScript)\n        code: |\n          // leverage the fixture\n          if (!ok) return;', ['banned word@9']],
+    ['an em dash in example code', '        label: pytest (Python)\n        code: |\n          # a — b', ['em dash@9']],
+    ['an exclamation mark in an example label', '        label: Playwright Test!\n        code: |\n          x();', ['exclamation mark@7']],
+  ])('reports %s', (_name, field, expected) => {
+    expect(rules(scanContent('planted.md', example(field)))).toEqual(expected);
+  });
+
+  it('reports an exclamation mark in an example title', () => {
+    const text = '---\nexamples:\n  - title: Refunds work!\n    variants:\n      - lang: sql\n        label: SQLite (SQL)\n        code: SELECT 1;\n---\n\nText.\n';
+    expect(rules(scanContent('planted.md', text))).toEqual(['exclamation mark@3']);
   });
 
   it('still reports an exclamation mark after a closed fence', () => {

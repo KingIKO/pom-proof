@@ -1,5 +1,8 @@
-import { expect, test, type Page } from '@playwright/test';
-import { discoverQuestions, questionTitle, questionTopics, type DiscoveredQuestion } from '../support/questions';
+import { expect, test, type Locator, type Page } from '@playwright/test';
+import {
+  discoverQuestions, exampleCodeName, questionExamples, questionTitle, questionTopics, switchableLanguages,
+  type DiscoveredQuestion, type ExampleVariant,
+} from '../support/questions';
 import { expandQuestion, openQuestion, questionRow, questionsInListOrder, rateByKeyboard, reviewState, storedCards } from '../support/review';
 
 const questions = questionsInListOrder(discoverQuestions());
@@ -155,26 +158,32 @@ test('a deep link opens its card in the list', async ({ page }) => {
   await expect(card.getByRole('heading', { level: 2, name: questionTitle(question), exact: true })).toBeInViewport();
 });
 
+/** The text search can match: title, lead, looks-for, trap, follow-ups and body, but not example code. */
+const searchFields = (question: DiscoveredQuestion) => {
+  const { title, oneLine, looksFor, trap } = question.frontmatter;
+  return {
+    trap: String(trap ?? ''),
+    body: question.body.replace(/\]\([^)]*\)|https?:\/\/\S+/g, ' '),
+    rest: [title, oneLine, ...((looksFor ?? []) as string[]), ...followUps(question).flatMap(({ question: ask, answer }) => [ask, answer])].join(' '),
+  };
+};
+
+/** Topic chip labels as the list renders them; they are searchable too. */
+const topicLabels = (page: Page) => page.locator('[data-topic-filter] > span:first-child').allTextContents();
+
 /**
  * A word of at least nine letters that appears in one question's chosen field and nowhere else: not in
- * its other fields and not in any other question. Searching it can only match through that field.
+ * its other fields, not in any other question and not in a topic label. Searching it can only match
+ * through that field.
  */
-function wordOnlyIn(field: 'trap' | 'body') {
-  const fields = (question: DiscoveredQuestion) => {
-    const { title, oneLine, looksFor, trap } = question.frontmatter;
-    return {
-      trap: String(trap ?? ''),
-      body: question.body.replace(/\]\([^)]*\)|https?:\/\/\S+/g, ' '),
-      rest: [title, oneLine, ...((looksFor ?? []) as string[]), ...followUps(question).flatMap(({ question: ask, answer }) => [ask, answer])].join(' '),
-    };
-  };
-  const all = questions.map((question) => ({ question, text: fields(question) }));
+function wordOnlyIn(field: 'trap' | 'body', labels: string[]) {
+  const all = questions.map((question) => ({ question, text: searchFields(question) }));
+  const chips = [...questionTopics.map((topic) => topic.replace(/-/g, ' ')), ...labels].join(' ').toLowerCase();
   for (const { question, text } of all) {
     const own = [text.rest, field === 'trap' ? text.body : text.trap].join(' ').toLowerCase();
     for (const word of new Set(text[field].match(/[A-Za-z]{9,}/g) ?? [])) {
       const term = word.toLowerCase();
-      // Topic chip labels are searchable too.
-      if (own.includes(term) || questionTopics.some((topic) => topic.replace(/-/g, ' ').includes(term))) continue;
+      if (own.includes(term) || chips.includes(term)) continue;
       if (all.some((other) => other.question !== question
         && [other.text.trap, other.text.body, other.text.rest].join(' ').toLowerCase().includes(term))) continue;
       return { question, term };
@@ -185,9 +194,11 @@ function wordOnlyIn(field: 'trap' | 'body') {
 
 for (const field of ['trap', 'body'] as const) {
   test(`search finds a question by a word only its ${field} has`, async ({ page }) => {
-    const match = wordOnlyIn(field);
-    expect(match, `a word unique to one question's ${field}`).toBeDefined();
     await page.goto('questions/');
+    const labels = await topicLabels(page);
+    expect(labels.length, 'topic chip labels').toBe(questionTopics.length);
+    const match = wordOnlyIn(field, labels);
+    expect(match, `a word unique to one question's ${field}`).toBeDefined();
     const search = page.getByRole('searchbox', { name: `Search ${questions.length} questions` });
     await search.fill(match!.term);
     await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe(match!.term);
@@ -198,8 +209,171 @@ for (const field of ['trap', 'body'] as const) {
   });
 }
 
+// ----- code examples -----
+
+const preferenceKey = 'pom-proof:example-lang';
+const languageNames: Record<string, string> = { ts: 'TypeScript', js: 'JavaScript', python: 'Python', java: 'Java' };
+const exampleCases = questions.flatMap((question) => questionExamples(question).map((example, index) => ({ question, example, index })));
+const switchable = exampleCases.find(({ example }) => example.variants.length > 1);
+const single = exampleCases.find(({ example }) => example.variants.length === 1);
+
+/** One example's figure, its language buttons, its code regions and its Copy control. */
+function exampleParts(scope: Locator | Page, index: number) {
+  const figure = scope.getByRole('figure').nth(index);
+  const languages = figure.getByRole('group', { name: 'Example language' });
+  return {
+    figure,
+    languages,
+    button: (variant: ExampleVariant) => languages.getByRole('button', { name: languageNames[variant.lang], exact: true }),
+    code: (variant: ExampleVariant) => figure.getByRole('region', { name: exampleCodeName(variant) }),
+    copy: figure.getByRole('button', { name: 'Copy', exact: true }),
+    status: figure.getByRole('status'),
+  };
+}
+
+/** A line long enough to tell one variant from another. */
+const telltale = (variant: ExampleVariant) => variant.code.split('\n').map((line) => line.trim()).find((line) => line.length >= 12) ?? variant.code.trim();
+
+/** The shown variant is `shown`: its code is in the page, its button pressed, every other variant absent. */
+async function expectShown(parts: ReturnType<typeof exampleParts>, variants: ExampleVariant[], shown: ExampleVariant) {
+  await expect(parts.code(shown)).toBeVisible();
+  await expect(parts.code(shown)).toContainText(telltale(shown));
+  await expect(parts.figure.locator('figcaption')).toContainText(shown.label);
+  for (const variant of variants) {
+    await expect(parts.button(variant)).toHaveAttribute('aria-pressed', String(variant === shown));
+    if (variant !== shown) await expect(parts.code(variant)).toHaveCount(0);
+  }
+}
+
+const savedLanguage = (page: Page) => page.evaluate((key) => localStorage.getItem(key), preferenceKey);
+
+test('content has a switchable example and a single-language one', () => {
+  expect(switchable, 'an example with two or more variants').toBeDefined();
+  expect(single, 'an example with one variant').toBeDefined();
+});
+
+test('the example language persists across a reload and onto the question page', async ({ page }) => {
+  const { question, example, index } = switchable!;
+  const [first, second] = example.variants;
+  await page.goto('questions/');
+  const parts = exampleParts(await expandQuestion(page, question), index);
+  await expect(parts.languages.getByRole('button')).toHaveText(example.variants.map(({ lang }) => languageNames[lang]));
+  await expectShown(parts, example.variants, first);
+  expect(await savedLanguage(page), 'nothing is saved before a choice').toBeNull();
+
+  await parts.button(second).click();
+  await expectShown(parts, example.variants, second);
+  expect(await savedLanguage(page)).toBe(second.lang);
+
+  await page.reload();
+  const card = await expandQuestion(page, question);
+  await expectShown(exampleParts(card, index), example.variants, second);
+
+  await card.getByRole('link', { name: 'Open page', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: questionTitle(question) })).toBeVisible();
+  await page.getByText('Show answer').click();
+  await expectShown(exampleParts(page.locator('[data-answer]'), index), example.variants, second);
+
+  await exampleParts(page.locator('[data-answer]'), index).button(first).click();
+  await expectShown(exampleParts(page.locator('[data-answer]'), index), example.variants, first);
+  expect(await savedLanguage(page)).toBe(first.lang);
+});
+
+test('a saved language an example lacks shows its first variant and keeps the saved choice', async ({ page }) => {
+  const { question, example, index } = switchable!;
+  const missing = switchableLanguages.find((lang) => !example.variants.some((variant) => variant.lang === lang));
+  expect(missing, 'a switchable language the example lacks').toBeDefined();
+  await page.goto('questions/');
+  await page.evaluate(([key, value]) => localStorage.setItem(key, value), [preferenceKey, missing!]);
+  await page.reload();
+
+  const parts = exampleParts(await expandQuestion(page, question), index);
+  await expectShown(parts, example.variants, example.variants[0]);
+  await expect(parts.languages.getByRole('button', { name: languageNames[missing!], exact: true })).toHaveCount(0);
+  expect(await savedLanguage(page), 'the fallback does not overwrite the saved language').toBe(missing);
+
+  // A single-language example offers Copy and no language buttons.
+  const other = exampleParts(await expandQuestion(page, single!.question), single!.index);
+  await expect(other.code(single!.example.variants[0])).toBeVisible();
+  await expect(other.languages).toHaveCount(0);
+  await expect(other.copy).toBeVisible();
+  expect(await savedLanguage(page)).toBe(missing);
+});
+
+test('when storage refuses writes, the chosen language holds for the page and is not kept', async ({ page }) => {
+  const { question, example, index } = switchable!;
+  const [first, second] = example.variants;
+  await page.addInitScript(() => {
+    Storage.prototype.setItem = () => { throw new DOMException('Blocked', 'SecurityError'); };
+  });
+  const errors: Error[] = [];
+  page.on('pageerror', (error) => errors.push(error));
+  await page.goto('questions/');
+  const parts = exampleParts(await expandQuestion(page, question), index);
+  await parts.button(second).click();
+  await expectShown(parts, example.variants, second);
+  expect(errors, 'page errors').toEqual([]);
+
+  await page.reload();
+  await expectShown(exampleParts(await expandQuestion(page, question), index), example.variants, first);
+});
+
+test('Copy puts the shown variant on the clipboard and announces Copied', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const { question, example, index } = switchable!;
+  const [first, second] = example.variants;
+  // The Windows clipboard stores CRLF line endings; compare the text line by line.
+  const clipboard = async () => (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n').trimEnd();
+  await page.goto('questions/');
+  const parts = exampleParts(await expandQuestion(page, question), index);
+  await expect(parts.status).toHaveText('');
+
+  await parts.button(second).click();
+  await parts.copy.click();
+  await expect(parts.status).toHaveText('Copied');
+  expect(await clipboard()).toBe(second.code.trimEnd());
+
+  // Switching clears the announcement, and Copy then takes the new variant.
+  await parts.button(first).click();
+  await expect(parts.status).toHaveText('');
+  await parts.copy.click();
+  await expect(parts.status).toHaveText('Copied');
+  expect(await clipboard()).toBe(first.code.trimEnd());
+});
+
+test('search does not match words that appear only in example code', async ({ page }) => {
+  expect(switchable, 'a question with example code').toBeDefined();
+  await page.goto('questions/');
+  const labels = (await topicLabels(page)).join(' ').toLowerCase();
+  const searchable = questions.map((question) => Object.values(searchFields(question)).join(' ')).join(' ').toLowerCase();
+  const codeWords = exampleCases.flatMap(({ example }) => example.variants.flatMap(({ code }) => code.match(/[A-Za-z]{8,}/g) ?? []));
+  const term = codeWords.map((word) => word.toLowerCase()).find((word) => !searchable.includes(word) && !labels.includes(word));
+  expect(term, 'a word that appears only in example code').toBeDefined();
+
+  const search = page.getByRole('searchbox', { name: `Search ${questions.length} questions` });
+  const shown = page.getByRole('status').filter({ hasText: /^\d+ shown$/ });
+  await search.fill(questionTitle(switchable!.question));
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe(questionTitle(switchable!.question));
+  await expect(questionRow(page, switchable!.question)).toBeVisible();
+  await search.fill(term!);
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe(term);
+  await expect(shown).toHaveText('0 shown');
+  await expect(questionRow(page, switchable!.question)).toBeHidden();
+});
+
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
+
+  test('an example shows its first variant, without language buttons or Copy', async ({ page }) => {
+    const { question, example, index } = switchable!;
+    await page.goto('questions/');
+    const parts = exampleParts(await expandQuestion(page, question), index);
+    await expect(parts.code(example.variants[0])).toBeVisible();
+    await expect(parts.code(example.variants[0])).toContainText(telltale(example.variants[0]));
+    for (const variant of example.variants.slice(1)) await expect(parts.code(variant)).toHaveCount(0);
+    await expect(parts.languages).toBeHidden();
+    await expect(parts.copy).toBeHidden();
+  });
 
   test('a card and its first follow-up still expand', async ({ page }) => {
     expect(sample, 'a question with follow-ups').toBeDefined();

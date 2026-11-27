@@ -1,15 +1,18 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import CodeExamples from './CodeExamples.astro';
 
 interface Props {
   answer: CollectionEntry<'questions'>['data'];
   recall?: boolean;
   cardId?: string;
+  cardTitleId?: string;
 }
 
-const { answer, recall, cardId } = Astro.props;
+const { answer, recall, cardId, cardTitleId } = Astro.props;
 const sources = answer.sources ?? [];
 const Heading = recall ? 'h2' : 'h3';
+const trapHeadingId = cardId ? `question-trap:${cardId}` : 'question-trap';
 const body = await Astro.slots.render('default');
 const anchors = new Map<string, string>();
 const inlineBody = cardId ? body.replace(/(<h[1-6]\b[^>]*?\sid=")([^"]+)"/g, (_, start: string, id: string) => {
@@ -25,6 +28,7 @@ const inlineBody = cardId ? body.replace(/(<h[1-6]\b[^>]*?\sid=")([^"]+)"/g, (_,
   {recall && <h2 class="visually-hidden">Full answer</h2>}
   <div class="question-answer-body" data-question-search><Fragment set:html={inlineBody} /></div>
 </div>
+{answer.examples && <CodeExamples examples={answer.examples} questionTitle={cardId ? answer.title : undefined} />}
 <div class="question-evidence">
   <section class="question-answer-section">
     <Heading class="section-label">What they look for</Heading>
@@ -42,8 +46,8 @@ const inlineBody = cardId ? body.replace(/(<h[1-6]\b[^>]*?\sid=")([^"]+)"/g, (_,
     ))}
   </section>
 </div>
-<aside class="callout trap" data-card aria-label="The trap">
-  <Heading class="section-label">The trap</Heading>
+<aside class="callout trap" data-card aria-labelledby={[trapHeadingId, cardTitleId].filter(Boolean).join(' ')}>
+  <Heading class="section-label" id={trapHeadingId}>The trap</Heading>
   <p data-question-search>{answer.trap}</p>
 </aside>
 {sources.length > 0 && (

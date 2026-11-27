@@ -16,7 +16,45 @@ export const questionTopics = {
   'ci-git-docker': 'CI, Git and Docker',
   behavioral: 'Behavioral',
   leadership: 'Leadership',
+  'framework-design': 'Framework design',
+  bdd: 'BDD',
+  cypress: 'Cypress',
+  performance: 'Performance',
+  security: 'Security',
+  'ai-testing': 'AI testing',
+  'system-design': 'System design',
+  sql: 'SQL',
+  java: 'Java',
+  python: 'Python',
+  'javascript-typescript': 'JavaScript and TypeScript',
+  containers: 'Docker and Kubernetes',
 } satisfies Record<Question['topic'], string>;
+
+type Topic = Question['topic'];
+type TopicGroup = { label: string; topics: readonly Topic[] };
+const groups = [
+  { label: 'Testing', topics: ['fundamentals', 'test-design', 'bug-reports', 'agile', 'bdd'] },
+  {
+    label: 'Automation',
+    topics: ['automation-strategy', 'framework-design', 'locators-waits', 'flaky-tests', 'playwright', 'selenium', 'cypress'],
+  },
+  { label: 'API and data', topics: ['api', 'sql'] },
+  { label: 'Languages', topics: ['javascript-typescript', 'python', 'java'] },
+  { label: 'Delivery', topics: ['ci-git-docker', 'containers'] },
+  { label: 'Specialist', topics: ['performance', 'security', 'system-design', 'ai-testing'] },
+  { label: 'People', topics: ['behavioral', 'leadership'] },
+] as const satisfies readonly TopicGroup[];
+
+type GroupedTopics<T extends readonly TopicGroup[]> =
+  T extends readonly [infer First extends TopicGroup, ...infer Rest extends TopicGroup[]]
+    ? [...First['topics'], ...GroupedTopics<Rest>]
+    : [];
+type EachTopicOnce<T extends readonly Topic[], Remaining extends Topic = Topic> =
+  T extends readonly [infer First extends Topic, ...infer Rest extends Topic[]]
+    ? First extends Remaining ? EachTopicOnce<Rest, Exclude<Remaining, First>> : false
+    : [Remaining] extends [never] ? true : false;
+
+export const topicGroups: EachTopicOnce<GroupedTopics<typeof groups>> extends true ? typeof groups : never = groups;
 
 export const questionLevels = {
   junior: 'Junior',
