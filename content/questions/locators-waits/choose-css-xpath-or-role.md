@@ -12,11 +12,15 @@ looksFor:
   - An explanation of why DOM positions break
 trap: Copying an absolute XPath from the inspector because it happens to work on the current page.
 followUps:
-  - question: What if the page has two Save buttons?
-    answer: I'd scope the search to the named dialog or region that owns the action and still require a single match.
+  - question: Every invoice row has a Refund button. What would make you confident the test will click A104's button?
+    answer: I'd scope the button's role and name to the row that displays A104 and still require one match within it.
+  - question: An added table wrapper broke the XPath copied for invoice A104. What would you keep from that selector?
+    answer: I'd keep a meaningful attribute if there is one and drop the root-to-row path the inspector recorded. Inside A104's row I could use `.//button[@data-action='refund']` without naming the wrappers.
 sources:
   - label: Playwright locators
     url: https://playwright.dev/docs/locators
+  - label: W3C XPath 1.0 location paths
+    url: https://www.w3.org/TR/1999/REC-xpath-19991116/#location-paths
 ---
 
 For a button I start with its role and accessible name. That describes what a customer operates, so adding a wrapper or changing a styling class shouldn't break the test. A role locator also gives me a reason to investigate if an icon-only action has no name. A passing role locator alone doesn't prove the page is accessible.
