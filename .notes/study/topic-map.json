@@ -2,7 +2,7 @@
   "meta": {
     "title": "POM Proof Study section topic map",
     "researched": "2026-11-27",
-    "source_rule": "Every URL in a sources[] array was fetched during this research and returned HTTP 200 (all 135 unique URLs re-checked on 2026-11-27; redirecting URLs were replaced with their final address). type is 'primary' (official docs, specs, standards, syllabus, or the originator's own description of a pattern) or 'practitioner' (Fowler, Google, Kent C. Dodds and similar).",
+    "source_rule": "The initial research re-checked 135 unique source URLs on 2026-11-27. All returned HTTP 200 after redirects. type is 'primary' (official docs, specs, standards, syllabus, or the originator's own description of a pattern) or 'practitioner' (Fowler, Google, Kent C. Dodds and similar). An archived copy keeps the type of its original.",
     "istqb_note": "The ISTQB CTFL v4.0.1 syllabus is a PDF (dated 2024-09-15). It was downloaded and read with pdftotext; section numbers in notes refer to it.",
     "stages": [
       {"stage": "A. Foundations", "modules": ["m1", "m2"]},
@@ -307,6 +307,7 @@
       "sources": [
         {"url": "http://xunitpatterns.com/Test%20Double.html", "type": "primary", "note": "Originator's description"},
         {"url": "https://playwright.dev/docs/mock", "type": "primary"},
+        {"url": "https://playwright.dev/docs/best-practices", "type": "primary", "note": "Avoid testing third-party dependencies"},
         {"url": "https://martinfowler.com/bliki/TestDouble.html", "type": "practitioner"},
         {"url": "https://martinfowler.com/articles/mocksArentStubs.html", "type": "practitioner", "note": "2 January 2007"},
         {"url": "https://testing.googleblog.com/2013/05/testing-on-toilet-dont-overuse-mocks.html", "type": "practitioner"},
@@ -353,7 +354,8 @@
       "sources": [
         {"url": "https://playwright.dev/docs/test-fixtures", "type": "primary"},
         {"url": "https://playwright.dev/docs/test-global-setup-teardown", "type": "primary"},
-        {"url": "https://docs.pytest.org/en/stable/how-to/fixtures.html", "type": "primary"}
+        {"url": "https://docs.pytest.org/en/stable/how-to/fixtures.html", "type": "primary"},
+        {"url": "https://docs.junit.org/current/writing-tests/annotations.html", "type": "primary"}
       ]
     },
     {
@@ -367,6 +369,7 @@
         {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/generating_application_state/", "type": "primary"},
         {"url": "https://playwright.dev/docs/best-practices", "type": "primary", "note": "Testing with a database"},
         {"url": "http://www.natpryce.com/articles/000714.html", "type": "primary", "note": "Originator's description of test data builders"},
+        {"url": "https://web.archive.org/web/20250207051618/http://www.natpryce.com/articles/000714.html", "type": "practitioner", "note": "Archived copy, because natpryce.com refuses HTTPS"},
         {"url": "https://martinfowler.com/bliki/ObjectMother.html", "type": "practitioner"}
       ]
     },
