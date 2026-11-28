@@ -100,7 +100,7 @@ diagrams:
     type: number-line
     title: Partitions and the values BVA checks
     note: Each band shows the expected result. Both Reject partitions continue past the values shown.
-    description: The expected result is Reject for 9 or less, Accept for 10 to 20 and Reject for 21 or more.
+    description: The expected result is Reject for 9 or less, Accept for 10 through 20 and Reject for 21 or more.
     bands:
       - { from: 5, to: 9, label: Reject, kind: reject }
       - { from: 10, to: 20, label: Accept, kind: accept }
@@ -113,14 +113,14 @@ diagrams:
 
 - Whole numbers only. At least 2 `bands`, in order, with no gap and no overlap. The first band's `from` and the last band's `to` are where the drawing starts and ends, at most 21 values.
 - A line is drawn wherever the band changes, so two bands next to each other never share a label, and a label is always the same `kind` (`accept` or `reject`).
-- The boxes follow from the bands. 2-value BVA boxes both values beside every line, and `threeValue: true` also boxes their other neighbours. A neighbour past either end of the drawing is not drawn, so a range that starts at 0 gets none below it. Where a partition goes on past the drawing, draw at least two of its values beside the line, and say in the note that it continues.
+- The boxes follow from the bands. 2-value BVA boxes both values beside every line, and `threeValue: true` also boxes their other neighbours. Only a line between two bands gets boxes, so a closed outer end, such as 0 where nothing lies below it, gets no box for being an end, although BVA checks it. A 3-value neighbour outside the drawn values is not shown. Where a partition goes on past the drawing, draw at least two of its values beside the line, and say in the note that it continues.
 - `segments` are what a narrow screen draws: one around each line, in order, at most 6 values each, and together they hold every boxed value.
 - A band label is one word, and it and every boxed value appear in the page body. A band reads out only its label, so the description gives each partition's range in the words of the page.
 - A segment title is at most 3 words.
 
 ### Matrix
 
-Two uses, told apart by `kind`, from the test fixture. The test double answers follow Meszaros's own table (xunitpatterns.com, "Mocks, Fakes, Stubs and Dummies") and Fowler ("TestDouble"), and the note says where the two differ. ISTQB publishes no mapping of likelihood and impact to a risk level, so the levels and the two placed risks are examples, and the note says so.
+Two uses, told apart by `kind`, from the test fixture. The test double answers follow Meszaros's own table (xunitpatterns.com, "Mocks, Fakes, Stubs and Dummies") and Fowler ("TestDouble"), and the note says where they differ on a cell. They also differ on whether a dummy is a test double, so the page says that. ISTQB publishes no mapping of likelihood and impact to a risk level, so the levels and the two placed risks are examples, and the note says so.
 
 ```yaml
 diagrams:
@@ -143,8 +143,8 @@ diagrams:
     type: matrix
     kind: answers
     title: What each test double does
-    note: Can means it may do this, which Meszaros calls optional. Fowler counts a spy as a stub, so his answer there is Yes.
-    columns: [Returns prepared answers, Keeps calls for the test, Checks expected calls, Works in a simpler way]
+    note: Can means it may do this, which Meszaros calls optional. For Fowler a spy is a kind of stub, so a spy's answer under Returns prepared answers would be Yes.
+    columns: [Returns prepared answers, Stores calls for the test, Checks expected calls, Has a simpler working version]
     entries:
       - { head: Dummy, cells: [No, No, No, No] }
       - { head: Stub, cells: [Yes, No, No, No] }
@@ -168,9 +168,7 @@ diagrams:
     type: timeline
     title: A fixed pause and a condition wait
     note: The condition wait ends when its condition is met, here before its timeout. Lengths are not measured.
-    description:
-      - Both runs share one time scale, and the fixed pause is the same length in both. The app is ready later in the slow run.
-      - In both runs the condition wait lasts until the app is ready, before its timeout.
+    description: Both runs share one time scale, and the fixed pause is the same length in both. The app is ready later in the slow run.
     steps: 10
     lanes:
       - name: Fast run
@@ -210,7 +208,7 @@ diagrams:
 - `groups` is optional: at least 2, in order, covering the whole scale. `parallel: true` says they run at the same time and draws a gap between them.
 - Every lane has at least one row in `entries`, and a `name` when there is more than one lane. A lane with no ticks, groups or `mark` cannot say where a bar starts, so it fails.
 - A row has a `name`, an optional second line `detail`, at least one span, an optional `outcome` of 1 to 3 words after its last bar, and `strong: true` on at most one row per lane. Spans run in order without overlap, each ends after it starts, and none passes the end of the scale. An outcome needs room after the last bar.
-- Keep outcomes off the last third of the scale: a row with an `outcome` ends its last bar by two thirds of the way, so the words have room beside the bar on a phone.
+- A row with an `outcome` ends its last bar by half way, so the words have room beside the bar on a phone.
 - `mark` is one moment per lane, at a position on the scale. Its label sits on the side of the line with more room. Each bar says where it starts and ends against it, as in "from the start, ends before App ready".
 - On a time scale no text gives a duration (500 ms, 2 s, 30-second). Lengths are relative, and positions such as App ready at 3 and 8 are illustrative.
 
@@ -223,8 +221,8 @@ diagrams:
   - id: locator-change
     type: blocks
     title: Edits after a button label change
-    note: Each locator here uses the button's label, so a new label means editing every copy. The three tests are an example.
-    description: With a page object, the three tests use one sign-in page object class. The same change takes 1 edit, and none of the three tests changes.
+    note: In this example of three tests, the locator no longer matches the new button label. Every copy of it needs an edit.
+    description: With a page object, the three tests use one sign-in page object class, and none of them changes.
     panels:
       - name: Each test holds the locator
         tiers:

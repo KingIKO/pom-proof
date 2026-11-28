@@ -1,6 +1,6 @@
 # Visual spec: Study diagrams (B2, tinted and calm)
 
-Decided on 2026-11-28. Kingsley picked option B (tinted) over the recommended option A, said B felt too busy, and allowed inline SVG inside Study diagrams only. B2 is B with fewer lines, colours and labels, and more space. Built: the layer stack is live on the test shapes page. The number line, matrix, timeline and blocks are built on branch `study-diagrams-c` (4c1092b) and have not landed. Approved and not built: the test levels growing pictures (A), the timeline with states (A) and the risk matrix axis names (B).
+Decided on 2026-11-28. Kingsley picked option B (tinted) over the recommended option A, said B felt too busy, and allowed inline SVG inside Study diagrams only. B2 is B with fewer lines, colours and labels, and more space. Built: the layer stack is live on the test shapes page. The number line, matrix, timeline and blocks are built (branch `study-diagrams-c`). Approved and not built: the test levels growing pictures (A), the timeline with states (A) and the risk matrix axis names (B).
 
 Reference files in this folder: `option-b2.html` (the three figures in real page context), `compare-b-vs-b2.html`, `diagrams.css` (the `[data-style="b2"]` block and the `.dg2-*` rules are B2), and the PNGs `option-b2-desktop.png`, `option-b2-360.png` and `compare-b-vs-b2.png`. The class names in `diagrams.css` are for the mockup only; iko-flow names its own, but uses the token and the values below.
 
@@ -22,17 +22,17 @@ Added later on 2026-11-28, after Kingsley approved B2: the timeline, blocks and 
 ```html
 <figure data-diagram="number-line" data-card>
   <figcaption id="dg-boundaries">
-    <span class="title">Partitions and boundary values</span>
-    <span class="note">Each band is the expected result. The rule changes at the lines.</span>
+    <span class="title">Partitions and the values BVA checks</span>
+    <span class="note">Each band shows the expected result. Both Reject partitions continue past the values shown.</span>
   </figcaption>
   <!-- the diagram as real HTML: a table, lists or labelled blocks -->
 </figure>
 ```
 
 - `data-diagram` names the kind: `layer-stack`, `number-line`, `matrix` (risk levels or yes/no answers), `timeline` and `blocks`, and later kinds as they are specified. (The first B2 mockup used older names, `test-shapes` and `risk-matrix`; these names replace them.) The diagram tokens are scoped to `figure[data-diagram]`.
-- Every kind except the matrix carries a visually hidden description after the figcaption that states in words what position, length, width or containment shows. A matrix needs none: the table is the structured version.
+- Every kind except the matrix carries a visually hidden description after the figcaption. It says only what the drawing's own words leave to the eye, such as position, length, width or what lines up, and does not repeat the title, the note or a label. A matrix needs none: the table is the structured version.
 - The figure is a card (`data-card`: white surface, 1px `borderCard`, 10px radius). It is the only rounded thing in a diagram.
-- Narrow layouts switch on the figure's own width (a container query at 34rem, 544px), not the viewport, so a figure in a narrower column behaves the same. Further switches at 40.75rem (paired blocks), 14.5rem (timeline, blocks), 12rem (layer stack) and 10rem (number line).
+- Narrow layouts switch on the figure's own width (a container query at 34rem, 544px), not the viewport, so a figure in a narrower column behaves the same. Further switches at 40.75rem (paired blocks), 14.5rem (timeline, blocks), 12rem (layer stack), 10rem (number line) and 8.5rem (timeline group heads).
 - Everything a sighted reader learns from the picture must be in the figure's text for a screen reader. Filled and hollow boxes are visual only, so each boxed value has a visually hidden label: "9, 2-value BVA" and "8, added by 3-value BVA". iko-flow owns that markup.
 
 ## Tokens
@@ -118,7 +118,7 @@ The measuring script also flags some pairs as failing that are not real failures
 - A real table. Axis names in small caps: the column axis above the column heads, the row axis up the side of the row heads, reading bottom to top ("Risk matrix axis names" below). Highest likelihood at the top.
 - Cells: tinted blocks 4px apart (`border-spacing`), no grid lines, 8px padding, at least 84px tall.
 - Every cell writes its level in ink, 14px medium; High is bold. Example items go under the level word in 13px `--text2`, with no box.
-- Shading runs `--dg-low`, `--dg-medium`, `--dg-high` only. A grid with no levels (such as level by size) keeps every cell `--dg-low`.
+- Shading runs `--dg-low`, `--dg-medium`, `--dg-high` only. A grid with no levels (such as level by size) is not supported yet: the schema takes Low, Medium or High only. Once it is, every cell keeps `--dg-low`.
 
 ### Yes/no matrix (a matrix with a word in every cell)
 
@@ -128,18 +128,18 @@ Sample: the five test doubles against four questions.
 - Yes: `--dg-part` fill, ink, bold. Can: `--dg-part` fill, ink, regular. No: `--dg-low` fill, `--text2`, regular. Words centred. The fill only helps the eye find the yeses; the word carries the answer.
 - Row heads are the items, 14px medium ink, left aligned. Column heads are the questions, 13px medium `--text2`, centred, bottom aligned, wrapping at spaces. The corner cell stays empty and unfilled.
 - Cells 4px apart, 8px padding, at least 44px tall. No grid lines.
-- Questions use the page's verbs ("Returns prepared answers", "Stores calls"), at most five words each.
+- Questions use the page's verbs ("Returns prepared answers", "Stores calls for the test"), at most five words each.
 
 ### Timeline
 
 Samples: a fixed pause against a condition wait (waiting and synchronisation), and fixture lifetimes per scope (fixtures and setup).
 
 - One time scale per figure, shared by every lane, running left to right at every width. Below 34rem the bars get shorter; the layout does not turn.
-- A row has a name in the left column, its bars, and an optional outcome. The name is 13px medium ink, with an optional second line in `--text2` for a tool or a qualifier ("Playwright", "pytest with xdist"). The outcome is one to three words in 13px `--text2`, placed right after the bar it describes ("Wastes time", "Too short"). It starts 8px after the bar's end and keeps 4px clear at its own end. The words wrap first, and only then does the gap shrink to 4px.
+- A row has a name in the left column, its bars, and an optional outcome. The name is 13px medium ink, with an optional second line in `--text2` for a tool or a qualifier ("Playwright", "pytest with xdist"). The outcome is one to three words in 13px `--text2`, placed right after the bar it describes ("Wastes time", "Too short"). It starts 10px after the bar (8px and the bar's own 2px clear) and keeps 4px clear at its own end. The words wrap first, and only then does the gap shrink to 6px.
 - Bar: `--dg-part` fill, 1px `--dg-part-edge` (its length carries meaning), 0 radius, at least 32px tall, 2px clear at each end, no text inside (the one exception is the long bar in "Timeline with states"). The one recommended or emphasised row gets `--dg-part-strong` and a bold row name.
 - A lane groups rows under a 14px medium heading ("Fast run"). Lanes sit 24px apart, rows 8px apart.
 - A moment is a 2px `--dg-edge` line through all of its lane's rows, labelled at the top in 13px medium `--text2` ("App ready"). The label sits on the side of the line with more room: after it, or before it when the line is past the middle.
-- Optional header rows: group heads over a range of columns ("Worker 1"), tick heads under them (1, 2, 3, 4), and the tick axis name in small caps in the name column ("Test"). Groups that run at the same time are separated by a 16px gap column, so their bars never touch. Group heads that follow one another in time are not used: states that change over time are drawn as "Timeline with states" below.
+- Optional header rows: group heads over a range of columns ("Worker 1"), tick heads under them (1, 2, 3, 4), and the tick axis name in small caps in the name column ("Test"). Groups that run at the same time are separated by a 16px gap column, so their bars never touch. Group heads that follow one another in time have no approved drawing, because states that change over time are drawn as "Timeline with states" below. The schema accepts them until the state strip is built, and no page uses them.
 - When the scale is time, one axis name "Time →" in small caps sits under the last lane, right aligned. No durations, no tick values in milliseconds, no grid lines.
 
 ### Blocks
@@ -150,7 +150,7 @@ Samples: browser contexts over a shared database (test independence), and tests 
 - Part: a thing inside a box. `--dg-part` fill, no border, 8px by 12px padding, name 13px medium ink, then its items in 13px `--text2`, one per line, no bullets.
 - Strong: one kind of thing per figure, the one the idea is about. A strong box (the shared database) gets `--dg-part-strong` and a bold title, and its parts turn white. A strong part (the copied locator) gets `--dg-part-strong` and bold text.
 - Boxes in a row are equal columns 16px apart. A box below a row spans all of its columns, so sharing shows as width. A → between two boxes has a 16px column with 8px on each side (4px under 34rem).
-- Arrows: ↓ (U+2193) or → (U+2192) in `--text2` at 16px, one per source column, centred, between neighbours only. When boxes stack, the ↓ arrows stand together under the last box. Arrows are `aria-hidden`; the description states the relation.
+- Arrows: ↓ (U+2193) or → (U+2192) in `--text2` at 16px, one per source column, centred, between neighbours only. When boxes stack, each → becomes a ↓ between its two boxes, and the ↓ arrows to the row below stand together under the last box. Arrows are `aria-hidden`; hidden text after the box's title gives the relation ("Test 1, calls Sign-in page object").
 - Before and after: two panels side by side, 32px apart, before on the left. Each panel has a 14px medium heading and ends with a result line in 16px bold ink ("3 edits", "1 edit"), aligned across the two panels.
 - Nesting stops at a part inside a box. A box inside a box has no approved drawing.
 
@@ -449,11 +449,11 @@ Inside a figure, words wrap at spaces only. The prose column's `overflow-wrap: a
 | Diagram | Below 34rem of figure width |
 |---|---|
 | Layer stack | The three shapes stack, each with its name above and the same 16rem scale. Below 12rem each label sits above a thin bar ("Layer stack width limits"). |
-| Number line | Two segments of six values, one around each edge (7 to 12 and 18 to 23), headed Lower edge and Upper edge, each with its own two bands and boundary line. The legend stays on top. Below 10rem each segment turns upright: values down the side, bands beside them, boundary lines across. |
+| Number line | Two segments of six values, one around each edge (7 to 12 and 18 to 23), headed Lower edge and Upper edge, each with its own two bands and boundary line. The legend stays on top. Below 10rem each segment turns upright: values down the side, bands beside them, boundary lines across. The reading order stays bands first, then values, although the values then stand to the left of the bands. Each segment is a group named by its heading. |
 | Matrix | The first column narrows to 3.25rem, cell gaps to 2px, cell padding to 4px, and level words to 13px. Columns size to their longest word. Likelihood runs up the side in its own 1.125rem column, which shrinks to .75rem before the table scrolls. Below 16rem the level cells take 2px side padding. If text still does not fit, the table scrolls inside its own box rather than spilling, as it does with enlarged text. |
-| Yes/no matrix | A second rendering, turned: the items become the columns (13px medium ink) and each question heads its own row of answers (13px medium `--text2`, left aligned, a `th scope="rowgroup"`). Columns size to their words; cells 2px apart with 4px by 2px padding. Only one rendering is visible at a time, as with the number line. With enlarged text the table scrolls inside its own box. |
+| Yes/no matrix | A second rendering, turned: the items become the columns (13px medium ink) and each question heads its own row of answers (13px medium `--text2`, left aligned, a `th scope="rowgroup"`). Columns size to their words; cells 2px apart with 4px by 2px padding. Only one rendering is visible at a time, as with the number line. With enlarged text the table scrolls inside its own box, and each question stays in view at the start of the box while its answers scroll. |
 | Timeline | Same layout: the name column narrows to 5.25rem, names and outcomes wrap to two lines, bars get shorter. Time still runs left to right. Below 14.5rem the name sits above its bars and the outcome below, 4px apart, with rows 12px apart; the moment line passes behind the words; group heads share a line down to 8.5rem. The timeline with states puts each name above its row instead, and stacks below 14.5rem (its own section). |
-| Blocks | Rows keep their columns side by side (two or three). Gaps, box padding and part padding shrink as in the spacing table. A before and after pair stacks, before first, each panel with its own result line. Its panels already take the 8px and 4px paddings below 40.75rem. Below 14.5rem boxes and parts stack. |
+| Blocks | Rows keep their columns side by side (two or three). Gaps, box padding and part padding shrink as in the spacing table. A before and after pair stacks, before first, each panel with its own result line. Its panels already take the 8px and 4px paddings below 40.75rem. Below 14.5rem boxes and parts stack, and each → becomes ↓. |
 
 Measured on 2026-11-28: no part overflows its box at 1280, 360 or 320 px, and nothing overflows with the SC 1.4.12 text-spacing overrides on at 1280 and 360 px. The one exception is 320 px with those overrides on, where the risk matrix scrolls inside its box (26px as first built, 28px with its approved axis names). The timeline, blocks and yes/no matrix figures do not overflow or scroll at any of the three widths, with or without the overrides, at default text only. With enlarged text both matrices scroll in their own box. No figure ever widens the page.
 
@@ -507,11 +507,11 @@ These rules follow the approach the request named from the Kubernetes documentat
 
 ## Open items
 
-- iko-flow: three values in this spec are fixes from the 2026-11-28 review that 4c1092b does not have yet: paired blocks switch paddings at 40.75rem (built 36.25rem), stacked timeline rows sit 12px apart with names and outcomes 4px from their bars (built 8px and 0), and group heads share a line down to 8.5rem (built: a line each below 14.5rem).
+- Built, nothing open: the three fixes from the 2026-11-28 review. Paired blocks switch paddings at 40.75rem, stacked timeline rows sit 12px apart with names and outcomes 4px from their bars, and group heads share a line down to 8.5rem.
 - Tests (owner to be assigned): the SVG allowance and its plants.
-- Writer: the matrix placements (a double charge rated medium likelihood and high impact, the receipt layout medium likelihood and low impact) and the 3 by 3 level mapping are placeholders. The Risk-based testing page does not state them.
-- Writer: every test-doubles cell is a placeholder until checked against Meszaros and Fowler, in particular Can for a spy and a mock under "Returns prepared answers" and Yes for a mock under "Stores calls". The four questions are the designer's reading of the page's list.
-- Writer: the fixtures figure draws a pytest session-scoped fixture once per worker under pytest-xdist, and labels that lane "pytest with xdist". That comes from the plan's note and is not sourced yet. If the sources do not support it, drop the lane or draw one bar across all four tests for a run without xdist.
+- Sourced (plan section 2): ISTQB publishes no 3 by 3 mapping, so the mapping and the two placements (a double charge rated medium likelihood and high impact, the receipt layout medium likelihood and low impact) are examples, and the note says so. The Risk-based testing page does not state them.
+- Sourced (plan section 2): the test-doubles cells follow Meszaros. A spy and a mock are Can under "Returns prepared answers", and a mock is No under "Stores calls for the test". Fowler differs on the spy, which the note says. The two also differ on whether a dummy is a test double: the page does not say so yet, and the writer adds it with the figure.
+- Sourced (plan section 2): under pytest-xdist a session-scoped fixture runs once per worker, so the "pytest with xdist" lane stays. The worker bars hold only while no test fails, and the note says none fails.
 - iko-flow: build "Timeline with states" (A) as a timeline with a state strip in place of the group heads, and "Risk matrix axis names" (B) on the levels matrix. Both sections hold the parts, gaps, narrow layouts and hidden text.
 - Writer: confirm the test levels price example, the words under each level, the intro and the trimmed list against the page's source. iko-flow builds the growing pictures (A) as a new kind once the current branch lands.
 - Writer: the words in "Timeline with states", hidden text included, come from the Assertions that retry page and its example code. Confirm them against that page.
