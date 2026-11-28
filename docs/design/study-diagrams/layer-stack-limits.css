@@ -1,0 +1,35 @@
+/* Layer stack width limits: the proposed change to src/styles/diagrams.css at cc302d3 (spec.md, "Layer stack
+   limits"). Same class names as the built component. CSS only: the markup, the data and the tokens do not change. */
+
+/* A long word no longer widens the whole stack. */
+.dg-layers { grid-template-columns: minmax(0, 1fr); }
+/* 4px at the sides instead of 8, so a tight label does not force its bar wider than its width says. */
+.dg-layers > li { padding-inline: var(--space-4); }
+/* The two narrowest widths, one step up (.3 and .4 before), so the labels fit and equal widths draw equal. */
+.dg-layers > li[data-width="1"] { --dg-width: .4; }
+.dg-layers > li[data-width="2"] { --dg-width: .5; }
+
+/* Large text on a narrow screen: a label no longer fits its bar, so it sits above a thin bar and the bar keeps
+   its true width. */
+@container (width < 12rem) {
+  .dg-layers { gap: var(--space-12); }
+  .dg-layers > li,
+  .dg-layers > li[data-widest] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .dg-layers > li::after {
+    content: "";
+    inline-size: calc(var(--dg-width) * 100%);
+    block-size: var(--space-12);
+    border: 1px solid var(--dg-part-edge);
+    background: var(--dg-part);
+  }
+  .dg-layers > li[data-widest]::after { background: var(--dg-part-strong); }
+}
