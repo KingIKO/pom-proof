@@ -1,0 +1,33 @@
+---
+import type { Diagram } from '../../../lib/diagram-schema';
+import { inline } from '../study';
+import NumberLineRow from './NumberLineRow.astro';
+import '../../../styles/diagram-number-line.css';
+
+interface Props {
+  diagram: Extract<Diagram, { type: 'number-line' }>;
+  /** The caption id, which prefixes the segment name ids. */
+  idPrefix: string;
+}
+
+// The whole line, and the same line as one segment per edge. The stylesheet shows one of the two, by
+// the figure's width; display: none keeps the other out of the accessibility tree as well.
+const { diagram, idPrefix } = Astro.props;
+---
+<ul class="dg-legend" role="list">
+  <li><span class="dg-key" data-mark="two" aria-hidden="true" /><span><span class="dg-word">2-value</span> BVA</span></li>
+  {diagram.threeValue && (
+    <li><span class="dg-key" data-mark="three" aria-hidden="true" /><span><span class="dg-word">3-value</span> BVA adds</span></li>
+  )}
+</ul>
+<div class="dg-line-wide">
+  <NumberLineRow diagram={diagram} from={diagram.min} to={diagram.max} />
+</div>
+<div class="dg-line-narrow">
+  {diagram.segments.map(({ title, from, to }, index) => (
+    <div class="dg-segment" role="group" aria-labelledby={`${idPrefix}-segment-${index + 1}`}>
+      <div class="dg-segment-name" id={`${idPrefix}-segment-${index + 1}`} set:html={inline(title)} />
+      <NumberLineRow diagram={diagram} from={from} to={to} />
+    </div>
+  ))}
+</div>

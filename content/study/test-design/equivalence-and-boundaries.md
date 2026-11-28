@@ -15,6 +15,25 @@ avoidWhen:
   - The outcome changes when two conditions meet or when earlier actions change the starting state.
 practiceTopics: [equivalence-partitioning, boundary-testing]
 questionTopics: [test-design]
+diagrams:
+  - id: boundary-values
+    type: number-line
+    title: Partitions and boundary values
+    note: Each band is the expected result. The rule changes at the lines.
+    description:
+      - The expected result is Reject for 5 to 9, Accept for 10 to 20 and Reject for 21 to 25.
+      - One line falls between 9 and 10. The other falls between 20 and 21.
+    min: 5
+    max: 25
+    bands:
+      - { from: 5, to: 9, label: Reject, kind: reject }
+      - { from: 10, to: 20, label: Accept, kind: accept }
+      - { from: 21, to: 25, label: Reject, kind: reject }
+    twoValue: [9, 10, 20, 21]
+    threeValue: [8, 11, 19, 22]
+    segments:
+      - { title: Lower edge, from: 7, to: 12 }
+      - { title: Upper edge, from: 18, to: 23 }
 sources:
   - { label: "ISTQB CTFL syllabus: Equivalence partitioning and boundary value analysis", url: "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", type: primary }
 ---
@@ -35,6 +54,10 @@ Suppose a temperature setting takes whole degrees and accepts 10 through 20, inc
 | 21 or more | 25 | Reject |
 
 In 2-value BVA, use each boundary and the nearest value in the next partition across that edge. The distinct values here are 9, 10, 20 and 21. In 3-value BVA, check each boundary and its closest neighbours on both sides. That adds 8, 11, 19 and 22.
+
+```diagram
+boundary-values
+```
 
 ## Why it helps
 

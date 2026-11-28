@@ -62,10 +62,10 @@ function pageSamples() {
     // The question 2E built the page against; it has every answer section, sources included.
     if (route === 'questions/[topic]/[id]') return { route, urls: ['questions/playwright/independent-checkout-contexts/'], status: 200 };
     if (route === 'tracks/[role]') return { route, urls: tracks.slice(0, 1).map((file) => `tracks/${file.replace(/\.ya?ml$/, '')}/`), status: 200 };
-    // The Study pilot module, and the page with the first concept diagram (plus a dispute and a
-    // What changed box). Examples are scanned by the read-state test below.
+    // The Study pilot module, the page with the first concept diagram (plus a dispute and a What
+    // changed box) and the number line's page. Examples are scanned by the read-state test below.
     if (route === 'study/[module]') return { route, urls: ['study/framework-design/'], status: 200 };
-    if (route === 'study/[module]/[page]') return { route, urls: ['study/testing-foundations/test-shapes/'], status: 200 };
+    if (route === 'study/[module]/[page]') return { route, urls: ['study/testing-foundations/test-shapes/', 'study/test-design/equivalence-and-boundaries/'], status: 200 };
     return { route, urls: [], status: 200 };
   });
 }

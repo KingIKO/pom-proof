@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { risk } from '../fixtures/diagrams/matrices';
+import { kindProblems } from '../support/diagram-rules';
 import { normalizeProse, scanProse, sentencesOf } from '../support/plain-language';
 import { discoverProblems, root } from '../support/problems';
 import { discoverQuestions, questionTopics } from '../support/questions';
@@ -104,6 +106,7 @@ function diagramProblems(data: Record<string, unknown>, body: string): string[] 
     if (diagram.type !== 'matrix' && !(isText(description) || (textList(description) && description.length > 0))) {
       add(`${at} needs a description that says what position, width or length shows`);
     }
+    for (const problem of kindProblems(diagram, withoutFences(body))) add(`${at} ${problem}`);
     // Backticks would turn part of a bar label or caption into code; diagram text is plain words.
     for (const [where, text] of diagramTexts(diagram, at)) {
       if (text.includes('`')) add(`${where} uses backticks; write diagram text as plain words`);
@@ -584,7 +587,7 @@ describe('the Study checks catch planted mistakes', () => {
 
     it('accepts a matrix without a description', () => {
       expect(shapes, 'the test shapes page').toBeDefined();
-      expect(pageProblems(plantShapes(withFigure({ type: 'matrix', description: undefined })), context)).toEqual([]);
+      expect(pageProblems(plantShapes({ diagrams: [{ ...risk, id: 'test-shapes' }] }), context)).toEqual([]);
     });
 
     it.each([
@@ -609,6 +612,7 @@ describe('the Study checks catch planted mistakes', () => {
       ['a layer stack without a description', withFigure({ description: undefined }), undefined, 'diagrams[0] needs a description'],
       ['backticks in a title', withFigure({ title: 'Where each `shape` puts the effort' }), undefined, 'diagrams[0].title uses backticks'],
       ['backticks in a layer label', withFigure({ shapes: [{ name: 'Pyramid', layers: [{ label: '`unit`', width: 5, widest: true }] }] }), undefined, 'diagrams[0].shapes[0].layers[0].label uses backticks'],
+      ['a label longer than its kind allows', { diagrams: [{ ...risk, id: 'test-shapes', rowAxis: 'How likely it is' }] }, undefined, 'diagrams[0] axis name "How likely it is" has 4 words; write at most 3'],
     ])('reports %s', (_name, frontmatter, body, message) => {
       expect(shapes, 'the test shapes page').toBeDefined();
       expect(pageProblems(plantShapes(frontmatter as Record<string, unknown>, body), context).join('\n')).toContain(message);
