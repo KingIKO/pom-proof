@@ -154,7 +154,7 @@ export function timelineDrawing({ id, steps, ticks, groups = [], parallel, lanes
   return found;
 }
 
-/** Problems with how blocks are drawn: equal boxes per row, parts inside, an arrow for every link. */
+/** Problems with how blocks are drawn: equal boxes per row, parts inside, words inside, an arrow for every link. */
 export function blocksDrawing({ id, tiers, panels }: BlocksData) {
   const found: string[] = [];
   const figure = document.querySelector(`figure[data-diagram="blocks"]:has(> #dg-${id})`);
@@ -172,6 +172,24 @@ export function blocksDrawing({ id, tiers, panels }: BlocksData) {
     const range = document.createRange();
     range.selectNodeContents(element);
     return range.getBoundingClientRect();
+  };
+  /** Where the drawn letters of an element start and end: not the words only a screen reader gets, nor the blank that letter spacing adds after the last letter. */
+  const ink = (element: Element) => {
+    const edges: Array<{ left: number; right: number }> = [];
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const text = walker.currentNode;
+      if (!text.textContent!.trim() || text.parentElement!.closest('.visually-hidden')) continue;
+      const range = document.createRange();
+      range.selectNode(text);
+      const { left, right } = range.getBoundingClientRect();
+      edges.push({ left, right: right - (parseFloat(getComputedStyle(text.parentElement!).letterSpacing) || 0) });
+    }
+    return { left: Math.min(...edges.map(({ left }) => left)), right: Math.max(...edges.map(({ right }) => right)) };
+  };
+  const outside = (element: Element, holder: DOMRect, edge: number) => {
+    const { left, right } = ink(element);
+    return left < holder.left + edge - 0.5 || right > holder.right - edge + 0.5;
   };
   const near = (a: number, b: number) => Math.abs(a - b) <= 1;
   const middle = ({ left, right }: DOMRect) => (left + right) / 2;
@@ -216,11 +234,13 @@ export function blocksDrawing({ id, tiers, panels }: BlocksData) {
         if (heading.textContent!.trim() !== said) found.push(`"${title}" reads as "${heading.textContent!.trim()}"`);
         if (isBold(heading) !== Boolean(strong)) found.push(`"${title}" has the wrong weight`);
         if (getComputedStyle(element).backgroundColor !== colour(strong ? 'dg-part-strong' : 'surface')) found.push(`"${title}" has the wrong fill`);
+        if (outside(heading, rect, 1)) found.push(`"${title}" runs out of its box`);
         const inner = [...element.querySelectorAll('.dg-part')];
         if (inner.length !== parts.length) found.push(`"${title}" draws ${inner.length} parts for ${parts.length}`);
         inner.forEach((part, at) => {
           const partRect = box(part);
           if (partRect.left < rect.left + 1 || partRect.right > rect.right - 1 || partRect.top < box(heading).bottom || partRect.bottom > rect.bottom - 1) found.push(`"${parts[at].name}" is not inside "${title}"`);
+          if (outside(part, partRect, 0)) found.push(`"${parts[at].name}" runs out of its part in "${title}"`);
           const fill = strong ? 'surface' : parts[at].strong ? 'dg-part-strong' : 'dg-part';
           if (getComputedStyle(part).backgroundColor !== colour(fill) || isBold(part.firstElementChild!) !== Boolean(parts[at].strong)) found.push(`"${parts[at].name}" in "${title}" has the wrong emphasis`);
         });

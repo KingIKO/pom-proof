@@ -1,4 +1,65 @@
-/** Checks the diagram specs run in the page. Each runs in the browser, so it uses nothing from this module. */
+import { expect, type Page } from '@playwright/test';
+
+/**
+ * Shows scrollbars: `test.use(withScrollbars)` at the top of every spec that checks how a figure fits.
+ * Playwright's default browser hides them, so a 320px window lends all 320px to the page. A desktop
+ * browser keeps 15px of it for the scrollbar (305px measured on 2026-11-28), and that gap hid a
+ * honeycomb bar 9.8px past the card edge at 200% text. It is a browser option, which Playwright only
+ * allows at the top of a file.
+ */
+export const withScrollbars = { channel: 'chromium', launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } };
+
+export interface FitState {
+  width: number;
+  /** Text size as the browser's default font size, in percent of 16px. */
+  text: 100 | 150 | 200;
+  /** With the SC 1.4.12 text-spacing overrides. */
+  spacing?: boolean;
+}
+
+/** The tightest wide layout: at 641px, 15px of it the scrollbar, a figure is 34rem wide inside its padding. */
+export const tightestWide: FitState = { width: 641, text: 100 };
+
+/** The states every figure has to fit in. */
+export const fitStates: FitState[] = [
+  { width: 1280, text: 100 },
+  { width: 1024, text: 100 },
+  { width: 768, text: 100 },
+  tightestWide,
+  { width: 360, text: 100 },
+  { width: 320, text: 100 },
+  { width: 360, text: 150 },
+  { width: 320, text: 150 },
+  { width: 360, text: 200 },
+  { width: 320, text: 200 },
+  { width: 1280, text: 200 },
+  { width: 1280, text: 100, spacing: true },
+  { width: 360, text: 100, spacing: true },
+  { width: 320, text: 100, spacing: true },
+  { width: 320, text: 200, spacing: true },
+];
+export const stateLabel = ({ width, text, spacing }: FitState) => `${width}px${text === 100 ? '' : ` with ${text}% text`}${spacing ? ' and the text-spacing overrides' : ''}`;
+
+/** The SC 1.4.12 text-spacing overrides. */
+const textSpacing = '* { line-height: 1.5 !important; letter-spacing: .12em !important; word-spacing: .16em !important; } p { margin-block-end: 2em !important; }';
+
+/** Opens a page in a state: the browser's default font size first, so the page loads with it. */
+export async function openAt(page: Page, url: string, { width, text, spacing }: FitState) {
+  await page.setViewportSize({ width, height: 900 });
+  const cdp = await page.context().newCDPSession(page);
+  // Whole pixels only: CDP refuses 19.5. The fixed size sets code text, which no diagram uses.
+  await cdp.send('Page.setFontSizes', { fontSizes: { standard: 16 * text / 100, fixed: Math.round(13 * text / 100) } });
+  const response = await page.goto(url);
+  expect(response?.status(), url).toBe(200);
+  await page.evaluate(() => document.fonts.ready);
+  if (spacing) await page.addStyleTag({ content: textSpacing });
+  // Without a scrollbar the page has 15px more room and these checks would pass on a layout nobody sees.
+  expect(await page.evaluate(() => window.innerWidth - document.documentElement.clientWidth), 'the page shows its scrollbar').toBeGreaterThan(0);
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).fontSize), 'the text size').toBe(`${16 * text / 100}px`);
+}
+
+/** How far the page scrolls sideways. Runs in the page, like the checks below, so it uses nothing from this module. */
+export const sidewaysScroll = () => document.documentElement.scrollWidth - document.documentElement.clientWidth;
 
 /**
  * Parts that cross their figure's outer edge: elements, the text inside them, and drawn bars, which
@@ -58,9 +119,3 @@ export function overlappingHeads() {
       && Math.min(a.box.bottom, b.box.bottom) - Math.max(a.box.top, b.box.top) > 0).map((b) => `"${a.text}" overlaps "${b.text}"`));
   });
 }
-
-/** Sets the root text size to 200%, as a reader's text zoom does. */
-export const doubleText = () => { document.documentElement.style.fontSize = '200%'; };
-
-/** The text spacing a reader may set (WCAG 1.4.12). */
-export const textSpacing = '* { line-height: 1.5 !important; letter-spacing: .12em !important; word-spacing: .16em !important; } p { margin-block-end: 2em !important; }';

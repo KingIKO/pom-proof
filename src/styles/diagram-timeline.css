@@ -45,7 +45,11 @@
 }
 .dg-lane-rows > [data-strong] > .dg-row-name > :first-child { font-weight: var(--weight-bold); }
 .dg-lane-rows > [data-strong] > .dg-span { background: var(--dg-part-strong); }
-.dg-outcome { padding-inline: var(--space-8) var(--space-4); color: var(--text2); font-size: var(--type-13); line-height: 1.25; }
+.dg-outcome { display: flex; padding-inline-end: var(--space-4); color: var(--text2); font-size: var(--type-13); line-height: 1.25; }
+/* 8px from the bar, or as little as 4px where the longest word would otherwise reach the moment's line.
+   The words wrap first, and only then does the gap shrink. */
+.dg-outcome::before { content: ""; flex: 0 1 var(--space-8); min-inline-size: var(--space-4); }
+.dg-outcome > :last-child { flex-shrink: 1000; }
 
 /* The moment: its label above the rows, and its line through them, centred on the column edge. */
 .dg-moment {
@@ -90,5 +94,6 @@
     background: var(--surface);
   }
   .dg-lane-rows > li > .dg-outcome { grid-row: 3; padding-inline: 0; }
+  .dg-outcome::before { display: none; }
   .dg-moment { white-space: normal; }
 }

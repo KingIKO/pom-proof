@@ -5,13 +5,15 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { database, figures, pipeline, scope, states } from '../fixtures/timeline-blocks/figures';
 import { blocksDrawing, timelineDrawing } from '../support/diagram-drawing';
-import { doubleText, figureOverflow, textSpacing } from '../support/diagrams';
+import { figureOverflow, fitStates, openAt, sidewaysScroll, stateLabel, withScrollbars, type FitState } from '../support/diagrams';
 import { root } from '../support/problems';
 
 // Timeline and blocks figures that no Study page has yet: the approved mockups' fixture scopes and
 // shared database, and what no mockup draws. They are a small site of their own in
 // tests/fixtures/timeline-blocks, built into .tmp/ and served to the test from disk, so they never
 // reach dist or the live site.
+
+test.use(withScrollbars);
 
 const out = join(root, '.tmp', 'timeline-blocks-fixture-test');
 const origin = 'http://timeline-blocks-fixture.test';
@@ -27,16 +29,13 @@ test.beforeAll(() => {
   if (build.status !== 0) throw new Error(`The fixture build failed:\n${build.stdout}\n${build.stderr}`);
 });
 
-async function open(page: Page, width: number) {
-  await page.setViewportSize({ width, height: 900 });
+async function open(page: Page, width: number, state: Partial<FitState> = {}) {
   await page.route(`${origin}/**`, (route) => {
     const { pathname } = new URL(route.request().url());
     const file = join(out, pathname.replace(prefix, '/').replace(/\/$/, '/index.html'));
     return existsSync(file) ? route.fulfill({ path: file }) : route.fulfill({ status: 404, body: '' });
   });
-  const response = await page.goto(`${origin}${prefix}`);
-  expect(response?.status()).toBe(200);
-  await page.evaluate(() => document.fonts.ready);
+  await openAt(page, `${origin}${prefix}`, { width, text: 100, ...state });
 }
 
 const figureOf = (page: Page, id: string) => page.locator(`figure[data-diagram]:has(> #dg-${id})`);
@@ -56,30 +55,15 @@ async function expectNoViolations(page: Page, state: string) {
   expect(violations.map(({ id, impact, nodes }) => ({ id, impact, targets: nodes.map(({ target }) => target.join(' ')) })), state).toEqual([]);
 }
 
-for (const width of [1280, 360, 320]) {
-  test(`every figure fits and is drawn as its data says at ${width}px`, async ({ page }) => {
-    await open(page, width);
+for (const state of fitStates) {
+  test(`every figure fits and is drawn as its data says at ${stateLabel(state)}`, async ({ page }) => {
+    await open(page, state.width, state);
     await expect(page.locator('figure[data-diagram]')).toHaveCount(figures.length);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
-    expect(await page.evaluate(figureOverflow, true)).toEqual([]);
+    // At the default text size words keep inside their boxes; larger text may use the card padding, up to the edge.
+    if (state.text === 100) expect(await page.evaluate(sidewaysScroll), 'no sideways page scroll').toBe(0);
+    expect(await page.evaluate(figureOverflow, state.text === 100), 'nothing crosses the card edge').toEqual([]);
     expect(await drawingProblems(page)).toEqual([]);
-    await expectNoViolations(page, `${width}px`);
-  });
-
-  test(`every figure keeps its text with wide text spacing at ${width}px`, async ({ page }) => {
-    await open(page, width);
-    await page.addStyleTag({ content: textSpacing });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
-    expect(await page.evaluate(figureOverflow, true)).toEqual([]);
-    expect(await drawingProblems(page)).toEqual([]);
-  });
-
-  test(`every figure stays inside its card at ${width}px with 200% text`, async ({ page }) => {
-    await open(page, width);
-    await page.evaluate(doubleText);
-    expect(await page.evaluate(figureOverflow, false), 'no part crosses the card edge').toEqual([]);
-    expect(await drawingProblems(page)).toEqual([]);
-    await expectNoViolations(page, `${width}px, 200% text`);
+    if (!state.spacing) await expectNoViolations(page, stateLabel(state));
   });
 }
 
@@ -136,7 +120,7 @@ test('with 200% text on a phone, an arrow between stacked boxes turns down', asy
   const turned = () => figureOf(page, 'pipeline').locator('.dg-arrow-across').first()
     .evaluate((arrow) => getComputedStyle(arrow).transform);
   expect(await turned()).toBe('none');
-  await page.evaluate(doubleText);
+  await open(page, 320, { text: 200 });
   // A quarter turn: matrix(cos 90, sin 90, -sin 90, cos 90, 0, 0).
   expect((await turned()).match(/-?[\d.]+(?:e-?\d+)?/g)!.slice(0, 4).map((value) => Math.round(Number(value)))).toEqual([0, 1, -1, 0]);
 });
@@ -155,8 +139,7 @@ test('the checks report planted faults', async ({ page }) => {
     await page.addStyleTag({ content: css });
     expect((await drawingProblems(page)).join('\n'), css).toMatch(message);
   }
-  await open(page, 320);
-  await page.evaluate(doubleText);
+  await open(page, 320, { text: 200 });
   expect(await drawingProblems(page)).toEqual([]);
   await page.addStyleTag({ content: '.dg-time-grid > .dg-time-group { grid-row: 1; }' });
   expect((await drawingProblems(page)).join('\n')).toContain('"Saving" overlaps "Saved"');

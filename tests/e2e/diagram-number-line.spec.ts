@@ -1,10 +1,12 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { doubleText, textSpacing } from '../support/diagrams';
+import { fitStates, openAt, stateLabel, tightestWide, withScrollbars } from '../support/diagrams';
 import { discoverStudyPages } from '../support/study';
 
 // The number line kind (diagram spec, Number line): what a screen reader gets at each width, and that
-// every mark, band and line is drawn where the data puts it. study.spec.ts checks placement, caption
-// and fit for every kind.
+// every mark, band and line is drawn where the data puts it. study.spec.ts checks placement and caption
+// for every kind, and study-diagrams.spec.ts checks fit.
+
+test.use(withScrollbars);
 
 interface NumberLine {
   type: string;
@@ -18,9 +20,6 @@ interface NumberLine {
 const pages = discoverStudyPages().flatMap(({ path, frontmatter }) =>
   (Array.isArray(frontmatter.diagrams) ? frontmatter.diagrams as NumberLine[] : [])
     .filter(({ type }) => type === 'number-line').map((line) => ({ path, line })));
-
-/** The tightest wide layout: at 626px the figure is 34rem wide inside its padding. */
-const tightest = 626;
 
 const valuesBetween = (line: NumberLine, from: number, to: number) => Array.from({ length: to - from + 1 }, (_, index) => {
   const value = from + index;
@@ -93,10 +92,9 @@ test('at least one Study page has a number line', () => {
 for (const { path, line } of pages) {
   const legend = ['2-value BVA', ...(line.threeValue ? ['3-value BVA adds'] : [])];
 
-  for (const width of [1280, tightest]) {
+  for (const width of [1280, tightestWide.width]) {
     test(`/${path} reads the whole number line once at ${width}px`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto(path);
+      await openAt(page, path, { width, text: 100 });
       await expect(linesOf(page).getByRole('group')).toHaveCount(0);
       expect(tidy(await listTexts(linesOf(page)))).toEqual([
         legend, bandsBetween(line, line.min, line.max), valuesBetween(line, line.min, line.max),
@@ -107,8 +105,7 @@ for (const { path, line } of pages) {
 
   for (const width of [360, 320]) {
     test(`/${path} reads one segment per edge at ${width}px`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto(path);
+      await openAt(page, path, { width, text: 100 });
       await expect(linesOf(page).getByRole('group')).toHaveCount(line.segments.length);
       expect(tidy(await listTexts(linesOf(page)))).toEqual([
         legend, ...line.segments.flatMap(({ from, to }) => [bandsBetween(line, from, to), valuesBetween(line, from, to)]),
@@ -116,15 +113,12 @@ for (const { path, line } of pages) {
       for (const { title } of line.segments) await expect(linesOf(page).getByRole('group', { name: title, exact: true })).toBeVisible();
       expect(await page.evaluate(drawingProblems, line)).toEqual([]);
     });
+  }
 
-    test(`/${path} draws the number line at ${width}px with 200% text and with wide text spacing`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto(path);
-      await page.addStyleTag({ content: textSpacing });
-      expect(await page.evaluate(drawingProblems, line), 'wide text spacing').toEqual([]);
-      await page.goto(path);
-      await page.evaluate(doubleText);
-      expect(await page.evaluate(drawingProblems, line), '200% text').toEqual([]);
+  for (const state of fitStates) {
+    test(`/${path} draws the number line at ${stateLabel(state)}`, async ({ page }) => {
+      await openAt(page, path, state);
+      expect(await page.evaluate(drawingProblems, line)).toEqual([]);
     });
   }
 }
@@ -140,8 +134,7 @@ test.describe('the drawing check', () => {
   ] as const) {
     test(`reports ${name}`, async ({ page }) => {
       const { path, line } = pages.find((entry) => entry.path === 'study/test-design/equivalence-and-boundaries/')!;
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto(path);
+      await openAt(page, path, { width, text: 100 });
       expect(await page.evaluate(drawingProblems, line)).toEqual([]);
       await page.addStyleTag({ content: css });
       expect((await page.evaluate(drawingProblems, line)).join('\n')).toMatch(message);

@@ -4,12 +4,14 @@ import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { doubles, risk } from '../fixtures/diagrams/matrices';
-import { doubleText, figureOverflow, overlappingHeads, textSpacing } from '../support/diagrams';
+import { figureOverflow, fitStates, openAt, overlappingHeads, sidewaysScroll, stateLabel, withScrollbars, type FitState } from '../support/diagrams';
 import { root } from '../support/problems';
 
 // The matrix kind (diagram spec, Matrix and Yes/no matrix) on a fixture page, because no Study page has
 // one until its facts are sourced. The fixture is its own small site in tests/fixtures/diagrams, built
 // into .tmp/ and served to the test from disk, so it never reaches dist or the live site.
+
+test.use(withScrollbars);
 
 const out = join(root, '.tmp', 'diagram-fixture-test');
 const origin = 'http://diagram-fixture.test';
@@ -25,16 +27,13 @@ test.beforeAll(() => {
   if (build.status !== 0) throw new Error(`The fixture build failed:\n${build.stdout}\n${build.stderr}`);
 });
 
-async function open(page: Page, width: number) {
-  await page.setViewportSize({ width, height: 900 });
+async function open(page: Page, width: number, state: Partial<FitState> = {}) {
   await page.route(`${origin}/**`, (route) => {
     const { pathname } = new URL(route.request().url());
     const file = join(out, pathname.replace(prefix, '/').replace(/\/$/, '/index.html'));
     return existsSync(file) ? route.fulfill({ path: file }) : route.fulfill({ status: 404, body: '' });
   });
-  const response = await page.goto(`${origin}${prefix}`);
-  expect(response?.status()).toBe(200);
-  await page.evaluate(() => document.fonts.ready);
+  await openAt(page, `${origin}${prefix}`, { width, text: 100, ...state });
 }
 
 const figureOf = (page: Page, id: string) => page.locator(`figure[data-diagram="matrix"]:has(> #dg-${id})`);
@@ -46,8 +45,15 @@ async function expectNoViolations(page: Page, state: string) {
   expect(violations.map(({ id, impact, nodes }) => ({ id, impact, targets: nodes.map(({ target }) => target.join(' ')) })), state).toEqual([]);
 }
 
-/** Boxes that scroll sideways, and by how much. */
-const scrolled = () => [...document.querySelectorAll('.dg-scroll')].map((box) => box.scrollWidth - box.clientWidth).filter((by) => by > 0);
+/** The figures whose box scrolls sideways. */
+const scrolled = () => [...document.querySelectorAll('.dg-scroll')].filter((box) => box.scrollWidth > box.clientWidth)
+  .map((box) => box.closest('figure')!.querySelector('figcaption')!.id.replace('dg-', ''));
+
+/** The matrices that may scroll in their own box: the risk matrix at 320px with the overrides, and both with enlarged text on a phone (spec, narrow layouts). */
+const mayScroll = ({ width, text, spacing }: FitState) => {
+  if (width > 360) return [];
+  return text > 100 ? ['risk', 'doubles'] : spacing && width === 320 ? ['risk'] : [];
+};
 
 for (const width of [1280, 360, 320]) {
   test(`the levels matrix is one table with its axes, levels and placed items at ${width}px`, async ({ page }) => {
@@ -98,41 +104,24 @@ for (const width of [1280, 360, 320]) {
     expect((await table.locator('tbody td').evaluateAll((cells) => cells.map((cell) => [cell.textContent!.trim(), Number(getComputedStyle(cell).fontWeight) >= 700])))
       .filter(([word, bold]) => !word || bold !== (word === 'Yes'))).toEqual([]);
   });
-
-  test(`both matrices fit at ${width}px without scrolling, and have no axe violations`, async ({ page }) => {
-    await open(page, width);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
-    expect(await page.evaluate(figureOverflow, true)).toEqual([]);
-    expect(await page.evaluate(scrolled)).toEqual([]);
-    expect(await page.evaluate(overlappingHeads)).toEqual([]);
-    await expectNoViolations(page, `${width}px`);
-  });
-
-  test(`both matrices keep their text with wide text spacing at ${width}px`, async ({ page }) => {
-    await open(page, width);
-    await page.addStyleTag({ content: textSpacing });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
-    expect(await page.evaluate(figureOverflow, false)).toEqual([]);
-    expect(await page.evaluate(overlappingHeads)).toEqual([]);
-    // At 320px the spec lets the risk matrix scroll inside its own box.
-    if (width > 320) expect(await page.evaluate(scrolled)).toEqual([]);
-  });
 }
 
-for (const width of [360, 320]) {
-  test(`both matrices stay inside their card at ${width}px with 200% text, and a keyboard can scroll them`, async ({ page }) => {
-    await open(page, width);
-    await page.evaluate(doubleText);
-    expect(await page.evaluate(figureOverflow, false), 'no part crosses the card edge').toEqual([]);
+for (const state of fitStates) {
+  test(`both matrices fit at ${stateLabel(state)}`, async ({ page }) => {
+    await open(page, state.width, state);
+    const plain = state.text === 100 && !state.spacing;
+    if (state.text === 100) expect(await page.evaluate(sidewaysScroll), 'no sideways page scroll').toBe(0);
+    // At the default text size nothing may even use the card padding; larger text may, up to the edge.
+    expect(await page.evaluate(figureOverflow, plain), 'nothing crosses the card edge').toEqual([]);
     expect(await page.evaluate(overlappingHeads)).toEqual([]);
-    expect((await page.evaluate(scrolled)).length, 'boxes that scroll').toBe(2);
-    await expectNoViolations(page, `${width}px, 200% text`);
-    for (const id of ['risk', 'doubles']) {
+    expect(await page.evaluate(scrolled), 'boxes that scroll').toEqual(mayScroll(state));
+    if (!state.spacing) await expectNoViolations(page, stateLabel(state));
+    for (const id of mayScroll(state)) {
       const box = figureOf(page, id).getByRole('group');
       await expect(box).toHaveCount(1);
       await box.focus();
       await page.keyboard.press('ArrowRight');
-      await expect.poll(() => box.evaluate((element) => element.scrollLeft), `${id} scrolls`).toBeGreaterThan(0);
+      await expect.poll(() => box.evaluate((element) => element.scrollLeft), `a keyboard scrolls ${id}`).toBeGreaterThan(0);
     }
   });
 }

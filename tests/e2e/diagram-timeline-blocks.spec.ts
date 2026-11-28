@@ -1,11 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
 import { blocksDrawing, timelineDrawing, type BlocksData, type TimelineData } from '../support/diagram-drawing';
-import { doubleText, figureOverflow, textSpacing } from '../support/diagrams';
+import { figureOverflow, fitStates, openAt, sidewaysScroll, stateLabel, tightestWide, withScrollbars } from '../support/diagrams';
 import { discoverStudyPages } from '../support/study';
 
 // The timeline and blocks kinds on their Study pages (diagram spec, Timeline and Blocks): what a screen
-// reader gets, that every part is drawn where the data puts it, and that nothing spills with wide text
-// spacing. study.spec.ts checks placement, caption and fit for every kind.
+// reader gets, and that every part is drawn where the data puts it. study.spec.ts checks placement and
+// caption for every kind, and study-diagrams.spec.ts checks fit.
+
+test.use(withScrollbars);
 
 const figures = discoverStudyPages().flatMap(({ path, frontmatter }) =>
   (Array.isArray(frontmatter.diagrams) ? frontmatter.diagrams as Array<TimelineData | BlocksData> : []).map((figure) => ({ path, figure })));
@@ -18,29 +20,22 @@ const drawingProblems = (page: Page, figure: TimelineData | BlocksData) => (figu
   : page.evaluate(blocksDrawing, figure as BlocksData));
 const tidy = (texts: string[]) => texts.map((text) => text.replace(/\s+/g, ' ').replace(/ ,/g, ',').trim());
 
-async function open(page: Page, path: string, width: number) {
-  await page.setViewportSize({ width, height: 900 });
-  await page.goto(path);
-  await page.evaluate(() => document.fonts.ready);
-}
+const open = (page: Page, path: string, width: number) => openAt(page, path, { width, text: 100 });
 
 test('a Study page has a timeline and a Study page has blocks', () => {
   expect(new Set(drawn.map(({ figure }) => figure.type))).toEqual(new Set(['timeline', 'blocks']));
 });
 
 for (const { path, figure } of drawn) {
-  for (const width of [1280, 360, 320]) {
-    test(`/${path} draws ${figure.id} as its data says at ${width}px`, async ({ page }) => {
-      await open(page, path, width);
+  for (const state of fitStates) {
+    test(`/${path} draws ${figure.id} as its data says at ${stateLabel(state)}`, async ({ page }) => {
+      await openAt(page, path, state);
       expect(await drawingProblems(page, figure)).toEqual([]);
-      await page.addStyleTag({ content: textSpacing });
-      expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
-      expect(await page.evaluate(figureOverflow, true), 'wide text spacing').toEqual([]);
-      expect(await drawingProblems(page, figure), 'wide text spacing').toEqual([]);
-      await page.goto(path);
-      await page.evaluate(doubleText);
-      expect(await page.evaluate(figureOverflow, false), '200% text').toEqual([]);
-      expect(await drawingProblems(page, figure), '200% text').toEqual([]);
+      // At the default text size these kinds keep their words inside their boxes even with wide spacing.
+      if (state.text === 100) {
+        expect(await page.evaluate(sidewaysScroll), 'no sideways page scroll').toBe(0);
+        expect(await page.evaluate(figureOverflow, true)).toEqual([]);
+      }
     });
   }
 }
@@ -91,6 +86,8 @@ test.describe('the drawing checks', () => {
     ['bars under 32px', waiting, 1280, '.dg-span { min-block-size: 12px !important; block-size: 12px; align-self: center !important; }', /a bar of "Fixed pause" is 12px tall/],
     ['a box wider than its neighbours', pageObjects, 1280, '.dg-box:first-child { margin-inline-end: 12px !important; }', /row 1 has uneven boxes/],
     ['a part outside its box', pageObjects, 1280, '.dg-part { translate: 0 60px; }', /"Button locator" is not inside "Test 1"/],
+    ['a word past its part, with the wide paddings in the tightest wide layout', pageObjects, tightestWide.width, '.dg-box { padding: 12px !important; } .dg-part { padding: 8px 12px !important; }', /"Button locator" runs out of its part in "Test 1"/],
+    ['a title past its box', pageObjects, 1280, '.dg-box-title { white-space: nowrap; text-indent: 6rem; }', /"Test 1" runs out of its box/],
     ['an arrow off its box', pageObjects, 1280, '.dg-arrows-down { translate: 30px; }', /no arrow runs from "Test 1" to "Sign-in page object"/],
     ['result lines that are not level', pageObjects, 1280, '.dg-panel { align-content: start; grid-template-rows: auto auto auto !important; }', /the result lines are not level/],
     ['panels side by side on a phone', pageObjects, 360, '.dg-panels { grid-template-columns: 1fr 1fr !important; }', /the panels are not stacked/],
