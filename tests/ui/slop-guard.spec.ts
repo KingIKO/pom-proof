@@ -65,7 +65,8 @@ function pageSamples() {
     // The Study pilot module, and the page with the first concept diagram (plus a dispute and a
     // What changed box). Examples are scanned by the read-state test below.
     if (route === 'study/[module]') return { route, urls: ['study/framework-design/'], status: 200 };
-    if (route === 'study/[module]/[page]') return { route, urls: ['study/testing-foundations/test-shapes/'], status: 200 };
+    // The waiting page has the timeline, and the page object page the blocks.
+    if (route === 'study/[module]/[page]') return { route, urls: ['study/testing-foundations/test-shapes/', 'study/automation-fundamentals/waiting-and-synchronisation/', 'study/framework-design/page-object-model/'], status: 200 };
     return { route, urls: [], status: 200 };
   });
 }

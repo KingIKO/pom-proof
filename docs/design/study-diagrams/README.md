@@ -1,6 +1,6 @@
 # Study diagram options
 
-Three styles for concept diagrams on the Study pages, each applied to the same three figures: the test shapes, the equivalence and boundaries number line, and the risk matrix. Every value comes from `src/styles/tokens.css`. The layer stack (test shapes) is built in `src/components/study/diagrams/`; the other kinds are not built yet.
+Three styles for concept diagrams on the Study pages, each applied to the same three figures: the test shapes, the equivalence and boundaries number line, and the risk matrix. Every value comes from `src/styles/tokens.css`. The layer stack (test shapes), the timeline (waiting and synchronisation) and the blocks (page object model) are built in `src/components/study/diagrams/`.
 
 Chosen on 2026-11-28: B, refined into B2 (tinted and calm) after Kingsley said B felt too busy. `spec.md` is the visual spec for B2; A, B and C are kept as the record of what was compared.
 

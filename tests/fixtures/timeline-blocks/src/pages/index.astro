@@ -1,0 +1,24 @@
+---
+// The fixture figures, checked by the real schema and drawn by the real components in the Study page
+// frame. This page is never deployed.
+import Diagram from '../../../../../src/components/study/diagrams/Diagram.astro';
+import '../../../../../src/components/study/study.css';
+import Base from '../../../../../src/layouts/Base.astro';
+import { diagramSchema } from '../../../../../src/lib/diagram-schema';
+import { figures } from '../../figures';
+
+const diagrams = diagramSchema.array().parse(figures);
+---
+<Base title="Timeline and blocks fixture" wide>
+  <div class="study-layout">
+    <div class="study-sidebar"></div>
+    <div class="study-main">
+      <article class="study-article">
+        <h1>Timeline and blocks fixture</h1>
+        <div class="study-body prose">
+          {diagrams.map((diagram) => <Fragment><p>The paragraph before the figure.</p><Diagram diagram={diagram} /></Fragment>)}
+        </div>
+      </article>
+    </div>
+  </div>
+</Base>

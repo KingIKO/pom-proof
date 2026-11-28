@@ -1,5 +1,8 @@
 import { z } from 'astro/zod';
-import { idSchema, textSchema } from './problem-schema';
+import { base, description } from './diagram-base';
+import { blocks } from './diagram-blocks';
+import { timeline } from './diagram-timeline';
+import { textSchema } from './problem-schema';
 
 /**
  * Concept diagrams on Study pages (diagram plan, section 2). A page lists its figures in the
@@ -7,15 +10,6 @@ import { idSchema, textSchema } from './problem-schema';
  * Diagram text follows the plain-language rules and does not count toward the body's words or
  * `minutes`.
  */
-
-/** Visually hidden text that says in words what position, width or length shows. */
-const description = z.union([textSchema, z.array(textSchema).min(1)]);
-
-const base = {
-  id: idSchema,
-  title: textSchema,
-  note: textSchema.optional(),
-};
 
 /**
  * Bars stacked top to bottom, one stack per shape, all on one width scale. `width` is relative
@@ -41,7 +35,7 @@ const layerStack = z.strictObject({
   })).min(1).max(3),
 });
 
-export const diagramSchema = z.discriminatedUnion('type', [layerStack]);
+export const diagramSchema = z.discriminatedUnion('type', [layerStack, timeline, blocks]);
 export type Diagram = z.infer<typeof diagramSchema>;
 
 export const diagramsSchema = z.array(diagramSchema).min(1).max(2)

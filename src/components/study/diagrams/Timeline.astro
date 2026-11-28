@@ -1,0 +1,64 @@
+---
+import type { Diagram } from '../../../lib/diagram-schema';
+import { gridColumn, markPlace, outcomeSpan, scaleTracks, spanText } from '../../../lib/diagram-timeline';
+import { label } from './label';
+import '../../../styles/diagram-timeline.css';
+
+interface Props {
+  diagram: Extract<Diagram, { type: 'timeline' }>;
+  /** The caption id, which names an unnamed lane's list and prefixes the lane name ids. */
+  idPrefix: string;
+}
+
+// One block per lane: its name, then a list of rows drawn on one set of columns. Each bar says its
+// start and end in hidden text, so the heads, the moment's line and the axis name are drawn for the
+// eye only. The moment's label stays text, because the bars refer to it.
+const { diagram, idPrefix } = Astro.props;
+const { ticks, groups } = diagram;
+const place = (columns: string) => `--dg-columns: ${columns}`;
+const between = (from: number, to: number) => place(gridColumn(diagram, { from, to }));
+const lanes = diagram.lanes.map((lane, index) => ({
+  ...lane,
+  id: lane.name && `${idPrefix}-lane-${index + 1}`,
+  moment: lane.mark && { ...lane.mark, place: markPlace(diagram, lane.mark.at) },
+  entries: lane.entries.map((entry) => ({ ...entry, room: outcomeSpan(diagram, lane, entry.spans) })),
+}));
+---
+<div class="dg-timeline" style={`--dg-scale: ${scaleTracks(diagram)}`}>
+  {(groups || ticks) && (
+    <div class="dg-time-heads" aria-hidden="true">
+      {groups && (
+        <div class="dg-time-grid">
+          {groups.map((group) => <span class="dg-time-head dg-time-group" style={between(group.from, group.to)} set:html={label(group.label)} />)}
+        </div>
+      )}
+      {ticks && (
+        <div class="dg-time-grid">
+          <span class="section-label" set:html={label(ticks.name)} />
+          {ticks.labels.map((text, index) => <span class="dg-time-head" style={between(index, index + 1)} set:html={label(text)} />)}
+        </div>
+      )}
+    </div>
+  )}
+  {lanes.map((lane) => (
+    <div class="dg-lane">
+      {lane.name && <div class="dg-lane-name" id={lane.id} set:html={label(lane.name)} />}
+      <div class="dg-time-grid dg-lane-drawing">
+        {lane.moment && <span class="dg-moment" data-side={lane.moment.place.side} style={place(lane.moment.place.label)} set:html={label(lane.moment.label)} />}
+        <ol class="dg-lane-rows" role="list" aria-labelledby={lane.id ?? idPrefix}>
+          {lane.entries.map(({ name, detail, spans, strong, outcome, room }) => (
+            <li class="dg-time-grid" data-strong={strong ? '' : undefined}>
+              <div class="dg-row-name"><span set:html={label(name)} />{detail && <> <span class="dg-row-detail" set:html={label(detail)} /></>}</div>
+              {spans.map((span) => (
+                <span class="dg-span" style={between(span.from, span.to)}><span class="visually-hidden">, {spanText(diagram, lane, span)}</span></span>
+              ))}
+              {outcome && <span class="dg-outcome" style={between(room.from, room.to)}><span class="visually-hidden">, </span><span set:html={label(outcome)} /></span>}
+            </li>
+          ))}
+        </ol>
+        {lane.moment && <span class="dg-moment-line" data-start={lane.moment.at === 0 ? '' : undefined} style={place(lane.moment.place.line)} aria-hidden="true"></span>}
+      </div>
+    </div>
+  ))}
+  {!ticks && <div class="section-label dg-time-axis" aria-hidden="true">Time →</div>}
+</div>

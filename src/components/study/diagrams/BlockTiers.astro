@@ -1,0 +1,58 @@
+---
+import { linkDirection, linkTarget, partsAcross, type Box, type Tiers } from '../../../lib/diagram-blocks';
+import { label } from './label';
+
+interface Props {
+  tiers: Tiers;
+}
+
+// A list of boxes per row, each box with a list of its parts, so the reading order follows
+// containment. A box that links to a neighbour says so in hidden text after its title; the arrow
+// itself is drawn for the eye only, one per box it starts from.
+const { tiers } = Astro.props;
+const equal = (count: number) => `repeat(${count}, minmax(0, 1fr))`;
+const rows = tiers.map((boxes, tierIndex) => {
+  const directions = boxes.map((_, boxIndex) => linkDirection(tiers, tierIndex, boxIndex));
+  // A row with → arrows gives each one a column of its own between two boxes.
+  const across = directions.includes('across');
+  return {
+    boxes,
+    directions,
+    across,
+    down: directions.includes('down'),
+    tracks: across ? `repeat(${boxes.length - 1}, minmax(0, 1fr) 1rem) minmax(0, 1fr)` : equal(boxes.length),
+  };
+});
+const relation = ({ linkTo }: Box) => linkTo && `, ${linkTo.label} ${linkTarget(tiers, linkTo.target)?.title}`;
+---
+<div class="dg-blocks">
+  {rows.map(({ boxes, directions, across, down, tracks }) => (
+    <>
+      <ul class="dg-tier" role="list" data-across={across ? '' : undefined} style={`--dg-tracks: ${tracks}`}>
+        {boxes.map((box, index) => (
+          <>
+            {across && index > 0 && <li class="dg-arrow-across" aria-hidden="true">{directions[index - 1] === 'across' ? '→' : ''}</li>}
+            <li class="dg-box" data-strong={box.strong ? '' : undefined}>
+              <div class="dg-box-title"><span set:html={label(box.title)} />{box.linkTo && <span class="visually-hidden">{relation(box)}</span>}</div>
+              {box.parts && (
+                <ul class="dg-parts" role="list" style={`--dg-tracks: ${equal(partsAcross(box.parts.length, boxes.length === 1))}`}>
+                  {box.parts.map(({ name, items, strong }) => (
+                    <li class="dg-part" data-strong={strong ? '' : undefined}>
+                      <span set:html={label(name)} />
+                      {items && <ul class="dg-part-items" role="list">{items.map((item) => <li set:html={label(item)} />)}</ul>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          </>
+        ))}
+      </ul>
+      {down && (
+        <div class="dg-arrows-down" aria-hidden="true" data-across={across ? '' : undefined} style={`--dg-tracks: ${tracks}`}>
+          {directions.map((direction, index) => direction === 'down' && <span style={`grid-column: ${across ? index * 2 + 1 : index + 1}`}>↓</span>)}
+        </div>
+      )}
+    </>
+  ))}
+</div>

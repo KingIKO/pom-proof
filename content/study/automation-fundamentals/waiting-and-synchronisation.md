@@ -16,6 +16,27 @@ avoidWhen:
   - A longer delay would only hide the reason the page never becomes ready.
 practiceTopics: [selenium]
 questionTopics: [locators-waits]
+diagrams:
+  - id: pause-and-condition
+    type: timeline
+    title: A fixed pause against a condition
+    note: Both runs use the same pause. The condition wait ends when the app is ready.
+    description:
+      - Two runs on one time scale.
+      - In the fast run the app is ready early. The fixed pause carries on after that and wastes time. The condition wait ends as soon as the app is ready.
+      - In the slow run the app is ready late. The fixed pause ends before that and is too short. The condition wait lasts until the app is ready.
+    steps: 10
+    lanes:
+      - name: Fast run
+        mark: { label: App ready, at: 3 }
+        entries:
+          - { name: Fixed pause, spans: [{ from: 0, to: 5 }], outcome: Wastes time }
+          - { name: Condition wait, spans: [{ from: 0, to: 3 }], strong: true }
+      - name: Slow run
+        mark: { label: App ready, at: 8 }
+        entries:
+          - { name: Fixed pause, spans: [{ from: 0, to: 5 }], outcome: Too short }
+          - { name: Condition wait, spans: [{ from: 0, to: 8 }], strong: true }
 sources:
   - { label: "Playwright: Actionability and assertions", url: "https://playwright.dev/docs/actionability", type: primary }
   - { label: "Selenium: Waiting strategies", url: "https://www.selenium.dev/documentation/webdriver/waits/", type: primary }
@@ -37,6 +58,10 @@ In Selenium, an explicit wait keeps checking a condition you choose. For example
 
 A condition lets a fast run continue as soon as the app is ready. It also gives a slower run time to catch up. If the condition never holds, the failure points to a specific missing state.
 
+```diagram
+pause-and-condition
+```
+
 ## When not to use it
 
-Skip a separate wait if the action already checks the same condition. Avoid pauses of a fixed length, since they can be too short on a slow run and waste time on a fast run. Cypress gives the same advice about arbitrary calls to its `cy.wait()` command with a number.
+Skip a separate wait if the action already checks the same condition. Avoid pauses of a fixed length. Cypress gives the same advice about arbitrary calls to its `cy.wait()` command with a number.

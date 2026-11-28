@@ -8,6 +8,7 @@ import {
   discoverStudyModules, discoverStudyPages, plannedPages, readTopicMap, topicMapUrls,
   type DiscoveredStudyModule, type DiscoveredStudyPage, type TopicMap, type TopicMapConcept,
 } from '../support/study';
+import { timelineBlocksProblems } from '../support/diagram-rules-timeline-blocks';
 
 /**
  * The Study authoring rules (practice and study plan, sections 3 and 4), checked from the files
@@ -108,6 +109,7 @@ function diagramProblems(data: Record<string, unknown>, body: string): string[] 
     for (const [where, text] of diagramTexts(diagram, at)) {
       if (text.includes('`')) add(`${where} uses backticks; write diagram text as plain words`);
     }
+    for (const problem of timelineBlocksProblems(diagram)) add(`${at} ${problem}`);
   });
 
   const placed = new Map<string, number>();
@@ -437,12 +439,16 @@ describe('Study pages', () => {
 
 describe('the Study checks catch planted mistakes', () => {
   const base = pages.find(({ id }) => id === 'framework-design/page-object-model');
-  const plant = (frontmatter: Record<string, unknown> = {}, body?: string, file?: { folder: string; slug: string }) => ({
-    ...base!,
-    ...(file ? { ...file, id: `${file.folder}/${file.slug}` } : {}),
-    frontmatter: { ...base!.frontmatter, ...frontmatter },
-    body: body ?? base!.body,
-  });
+  /** The page object page with fields replaced. A planted body has no diagram marker, so the figure goes with the old one. */
+  const plant = (frontmatter: Record<string, unknown> = {}, body?: string, file?: { folder: string; slug: string }) => {
+    const { diagrams, ...fields } = base!.frontmatter;
+    return {
+      ...base!,
+      ...(file ? { ...file, id: `${file.folder}/${file.slug}` } : {}),
+      frontmatter: { ...fields, ...(body === undefined ? { diagrams } : {}), ...frontmatter },
+      body: body ?? base!.body,
+    };
+  };
   const problemsOf = (page: DiscoveredStudyPage) => pageProblems(page, context).join('\n');
   const sentence = (count: number) => `${Array(count).fill('word').join(' ')}.`;
   const bodyOf = (sections: string[], words = 60) => sections.map((heading) => `## ${heading}\n\n${sentence(words)}\n`).join('\n');
@@ -621,6 +627,19 @@ describe('the Study checks catch planted mistakes', () => {
       expect(planted, 'the description sentence was replaced').not.toBe(source);
       expect(scanProse(shapes!.file, source).findings).toEqual([]);
       expect(scanProse(shapes!.file, planted).findings.map(({ rule }) => rule)).toContain('semicolon');
+    });
+
+    it.each([
+      ['a timeline span that ends before it starts', 'automation-fundamentals/waiting-and-synchronisation', '"from":0,"to":3', '"from":5,"to":3', 'diagrams[0] a span of "Condition wait" runs from 5 to 3'],
+      ['a blocks link to a missing box', 'framework-design/page-object-model', '"target":"sign-in"', '"target":"sign-out"', 'diagrams[0] "Test 1" links to "sign-out", which 0 boxes have as their id'],
+    ])('reports %s in the page file', (_name, id, written, planted, message) => {
+      const page = pages.find((candidate) => candidate.id === id);
+      expect(page, id).toBeDefined();
+      expect(pageProblems(page!, context)).toEqual([]);
+      const source = JSON.stringify(page!.frontmatter.diagrams);
+      expect(source, 'the data to plant on').toContain(written);
+      const diagrams = JSON.parse(source.replace(written, planted)) as unknown;
+      expect(pageProblems({ ...page!, frontmatter: { ...page!.frontmatter, diagrams } }, context).join('\n')).toContain(message);
     });
   });
 

@@ -1,6 +1,7 @@
 ---
 import type { Diagram } from '../../../lib/diagram-schema';
 import { inline } from '../study';
+import { label } from './label';
 
 interface Props {
   diagram: Extract<Diagram, { type: 'layer-stack' }>;
@@ -13,8 +14,6 @@ interface Props {
 // The shape name is a label, not a paragraph, so a reader's paragraph spacing does not part it
 // from its bars. role="list" keeps the list a list where list-style: none would drop it.
 const { diagram, idPrefix } = Astro.props;
-const label = (text: string) => inline(text)
-  .replace(/[^\s<>]*\p{L}-\p{L}[^\s<>]*/gu, (word) => `<span class="dg-word">${word}</span>`);
 ---
 <div class="dg-shapes">
   {diagram.shapes.map((shape, index) => (

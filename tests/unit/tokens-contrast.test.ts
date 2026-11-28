@@ -90,6 +90,9 @@ const pairs: Array<{ fg: string; bg: string; min: number }> = [
   { fg: 'dg-reject-text', bg: 'dg-reject-bg', min: text },
   { fg: white, bg: 'dg-mark', min: text },
   ...['dg-part-edge', 'dg-edge', 'dg-mark'].map((fg) => ({ fg, bg: 'surface', min: nonText })),
+  // Blocks: the items of a strong part. Timeline: a moment's line where it crosses or meets a bar.
+  { fg: 'text2', bg: 'dg-part-strong', min: text },
+  ...['dg-part', 'dg-part-strong'].map((bg) => ({ fg: 'dg-edge', bg, min: nonText })),
 ];
 
 /** Every pair below its minimum, or naming a token the stylesheet does not define. */
@@ -138,6 +141,9 @@ describe('palette A contrast', () => {
     ['dg-part-edge', 'color-mix(in srgb, var(--primary) 40%, var(--surface))', 'dg-part-edge on surface'],
     ['dg-medium', 'var(--accent)', 'text2 on dg-medium'],
     ['dg-part', 'var(--text3)', 'text2 on dg-part'],
+    ['dg-part-strong', 'color-mix(in srgb, var(--primary) 45%, var(--surface))', 'text2 on dg-part-strong'],
+    ['dg-part-strong', 'var(--primary)', 'dg-edge on dg-part-strong'],
+    ['dg-edge', 'var(--dg-part-edge)', 'dg-edge on dg-part'],
   ])('a weakened diagram token %s (%s) is reported', (token, value, pair) => {
     const planted = tokensCss.replace(new RegExp(`(--${token}\\s*:\\s*)[^;]+;`), `$1${value};`);
     expect(planted, `${token} was replaced`).not.toBe(tokensCss);

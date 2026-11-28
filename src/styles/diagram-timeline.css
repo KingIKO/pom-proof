@@ -1,0 +1,94 @@
+/* Timeline (diagram spec, Timeline): a row has a name, its bars and an optional outcome. Every row
+   repeats the same columns, a fixed name column and equal steps, so all bars sit on one scale. A 2px
+   line marks a moment across the rows of a lane. */
+
+.dg-timeline { --dg-name: 9.5rem; }
+.dg-time-grid { display: grid; grid-template-columns: var(--dg-name) var(--dg-scale); }
+.dg-time-grid > [style] { grid-column: var(--dg-columns); }
+
+.dg-time-heads { display: grid; gap: var(--space-8); margin-block-end: var(--space-8); }
+.dg-time-head {
+  color: var(--text2);
+  font-size: var(--type-13);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  text-align: center;
+}
+.dg-time-axis { margin-block-start: var(--space-24); text-align: end; }
+
+.dg-lane + .dg-lane { margin-block-start: var(--space-24); }
+.dg-lane-name {
+  margin-block-end: var(--space-8);
+  font-size: var(--type-14);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+}
+.dg-lane-drawing { row-gap: var(--space-8); }
+.dg-lane-rows { grid-column: 1 / -1; display: grid; gap: var(--space-8); margin: 0; padding: 0; list-style: none; }
+.dg-lane-rows > li { align-items: center; margin: 0; }
+.dg-lane-rows > li > * { grid-row: 1; }
+.dg-row-name {
+  grid-column: 1;
+  padding-inline-end: var(--space-12);
+  color: var(--text);
+  font-size: var(--type-13);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+}
+.dg-row-detail { display: block; color: var(--text2); font-weight: var(--weight-regular); }
+.dg-span {
+  align-self: stretch;
+  min-block-size: 2rem;
+  margin-inline: 2px;
+  border: 1px solid var(--dg-part-edge);
+  background: var(--dg-part);
+}
+.dg-lane-rows > [data-strong] > .dg-row-name > :first-child { font-weight: var(--weight-bold); }
+.dg-lane-rows > [data-strong] > .dg-span { background: var(--dg-part-strong); }
+.dg-outcome { padding-inline: var(--space-8) var(--space-4); color: var(--text2); font-size: var(--type-13); line-height: 1.25; }
+
+/* The moment: its label above the rows, and its line through them, centred on the column edge. */
+.dg-moment {
+  grid-row: 1;
+  justify-self: start;
+  padding-inline-start: var(--space-8);
+  color: var(--text2);
+  font-size: var(--type-13);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.dg-moment[data-side="before"] { justify-self: end; padding-inline: 0 var(--space-8); }
+.dg-moment ~ .dg-lane-rows { grid-row: 2; }
+.dg-moment-line {
+  grid-row: 1 / 3;
+  justify-self: end;
+  inline-size: 0;
+  margin-inline-end: -1px;
+  border-inline-start: 2px solid var(--dg-edge);
+}
+.dg-moment-line[data-start] { justify-self: start; margin-inline: -1px 0; }
+
+@container (width < 34rem) {
+  .dg-timeline { --dg-name: 5.25rem; }
+  .dg-row-name { padding-inline-end: var(--space-8); }
+}
+
+/* Enlarged text on a phone: the name and the outcome take their own lines, so the bars keep the whole
+   width. The scale still runs left to right, and the moment's line passes behind the words. Each group
+   head takes a line of its own from where its group starts, so no two heads share one. */
+@container (width < 14.5rem) {
+  .dg-timeline { --dg-name: 0px; }
+  .dg-time-grid > .dg-time-group { grid-column-end: -1; text-align: start; }
+  .dg-time-heads .section-label { grid-column: 1 / -1; }
+  .dg-lane-rows > li > .dg-span { grid-row: 2; }
+  .dg-lane-rows > li > :is(.dg-row-name, .dg-outcome) {
+    position: relative;
+    z-index: 1;
+    grid-column: 1 / -1;
+    justify-self: start;
+    background: var(--surface);
+  }
+  .dg-lane-rows > li > .dg-outcome { grid-row: 3; padding-inline: 0; }
+  .dg-moment { white-space: normal; }
+}

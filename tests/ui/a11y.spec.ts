@@ -21,6 +21,8 @@ const pages = [
   // The two pilot pages: one with a dispute and two examples, one with a "what changed" box.
   { name: 'study page object page', url: 'study/framework-design/page-object-model/' },
   { name: 'study parameterised tests page', url: 'study/framework-design/parameterised-tests/' },
+  // The timeline; the page object page above has the blocks. Both are checked at 320px below.
+  { name: 'study waiting page', url: 'study/automation-fundamentals/waiting-and-synchronisation/' },
   // The first concept diagram; the 320px check is below.
   { name: 'study test shapes page', url: 'study/testing-foundations/test-shapes/' },
   { name: '404 page', url: 'this-page-does-not-exist/', status: 404 },
@@ -135,6 +137,24 @@ test('the Study module list folded on a narrow screen has no serious or critical
   await expect(page.getByRole('navigation', { name: 'Study modules' })).toBeVisible();
   await expectNoSeriousViolations(page, testInfo, 'open module list');
 });
+
+for (const [name, url, type] of [
+  ['timeline', 'study/automation-fundamentals/waiting-and-synchronisation/', 'timeline'],
+  ['page object blocks', 'study/framework-design/page-object-model/', 'blocks'],
+] as const) {
+  test(`the ${name} at 320px and with 200% text has no axe violations of any impact in its figure`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 760 });
+    await open(page, url);
+    const figure = page.locator(`figure[data-diagram="${type}"]`);
+    for (const size of ['100%', '200%']) {
+      await page.evaluate((value) => { document.documentElement.style.fontSize = value; }, size);
+      await expect(figure).toBeVisible();
+      const { violations, passes } = await new AxeBuilder({ page }).include(`figure[data-diagram="${type}"]`).analyze();
+      expect(passes.length, 'axe ran no checks').toBeGreaterThan(0);
+      expect(violations.map(({ id, nodes }) => ({ id, targets: nodes.map(({ target }) => target.join(' ')) })), `${size} text`).toEqual([]);
+    }
+  });
+}
 
 test('the test shapes diagram at 320px, stacked, has no serious or critical axe violations', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 760 });
