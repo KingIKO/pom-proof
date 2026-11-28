@@ -1,6 +1,6 @@
 # Visual spec: Study diagrams (B2, tinted and calm)
 
-Decided on 2026-11-28. Kingsley picked option B (tinted) over the recommended option A, said B felt too busy, and allowed inline SVG inside Study diagrams only. B2 is B with fewer lines, colours and labels, and more space. Built: the layer stack is live on the test shapes page. The number line, matrix, timeline and blocks are built (branch `study-diagrams-c`). Approved and not built: the test levels growing pictures (A), the timeline with states (A) and the risk matrix axis names (B).
+Decided on 2026-11-28. Kingsley picked option B (tinted) over the recommended option A, said B felt too busy, and allowed inline SVG inside Study diagrams only. B2 is B with fewer lines, colours and labels, and more space. Built: the layer stack is live on the test shapes page. The number line, matrix, timeline and blocks are built. Approved and not built: the test levels growing pictures (A), the timeline with states (A) and the risk matrix axis names (B).
 
 Reference files in this folder: `option-b2.html` (the three figures in real page context), `compare-b-vs-b2.html`, `diagrams.css` (the `[data-style="b2"]` block and the `.dg2-*` rules are B2), and the PNGs `option-b2-desktop.png`, `option-b2-360.png` and `compare-b-vs-b2.png`. The class names in `diagrams.css` are for the mockup only; iko-flow names its own, but uses the token and the values below.
 
