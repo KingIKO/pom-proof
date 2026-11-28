@@ -91,7 +91,9 @@ tokens-contrast: read the `figure[data-diagram]` block. Text pairs 4.5:1: `text`
 
 study.test.ts `pageProblems`: unique slug ids, ≤2 per page; each id named by exactly one marker, each marker holds one listed id; marker inside one of the four sections, never directly after a heading; title ≤7 words, no full stop, no leading "Figure 1" label, no "Diagram of" or "This shows"; note ≤2 sentences; `description` unless matrix; no backticks in any diagram text. Plants for each; marker adds 0 to `bodyWords`; semicolon in a diagram `description` reported.
 
-study.spec.ts: one `figure[data-diagram]` per entry, each a direct child of `.study-body` that follows body content other than a heading (the same rule as study.test.ts); caption matches frontmatter; no `language-diagram` left; at 1280, 360 and 320 px no horizontal scroll, no figure part overflows; at 360 and 320 px with 200% text a part may use the card padding but never crosses the card edge, and no bar draws wider than its shape's widest.
+study.spec.ts: one `figure[data-diagram]` per entry, each a direct child of `.study-body` that follows body content other than a heading (the same rule as study.test.ts); caption matches frontmatter; no `language-diagram` left.
+
+study-diagrams.spec.ts (scrollbars shown, text enlarged through the browser's default font size): at 1280, 1024, 768, 360 and 320 px no horizontal scroll and no figure part overflows; at those widths, at 360 and 320 px with 150% and 200% text, at 1280 px with 200% text or the SC 1.4.12 overrides, and at 320 px with both, nothing crosses the card edge and bars draw strictly in the order of their widths across the figure; bars with the same width draw equal, within the differences the spec accepts (1.8 px at 1024, 10 px at 1280 with 200% text, 3.3 px at 1280 with the overrides; not checked at 320 px with 200% text and the overrides together). Plants for each check, and a check that the scrollbar is showing.
 
 a11y.spec.ts: test shapes page at desktop and 320 px.
 
