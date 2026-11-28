@@ -18,19 +18,14 @@ questionTopics: [test-design]
 diagrams:
   - id: boundary-values
     type: number-line
-    title: Partitions and boundary values
-    note: Each band is the expected result. The rule changes at the lines.
-    description:
-      - The expected result is Reject for 5 to 9, Accept for 10 to 20 and Reject for 21 to 25.
-      - One line falls between 9 and 10. The other falls between 20 and 21.
-    min: 5
-    max: 25
+    title: Partitions and the values BVA checks
+    note: Each band shows the expected result. Both Reject partitions continue past the values shown.
+    description: The expected result is Reject for 9 or less, Accept for 10 to 20 and Reject for 21 or more.
     bands:
       - { from: 5, to: 9, label: Reject, kind: reject }
       - { from: 10, to: 20, label: Accept, kind: accept }
       - { from: 21, to: 25, label: Reject, kind: reject }
-    twoValue: [9, 10, 20, 21]
-    threeValue: [8, 11, 19, 22]
+    threeValue: true
     segments:
       - { title: Lower edge, from: 7, to: 12 }
       - { title: Upper edge, from: 18, to: 23 }

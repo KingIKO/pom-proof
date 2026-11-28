@@ -1,12 +1,14 @@
 ---
 import type { Diagram } from '../../../lib/diagram-schema';
-import { inline } from '../study';
+import { label } from './label';
 import '../../../styles/diagram-matrix.css';
 
 interface Props {
   diagram: Extract<Diagram, { type: 'matrix' }>;
-  /** The caption id, which names the table and prefixes its header ids. */
+  /** The caption id, which prefixes the header ids. */
   idPrefix: string;
+  /** The title id, which names the table and its box. The note is not repeated with it. */
+  titleId: string;
 }
 
 // A real table, never role="img", so a screen reader gets each cell with its row and column. A levels
@@ -14,36 +16,37 @@ interface Props {
 // figure; the stylesheet shows one of the two, and display: none keeps the other out of the
 // accessibility tree as well. In the turned table a question heads the row of answers below it, so
 // each answer names both of its headers (WCAG technique H43). A matrix too wide for enlarged text
-// scrolls in its own box, which takes focus so a keyboard can scroll it.
-const { diagram, idPrefix } = Astro.props;
+// scrolls in its own box, which takes focus so a keyboard can scroll it. A question of the turned
+// table sits in a span that stays in view while its row of answers scrolls.
+const { diagram, idPrefix, titleId } = Astro.props;
 const { columns, entries } = diagram;
 const placedAt = (row: string, column: string) => (diagram.placed ?? []).filter((item) => item.row === row && item.column === column);
 const answer = (word: string) => ({ Yes: 'yes', No: 'no' }[word] ?? 'qualified');
-const box = { role: 'group', 'aria-labelledby': idPrefix, tabindex: 0 } as const;
+const box = { role: 'group', 'aria-labelledby': titleId, tabindex: 0 } as const;
 ---
 {diagram.kind === 'levels' ? (
   <div class="dg-scroll" {...box}>
-    <table class="dg-matrix dg-matrix-levels" aria-labelledby={idPrefix}>
+    <table class="dg-matrix dg-matrix-levels" aria-labelledby={titleId}>
       <colgroup><col class="dg-matrix-heads" /></colgroup>
       <colgroup span={columns.length} />
       <thead>
         <tr>
           <td></td>
-          <th scope="colgroup" colspan={columns.length} class="dg-axis-top"><span class="section-label" set:html={inline(diagram.columnAxis!)} /></th>
+          <th scope="colgroup" colspan={columns.length} class="dg-axis-top"><span class="section-label" set:html={label(diagram.columnAxis!)} /></th>
         </tr>
         <tr>
-          <th scope="col" class="dg-axis-side"><span class="section-label" set:html={inline(diagram.rowAxis!)} /></th>
-          {columns.map((column) => <th scope="col" set:html={inline(column)} />)}
+          <th scope="col" class="dg-axis-side"><span class="section-label" set:html={label(diagram.rowAxis!)} /></th>
+          {columns.map((column) => <th scope="col" set:html={label(column)} />)}
         </tr>
       </thead>
       <tbody>
         {entries.map(({ head, cells }) => (
           <tr>
-            <th scope="row" set:html={inline(head)} />
+            <th scope="row" set:html={label(head)} />
             {cells.map((word, index) => (
               <td data-level={word.toLowerCase()}>
-                <span class="dg-level" set:html={inline(word)} />
-                {placedAt(head, columns[index]).map(({ label }) => <span class="dg-placed" set:html={inline(label)} />)}
+                <span class="dg-level" set:html={label(word)} />
+                {placedAt(head, columns[index]).map((item) => <span class="dg-placed" set:html={label(item.label)} />)}
               </td>
             ))}
           </tr>
@@ -54,41 +57,41 @@ const box = { role: 'group', 'aria-labelledby': idPrefix, tabindex: 0 } as const
 ) : (
   <Fragment>
     <div class="dg-scroll dg-matrix-wide" {...box}>
-      <table class="dg-matrix dg-matrix-answers" aria-labelledby={idPrefix}>
+      <table class="dg-matrix dg-matrix-answers" aria-labelledby={titleId}>
         <colgroup><col class="dg-matrix-heads" /></colgroup>
         <colgroup span={columns.length} />
         <thead>
           <tr>
             <td></td>
-            {columns.map((column) => <th scope="col" set:html={inline(column)} />)}
+            {columns.map((column) => <th scope="col" set:html={label(column)} />)}
           </tr>
         </thead>
         <tbody>
           {entries.map(({ head, cells }) => (
             <tr>
-              <th scope="row" set:html={inline(head)} />
-              {cells.map((word) => <td data-answer={answer(word)} set:html={inline(word)} />)}
+              <th scope="row" set:html={label(head)} />
+              {cells.map((word) => <td data-answer={answer(word)} set:html={label(word)} />)}
             </tr>
           ))}
         </tbody>
       </table>
     </div>
     <div class="dg-scroll dg-matrix-narrow" {...box}>
-      <table class="dg-matrix dg-matrix-answers" aria-labelledby={idPrefix}>
+      <table class="dg-matrix dg-matrix-answers" aria-labelledby={titleId}>
         <thead>
           <tr>
-            {entries.map(({ head }, item) => <th scope="col" id={`${idPrefix}-item-${item + 1}`} set:html={inline(head)} />)}
+            {entries.map(({ head }, item) => <th scope="col" id={`${idPrefix}-item-${item + 1}`} set:html={label(head)} />)}
           </tr>
         </thead>
         {columns.map((column, question) => (
           <tbody>
             <tr>
-              <th scope="rowgroup" colspan={entries.length} id={`${idPrefix}-question-${question + 1}`} set:html={inline(column)} />
+              <th scope="rowgroup" colspan={entries.length} id={`${idPrefix}-question-${question + 1}`}><span class="dg-question" set:html={label(column)} /></th>
             </tr>
             <tr>
               {entries.map(({ cells }, item) => (
                 <td data-answer={answer(cells[question])} headers={`${idPrefix}-item-${item + 1} ${idPrefix}-question-${question + 1}`}
-                  set:html={inline(cells[question])} />
+                  set:html={label(cells[question])} />
               ))}
             </tr>
           </tbody>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { lineValues } from '../../src/lib/diagram-number-line';
 import { diagramSchema } from '../../src/lib/diagram-schema';
 import { discoverStudyPages } from '../support/study';
 
@@ -22,15 +23,19 @@ describe('the number line schema', () => {
     expect(problems({})).toBe('');
   });
 
-  it('accepts a line with 2-value marks only', () => {
+  it('accepts a line with 2-value BVA only', () => {
     expect(problems({ threeValue: undefined })).toBe('');
   });
 
   it('accepts a partition of one value, whose two lines share it', () => {
     expect(problems({
-      min: 5, max: 15, bands: [reject(5, 9), accept(10, 10), reject(11, 15)],
-      twoValue: [9, 10, 11], threeValue: [8, 12], segments: [{ title: 'Both edges', from: 8, to: 12 }],
+      bands: [reject(5, 9), accept(10, 10), reject(11, 15)], segments: [{ title: 'Both edges', from: 8, to: 12 }],
     })).toBe('');
+  });
+
+  it('accepts a range that starts or ends beside a line, where 3-value BVA has no neighbour to add', () => {
+    expect(problems({ bands: [reject(0, 0), accept(1, 20)], segments: [{ title: 'Lower edge', from: 0, to: 4 }] })).toBe('');
+    expect(problems({ bands: [accept(1, 20), reject(21, 21)], segments: [{ title: 'Upper edge', from: 17, to: 21 }] })).toBe('');
   });
 
   it.each([
@@ -38,35 +43,46 @@ describe('the number line schema', () => {
     ['a longer band gap', { bands: [reject(5, 9), accept(10, 17), reject(21, 25)] }, 'band "Reject" (21 to 25) leaves out 18 to 20. Start it at 18'],
     ['a band overlap', { bands: [reject(5, 10), accept(10, 20), reject(21, 25)] }, 'band "Accept" (10 to 20) overlaps the band before it. Start it at 11'],
     ['a band that ends before it starts', { bands: [reject(5, 9), accept(10, 8), reject(9, 25)] }, 'band "Accept" (10 to 8) ends before it starts'],
-    ['bands that start below min', { bands: [reject(4, 9), accept(10, 20), reject(21, 25)] }, 'band "Reject" (4 to 9) starts below min 5'],
-    ['bands that start above min', { bands: [reject(7, 9), accept(10, 20), reject(21, 25)] }, 'leaves out 5 to 6. Start it at 5'],
-    ['bands that stop before max', { bands: [reject(5, 9), accept(10, 20), reject(21, 24)] }, 'the last band ends at 24. End it at max 25'],
-    ['bands that run past max', { bands: [reject(5, 9), accept(10, 20), reject(21, 26)] }, 'the last band ends at 26. End it at max 25'],
     ['one band, with no line', { bands: [accept(5, 25)] }, 'bands'],
+    ['no bands', { bands: [] }, 'bands'],
     ['a line where no rule changes', { bands: [reject(5, 9), accept(10, 15), accept(16, 20), reject(21, 25)] }, 'repeats the label before it'],
     ['one label for both kinds', { bands: [reject(5, 9), accept(10, 20), { ...accept(21, 25), label: 'Reject' }] }, 'label "Reject" is both accept and reject'],
     ['an unknown band kind', { bands: [reject(5, 9), { ...accept(10, 20), kind: 'maybe' }, reject(21, 25)] }, 'bands.1.kind'],
-    ['a mark above the range', { twoValue: [9, 10, 20, 21, 26] }, 'mark 26 is outside 5 to 25'],
-    ['a mark below the range', { threeValue: [4, 8, 11, 19, 22] }, 'mark 4 is outside 5 to 25'],
-    ['a mark that is not whole', { twoValue: [9.5, 10, 20, 21] }, 'twoValue.0'],
-    ['a mark listed twice', { twoValue: [9, 10, 10, 20, 21] }, 'mark 10 is listed twice'],
-    ['a mark in both lists', { threeValue: [8, 9, 11, 19, 22] }, 'mark 9 is listed twice'],
-    ['a 2-value mark away from the lines', { twoValue: [9, 10, 15, 20, 21] }, 'The values beside the lines are 9, 10, 20, 21'],
-    ['a missing 2-value mark', { twoValue: [9, 10, 20] }, 'twoValue is 9, 10, 20. The values beside the lines are 9, 10, 20, 21'],
-    ['a missing 3-value mark', { threeValue: [8, 11, 19] }, 'The values next to 9, 10, 20, 21 are 8, 11, 19, 22'],
-    ['a range that runs backwards', { min: 25, max: 5 }, 'min 25 must be below max 5'],
-    ['more values than fit', { min: 4, bands: [reject(4, 9), accept(10, 20), reject(21, 25)] }, '4 to 25 is 22 values. Draw at most 21'],
+    ['a band edge that is not whole', { bands: [reject(5, 9.5), accept(10, 20), reject(21, 25)] }, 'bands.0.to'],
+    ['values the bands already decide', { twoValue: [9, 10, 20, 21] }, 'twoValue'],
+    ['a start the bands already decide', { min: 5 }, 'min'],
+    ['a list of 3-value marks', { threeValue: [8, 11, 19, 22] }, 'threeValue'],
+    ['3-value BVA that adds nothing', { bands: [reject(0, 0), accept(1, 1)], segments: [{ title: 'Edge', from: 0, to: 1 }] }, 'threeValue adds no value to this line. Leave it out'],
+    ['more values than fit', { bands: [reject(4, 9), accept(10, 20), reject(21, 25)] }, '4 to 25 is 22 values. Draw at most 21'],
     ['a segment outside the range', { segments: [{ ...lower, from: 4, to: 9 }, lower, upper] }, 'segment "Lower edge" (4 to 9) is outside 5 to 25'],
     ['a segment of seven values', { segments: [{ ...lower, to: 13 }, upper] }, 'has 7 values. Draw at most 6'],
     ['segments that overlap', { segments: [lower, { ...lower, title: 'Again', from: 9 }, upper] }, 'segment "Again" (9 to 12) overlaps the segment before it'],
     ['a segment with no line', { segments: [lower, { title: 'Middle', from: 13, to: 17 }, upper] }, 'segment "Middle" (13 to 17) holds no line'],
     ['a line no segment holds', { segments: [lower] }, 'no segment holds the line between 20 and 21'],
     ['a segment that cuts a line in half', { segments: [{ ...lower, from: 10, to: 12 }, upper] }, 'no segment holds the line between 9 and 10'],
-    ['a mark no segment holds', { segments: [{ ...lower, from: 9 }, upper] }, 'no segment holds mark 8'],
+    ['a checked value no segment holds', { segments: [{ ...lower, from: 9 }, upper] }, 'no segment holds 8, which BVA checks'],
     ['no description', { description: undefined }, 'description'],
     ['an unknown field', { ticks: true }, 'ticks'],
   ])('rejects %s', (_name, changes, message) => {
     expect(problems({})).toBe('');
     expect(problems(changes)).toContain(message);
+  });
+});
+
+describe('the values the bands decide', () => {
+  const bands = [reject(5, 9), accept(10, 20), reject(21, 25)];
+
+  it('are the ends of the drawing and the values BVA checks on the page', () => {
+    expect(lineValues({ bands, threeValue: true })).toEqual({ min: 5, max: 25, two: [9, 10, 20, 21], three: [8, 11, 19, 22] });
+    expect(lineValues({ bands }).three).toEqual([]);
+  });
+
+  it('name a value once when two lines share it', () => {
+    expect(lineValues({ bands: [reject(5, 9), accept(10, 10), reject(11, 15)], threeValue: true })).toMatchObject({ two: [9, 10, 11], three: [8, 12] });
+  });
+
+  it('leave out a neighbour below the start of the range or above its end', () => {
+    expect(lineValues({ bands: [reject(0, 0), accept(1, 20)], threeValue: true })).toMatchObject({ two: [0, 1], three: [2] });
+    expect(lineValues({ bands: [accept(1, 20), reject(21, 21)], threeValue: true })).toMatchObject({ two: [20, 21], three: [19] });
   });
 });

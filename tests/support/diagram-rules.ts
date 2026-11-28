@@ -1,3 +1,5 @@
+import { lineValues } from '../../src/lib/diagram-number-line';
+
 /**
  * Authoring rules per diagram kind (diagram spec, Parts per diagram and Rules for writers), checked from
  * the page file and independently of the collection schema. The schema checks that the data holds
@@ -17,17 +19,18 @@ const bodyTokens = (body: string) => new Set(body.match(/[\p{L}\p{N}]+/gu) ?? []
 const tooLong = (label: unknown, what: string, limit = 3) =>
   (label !== undefined && wordsIn(label) > limit ? [`${what} "${String(label)}" has ${wordsIn(label)} words; write at most ${limit}`] : []);
 
-/** Band labels and checked values come from the page: each must appear in its body. */
-const numberLine: Rule = ({ bands, twoValue, threeValue, segments }, body) => {
+/** Band labels and the values BVA checks come from the page: each must appear in its body. */
+const numberLine: Rule = ({ bands, threeValue, segments }, body) => {
   const said = bodyTokens(body);
-  const labels = new Set(list<Data>(bands).map(({ label }) => String(label)));
+  const ranges = list<{ from: number; to: number; label: string }>(bands);
+  const labels = new Set(ranges.map(({ label }) => String(label)));
+  const { two, three } = ranges.length ? lineValues({ bands: ranges, threeValue: Boolean(threeValue) }) : { two: [], three: [] };
   return [
     ...[...labels].flatMap((label) => [
       ...tooLong(label, 'band label', 1),
       ...(said.has(label) ? [] : [`band label "${label}" is not a word in the body`]),
     ]),
-    ...[...list<number>(twoValue), ...list<number>(threeValue)].flatMap((mark) =>
-      (said.has(String(mark)) ? [] : [`checked value ${String(mark)} is not in the body`])),
+    ...[...two, ...three].flatMap((mark) => (said.has(String(mark)) ? [] : [`checked value ${mark} is not in the body`])),
     ...list<Data>(segments).flatMap(({ title }) => tooLong(title, 'segment title')),
   ];
 };

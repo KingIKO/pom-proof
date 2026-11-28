@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { figureOverflow, fitStates, openAt, overlappingHeads, sidewaysScroll, stateLabel, tightestWide, withScrollbars, type FitState } from '../support/diagrams';
+import { drawingProblems, type FigureData } from '../support/diagram-drawing';
+import { expectNoViolations, figureOverflow, fitStates, openAt, overlappingHeads, sidewaysScroll, stateLabel, tightestWide, withScrollbars, type FitState } from '../support/diagrams';
 import { discoverStudyPages } from '../support/study';
 
-// How Study concept diagrams of every kind fit their card, and that layer stack bars keep their widths
-// (diagram spec, "Layer stack width limits" in docs/design/study-diagrams/spec.md). Placement and
-// captions are checked in study.spec.ts, and what each kind draws in its own spec.
+// How Study concept diagrams of every kind fit their card and draw their data, in one page load per
+// state, and that layer stack bars keep their widths (diagram spec, "Layer stack width limits" in
+// docs/design/study-diagrams/spec.md). Placement and captions are checked in study.spec.ts. What a screen
+// reader gets, and that each drawing check reports a planted fault, is in the spec of each kind.
 
 test.use(withScrollbars);
 
@@ -23,7 +25,9 @@ function sameWidthGap({ width, text, spacing }: FitState) {
   if (spacing && text === 200) return null;
   if (spacing) return width === 1280 ? 3.3 : 0;
   if (width === 1280 && text === 200) return 10;
-  // The spec has no row for the tightest wide layout (7px between UI and Integrated on 2026-11-28).
+  // The spec has no row for the tightest wide layout (7px between UI and Integrated on 2026-11-28). Between
+  // the rows it has, UI and Integrated also differ at 1008px (3.9px) and 992px (6.1px), and those widths
+  // are not fit states.
   if (width === tightestWide.width) return null;
   return width === 1024 ? 1.8 : 0;
 }
@@ -67,15 +71,22 @@ const unequal = (figures: Figures, gap: number) => figures.flatMap(({ bars }) =>
   return spread > gap ? [`width ${data} draws ${spread}px apart: ${same.map(({ name, drawn }) => `${name} ${tenth(drawn)}`).join(', ')}`] : [];
 }));
 
+/** Kinds whose words may use the card padding with the text-spacing overrides: a bar grows to its longest word, and a matrix scrolls. */
+const roomy = new Set(['layer-stack', 'matrix']);
+
 for (const study of withDiagrams) {
+  const listed = study.frontmatter.diagrams as FigureData[];
   for (const state of fitStates) {
-    test(`/${study.path} figures fit at ${stateLabel(state)}`, async ({ page }) => {
+    test(`/${study.path} figures fit and are drawn as their data says at ${stateLabel(state)}`, async ({ page }) => {
       await openAt(page, study.path, state);
-      const plain = state.text === 100 && !state.spacing;
       // At the default text size nothing may even use the card padding; larger text may, up to the edge.
-      if (plain) expect(await page.evaluate(sidewaysScroll), 'no sideways page scroll').toBe(0);
-      expect(await page.evaluate(figureOverflow, plain), 'nothing crosses the card edge').toEqual([]);
+      const strict = state.text === 100 && !(state.spacing && listed.some(({ type }) => roomy.has(type)));
+      if (strict) expect(await page.evaluate(sidewaysScroll), 'no sideways page scroll').toBe(0);
+      expect(await page.evaluate(figureOverflow, strict), 'nothing crosses the card edge').toEqual([]);
       expect(await page.evaluate(overlappingHeads)).toEqual([]);
+      for (const figure of listed) expect(await drawingProblems(page, figure), figure.id).toEqual([]);
+      // Axe where a figure changes most: on the narrowest phone, at both ends of the text sizes.
+      if (state.width === 320 && state.text !== 150 && !state.spacing) await expectNoViolations(page, 'figure[data-diagram]', stateLabel(state));
       const figures = await page.evaluate(drawnBars);
       const gap = sameWidthGap(state);
       expect(outOfOrder(figures), 'bars draw in the order of their widths').toEqual([]);

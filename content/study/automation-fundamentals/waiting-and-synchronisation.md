@@ -19,12 +19,11 @@ questionTopics: [locators-waits]
 diagrams:
   - id: pause-and-condition
     type: timeline
-    title: A fixed pause against a condition
-    note: Both runs use the same pause. The condition wait ends when the app is ready.
+    title: A fixed pause and a condition wait
+    note: The condition wait ends when its condition is met, here before its timeout. Lengths are not measured.
     description:
-      - Two runs on one time scale.
-      - In the fast run the app is ready early. The fixed pause carries on after that and wastes time. The condition wait ends as soon as the app is ready.
-      - In the slow run the app is ready late. The fixed pause ends before that and is too short. The condition wait lasts until the app is ready.
+      - Both runs share one time scale, and the fixed pause is the same length in both. The app is ready later in the slow run.
+      - In both runs the condition wait lasts until the app is ready, before its timeout.
     steps: 10
     lanes:
       - name: Fast run
@@ -56,7 +55,7 @@ In Selenium, an explicit wait keeps checking a condition you choose. For example
 
 ## Why it helps
 
-A condition lets a fast run continue as soon as the app is ready. It also gives a slower run time to catch up. If the condition never holds, the failure points to a specific missing state.
+A fixed pause waits the same time on every run. A condition wait lets a fast run continue as soon as the app is ready. It also gives a slower run time to catch up. If the condition never holds, the failure points to a specific missing state.
 
 ```diagram
 pause-and-condition
@@ -64,4 +63,4 @@ pause-and-condition
 
 ## When not to use it
 
-Skip a separate wait if the action already checks the same condition. Avoid pauses of a fixed length. Cypress gives the same advice about arbitrary calls to its `cy.wait()` command with a number.
+Skip a separate wait if the action already checks the same condition. Avoid pauses of a fixed length, because one length can be too short on a slow run and too long on a fast run. Cypress gives the same advice about arbitrary calls to its `cy.wait()` command with a number.

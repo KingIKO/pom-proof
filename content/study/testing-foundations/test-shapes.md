@@ -20,10 +20,10 @@ diagrams:
     title: Where each shape puts the effort
     note: Wider bars mean more testing effort. The widths are not measured.
     description:
-      - Each list gives a shape's layers from the top of the drawing to the bottom. A wider bar means more effort at that layer.
-      - In the pyramid, Unit is widest, Service is narrower and UI is narrowest.
-      - In the trophy, Integration is widest. Unit and Static are narrower, and End-to-end is narrowest.
-      - In the honeycomb, Integration is widest, then Implementation detail. Integrated is narrowest.
+      - Each list runs from the top of the drawing to the bottom.
+      - In the pyramid, Service is narrower than Unit, and UI is narrowest.
+      - In the trophy, Unit and Static are narrower than Integration, and End-to-end is narrowest.
+      - In the honeycomb, Implementation detail is narrower than Integration, and Integrated is narrowest.
     shapes:
       - name: Pyramid
         layers:

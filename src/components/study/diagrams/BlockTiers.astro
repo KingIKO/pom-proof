@@ -8,7 +8,8 @@ interface Props {
 
 // A list of boxes per row, each box with a list of its parts, so the reading order follows
 // containment. A box that links to a neighbour says so in hidden text after its title; the arrow
-// itself is drawn for the eye only, one per box it starts from.
+// itself is drawn for the eye only, one per box it starts from. Between two boxes it is a → and a
+// ↓, and the stylesheet shows the one that fits how the boxes stand.
 const { tiers } = Astro.props;
 const equal = (count: number) => `repeat(${count}, minmax(0, 1fr))`;
 const rows = tiers.map((boxes, tierIndex) => {
@@ -31,7 +32,7 @@ const relation = ({ linkTo }: Box) => linkTo && `, ${linkTo.label} ${linkTarget(
       <ul class="dg-tier" role="list" data-across={across ? '' : undefined} style={`--dg-tracks: ${tracks}`}>
         {boxes.map((box, index) => (
           <>
-            {across && index > 0 && <li class="dg-arrow-across" aria-hidden="true">{directions[index - 1] === 'across' ? '→' : ''}</li>}
+            {across && index > 0 && <li class="dg-arrow-across" aria-hidden="true">{directions[index - 1] === 'across' && <><span>→</span><span>↓</span></>}</li>}
             <li class="dg-box" data-strong={box.strong ? '' : undefined}>
               <div class="dg-box-title"><span set:html={label(box.title)} />{box.linkTo && <span class="visually-hidden">{relation(box)}</span>}</div>
               {box.parts && (

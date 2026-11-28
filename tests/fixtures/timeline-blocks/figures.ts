@@ -1,19 +1,17 @@
 /**
- * Timeline and blocks data for the tests. `scope` and `database` are the approved mockups' placeholder
- * data (docs/design/study-diagrams/b2-timeline.html and b2-blocks.html). `states` and `pipeline` cover
- * what no mockup draws: heads that follow each other in time, a moment at the end of the scale, and the
- * arrow between boxes in one row. Nothing here is sourced, and writers source each fact before a Study
- * page uses it.
+ * Timeline and blocks data for the tests, in the shape of the approved mockups
+ * (docs/design/study-diagrams/b2-timeline.html and b2-blocks.html) for `scope` and `database`. `states`
+ * and `pipeline` cover what no mockup draws: heads that follow each other in time, a moment at the end of
+ * the scale, and the arrow between boxes in one row. `scope` follows the Playwright, pytest and
+ * pytest-xdist docs, and holds only while no test fails, because a failure ends the Playwright worker. The
+ * rest is made up. A writer gives the sources when a Study page uses any of it.
  */
 export const scope = {
   id: 'scope',
   type: 'timeline',
   title: 'Scope sets how long a fixture lives',
-  note: 'Each bar is one copy, from setup to teardown. Four tests run on two workers.',
-  description: [
-    'Four tests run on two workers, tests 1 and 2 on worker 1 and tests 3 and 4 on worker 2.',
-    'A test-scoped fixture is set up four times, once for each test. A worker-scoped fixture is set up twice, once in each worker.',
-  ],
+  note: 'Each bar is one copy, from setup to teardown. Four tests run on two workers and none fails.',
+  description: 'The two workers run at the same time.',
   ticks: { name: 'Test', labels: ['1', '2', '3', '4'] },
   groups: [{ label: 'Worker 1', from: 0, to: 2 }, { label: 'Worker 2', from: 2, to: 4 }],
   parallel: true,
@@ -30,7 +28,7 @@ export const states = {
   id: 'states',
   type: 'timeline',
   title: 'One read against repeated reads',
-  description: 'The page shows Draft, then Saving, then Saved. One read runs during Saving. The repeated reads go on until the last state.',
+  description: 'The page shows Draft, then Saving, then Saved.',
   steps: 12,
   groups: [{ label: 'Draft', from: 0, to: 4 }, { label: 'Saving', from: 4, to: 8 }, { label: 'Saved', from: 8, to: 12 }],
   lanes: [
@@ -44,10 +42,7 @@ export const database = {
   type: 'blocks',
   title: 'Separate contexts, one shared database',
   note: 'Each test gets its own browser context. Both tests reach the same database.',
-  description: [
-    'Test A and Test B each have their own browser context, holding cookies and storage.',
-    'Both tests save orders to one server database, which holds an order for Test A and an order for Test B.',
-  ],
+  description: 'The two tests stand side by side, above the one database they share.',
   tiers: [
     [
       { title: 'Test A', parts: [{ name: 'Browser context', items: ['Cookies', 'Storage'] }], linkTo: { label: 'saves to', target: 'database' } },
@@ -61,7 +56,7 @@ export const pipeline = {
   id: 'pipeline',
   type: 'blocks',
   title: 'A build passes through three stages',
-  description: 'Build hands over to Test, and Test hands over to Deploy. Deploy writes to the log.',
+  description: 'Build, Test and Deploy stand in a row, above the log.',
   tiers: [
     [
       { title: 'Build', linkTo: { label: 'hands over to', target: 'test' } },

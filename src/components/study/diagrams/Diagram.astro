@@ -13,9 +13,10 @@ interface Props {
 }
 
 // The figure shell from the diagram spec: the caption first, so a reader knows what to look for,
-// then the description a screen reader needs in place of the picture, then the drawing.
+// then the description, which says what the drawing's own text leaves to the eye, then the drawing.
 const { diagram } = Astro.props;
 const captionId = `dg-${diagram.id}`;
+const titleId = `${captionId}-title`;
 const description = [diagram.description ?? []].flat();
 
 // One component per kind. A kind the schema adds without a row here fails the type check, and data
@@ -27,15 +28,15 @@ const components = {
   timeline: Timeline,
   blocks: Blocks,
 } satisfies Record<Diagram['type'], unknown>;
-type Kind = (props: { diagram: Diagram; idPrefix: string }) => unknown;
+type Kind = (props: { diagram: Diagram; idPrefix: string; titleId: string }) => unknown;
 const Kind = (components as Partial<Record<string, Kind>>)[diagram.type];
 if (!Kind) throw new Error(`Diagram "${diagram.id}" is a ${String(diagram.type)}, which has no component in Diagram.astro`);
 ---
 <figure data-diagram={diagram.type} data-card>
   <figcaption class="dg-caption" id={captionId}>
-    <span class="dg-title" set:html={inline(diagram.title)} />
+    <span class="dg-title" id={titleId} set:html={inline(diagram.title)} />
     {diagram.note && <span class="dg-note" set:html={` ${inline(diagram.note)}`} />}
   </figcaption>
   {description.map((text) => <p class="visually-hidden" set:html={inline(text)} />)}
-  <Kind diagram={diagram} idPrefix={captionId} />
+  <Kind diagram={diagram} idPrefix={captionId} titleId={titleId} />
 </figure>

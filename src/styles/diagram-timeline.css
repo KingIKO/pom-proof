@@ -79,11 +79,13 @@
 }
 
 /* Enlarged text on a phone: the name and the outcome take their own lines, so the bars keep the whole
-   width. The scale still runs left to right, and the moment's line passes behind the words. Each group
-   head takes a line of its own from where its group starts, so no two heads share one. */
+   width. A row's lines stand closer together than two rows do. The scale still runs left to right, and
+   the moment's line passes behind the words. Each group head starts where its group does. */
 @container (width < 14.5rem) {
   .dg-timeline { --dg-name: 0px; }
-  .dg-time-grid > .dg-time-group { grid-column-end: -1; text-align: start; }
+  .dg-time-group { text-align: start; }
+  .dg-lane-rows { gap: var(--space-12); }
+  .dg-lane-rows > li { row-gap: var(--space-4); }
   .dg-time-heads .section-label { grid-column: 1 / -1; }
   .dg-lane-rows > li > .dg-span { grid-row: 2; }
   .dg-lane-rows > li > :is(.dg-row-name, .dg-outcome) {
@@ -96,4 +98,9 @@
   .dg-lane-rows > li > .dg-outcome { grid-row: 3; padding-inline: 0; }
   .dg-outcome::before { display: none; }
   .dg-moment { white-space: normal; }
+}
+/* Below this the columns no longer hold a word, so each head takes a line of its own, as far as the end of
+   the scale. Above it every head keeps its own columns, and they share one line. */
+@container (width < 8.5rem) {
+  .dg-time-grid > .dg-time-group { grid-column-end: -1; }
 }

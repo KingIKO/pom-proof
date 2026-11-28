@@ -59,9 +59,10 @@ function problems(timeline: Timeline): Array<{ message: string; path: Path }> {
   if (steps !== undefined && ticks) add(['steps'], 'give steps or ticks, not both');
   const end = columnsOf(timeline);
   if (!end) return found;
+  const limit = `${ticks ? 'the last tick' : 'the end of the scale'} at ${end}`;
   const checkRange = (path: Path, name: string, { from, to }: Span) => {
     if (to <= from) add(path, `${name} ends at ${to}, which is not after its start at ${from}`);
-    if (to > end) add(path, `${name} ends at ${to}, past the last tick at ${end}`);
+    if (to > end) add(path, `${name} ends at ${to}, past ${limit}`);
   };
 
   groups.forEach((group, index) => {
@@ -77,7 +78,7 @@ function problems(timeline: Timeline): Array<{ message: string; path: Path }> {
   lanes.forEach(({ name, mark, entries }, laneIndex) => {
     const lane: Path = ['lanes', laneIndex];
     if (lanes.length > 1 && !name) add(lane, 'name each lane when there is more than one');
-    if (mark && mark.at > end) add([...lane, 'mark'], `the mark "${mark.label}" is at ${mark.at}, past the last tick at ${end}`);
+    if (mark && mark.at > end) add([...lane, 'mark'], `the mark "${mark.label}" is at ${mark.at}, past ${limit}`);
     if (!ticks && !groups.length && !mark) add(lane, 'give ticks, groups or a mark, so each bar can say in words where it starts and ends');
     if (entries.filter(({ strong }) => strong).length > 1) add(lane, 'make at most one row of a lane strong');
     entries.forEach(({ name: row, spans, outcome }, entryIndex) => {
@@ -153,9 +154,12 @@ export function spanText({ ticks, groups = [] }: Timeline, { mark }: Lane, { fro
     words.push(to - from === 1 ? `${tick(from)} only` : `from ${tick(from)} to ${tick(to - 1)}`);
   } else if (first) words.push(first === last ? `during ${first}` : `from ${first} to ${last}`);
   if (mark) {
-    const relative = (at: number) => `${at < mark.at ? 'before ' : at > mark.at ? 'after ' : ''}${mark.label}`;
-    const ending = `until ${relative(to)}`;
-    words.push(words.length ? ending : `from ${from ? relative(from) : 'the start'} ${ending}`);
+    const side = (at: number) => (at < mark.at ? 'before' : at > mark.at ? 'after' : 'at');
+    const ending = `ends ${side(to)} ${mark.label}`;
+    if (words.length) words.push(ending);
+    else if (!from) words.push('from the start', ending);
+    else if (side(from) === side(to)) words.push(`starts and ${ending}`);
+    else words.push(`starts ${side(from)} ${mark.label}`, ending);
   }
   return words.join(', ');
 }

@@ -140,24 +140,6 @@ test('the Study module list folded on a narrow screen has no serious or critical
   await expectNoSeriousViolations(page, testInfo, 'open module list');
 });
 
-for (const [name, url, type] of [
-  ['timeline', 'study/automation-fundamentals/waiting-and-synchronisation/', 'timeline'],
-  ['page object blocks', 'study/framework-design/page-object-model/', 'blocks'],
-] as const) {
-  test(`the ${name} at 320px and with 200% text has no axe violations of any impact in its figure`, async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 760 });
-    await open(page, url);
-    const figure = page.locator(`figure[data-diagram="${type}"]`);
-    for (const size of ['100%', '200%']) {
-      await page.evaluate((value) => { document.documentElement.style.fontSize = value; }, size);
-      await expect(figure).toBeVisible();
-      const { violations, passes } = await new AxeBuilder({ page }).include(`figure[data-diagram="${type}"]`).analyze();
-      expect(passes.length, 'axe ran no checks').toBeGreaterThan(0);
-      expect(violations.map(({ id, nodes }) => ({ id, targets: nodes.map(({ target }) => target.join(' ')) })), `${size} text`).toEqual([]);
-    }
-  });
-}
-
 test('the test shapes diagram at 320px, stacked, has no serious or critical axe violations', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 760 });
   await open(page, 'study/testing-foundations/test-shapes/');

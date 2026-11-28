@@ -6,14 +6,16 @@ import '../../../styles/diagram-timeline.css';
 
 interface Props {
   diagram: Extract<Diagram, { type: 'timeline' }>;
-  /** The caption id, which names an unnamed lane's list and prefixes the lane name ids. */
+  /** The caption id, which prefixes the lane name ids. */
   idPrefix: string;
+  /** The title id, which names an unnamed lane's list. The note is not repeated with it. */
+  titleId: string;
 }
 
 // One block per lane: its name, then a list of rows drawn on one set of columns. Each bar says its
 // start and end in hidden text, so the heads, the moment's line and the axis name are drawn for the
 // eye only. The moment's label stays text, because the bars refer to it.
-const { diagram, idPrefix } = Astro.props;
+const { diagram, idPrefix, titleId } = Astro.props;
 const { ticks, groups } = diagram;
 const place = (columns: string) => `--dg-columns: ${columns}`;
 const between = (from: number, to: number) => place(gridColumn(diagram, { from, to }));
@@ -45,7 +47,7 @@ const lanes = diagram.lanes.map((lane, index) => ({
       {lane.name && <div class="dg-lane-name" id={lane.id} set:html={label(lane.name)} />}
       <div class="dg-time-grid dg-lane-drawing">
         {lane.moment && <span class="dg-moment" data-side={lane.moment.place.side} style={place(lane.moment.place.label)} set:html={label(lane.moment.label)} />}
-        <ol class="dg-lane-rows" role="list" aria-labelledby={lane.id ?? idPrefix}>
+        <ol class="dg-lane-rows" role="list" aria-labelledby={lane.id ?? titleId}>
           {lane.entries.map(({ name, detail, spans, strong, outcome, room }) => (
             <li class="dg-time-grid" data-strong={strong ? '' : undefined}>
               <div class="dg-row-name"><span set:html={label(name)} />{detail && <> <span class="dg-row-detail" set:html={label(detail)} /></>}</div>

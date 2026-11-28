@@ -1,14 +1,15 @@
 /**
- * The approved mockups' placeholder data for the matrix kind (docs/design/study-diagrams/option-b2.html
- * and b2-yes-no-matrix.html). Nothing here is sourced. Writers source each fact before a Study page
- * uses it.
+ * Data for the matrix kind in the shape of the approved mockups (docs/design/study-diagrams/option-b2.html
+ * and b2-yes-no-matrix.html). The test double answers follow Meszaros's table and Fowler (TestDouble). ISTQB
+ * publishes no risk mapping, so the levels and ratings are examples. A writer gives the sources when a
+ * Study page uses either one.
  */
 export const risk = {
   id: 'risk',
   type: 'matrix',
   kind: 'levels',
   title: 'Likelihood and impact set the risk level',
-  note: 'The two checkout risks, with example ratings. Test the high cells first.',
+  note: 'An example mapping and example ratings. Each team sets its own.',
   columnAxis: 'Impact',
   rowAxis: 'Likelihood',
   columns: ['Low', 'Medium', 'High'],
@@ -28,13 +29,13 @@ export const doubles = {
   type: 'matrix',
   kind: 'answers',
   title: 'What each test double does',
-  note: 'Can means it may do this, but that is not what defines it.',
-  columns: ['Returns prepared answers', 'Stores calls', 'Checks expected calls', 'Works like the real thing'],
+  note: 'Can means it may do this, which Meszaros calls optional. Fowler counts a spy as a stub, so his answer there is Yes.',
+  columns: ['Returns prepared answers', 'Keeps calls for the test', 'Checks expected calls', 'Works in a simpler way'],
   entries: [
     { head: 'Dummy', cells: ['No', 'No', 'No', 'No'] },
     { head: 'Stub', cells: ['Yes', 'No', 'No', 'No'] },
     { head: 'Spy', cells: ['Can', 'Yes', 'No', 'No'] },
-    { head: 'Mock', cells: ['Can', 'Yes', 'Yes', 'No'] },
+    { head: 'Mock', cells: ['Can', 'No', 'Yes', 'No'] },
     { head: 'Fake', cells: ['No', 'No', 'No', 'Yes'] },
   ],
 };

@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { blocksDrawing, timelineDrawing, type BlocksData, type TimelineData } from '../support/diagram-drawing';
-import { figureOverflow, fitStates, openAt, sidewaysScroll, stateLabel, tightestWide, withScrollbars } from '../support/diagrams';
+import { drawingProblems, type BlocksData, type TimelineData } from '../support/diagram-drawing';
+import { openAt, tightestWide, withScrollbars } from '../support/diagrams';
 import { discoverStudyPages } from '../support/study';
 
 // The timeline and blocks kinds on their Study pages (diagram spec, Timeline and Blocks): what a screen
-// reader gets, and that every part is drawn where the data puts it. study.spec.ts checks placement and
-// caption for every kind, and study-diagrams.spec.ts checks fit.
+// reader gets, and that the drawing checks report planted faults. study.spec.ts checks placement and
+// caption for every kind, and study-diagrams.spec.ts checks fit and drawing.
 
 test.use(withScrollbars);
 
@@ -15,9 +15,6 @@ const drawn = figures.filter(({ figure }) => figure.type === 'timeline' || figur
 const waiting = 'study/automation-fundamentals/waiting-and-synchronisation/';
 const pageObjects = 'study/framework-design/page-object-model/';
 
-const drawingProblems = (page: Page, figure: TimelineData | BlocksData) => (figure.type === 'timeline'
-  ? page.evaluate(timelineDrawing, figure as TimelineData)
-  : page.evaluate(blocksDrawing, figure as BlocksData));
 const tidy = (texts: string[]) => texts.map((text) => text.replace(/\s+/g, ' ').replace(/ ,/g, ',').trim());
 
 const open = (page: Page, path: string, width: number) => openAt(page, path, { width, text: 100 });
@@ -26,28 +23,14 @@ test('a Study page has a timeline and a Study page has blocks', () => {
   expect(new Set(drawn.map(({ figure }) => figure.type))).toEqual(new Set(['timeline', 'blocks']));
 });
 
-for (const { path, figure } of drawn) {
-  for (const state of fitStates) {
-    test(`/${path} draws ${figure.id} as its data says at ${stateLabel(state)}`, async ({ page }) => {
-      await openAt(page, path, state);
-      expect(await drawingProblems(page, figure)).toEqual([]);
-      // At the default text size these kinds keep their words inside their boxes even with wide spacing.
-      if (state.text === 100) {
-        expect(await page.evaluate(sidewaysScroll), 'no sideways page scroll').toBe(0);
-        expect(await page.evaluate(figureOverflow, true)).toEqual([]);
-      }
-    });
-  }
-}
-
 for (const width of [1280, 320]) {
   test(`the waiting page timeline says each bar's start, end and outcome at ${width}px`, async ({ page }) => {
     await open(page, waiting, width);
     const figure = page.locator('figure[data-diagram="timeline"]');
     await expect(figure.getByRole('list')).toHaveCount(2);
     const rows = async (name: string) => tidy(await figure.getByRole('list', { name, exact: true }).getByRole('listitem').allTextContents());
-    expect(await rows('Fast run')).toEqual(['Fixed pause, from the start until after App ready, Wastes time', 'Condition wait, from the start until App ready']);
-    expect(await rows('Slow run')).toEqual(['Fixed pause, from the start until before App ready, Too short', 'Condition wait, from the start until App ready']);
+    expect(await rows('Fast run')).toEqual(['Fixed pause, from the start, ends after App ready, Wastes time', 'Condition wait, from the start, ends at App ready']);
+    expect(await rows('Slow run')).toEqual(['Fixed pause, from the start, ends before App ready, Too short', 'Condition wait, from the start, ends at App ready']);
     // No image and no second copy: what is drawn without words is hidden.
     await expect(figure.locator('svg, img, [role="img"]')).toHaveCount(0);
     await expect(figure.getByText('Time →')).toHaveAttribute('aria-hidden', 'true');
@@ -76,6 +59,7 @@ test.describe('the drawing checks', () => {
   for (const [name, path, width, css, message] of [
     ['a bar that stops short of its moment', waiting, 1280, '[data-strong] > .dg-span { margin-inline-end: 24px !important; }', /a bar of "Condition wait" ends -\d+px off the scale/],
     ['a lane on its own scale', waiting, 1280, '.dg-lane + .dg-lane { --dg-scale: repeat(12, minmax(0, 1fr)); }', /off the scale/],
+    ['a scale 2px into the card padding', waiting, 1280, '.dg-timeline { margin-inline-end: -2px; }', /the scale runs past the card padding/],
     ['a moment off its place', waiting, 1280, '.dg-moment-line { translate: 8px; }', /"App ready" stands 8px off its place/],
     ['a moment that stops after one row', waiting, 1280, '.dg-moment-line { block-size: 60px; }', /"App ready" does not run through its rows/],
     ['a moment label on the wrong side', waiting, 1280, '.dg-moment { translate: -90px; }', /the label "App ready" is on the wrong side/],
@@ -87,6 +71,7 @@ test.describe('the drawing checks', () => {
     ['a box wider than its neighbours', pageObjects, 1280, '.dg-box:first-child { margin-inline-end: 12px !important; }', /row 1 has uneven boxes/],
     ['a part outside its box', pageObjects, 1280, '.dg-part { translate: 0 60px; }', /"Button locator" is not inside "Test 1"/],
     ['a word past its part, with the wide paddings in the tightest wide layout', pageObjects, tightestWide.width, '.dg-box { padding: 12px !important; } .dg-part { padding: 8px 12px !important; }', /"Button locator" runs out of its part in "Test 1"/],
+    ['a word in the padding of its part, with the wide paddings at 1024px', pageObjects, 1024, '.dg-box { padding: 12px !important; } .dg-part { padding: 8px 12px !important; }', /"Button locator" runs out of its part in "Test 1"/],
     ['a title past its box', pageObjects, 1280, '.dg-box-title { white-space: nowrap; text-indent: 6rem; }', /"Test 1" runs out of its box/],
     ['an arrow off its box', pageObjects, 1280, '.dg-arrows-down { translate: 30px; }', /no arrow runs from "Test 1" to "Sign-in page object"/],
     ['result lines that are not level', pageObjects, 1280, '.dg-panel { align-content: start; grid-template-rows: auto auto auto !important; }', /the result lines are not level/],

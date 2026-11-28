@@ -5,7 +5,8 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
   root: import.meta.dirname,
   outDir: '../../../.tmp/timeline-blocks-fixture',
-  cacheDir: '../../../.tmp/timeline-blocks-fixture-cache',
+  // Each test worker builds with a cache of its own (tests/support/fixture-site.ts).
+  cacheDir: process.env.FIXTURE_CACHE ?? '../../../.tmp/timeline-blocks-fixture-cache',
   base: '/timeline-blocks-fixture',
   trailingSlash: 'always',
   devToolbar: { enabled: false },

@@ -25,8 +25,9 @@ describe('the timeline schema', () => {
     for (const figure of [waits, scope, states]) expect(problems(figure)).toBe('');
   });
 
-  it('rejects a span past the last labelled tick', () => {
+  it('rejects a span or a mark past the last labelled tick', () => {
     expect(problems({ ...scope, ticks: { name: 'Test', labels: ['1', '2', '3'] } })).toContain('a span of "Test" ends at 4, past the last tick at 3');
+    expect(problems({ ...scope, lanes: [{ mark: { label: 'Stop', at: 5 }, entries: scope.lanes[0].entries }] })).toContain('the mark "Stop" is at 5, past the last tick at 4');
   });
 
   it('accepts a bar across both parallel groups, for a run on one worker', () => {
@@ -36,14 +37,14 @@ describe('the timeline schema', () => {
   it.each([
     ['a span that ends before it starts', row({ spans: [{ from: 5, to: 2 }] }), 'lanes.0.entries.0.spans.0 a span of "Fixed pause" ends at 2, which is not after its start at 5'],
     ['a span of no length', row({ spans: [{ from: 2, to: 2 }] }), 'ends at 2, which is not after its start at 2'],
-    ['a span past the last tick', row({ spans: [{ from: 0, to: 11 }], outcome: undefined }), 'a span of "Fixed pause" ends at 11, past the last tick at 10'],
-    ['a span before the first tick', row({ spans: [{ from: -1, to: 2 }] }), 'lanes.0.entries.0.spans.0.from'],
-    ['a position between two ticks', row({ spans: [{ from: 0, to: 2.5 }] }), 'lanes.0.entries.0.spans.0.to'],
+    ['a span past the end of the scale', row({ spans: [{ from: 0, to: 11 }], outcome: undefined }), 'a span of "Fixed pause" ends at 11, past the end of the scale at 10'],
+    ['a span before the start of the scale', row({ spans: [{ from: -1, to: 2 }] }), 'lanes.0.entries.0.spans.0.from'],
+    ['a position between two steps', row({ spans: [{ from: 0, to: 2.5 }] }), 'lanes.0.entries.0.spans.0.to'],
     ['spans that overlap', row({ spans: [{ from: 0, to: 3 }, { from: 2, to: 5 }] }), 'the spans of "Fixed pause" overlap or are out of order'],
     ['spans out of order', row({ spans: [{ from: 4, to: 5 }, { from: 0, to: 2 }] }), 'the spans of "Fixed pause" overlap or are out of order'],
     ['a row with no span', row({ spans: [] }), 'lanes.0.entries.0.spans'],
-    ['a mark past the last tick', { lanes: [{ ...lane, mark: { ...mark, at: 11 } }] }, 'the mark "App ready" is at 11, past the last tick at 10'],
-    ['a mark before the first tick', { lanes: [{ ...lane, mark: { ...mark, at: -1 } }] }, 'lanes.0.mark.at'],
+    ['a mark past the end of the scale', { lanes: [{ ...lane, mark: { ...mark, at: 11 } }] }, 'the mark "App ready" is at 11, past the end of the scale at 10'],
+    ['a mark before the start of the scale', { lanes: [{ ...lane, mark: { ...mark, at: -1 } }] }, 'lanes.0.mark.at'],
     ['a mark without a label', { lanes: [{ ...lane, mark: { at: 3 } }] }, 'lanes.0.mark.label'],
     ['an outcome with no room after the bar', row({ spans: [{ from: 0, to: 10 }] }), '"Wastes time" stands after the last bar of "Fixed pause", which ends where the scale does'],
     ['two lanes, one without a name', { lanes: [lane, { ...lane, name: undefined }] }, 'lanes.1 name each lane when there is more than one'],
@@ -58,7 +59,7 @@ describe('the timeline schema', () => {
     ['groups that leave a gap', { groups: [{ label: 'Draft', from: 0, to: 4 }, { label: 'Saved', from: 5, to: 10 }] }, 'group "Saved" starts at 5. The groups cover the scale in order, so start it at 4'],
     ['groups that overlap', { groups: [{ label: 'Draft', from: 0, to: 4 }, { label: 'Saved', from: 3, to: 10 }] }, 'group "Saved" starts at 3'],
     ['groups that stop early', { groups: [{ label: 'Draft', from: 0, to: 4 }, { label: 'Saved', from: 4, to: 8 }] }, 'the groups stop at 8. They cover the scale, so end the last one at 10'],
-    ['a group past the last tick', { groups: [{ label: 'Draft', from: 0, to: 4 }, { label: 'Saved', from: 4, to: 11 }] }, 'group "Saved" ends at 11, past the last tick at 10'],
+    ['a group past the end of the scale', { groups: [{ label: 'Draft', from: 0, to: 4 }, { label: 'Saved', from: 4, to: 11 }] }, 'group "Saved" ends at 11, past the end of the scale at 10'],
     ['a group that ends before it starts', { groups: [{ label: 'Draft', from: 0, to: 4 }, { label: 'Saved', from: 4, to: 2 }] }, 'group "Saved" ends at 2, which is not after its start at 4'],
     ['a parallel scale with no groups', { parallel: true }, 'only groups run in parallel, and this timeline has none'],
     ['no description', { description: undefined }, 'description'],
@@ -71,15 +72,18 @@ describe('the timeline schema', () => {
 });
 
 describe('the timeline grid', () => {
-  const [time, workers, phases] = [waits, scope, states].map((figure) => timeline.parse(figure));
+  // Parsed inside each test, so data that fails the schema fails a test and not the whole file.
+  const parsed = () => [waits, scope, states].map((figure) => timeline.parse(figure));
 
   it('gives every step a column, and a gap column between parallel groups only', () => {
+    const [time, workers, phases] = parsed();
     expect(scaleTracks(time)).toBe('repeat(10, minmax(0, 1fr))');
     expect(scaleTracks(workers)).toBe('repeat(2, minmax(0, 1fr)) var(--space-16) repeat(2, minmax(0, 1fr))');
     expect(scaleTracks(phases)).toBe('repeat(12, minmax(0, 1fr))');
   });
 
   it('keeps a bar on its own side of a gap', () => {
+    const [time, workers] = parsed();
     expect(gridColumn(time, { from: 0, to: 5 })).toBe('2 / 7');
     expect(gridColumn(workers, { from: 0, to: 2 })).toBe('2 / 4');
     expect(gridColumn(workers, { from: 2, to: 4 })).toBe('5 / 7');
@@ -87,6 +91,7 @@ describe('the timeline grid', () => {
   });
 
   it('puts a moment label on the side with more room', () => {
+    const [time] = parsed();
     expect(markPlace(time, 3)).toEqual({ line: '4 / 5', label: '5 / 12', side: 'after' });
     expect(markPlace(time, 8)).toEqual({ line: '9 / 10', label: '2 / 10', side: 'before' });
     expect(markPlace(time, 0)).toEqual({ line: '2 / 3', label: '2 / 12', side: 'after' });
@@ -94,6 +99,7 @@ describe('the timeline grid', () => {
   });
 
   it('ends the room for an outcome at the moment, or at the end of the scale', () => {
+    const [time] = parsed();
     expect(time.lanes.map((each) => outcomeSpan(time, each, each.entries[0].spans))).toEqual([{ from: 5, to: 10 }, { from: 5, to: 8 }]);
   });
 });
@@ -106,8 +112,8 @@ describe('the words for a bar', () => {
 
   it('say where it stands against the moment', () => {
     expect(texts(waits)).toEqual([
-      [['from the start until after App ready'], ['from the start until App ready']],
-      [['from the start until before App ready'], ['from the start until App ready']],
+      [['from the start, ends after App ready'], ['from the start, ends at App ready']],
+      [['from the start, ends before App ready'], ['from the start, ends at App ready']],
     ]);
   });
 
@@ -121,12 +127,18 @@ describe('the words for a bar', () => {
   });
 
   it('say its group on a time scale with groups', () => {
-    expect(texts(states)).toEqual([[['during Saving']], [['from Saving to Saved, until Match']]]);
+    expect(texts(states)).toEqual([[['during Saving']], [['from Saving to Saved, ends at Match']]]);
   });
 
   it('say a start that is not the start of the scale', () => {
-    const spans = [[{ from: 1, to: 3 }], [{ from: 3, to: 5 }], [{ from: 4, to: 6 }]];
+    const spans = [[{ from: 1, to: 2 }], [{ from: 1, to: 3 }], [{ from: 1, to: 5 }], [{ from: 3, to: 5 }], [{ from: 4, to: 6 }]];
     expect(texts({ ...waits, lanes: [{ mark, entries: spans.map((each) => ({ name: 'Read', spans: each })) }] }))
-      .toEqual([[['from before App ready until App ready'], ['from App ready until after App ready'], ['from after App ready until after App ready']]]);
+      .toEqual([[
+        ['starts and ends before App ready'],
+        ['starts before App ready, ends at App ready'],
+        ['starts before App ready, ends after App ready'],
+        ['starts at App ready, ends after App ready'],
+        ['starts and ends after App ready'],
+      ]]);
   });
 });

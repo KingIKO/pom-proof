@@ -19,11 +19,9 @@ questionTopics: [framework-design, automation-strategy]
 diagrams:
   - id: locator-change
     type: blocks
-    title: Where a locator change lands
-    note: When the button label changes, each copy of its locator needs an edit. Three tests is an example.
-    description:
-      - Without a page object, three tests each hold their own copy of the button locator. A label change takes 3 edits.
-      - With a page object, the three tests call one sign-in page object that holds the only copy. The same change takes 1 edit, and every test keeps working.
+    title: Edits after a button label change
+    note: Each locator here uses the button's label, so a new label means editing every copy. The three tests are an example.
+    description: With a page object, the three tests use one sign-in page object class. The same change takes 1 edit, and none of the three tests changes.
     panels:
       - name: Each test holds the locator
         tiers:
@@ -165,7 +163,7 @@ A page object is a class that stands for one screen, or one part of a screen. It
 
 ## How it works
 
-Put the locators in the class, with methods for what a user can do there and what a user can see. The test keeps the intent, which is what the user does and what should happen. When a button label changes, you fix one locator in one class.
+Put the locators in the class, with methods for what a user can do there and what a user can see. The test keeps the intent, which is what the user does and what should happen. If a locator uses a button's label and that label changes, you fix one locator in one class. The tests that use the class do not change.
 
 ```diagram
 locator-change

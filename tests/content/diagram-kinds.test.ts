@@ -29,7 +29,7 @@ describe('the number line authoring rules', () => {
   it.each([
     ['a band label of two words', { bands: [{ from: 5, to: 9, label: 'Not accepted', kind: 'reject' }] }, 'band label "Not accepted" has 2 words; write at most 1'],
     ['a band label the page does not use', { bands: [{ from: 5, to: 9, label: 'Refuse', kind: 'reject' }] }, 'band label "Refuse" is not a word in the body'],
-    ['a checked value the page does not give', { twoValue: [9, 10, 20, 24] }, 'checked value 24 is not in the body'],
+    ['a checked value the page does not give', { bands: [{ from: 5, to: 9, label: 'Reject', kind: 'reject' }, { from: 10, to: 23, label: 'Accept', kind: 'accept' }, { from: 24, to: 25, label: 'Reject', kind: 'reject' }] }, 'checked value 24 is not in the body'],
     ['a four-word segment title', { segments: [{ title: 'Around the lower edge', from: 7, to: 12 }] }, 'segment title "Around the lower edge" has 4 words; write at most 3'],
   ])('report %s', (_name, changes, message) => {
     expect(problems({ ...line, ...changes })).toContain(message);

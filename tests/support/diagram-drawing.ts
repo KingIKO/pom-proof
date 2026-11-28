@@ -1,6 +1,10 @@
+import type { Page } from '@playwright/test';
+import { lineValues } from '../../src/lib/diagram-number-line';
+
 /**
- * Checks that a timeline or blocks figure is drawn where its data puts things (diagram spec, Timeline
- * and Blocks). Each function runs in the browser, so it uses nothing from this module.
+ * Checks that a timeline, blocks or number line figure is drawn where its data puts things (diagram
+ * spec, Timeline, Blocks and Number line). Each check runs in the browser, so it uses nothing from
+ * this module.
  */
 
 interface Span { from: number; to: number }
@@ -34,8 +38,28 @@ export interface BlocksData {
   panels?: Array<{ name: string; tiers: BoxData[][]; result: string }>;
 }
 
+export interface NumberLineData {
+  id: string;
+  type: string;
+  bands: Array<Span & { label: string; kind: string }>;
+  threeValue?: boolean;
+  segments: Array<Span & { title: string }>;
+}
+
+/** A figure of any kind, as a page lists it. */
+export interface FigureData { id: string; type: string }
+
+/** Problems with how a figure is drawn. A layer stack is checked in study-diagrams.spec.ts, and a matrix is a table. */
+export async function drawingProblems(page: Page, figure: FigureData): Promise<string[]> {
+  if (figure.type === 'timeline') return page.evaluate(timelineDrawing, figure as TimelineData);
+  if (figure.type === 'blocks') return page.evaluate(blocksDrawing, figure as BlocksData);
+  if (figure.type !== 'number-line') return [];
+  const line = figure as NumberLineData;
+  return page.evaluate(numberLineDrawing, { ...line, ...lineValues(line) });
+}
+
 /** Problems with how a timeline is drawn: one scale for every bar, and each label where it belongs. */
-export function timelineDrawing({ id, steps, ticks, groups = [], parallel, lanes }: TimelineData) {
+function timelineDrawing({ id, steps, ticks, groups = [], parallel, lanes }: TimelineData) {
   const found: string[] = [];
   const figure = document.querySelector(`figure[data-diagram="timeline"]:has(> #dg-${id})`);
   if (!figure) return [`no timeline ${id}`];
@@ -85,7 +109,9 @@ export function timelineDrawing({ id, steps, ticks, groups = [], parallel, lanes
     if ([...bar.childNodes].some((node) => !(node instanceof Element && node.matches('.visually-hidden')))) found.push(`a bar of "${name}" has text inside`);
   }
   const card = getComputedStyle(figure);
-  const content = { left: box(figure).left + parseFloat(card.paddingLeft), right: box(figure).right - parseFloat(card.paddingRight) };
+  // From inside the card's border, which the box of the figure includes.
+  const inside = box(figure).left + figure.clientLeft;
+  const content = { left: inside + parseFloat(card.paddingLeft), right: inside + figure.clientWidth - parseFloat(card.paddingRight) };
   if (x(columns, 'end') > content.right + 1) found.push('the scale runs past the card padding');
 
   // Stacked is the layout for enlarged text on a phone: a name above its bars, an outcome below.
@@ -96,6 +122,10 @@ export function timelineDrawing({ id, steps, ticks, groups = [], parallel, lanes
     const nameElement = element.querySelector('.dg-row-name')!;
     const bar = box(bars[0]);
     if (stacked ? words(nameElement).bottom > bar.top + 1 : words(nameElement).right > x(0, 'start')) found.push(`"${name}" runs into its bars`);
+    // Stacked, a row's own lines stand 4px apart and two rows 12px, so a name belongs to the bars under it.
+    if (stacked && !near(bar.top - box(nameElement).bottom, 0.25 * rem)) found.push(`"${name}" stands ${Math.round(bar.top - box(nameElement).bottom)}px over its bars`);
+    const next = element.nextElementSibling;
+    if (stacked && next && !near(box(next).top - box(element).bottom, 0.75 * rem)) found.push(`"${name}" stands ${Math.round(box(next).top - box(element).bottom)}px over the next row`);
     if (Number(getComputedStyle(nameElement.firstElementChild!).fontWeight) >= 700 !== Boolean(strong)) found.push(`"${name}" has the wrong weight`);
     const fill = colour(strong ? 'dg-part-strong' : 'dg-part');
     if (bars.some((each) => getComputedStyle(each).backgroundColor !== fill)) found.push(`"${name}" has the wrong fill`);
@@ -131,7 +161,7 @@ export function timelineDrawing({ id, steps, ticks, groups = [], parallel, lanes
     if (mark.at > columns / 2 ? text.right > rect.left : text.left < rect.right) found.push(`the label "${mark.label}" is on the wrong side of its line`);
   });
 
-  // Heads stand over their columns. Stacked, each group head starts where its group does.
+  // Heads stand over their columns. Stacked, each group head starts where its group does, on one line from 8.5rem.
   const heads = [...figure.querySelectorAll('.dg-time-head')];
   const [groupHeads, tickHeads] = [heads.filter((head) => head.matches('.dg-time-group')), heads.filter((head) => !head.matches('.dg-time-group'))];
   if (groupHeads.length !== groups.length || tickHeads.length !== (ticks?.labels.length ?? 0)) found.push('a head is missing');
@@ -140,6 +170,7 @@ export function timelineDrawing({ id, steps, ticks, groups = [], parallel, lanes
     const text = words(head);
     if (stacked ? !near(text.left, x(start, 'start')) : !near((text.left + text.right) / 2, (x(start, 'start') + x(end, 'end')) / 2)) found.push(`"${label}" is not over its columns`);
   });
+  if (groups.length && (new Set(groupHeads.map((head) => Math.round(box(head).top))).size === 1) !== content.right - content.left >= 8.5 * rem) found.push('the group heads share one line only from 8.5rem');
   tickHeads.forEach((head, index) => {
     const text = words(head);
     if (!near((text.left + text.right) / 2, (x(index, 'start') + x(index + 1, 'end')) / 2)) found.push(`tick ${index + 1} is not over its column`);
@@ -155,7 +186,7 @@ export function timelineDrawing({ id, steps, ticks, groups = [], parallel, lanes
 }
 
 /** Problems with how blocks are drawn: equal boxes per row, parts inside, words inside, an arrow for every link. */
-export function blocksDrawing({ id, tiers, panels }: BlocksData) {
+function blocksDrawing({ id, tiers, panels }: BlocksData) {
   const found: string[] = [];
   const figure = document.querySelector(`figure[data-diagram="blocks"]:has(> #dg-${id})`);
   if (!figure) return [`no blocks ${id}`];
@@ -194,9 +225,14 @@ export function blocksDrawing({ id, tiers, panels }: BlocksData) {
   const near = (a: number, b: number) => Math.abs(a - b) <= 1;
   const middle = ({ left, right }: DOMRect) => (left + right) / 2;
   const isBold = (element: Element) => Number(getComputedStyle(element).fontWeight) >= 700;
+  /** The text an element shows: an arrow between boxes holds a → and a ↓, and draws one of them. */
+  const drawnText = (element: Element) => (element as HTMLElement).innerText.trim();
   const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
   const card = getComputedStyle(figure);
-  const wide = box(figure).width - parseFloat(card.paddingLeft) - parseFloat(card.paddingRight) >= 34 * rem;
+  const wide = figure.clientWidth - parseFloat(card.paddingLeft) - parseFloat(card.paddingRight) >= 34 * rem;
+  // With the text-spacing overrides a long word may use its part's padding. Otherwise it keeps all of it.
+  const spaced = parseFloat(getComputedStyle(figure).letterSpacing) > 0;
+  const padding = (element: Element) => (spaced ? 0 : parseFloat(getComputedStyle(element).paddingLeft));
 
   const roots = [...figure.querySelectorAll('.dg-blocks')];
   const drawings = tiers ? [tiers] : panels?.map((panel) => panel.tiers) ?? [];
@@ -209,7 +245,7 @@ export function blocksDrawing({ id, tiers, panels }: BlocksData) {
       found.push('a box is missing');
       return;
     }
-    const arrows = [...root.querySelectorAll('.dg-arrow-across, .dg-arrows-down > span')].filter((arrow) => arrow.textContent!.trim());
+    const arrows = [...root.querySelectorAll('.dg-arrow-across, .dg-arrows-down > span')].filter((arrow) => drawnText(arrow));
     const links = drawing.flat().filter(({ linkTo }) => linkTo).length;
     if (arrows.length !== links) found.push(`${arrows.length} arrows for ${links} links`);
     if (arrows.some((arrow) => !arrow.closest('[aria-hidden="true"]'))) found.push('an arrow is read aloud');
@@ -234,13 +270,13 @@ export function blocksDrawing({ id, tiers, panels }: BlocksData) {
         if (heading.textContent!.trim() !== said) found.push(`"${title}" reads as "${heading.textContent!.trim()}"`);
         if (isBold(heading) !== Boolean(strong)) found.push(`"${title}" has the wrong weight`);
         if (getComputedStyle(element).backgroundColor !== colour(strong ? 'dg-part-strong' : 'surface')) found.push(`"${title}" has the wrong fill`);
-        if (outside(heading, rect, 1)) found.push(`"${title}" runs out of its box`);
+        if (outside(heading, rect, 1 + padding(element))) found.push(`"${title}" runs out of its box`);
         const inner = [...element.querySelectorAll('.dg-part')];
         if (inner.length !== parts.length) found.push(`"${title}" draws ${inner.length} parts for ${parts.length}`);
         inner.forEach((part, at) => {
           const partRect = box(part);
           if (partRect.left < rect.left + 1 || partRect.right > rect.right - 1 || partRect.top < box(heading).bottom || partRect.bottom > rect.bottom - 1) found.push(`"${parts[at].name}" is not inside "${title}"`);
-          if (outside(part, partRect, 0)) found.push(`"${parts[at].name}" runs out of its part in "${title}"`);
+          if (outside(part, partRect, padding(part))) found.push(`"${parts[at].name}" runs out of its part in "${title}"`);
           const fill = strong ? 'surface' : parts[at].strong ? 'dg-part-strong' : 'dg-part';
           if (getComputedStyle(part).backgroundColor !== colour(fill) || isBold(part.firstElementChild!) !== Boolean(parts[at].strong)) found.push(`"${parts[at].name}" in "${title}" has the wrong emphasis`);
         });
@@ -258,7 +294,7 @@ export function blocksDrawing({ id, tiers, panels }: BlocksData) {
         if (!own) found.push(`no arrow runs from "${title}" to "${target?.title ?? linkTo.target}"`);
         else {
           free.delete(own);
-          if (own.textContent!.trim() !== (across ? '→' : '↓')) found.push(`the arrow from "${title}" points the wrong way`);
+          if (drawnText(own) !== (across && !stacked ? '→' : '↓')) found.push(`the arrow from "${title}" points the wrong way`);
         }
       });
     });
@@ -273,6 +309,65 @@ export function blocksDrawing({ id, tiers, panels }: BlocksData) {
       if (!near(box(results[0]).top, box(results[1]).top)) found.push('the result lines are not level');
     } else if (after.top < before.bottom) found.push('the panels are not stacked, before first');
     if (results.some((result) => !isBold(result))) found.push('a result line is not bold');
+  }
+  return found;
+}
+
+/** Problems with how a number line is drawn, in each rendering that shows: boxes, bands over their values, a line at every rule change. */
+function numberLineDrawing({ id, bands, two, three }: NumberLineData & ReturnType<typeof lineValues>) {
+  const found: string[] = [];
+  const figure = document.querySelector(`figure[data-diagram="number-line"]:has(> #dg-${id})`);
+  if (!figure) return [`no number line ${id}`];
+  const drawn = [...figure.querySelectorAll('.dg-line')].filter((element) => element.getBoundingClientRect().width > 0);
+  if (!drawn.length) found.push('no line is visible');
+  const probe = document.createElement('div');
+  probe.style.color = 'var(--dg-mark)';
+  figure.append(probe);
+  const ink = getComputedStyle(probe).color;
+  probe.remove();
+  const box = (part: Element) => part.getBoundingClientRect();
+  for (const element of drawn) {
+    const items = [...element.querySelectorAll('.dg-values > li')];
+    const numbers = items.map((item) => parseInt(item.textContent!, 10));
+    // Values run left to right, or top to bottom where the text is enlarged on a phone.
+    const upright = box(items[1]).top >= box(items[0]).bottom;
+    const start = upright ? 'top' : 'left';
+    const end = upright ? 'bottom' : 'right';
+    const at = (value: number) => box(items[numbers.indexOf(value)]);
+    items.forEach((item, index) => {
+      if (index && box(item)[start] < box(items[index - 1])[end] + 1) found.push(`${numbers[index]} is under 1px from ${numbers[index - 1]}`);
+      const style = getComputedStyle(item);
+      const [filledBox, hollowBox] = [two.includes(numbers[index]), three.includes(numbers[index])];
+      const filled = style.backgroundColor === ink;
+      const hollow = !filled && parseFloat(style.borderTopWidth) === 2 && style.borderTopColor === ink;
+      if (filled !== filledBox) found.push(`${numbers[index]} is ${filled ? '' : 'not '}a filled box`);
+      if (hollow !== hollowBox) found.push(`${numbers[index]} is ${hollow ? '' : 'not '}a hollow box`);
+      if ((filledBox || hollowBox) !== Number(style.fontWeight) >= 700) found.push(`${numbers[index]} has the wrong weight`);
+    });
+    const [first, last] = [numbers[0], numbers.at(-1)!];
+    const shown = bands.filter(({ from, to }) => from <= last && to >= first);
+    const bandBoxes = [...element.querySelectorAll('.dg-bands > li')];
+    if (bandBoxes.map((band) => band.textContent!.trim()).join() !== shown.map(({ label }) => label).join()) found.push(`the bands over ${first} to ${last} are not ${shown.map(({ label }) => label).join(', ')}`);
+    else {
+      shown.forEach((band, index) => {
+        const [from, to] = [Math.max(band.from, first), Math.min(band.to, last)];
+        if (!(box(bandBoxes[index])[start] <= at(from)[start] + 4 && box(bandBoxes[index])[end] >= at(to)[end] - 4)) found.push(`the band over ${from} to ${to} does not cover its values`);
+      });
+    }
+    const rules = bands.slice(1).map(({ from }) => from).filter((from) => numbers.includes(from) && numbers.includes(from - 1));
+    const edges = [...element.querySelectorAll('.dg-boundary')];
+    if (edges.length !== rules.length) found.push(`${edges.length} lines for ${rules.length} rule changes`);
+    edges.forEach((edge, index) => {
+      const [before, after, rect] = [at(rules[index] - 1), at(rules[index]), box(edge)];
+      if (rect[end] - rect[start] !== 2) found.push(`the line at ${rules[index]} is ${rect[end] - rect[start]}px wide`);
+      if (rect[start] < before[end] || rect[end] > after[start]) found.push(`the line at ${rules[index]} is not between ${rules[index] - 1} and ${rules[index]}`);
+      // The line runs through both rows: from the bands' far side to the values' far side.
+      const [side, far] = upright ? ['left', 'right'] as const : ['top', 'bottom'] as const;
+      const parts = [...bandBoxes, ...items].map(box);
+      if (rect[side] > Math.min(...parts.map((part) => part[side])) + 0.5 || rect[far] < Math.max(...parts.map((part) => part[far])) - 0.5) {
+        found.push(`the line at ${rules[index]} does not run through the bands and the values`);
+      }
+    });
   }
   return found;
 }

@@ -625,7 +625,7 @@ describe('the Study checks catch planted mistakes', () => {
     it('reports a semicolon in a diagram description', () => {
       expect(shapes, 'the test shapes page').toBeDefined();
       const source = readFileSync(join(root, shapes!.file), 'utf8');
-      const planted = source.replace('A wider bar means more effort at that layer.', 'A wider bar means more effort; widths are not measured.');
+      const planted = source.replace('Each list runs from the top of the drawing to the bottom.', 'Each list runs from the top of the drawing; it ends at the bottom.');
       expect(planted, 'the description sentence was replaced').not.toBe(source);
       expect(scanProse(shapes!.file, source).findings).toEqual([]);
       expect(scanProse(shapes!.file, planted).findings.map(({ rule }) => rule)).toContain('semicolon');

@@ -1,49 +1,19 @@
-import { spawnSync } from 'node:child_process';
-import { existsSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { doubles, risk } from '../fixtures/diagrams/matrices';
-import { figureOverflow, fitStates, openAt, overlappingHeads, sidewaysScroll, stateLabel, withScrollbars, type FitState } from '../support/diagrams';
-import { root } from '../support/problems';
+import { expectNoViolations, figureOverflow, fitStates, overlappingHeads, sidewaysScroll, stateLabel, withScrollbars, type FitState } from '../support/diagrams';
+import { fixtureSite } from '../support/fixture-site';
 
 // The matrix kind (diagram spec, Matrix and Yes/no matrix) on a fixture page, because no Study page has
-// one until its facts are sourced. The fixture is its own small site in tests/fixtures/diagrams, built
-// into .tmp/ and served to the test from disk, so it never reaches dist or the live site.
+// one until its facts are sourced.
 
+const test = fixtureSite('diagrams');
 test.use(withScrollbars);
-
-const out = join(root, '.tmp', 'diagram-fixture-test');
-const origin = 'http://diagram-fixture.test';
-const prefix = '/diagram-fixture/';
 
 // One worker builds the fixture once and runs these in order.
 test.describe.configure({ mode: 'default' });
 
-test.beforeAll(() => {
-  rmSync(out, { recursive: true, force: true });
-  const build = spawnSync(process.execPath, [join(root, 'node_modules', 'astro', 'bin', 'astro.mjs'), 'build',
-    '--root', join(root, 'tests', 'fixtures', 'diagrams'), '--outDir', out], { cwd: root, encoding: 'utf8' });
-  if (build.status !== 0) throw new Error(`The fixture build failed:\n${build.stdout}\n${build.stderr}`);
-});
-
-async function open(page: Page, width: number, state: Partial<FitState> = {}) {
-  await page.route(`${origin}/**`, (route) => {
-    const { pathname } = new URL(route.request().url());
-    const file = join(out, pathname.replace(prefix, '/').replace(/\/$/, '/index.html'));
-    return existsSync(file) ? route.fulfill({ path: file }) : route.fulfill({ status: 404, body: '' });
-  });
-  await openAt(page, `${origin}${prefix}`, { width, text: 100, ...state });
-}
-
 const figureOf = (page: Page, id: string) => page.locator(`figure[data-diagram="matrix"]:has(> #dg-${id})`);
 const tidy = (texts: string[]) => texts.map((text) => text.replace(/\s+/g, ' ').trim());
-
-async function expectNoViolations(page: Page, state: string) {
-  const { violations, passes } = await new AxeBuilder({ page }).include('main').analyze();
-  expect(passes.length, 'axe ran no checks').toBeGreaterThan(0);
-  expect(violations.map(({ id, impact, nodes }) => ({ id, impact, targets: nodes.map(({ target }) => target.join(' ')) })), state).toEqual([]);
-}
 
 /** The figures whose box scrolls sideways. */
 const scrolled = () => [...document.querySelectorAll('.dg-scroll')].filter((box) => box.scrollWidth > box.clientWidth)
@@ -56,12 +26,12 @@ const mayScroll = ({ width, text, spacing }: FitState) => {
 };
 
 for (const width of [1280, 360, 320]) {
-  test(`the levels matrix is one table with its axes, levels and placed items at ${width}px`, async ({ page }) => {
-    await open(page, width);
+  test(`the levels matrix is one table with its axes, levels and placed items at ${width}px`, async ({ page, open }) => {
+    await open(width);
     const figure = figureOf(page, 'risk');
     const table = figure.getByRole('table');
     await expect(table).toHaveCount(1);
-    await expect(figure.getByRole('table', { name: `${risk.title} ${risk.note}` })).toBeVisible();
+    await expect(figure.getByRole('table', { name: risk.title, exact: true })).toBeVisible();
     await expect(figure.locator('[role="img"], svg, img')).toHaveCount(0);
     await expect(table.getByRole('columnheader')).toHaveText([risk.columnAxis, risk.rowAxis, ...risk.columns]);
     await expect(table.locator('th[scope="colgroup"]')).toHaveText(risk.columnAxis);
@@ -76,10 +46,10 @@ for (const width of [1280, 360, 320]) {
     }
   });
 
-  test(`the answers matrix is read once at ${width}px, every answer with its item and question`, async ({ page }) => {
-    await open(page, width);
+  test(`the answers matrix is read once at ${width}px, every answer with its item and question`, async ({ page, open }) => {
+    await open(width);
     const figure = figureOf(page, 'doubles');
-    const table = figure.getByRole('table', { name: `${doubles.title} ${doubles.note}` });
+    const table = figure.getByRole('table', { name: doubles.title, exact: true });
     await expect(table).toHaveCount(1);
     await expect(figure.getByRole('table')).toHaveCount(1);
     await expect(figure.locator('[role="img"], svg, img')).toHaveCount(0);
@@ -107,15 +77,15 @@ for (const width of [1280, 360, 320]) {
 }
 
 for (const state of fitStates) {
-  test(`both matrices fit at ${stateLabel(state)}`, async ({ page }) => {
-    await open(page, state.width, state);
+  test(`both matrices fit at ${stateLabel(state)}`, async ({ page, open }) => {
+    await open(state.width, state);
     const plain = state.text === 100 && !state.spacing;
     if (state.text === 100) expect(await page.evaluate(sidewaysScroll), 'no sideways page scroll').toBe(0);
     // At the default text size nothing may even use the card padding; larger text may, up to the edge.
     expect(await page.evaluate(figureOverflow, plain), 'nothing crosses the card edge').toEqual([]);
     expect(await page.evaluate(overlappingHeads)).toEqual([]);
     expect(await page.evaluate(scrolled), 'boxes that scroll').toEqual(mayScroll(state));
-    if (!state.spacing) await expectNoViolations(page, stateLabel(state));
+    if (!state.spacing) await expectNoViolations(page, 'main', stateLabel(state));
     for (const id of mayScroll(state)) {
       const box = figureOf(page, id).getByRole('group');
       await expect(box).toHaveCount(1);
@@ -126,19 +96,42 @@ for (const state of fitStates) {
   });
 }
 
-test('the fit and overlap checks report planted faults', async ({ page }) => {
-  await open(page, 320);
+test('the fit and overlap checks report planted faults', async ({ page, open }) => {
+  await open(320);
   expect(await page.evaluate(figureOverflow, true)).toEqual([]);
   await page.addStyleTag({ content: '.dg-matrix td { min-inline-size: 9rem; }' });
-  expect((await page.evaluate(figureOverflow, true)).join('\n')).toMatch(/div\.dg-scroll .* holds content \d+px wider than its box/);
-  await open(page, 320);
+  // Every cell past the edge, and none of the rows, the table and the box around them.
+  const found = await page.evaluate(figureOverflow, true);
+  expect(found.join('\n')).toMatch(/^span\.dg-level "High" passes the card edge by [\d.]+px$/m);
+  expect(found.filter((problem) => /^(?:tr|tbody|table|div|figure)\b/.test(problem))).toEqual([]);
+  await open(320);
   expect(await page.evaluate(overlappingHeads)).toEqual([]);
   await page.addStyleTag({ content: '.dg-axis-side > span { inset-inline-start: 30px !important; }' });
   expect((await page.evaluate(overlappingHeads)).join('\n')).toContain('"Likelihood" overlaps "Low"');
 });
 
-test('a screen reader would meet the answers twice if both renderings showed', async ({ page }) => {
-  await open(page, 1280);
+test('a question stays in view while its answers scroll', async ({ page, open }) => {
+  await open(360, { text: 200 });
+  const box = figureOf(page, 'doubles').getByRole('group');
+  const room = await box.evaluate((element) => element.scrollWidth - element.clientWidth);
+  expect(room, 'the table is wider than its box').toBeGreaterThan(20);
+  for (const left of [0, Math.round(room / 2), room]) {
+    expect(await box.evaluate((element, to) => {
+      element.scrollLeft = to;
+      const view = element.getBoundingClientRect();
+      return [...element.querySelectorAll('.dg-question')].map((question) => {
+        const { left: start, right: end, width } = question.getBoundingClientRect();
+        return width > 0 && start >= view.left - 0.5 && end <= view.right + 0.5;
+      });
+    }, left), `scrolled ${left}px`).toEqual(doubles.columns.map(() => true));
+  }
+  // The plant: without the sticky position the questions scroll away with their answers.
+  await page.addStyleTag({ content: '.dg-question { position: static !important; }' });
+  expect(await box.evaluate((element) => element.querySelector('.dg-question')!.getBoundingClientRect().left - element.getBoundingClientRect().left)).toBeLessThan(-10);
+});
+
+test('a screen reader would meet the answers twice if both renderings showed', async ({ page, open }) => {
+  await open(1280);
   const tables = figureOf(page, 'doubles').getByRole('table');
   await expect(tables).toHaveCount(1);
   await page.addStyleTag({ content: '.dg-matrix-narrow { display: block !important; }' });

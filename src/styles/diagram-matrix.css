@@ -55,5 +55,8 @@ td[data-level="high"] > .dg-level { font-weight: var(--weight-bold); }
   .dg-matrix-answers thead th { color: var(--text); }
   .dg-matrix-answers tbody td { block-size: 2.25rem; }
   .dg-matrix-answers tbody th[scope="rowgroup"] { padding: var(--space-12) 0 var(--space-4); }
+  /* A question stays in view while its answers scroll: held at the start of the box, and as wide as the
+     box at most, less the table's spacing on both sides. */
+  .dg-question { position: sticky; inset-inline-start: 0; display: inline-block; max-inline-size: calc(100cqi - 4px); }
   .dg-matrix-answers tbody:first-of-type th[scope="rowgroup"] { padding-block-start: var(--space-8); }
 }

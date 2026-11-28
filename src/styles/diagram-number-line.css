@@ -13,8 +13,9 @@
   line-height: 1.3;
   list-style: none;
 }
-.dg-legend > li { display: inline-flex; align-items: center; gap: var(--space-8); margin: 0; }
-.dg-key { flex: none; inline-size: .875rem; block-size: .875rem; }
+.dg-legend > li { display: inline-flex; gap: var(--space-8); margin: 0; }
+/* Centred on the first line, so a wrapped name keeps its key beside its first word. */
+.dg-key { flex: none; inline-size: .875rem; block-size: .875rem; margin-block-start: calc((1lh - .875rem) / 2); }
 
 .dg-line {
   position: relative;

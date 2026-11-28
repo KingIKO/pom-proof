@@ -1,85 +1,26 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { fitStates, openAt, stateLabel, tightestWide, withScrollbars } from '../support/diagrams';
+import { lineValues } from '../../src/lib/diagram-number-line';
+import { drawingProblems, type NumberLineData } from '../support/diagram-drawing';
+import { openAt, tightestWide, withScrollbars } from '../support/diagrams';
 import { discoverStudyPages } from '../support/study';
 
-// The number line kind (diagram spec, Number line): what a screen reader gets at each width, and that
-// every mark, band and line is drawn where the data puts it. study.spec.ts checks placement and caption
-// for every kind, and study-diagrams.spec.ts checks fit.
+// The number line kind (diagram spec, Number line): what a screen reader gets at each width, and that the
+// drawing check reports planted faults. study.spec.ts checks placement and caption for every kind, and
+// study-diagrams.spec.ts checks fit and drawing.
 
 test.use(withScrollbars);
 
-interface NumberLine {
-  type: string;
-  min: number;
-  max: number;
-  bands: Array<{ from: number; to: number; label: string; kind: string }>;
-  twoValue: number[];
-  threeValue?: number[];
-  segments: Array<{ title: string; from: number; to: number }>;
-}
 const pages = discoverStudyPages().flatMap(({ path, frontmatter }) =>
-  (Array.isArray(frontmatter.diagrams) ? frontmatter.diagrams as NumberLine[] : [])
+  (Array.isArray(frontmatter.diagrams) ? frontmatter.diagrams as NumberLineData[] : [])
     .filter(({ type }) => type === 'number-line').map((line) => ({ path, line })));
 
-const valuesBetween = (line: NumberLine, from: number, to: number) => Array.from({ length: to - from + 1 }, (_, index) => {
-  const value = from + index;
-  return `${value}${line.twoValue.includes(value) ? ', 2-value BVA' : line.threeValue?.includes(value) ? ', added by 3-value BVA' : ''}`;
-});
-const bandsBetween = (line: NumberLine, from: number, to: number) => line.bands.filter((band) => band.from <= to && band.to >= from)
-  .map((band) => `${band.label}, ${Math.max(band.from, from)} to ${Math.min(band.to, to)}`);
-
-/** Problems with what each visible line draws. Runs in the page. */
-function drawingProblems(line: Pick<NumberLine, 'bands' | 'twoValue' | 'threeValue'>) {
-  const found: string[] = [];
-  const drawn = [...document.querySelectorAll('.dg-line')].filter((element) => element.getBoundingClientRect().width > 0);
-  if (!drawn.length) found.push('no line is visible');
-  const probe = document.createElement('div');
-  probe.style.color = 'var(--dg-mark)';
-  document.querySelector('figure[data-diagram]')!.append(probe);
-  const ink = getComputedStyle(probe).color;
-  probe.remove();
-  for (const element of drawn) {
-    const box = (part: Element) => part.getBoundingClientRect();
-    const items = [...element.querySelectorAll('.dg-values > li')];
-    const numbers = items.map((item) => parseInt(item.textContent!, 10));
-    // Values run left to right, or top to bottom where the text is enlarged on a phone.
-    const upright = box(items[1]).top >= box(items[0]).bottom;
-    const start = upright ? 'top' : 'left';
-    const end = upright ? 'bottom' : 'right';
-    const at = (value: number) => box(items[numbers.indexOf(value)]);
-    items.forEach((item, index) => {
-      if (index && box(item)[start] < box(items[index - 1])[end] + 1) found.push(`${numbers[index]} is under 1px from ${numbers[index - 1]}`);
-      const style = getComputedStyle(item);
-      const two = line.twoValue.includes(numbers[index]);
-      const three = line.threeValue?.includes(numbers[index]) ?? false;
-      const filled = style.backgroundColor === ink;
-      const hollow = !filled && parseFloat(style.borderTopWidth) === 2 && style.borderTopColor === ink;
-      if (filled !== two) found.push(`${numbers[index]} is ${filled ? '' : 'not '}a filled box`);
-      if (hollow !== three) found.push(`${numbers[index]} is ${hollow ? '' : 'not '}a hollow box`);
-      if ((two || three) !== Number(style.fontWeight) >= 700) found.push(`${numbers[index]} has the wrong weight`);
-    });
-    const bands = [...element.querySelectorAll('.dg-bands > li')];
-    for (const band of bands) {
-      const [, from, to] = /, (-?\d+) to (-?\d+)$/.exec(band.textContent!.trim())!.map(Number);
-      if (!(box(band)[start] <= at(from)[start] + 4 && box(band)[end] >= at(to)[end] - 4)) found.push(`the band over ${from} to ${to} does not cover its values`);
-    }
-    const rules = line.bands.slice(1).map(({ from }) => from).filter((from) => numbers.includes(from) && numbers.includes(from - 1));
-    const edges = [...element.querySelectorAll('.dg-boundary')];
-    if (edges.length !== rules.length) found.push(`${edges.length} lines for ${rules.length} rule changes`);
-    edges.forEach((edge, index) => {
-      const [before, after, rect] = [at(rules[index] - 1), at(rules[index]), box(edge)];
-      if (rect[end] - rect[start] !== 2) found.push(`the line at ${rules[index]} is ${rect[end] - rect[start]}px wide`);
-      if (rect[start] < before[end] || rect[end] > after[start]) found.push(`the line at ${rules[index]} is not between ${rules[index] - 1} and ${rules[index]}`);
-      // The line runs through both rows: from the bands' far side to the values' far side.
-      const [side, far] = upright ? ['left', 'right'] as const : ['top', 'bottom'] as const;
-      const parts = [...bands, ...items].map(box);
-      if (rect[side] > Math.min(...parts.map((part) => part[side])) + 0.5 || rect[far] < Math.max(...parts.map((part) => part[far])) - 0.5) {
-        found.push(`the line at ${rules[index]} does not run through the bands and the values`);
-      }
-    });
-  }
-  return found;
-}
+const valuesBetween = (line: NumberLineData, from: number, to: number) => {
+  const { two, three } = lineValues(line);
+  return Array.from({ length: to - from + 1 }, (_, index) => from + index)
+    .map((value) => `${value}${two.includes(value) ? ', 2-value BVA' : three.includes(value) ? ', added by 3-value BVA' : ''}`);
+};
+/** The bands' labels. Which values each one holds is in the figure's description. */
+const bandsBetween = (line: NumberLineData, from: number, to: number) => line.bands.filter((band) => band.from <= to && band.to >= from).map(({ label }) => label);
 
 const linesOf = (page: Page) => page.locator('figure[data-diagram="number-line"]');
 const listTexts = async (scope: Locator) => Promise.all((await scope.getByRole('list').all()).map((list) => list.getByRole('listitem').allTextContents()));
@@ -92,14 +33,15 @@ test('at least one Study page has a number line', () => {
 for (const { path, line } of pages) {
   const legend = ['2-value BVA', ...(line.threeValue ? ['3-value BVA adds'] : [])];
 
+  const { min, max } = lineValues(line);
+
   for (const width of [1280, tightestWide.width]) {
     test(`/${path} reads the whole number line once at ${width}px`, async ({ page }) => {
       await openAt(page, path, { width, text: 100 });
       await expect(linesOf(page).getByRole('group')).toHaveCount(0);
       expect(tidy(await listTexts(linesOf(page)))).toEqual([
-        legend, bandsBetween(line, line.min, line.max), valuesBetween(line, line.min, line.max),
+        legend, bandsBetween(line, min, max), valuesBetween(line, min, max),
       ]);
-      expect(await page.evaluate(drawingProblems, line)).toEqual([]);
     });
   }
 
@@ -111,17 +53,15 @@ for (const { path, line } of pages) {
         legend, ...line.segments.flatMap(({ from, to }) => [bandsBetween(line, from, to), valuesBetween(line, from, to)]),
       ]);
       for (const { title } of line.segments) await expect(linesOf(page).getByRole('group', { name: title, exact: true })).toBeVisible();
-      expect(await page.evaluate(drawingProblems, line)).toEqual([]);
-    });
-  }
-
-  for (const state of fitStates) {
-    test(`/${path} draws the number line at ${stateLabel(state)}`, async ({ page }) => {
-      await openAt(page, path, state);
-      expect(await page.evaluate(drawingProblems, line)).toEqual([]);
     });
   }
 }
+
+test('the description on the equivalence and boundaries page gives the ranges its table gives', async ({ page }) => {
+  await openAt(page, 'study/test-design/equivalence-and-boundaries/', { width: 1280, text: 100 });
+  await expect(linesOf(page).locator('> p')).toHaveText('The expected result is Reject for 9 or less, Accept for 10 to 20 and Reject for 21 or more.');
+  await expect(page.locator('.study-body table').getByRole('row')).toContainText(['Partition', /9 or less[^]*Reject/, /10 through 20[^]*Accept/, /21 or more[^]*Reject/]);
+});
 
 test.describe('the drawing check', () => {
   for (const [name, width, css, message] of [
@@ -135,11 +75,21 @@ test.describe('the drawing check', () => {
     test(`reports ${name}`, async ({ page }) => {
       const { path, line } = pages.find((entry) => entry.path === 'study/test-design/equivalence-and-boundaries/')!;
       await openAt(page, path, { width, text: 100 });
-      expect(await page.evaluate(drawingProblems, line)).toEqual([]);
+      expect(await drawingProblems(page, line)).toEqual([]);
       await page.addStyleTag({ content: css });
-      expect((await page.evaluate(drawingProblems, line)).join('\n')).toMatch(message);
+      expect((await drawingProblems(page, line)).join('\n')).toMatch(message);
     });
   }
+});
+
+test('the drawing check reports data the page does not draw', async ({ page }) => {
+  const { path, line } = pages.find((entry) => entry.path === 'study/test-design/equivalence-and-boundaries/')!;
+  await openAt(page, path, { width: 1280, text: 100 });
+  const bands = line.bands.map((band, index) => ({ ...band, from: band.from + (index === 1 ? 1 : 0), to: band.to + (index === 0 ? 1 : 0) }));
+  expect((await drawingProblems(page, { ...line, bands } as NumberLineData)).join('\n')).toMatch(/9 is a filled box[\s\S]*the line at 11 is not between 10 and 11/);
+  expect((await drawingProblems(page, { ...line, threeValue: undefined } as NumberLineData)).join('\n')).toContain('8 is a hollow box');
+  const renamed = line.bands.map((band) => ({ ...band, label: band.label === 'Accept' ? 'Allow' : band.label }));
+  expect((await drawingProblems(page, { ...line, bands: renamed } as NumberLineData)).join('\n')).toContain('the bands over 5 to 25 are not Reject, Allow, Reject');
 });
 
 test('the number line keeps filled and hollow boxes apart in a high-contrast theme', async ({ page }) => {

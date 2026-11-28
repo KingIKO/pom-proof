@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
 /**
@@ -58,13 +59,21 @@ export async function openAt(page: Page, url: string, { width, text, spacing }: 
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).fontSize), 'the text size').toBe(`${16 * text / 100}px`);
 }
 
+/** An axe scan of one part of the page, with no violation of any impact allowed. */
+export async function expectNoViolations(page: Page, part: string, state: string) {
+  const { violations, passes } = await new AxeBuilder({ page }).include(part).analyze();
+  expect(passes.length, 'axe ran no checks').toBeGreaterThan(0);
+  expect(violations.map(({ id, impact, nodes }) => ({ id, impact, targets: nodes.map(({ target }) => target.join(' ')) })), state).toEqual([]);
+}
+
 /** How far the page scrolls sideways. Runs in the page, like the checks below, so it uses nothing from this module. */
 export const sidewaysScroll = () => document.documentElement.scrollWidth - document.documentElement.clientWidth;
 
 /**
  * Parts that cross their figure's outer edge: elements, the text inside them, and drawn bars, which
  * may be a bar's own box or its ::after. With `strict`, also a box whose content is wider than it is.
- * Without it, what sits inside a box that scrolls by itself is left to that box.
+ * Without it, what sits inside a box that scrolls by itself is left to that box. A part that overflows
+ * makes the boxes around it overflow as well, so only the innermost one is reported.
  */
 export function figureOverflow(strict: boolean) {
   const name = (element: Element) => {
@@ -73,9 +82,10 @@ export function figureOverflow(strict: boolean) {
   };
   return [...document.querySelectorAll('figure[data-diagram]')].flatMap((figure) => {
     const box = figure.getBoundingClientRect();
-    const found: string[] = [];
+    const found: Array<{ element: Element; problem: string }> = [];
+    const add = (element: Element, problem: string) => found.push({ element, problem: `${name(element)} ${problem}` });
     const past = (left: number, right: number) => Math.max(box.left - left, right - box.right);
-    if (strict && figure.scrollWidth > figure.clientWidth) found.push(`${name(figure)} scrolls ${figure.scrollWidth - figure.clientWidth}px sideways`);
+    if (strict && figure.scrollWidth > figure.clientWidth) add(figure, `scrolls ${figure.scrollWidth - figure.clientWidth}px sideways`);
     for (const part of figure.querySelectorAll('*')) {
       if (part.closest('.visually-hidden')) continue;
       if (!strict && part.parentElement?.closest('.dg-scroll')) continue;
@@ -89,18 +99,18 @@ export function figureOverflow(strict: boolean) {
         return past(left, right);
       });
       const over = Math.max(past(rect.left, rect.right), ...ink);
-      if (over > 0.5) found.push(`${name(part)} passes the card edge by ${over.toFixed(1)}px`);
+      if (over > 0.5) add(part, `passes the card edge by ${over.toFixed(1)}px`);
       // The corner axis name of a narrow matrix reaches over the first column on purpose (spec, narrow matrix).
-      if (strict && !part.matches('.dg-axis-side') && part.clientWidth && part.scrollWidth > part.clientWidth + 1) found.push(`${name(part)} holds content ${part.scrollWidth - part.clientWidth}px wider than its box`);
+      if (strict && !part.matches('.dg-axis-side') && part.clientWidth && part.scrollWidth > part.clientWidth + 1) add(part, `holds content ${part.scrollWidth - part.clientWidth}px wider than its box`);
       const after = getComputedStyle(part, '::after');
       if (after.content !== 'none' && after.content !== 'normal') {
         const width = parseFloat(after.width);
         const centre = rect.left + rect.width / 2;
         const barOver = past(centre - width / 2, centre + width / 2);
-        if (barOver > 0.5) found.push(`${name(part)} draws its bar past the card edge by ${barOver.toFixed(1)}px`);
+        if (barOver > 0.5) add(part, `draws its bar past the card edge by ${barOver.toFixed(1)}px`);
       }
     }
-    return found;
+    return found.filter(({ element }) => !found.some((other) => other.element !== element && element.contains(other.element))).map(({ problem }) => problem);
   });
 }
 

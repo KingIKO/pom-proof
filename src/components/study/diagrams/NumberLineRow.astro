@@ -1,6 +1,6 @@
 ---
 import type { Diagram } from '../../../lib/diagram-schema';
-import { boundaries } from '../../../lib/diagram-number-line';
+import { boundaries, lineValues } from '../../../lib/diagram-number-line';
 import { inline } from '../study';
 
 interface Props {
@@ -10,24 +10,24 @@ interface Props {
   to: number;
 }
 
-// The bands over the values, with a line where the rule changes. A band's range and a boxed value's
-// reason are read out, because position and the box are visual only. Each part carries its place in
-// custom properties, so the stylesheet can turn the line upright when the text is very large.
+// The bands over the values, with a line where the rule changes. A boxed value's reason is read out,
+// because the box is visual only. The figure's description says which values each band holds, and
+// more than is drawn: a partition can go on past the line. Each part carries its place in custom
+// properties, so the stylesheet can turn the line upright when the text is very large.
 const { diagram, from, to } = Astro.props;
+const { two, three } = lineValues(diagram);
 const bands = diagram.bands
   .filter((band) => band.from <= to && band.to >= from)
   .map((band) => ({ ...band, from: Math.max(band.from, from), to: Math.min(band.to, to) }));
 const values = Array.from({ length: to - from + 1 }, (_, index) => from + index);
-const mark = (value: number) => (diagram.twoValue.includes(value) ? 'two' : diagram.threeValue?.includes(value) ? 'three' : undefined);
+const mark = (value: number) => (two.includes(value) ? 'two' : three.includes(value) ? 'three' : undefined);
 const said = { two: ', 2-value BVA', three: ', added by 3-value BVA' };
 const place = (value: number) => value - from + 1;
 ---
 <div class="dg-line" style={`--dg-count:${values.length}`}>
   <ul class="dg-bands" role="list">
     {bands.map((band) => (
-      <li data-kind={band.kind} style={`--dg-from:${place(band.from)};--dg-to:${place(band.to) + 1}`}>
-        <span set:html={inline(band.label)} /><span class="visually-hidden">, {band.from} to {band.to}</span>
-      </li>
+      <li data-kind={band.kind} style={`--dg-from:${place(band.from)};--dg-to:${place(band.to) + 1}`} set:html={inline(band.label)} />
     ))}
   </ul>
   <ol class="dg-values" role="list">

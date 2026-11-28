@@ -1,4 +1,5 @@
 ---
+import { lineValues } from '../../../lib/diagram-number-line';
 import type { Diagram } from '../../../lib/diagram-schema';
 import { inline } from '../study';
 import NumberLineRow from './NumberLineRow.astro';
@@ -13,15 +14,16 @@ interface Props {
 // The whole line, and the same line as one segment per edge. The stylesheet shows one of the two, by
 // the figure's width; display: none keeps the other out of the accessibility tree as well.
 const { diagram, idPrefix } = Astro.props;
+const { min, max, three } = lineValues(diagram);
 ---
 <ul class="dg-legend" role="list">
   <li><span class="dg-key" data-mark="two" aria-hidden="true" /><span><span class="dg-word">2-value</span> BVA</span></li>
-  {diagram.threeValue && (
+  {three.length > 0 && (
     <li><span class="dg-key" data-mark="three" aria-hidden="true" /><span><span class="dg-word">3-value</span> BVA adds</span></li>
   )}
 </ul>
 <div class="dg-line-wide">
-  <NumberLineRow diagram={diagram} from={diagram.min} to={diagram.max} />
+  <NumberLineRow diagram={diagram} from={min} to={max} />
 </div>
 <div class="dg-line-narrow">
   {diagram.segments.map(({ title, from, to }, index) => (
