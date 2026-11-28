@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Study diagrams: Blocks in B2</title>
+<link rel="stylesheet" href="site/TitleBand.LV6_VoVR.css"><link rel="stylesheet" href="site/study.CSPUfXUM.css"><link rel="stylesheet" href="diagrams.css?v=t2">
+<style>
+body { padding: var(--space-32); }
+.cmp-top { max-inline-size: 72ch; margin-block-end: var(--space-8); }
+.cmp-top h1 { font-size: var(--type-24); margin: 0 0 var(--space-8); }
+.cmp-top p { margin: 0; color: var(--text2); }
+.cmp { display: grid; grid-template-columns: repeat(3, max-content); gap: 0 var(--space-32); align-items: start; }
+.cmp-row { grid-column: 1 / -1; margin: var(--space-32) 0 var(--space-12); padding-block-start: var(--space-16); border-block-start: 1px solid var(--divider); color: var(--text2); font-size: var(--type-14); font-weight: var(--weight-medium); }
+.cmp-cell { inline-size: var(--w); }
+.cmp-w { margin: 0 0 var(--space-8); color: var(--text3); font-size: var(--type-13); }
+.cmp .dg { margin-block: 0; }
+/* The site's phone rules key on the screen width; this sheet is wide, so it applies them here. */
+.cmp-phone [data-style="b2"] { padding: var(--space-16); }
+.cmp-phone [data-style="b2"] > figcaption { margin-block-end: var(--space-16); }
+</style></head><body>
+<div class="cmp-top"><h1>Blocks in B2</h1><p>Each figure at the article width on a desktop and at the figure width on 360 and 320 px phones. Same tokens as the approved B2 figures; nothing new in colour.</p></div>
+<div class="cmp"><h2 class="cmp-row">From Test independence and isolation</h2>
+<div class="cmp-cell" style="--w:738px"><p class="cmp-w">Desktop, 738 px column</p><figure class="dg" data-card data-style="b2" data-diagram="blocks">
+<figcaption id="dg-indep"><span class="dg-title">Separate contexts, one shared database</span><span class="dg-note">Each test gets its own browser context. Both tests reach the same database.</span></figcaption>
+<p class="visually-hidden">Test A and Test B each have their own browser context, holding cookies and storage. Both tests save orders to one server database, which holds an order for Test A and an order for Test B. A fresh context does not reset that database.</p>
+<div class="bk">
+<div class="bk-row" style="--cols:2"><div class="bk-box"><span class="bk-title">Test A</span><div class="bk-part">Browser context<ul class="dg-plain bk-items"><li>Cookies</li><li>Storage</li></ul></div></div><div class="bk-box"><span class="bk-title">Test B</span><div class="bk-part">Browser context<ul class="dg-plain bk-items"><li>Cookies</li><li>Storage</li></ul></div></div></div>
+<div class="bk-arrows" style="--cols:2" aria-hidden="true"><span>↓</span><span>↓</span></div>
+<div class="bk-box" data-strong><span class="bk-title">Server database</span><div class="bk-row" style="--cols:2"><div class="bk-part">Order for Test A</div><div class="bk-part">Order for Test B</div></div></div>
+</div></figure></div>
+<div class="cmp-cell cmp-phone" style="--w:313px"><p class="cmp-w">Phone, 360 px screen</p><figure class="dg" data-card data-style="b2" data-diagram="blocks">
+<figcaption id="dg-indep"><span class="dg-title">Separate contexts, one shared database</span><span class="dg-note">Each test gets its own browser context. Both tests reach the same database.</span></figcaption>
+<p class="visually-hidden">Test A and Test B each have their own browser context, holding cookies and storage. Both tests save orders to one server database, which holds an order for Test A and an order for Test B. A fresh context does not reset that database.</p>
+<div class="bk">
+<div class="bk-row" style="--cols:2"><div class="bk-box"><span class="bk-title">Test A</span><div class="bk-part">Browser context<ul class="dg-plain bk-items"><li>Cookies</li><li>Storage</li></ul></div></div><div class="bk-box"><span class="bk-title">Test B</span><div class="bk-part">Browser context<ul class="dg-plain bk-items"><li>Cookies</li><li>Storage</li></ul></div></div></div>
+<div class="bk-arrows" style="--cols:2" aria-hidden="true"><span>↓</span><span>↓</span></div>
+<div class="bk-box" data-strong><span class="bk-title">Server database</span><div class="bk-row" style="--cols:2"><div class="bk-part">Order for Test A</div><div class="bk-part">Order for Test B</div></div></div>
+</div></figure></div>
+<div class="cmp-cell cmp-phone" style="--w:273px"><p class="cmp-w">Phone, 320 px screen</p><figure class="dg" data-card data-style="b2" data-diagram="blocks">
+<figcaption id="dg-indep"><span class="dg-title">Separate contexts, one shared database</span><span class="dg-note">Each test gets its own browser context. Both tests reach the same database.</span></figcaption>
+<p class="visually-hidden">Test A and Test B each have their own browser context, holding cookies and storage. Both tests save orders to one server database, which holds an order for Test A and an order for Test B. A fresh context does not reset that database.</p>
+<div class="bk">
+<div class="bk-row" style="--cols:2"><div class="bk-box"><span class="bk-title">Test A</span><div class="bk-part">Browser context<ul class="dg-plain bk-items"><li>Cookies</li><li>Storage</li></ul></div></div><div class="bk-box"><span class="bk-title">Test B</span><div class="bk-part">Browser context<ul class="dg-plain bk-items"><li>Cookies</li><li>Storage</li></ul></div></div></div>
+<div class="bk-arrows" style="--cols:2" aria-hidden="true"><span>↓</span><span>↓</span></div>
+<div class="bk-box" data-strong><span class="bk-title">Server database</span><div class="bk-row" style="--cols:2"><div class="bk-part">Order for Test A</div><div class="bk-part">Order for Test B</div></div></div>
+</div></figure></div>
+<h2 class="cmp-row">From Page Object Model</h2>
+<div class="cmp-cell" style="--w:738px"><p class="cmp-w">Desktop, 738 px column</p><figure class="dg" data-card data-style="b2" data-diagram="blocks">
+<figcaption id="dg-pom"><span class="dg-title">Where a locator change lands</span><span class="dg-note">When the button label changes, each copy of its locator needs an edit. Three tests is an example.</span></figcaption>
+<p class="visually-hidden">Without a page object, three tests each hold their own copy of the button locator, so a label change takes 3 edits. With a page object, the three tests call one sign-in page object that holds the only copy, so the same change takes 1 edit.</p>
+<div class="bk-pair">
+<section class="bk-panel" aria-label="Without a page object"><h3>Each test holds the locator</h3>
+<div class="bk"><div class="bk-row" style="--cols:3"><div class="bk-box"><span class="bk-title">Test 1</span><div class="bk-part" data-strong>Button locator</div></div><div class="bk-box"><span class="bk-title">Test 2</span><div class="bk-part" data-strong>Button locator</div></div><div class="bk-box"><span class="bk-title">Test 3</span><div class="bk-part" data-strong>Button locator</div></div></div></div>
+<p class="bk-result">3 edits</p></section>
+<section class="bk-panel" aria-label="With a page object"><h3>Tests call one page object</h3>
+<div class="bk"><div class="bk-row" style="--cols:3"><div class="bk-box"><span class="bk-title">Test 1</span></div><div class="bk-box"><span class="bk-title">Test 2</span></div><div class="bk-box"><span class="bk-title">Test 3</span></div></div>
+<div class="bk-arrows" style="--cols:3" aria-hidden="true"><span>↓</span><span>↓</span><span>↓</span></div>
+<div class="bk-box"><span class="bk-title">Sign‑in page object</span><div class="bk-part" data-strong>Button locator</div></div></div>
+<p class="bk-result">1 edit</p></section>
+</div></figure></div>
+<div class="cmp-cell cmp-phone" style="--w:313px"><p class="cmp-w">Phone, 360 px screen</p><figure class="dg" data-card data-style="b2" data-diagram="blocks">
+<figcaption id="dg-pom"><span class="dg-title">Where a locator change lands</span><span class="dg-note">When the button label changes, each copy of its locator needs an edit. Three tests is an example.</span></figcaption>
+<p class="visually-hidden">Without a page object, three tests each hold their own copy of the button locator, so a label change takes 3 edits. With a page object, the three tests call one sign-in page object that holds the only copy, so the same change takes 1 edit.</p>
+<div class="bk-pair">
+<section class="bk-panel" aria-label="Without a page object"><h3>Each test holds the locator</h3>
+<div class="bk"><div class="bk-row" style="--cols:3"><div class="bk-box"><span class="bk-title">Test 1</span><div class="bk-part" data-strong>Button locator</div></div><div class="bk-box"><span class="bk-title">Test 2</span><div class="bk-part" data-strong>Button locator</div></div><div class="bk-box"><span class="bk-title">Test 3</span><div class="bk-part" data-strong>Button locator</div></div></div></div>
+<p class="bk-result">3 edits</p></section>
+<section class="bk-panel" aria-label="With a page object"><h3>Tests call one page object</h3>
+<div class="bk"><div class="bk-row" style="--cols:3"><div class="bk-box"><span class="bk-title">Test 1</span></div><div class="bk-box"><span class="bk-title">Test 2</span></div><div class="bk-box"><span class="bk-title">Test 3</span></div></div>
+<div class="bk-arrows" style="--cols:3" aria-hidden="true"><span>↓</span><span>↓</span><span>↓</span></div>
+<div class="bk-box"><span class="bk-title">Sign‑in page object</span><div class="bk-part" data-strong>Button locator</div></div></div>
+<p class="bk-result">1 edit</p></section>
+</div></figure></div>
+<div class="cmp-cell cmp-phone" style="--w:273px"><p class="cmp-w">Phone, 320 px screen</p><figure class="dg" data-card data-style="b2" data-diagram="blocks">
+<figcaption id="dg-pom"><span class="dg-title">Where a locator change lands</span><span class="dg-note">When the button label changes, each copy of its locator needs an edit. Three tests is an example.</span></figcaption>
+<p class="visually-hidden">Without a page object, three tests each hold their own copy of the button locator, so a label change takes 3 edits. With a page object, the three tests call one sign-in page object that holds the only copy, so the same change takes 1 edit.</p>
+<div class="bk-pair">
+<section class="bk-panel" aria-label="Without a page object"><h3>Each test holds the locator</h3>
+<div class="bk"><div class="bk-row" style="--cols:3"><div class="bk-box"><span class="bk-title">Test 1</span><div class="bk-part" data-strong>Button locator</div></div><div class="bk-box"><span class="bk-title">Test 2</span><div class="bk-part" data-strong>Button locator</div></div><div class="bk-box"><span class="bk-title">Test 3</span><div class="bk-part" data-strong>Button locator</div></div></div></div>
+<p class="bk-result">3 edits</p></section>
+<section class="bk-panel" aria-label="With a page object"><h3>Tests call one page object</h3>
+<div class="bk"><div class="bk-row" style="--cols:3"><div class="bk-box"><span class="bk-title">Test 1</span></div><div class="bk-box"><span class="bk-title">Test 2</span></div><div class="bk-box"><span class="bk-title">Test 3</span></div></div>
+<div class="bk-arrows" style="--cols:3" aria-hidden="true"><span>↓</span><span>↓</span><span>↓</span></div>
+<div class="bk-box"><span class="bk-title">Sign‑in page object</span><div class="bk-part" data-strong>Button locator</div></div></div>
+<p class="bk-result">1 edit</p></section>
+</div></figure></div></div></body></html>

@@ -21,6 +21,8 @@ const pages = [
   // The two pilot pages: one with a dispute and two examples, one with a "what changed" box.
   { name: 'study page object page', url: 'study/framework-design/page-object-model/' },
   { name: 'study parameterised tests page', url: 'study/framework-design/parameterised-tests/' },
+  // The first concept diagram; the 320px check is below.
+  { name: 'study test shapes page', url: 'study/testing-foundations/test-shapes/' },
   { name: '404 page', url: 'this-page-does-not-exist/', status: 404 },
 ];
 
@@ -132,6 +134,13 @@ test('the Study module list folded on a narrow screen has no serious or critical
   await modules.locator('summary').click();
   await expect(page.getByRole('navigation', { name: 'Study modules' })).toBeVisible();
   await expectNoSeriousViolations(page, testInfo, 'open module list');
+});
+
+test('the test shapes diagram at 320px, stacked, has no serious or critical axe violations', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 320, height: 760 });
+  await open(page, 'study/testing-foundations/test-shapes/');
+  await expect(page.locator('figure[data-diagram]')).toBeVisible();
+  await expectNoSeriousViolations(page, testInfo, 'test shapes at 320px');
 });
 
 test('code run results have no serious or critical axe violations', async ({ page }, testInfo) => {

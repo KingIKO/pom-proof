@@ -57,6 +57,7 @@ ink #101A33, onInkMuted #AEB8D4, accent #FFB547, canvas #F5F7FC, surface #FFFFFF
 | Callouts | 4px left border and tint: trap (medium hue), example or note (easy hue). |
 
 Icons: none. SVG and image ban stays. Chevrons and plus/minus are CSS-drawn.
+Exception (owner, 2026-11-28): inline SVG is allowed only inside Study diagrams, as `figure[data-diagram] > svg[role="img"][aria-labelledby]`, for what HTML and CSS cannot draw (`.notes/study/diagram-spec.md`, Inline SVG); the slop guard bans every other `svg` and gains this allowance only with the first SVG figure.
 
 ## 2. Screens
 

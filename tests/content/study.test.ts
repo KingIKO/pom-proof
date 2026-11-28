@@ -19,11 +19,14 @@ import {
 
 const headings = ['What it is', 'How it works', 'Why it helps', 'When not to use it'];
 const required = ['title', 'module', 'order', 'level', 'summary', 'minutes', 'outcomes', 'useWhen', 'avoidWhen', 'sources'];
-const allowed = new Set([...required, 'prerequisites', 'practiceTopics', 'questionTopics', 'examples', 'whatChanged', 'expertsDisagree']);
+const allowed = new Set([...required, 'prerequisites', 'practiceTopics', 'questionTopics', 'examples', 'diagrams', 'whatChanged', 'expertsDisagree']);
 const slug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const pageId = /^[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /** A recap item may share at most this many words in a row with the body. */
 const sharedLimit = 4;
+/** Diagram captions (diagram spec, Captions): a short title that is not a label for the figure itself. */
+const titleWords = 7;
+const titleLabels = /\b(?:figure|diagram of|this shows)\b/i;
 
 const isText = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
 const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -32,7 +35,81 @@ const sentences = (text: string) => sentencesOf(normalizeProse(text)).filter((se
 /** One sentence that starts with a capital or a number and ends with a full stop or question mark. */
 const isSentence = (text: string) => /^[\p{Lu}\p{N}`"]/u.test(text.trim()) && /[.?]$/.test(text.trim()) && sentences(text).length === 1;
 
-const withoutFences = (body: string) => body.replace(/^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1[^\n]*$/gm, '');
+const fences = /^ {0,3}(`{3,}|~{3,})([^\n]*)\n([\s\S]*?)^ {0,3}\1[^\n]*$/gm;
+const withoutFences = (body: string) => body.replace(fences, '');
+
+/** The ```diagram markers in a body: the ids inside, the info string, and what comes before. */
+function diagramMarkers(body: string) {
+  return [...body.matchAll(fences)].filter(([, , info]) => /^diagram\b/.test(info.trim())).map((match) => {
+    const before = body.slice(0, match.index).split('\n').filter((line) => line.trim());
+    return {
+      info: match[2].trim(),
+      ids: match[3].split('\n').map((line) => line.trim()).filter(Boolean),
+      inSection: before.some((line) => /^##[ \t]/.test(line)),
+      afterHeading: /^#{1,6}[ \t]/.test(before.at(-1) ?? ''),
+    };
+  });
+}
+
+/** Problems with the `diagrams` field and the markers that place each diagram in the body. */
+function diagramProblems(data: Record<string, unknown>, body: string): string[] {
+  const found: string[] = [];
+  const add = (message: string) => found.push(message);
+  const markers = diagramMarkers(body);
+  if (!('diagrams' in data)) {
+    if (markers.length) add(`the body has ${markers.length} diagram marker(s) but no diagrams field`);
+    return found;
+  }
+  const diagrams = Array.isArray(data.diagrams) ? data.diagrams : [];
+  if (diagrams.length < 1 || diagrams.length > 2) add(`diagrams needs 1 or 2 items, has ${diagrams.length}`);
+  const ids: string[] = [];
+  diagrams.forEach((diagram, index) => {
+    const at = `diagrams[${index}]`;
+    if (!isRecord(diagram)) {
+      add(`${at} must be a diagram`);
+      return;
+    }
+    if (typeof diagram.id !== 'string' || !slug.test(diagram.id)) add(`${at} id "${String(diagram.id)}" must be lowercase words joined by hyphens`);
+    else if (ids.includes(diagram.id)) add(`${at} repeats id "${diagram.id}"`);
+    else ids.push(diagram.id);
+    if (!isText(diagram.type)) add(`${at} needs a type`);
+    if (!isText(diagram.title)) add(`${at} needs a title`);
+    else {
+      const words = wordsOf(diagram.title).length;
+      if (words > titleWords) add(`${at} title has ${words} words; write at most ${titleWords}`);
+      if (/\.\s*$/.test(diagram.title)) add(`${at} title ends with a full stop`);
+      const label = titleLabels.exec(diagram.title)?.[0];
+      if (label) add(`${at} title uses "${label}"; state the idea instead`);
+    }
+    if ('note' in diagram) {
+      if (!isText(diagram.note)) add(`${at} note must be text`);
+      else if (sentences(diagram.note).length > 2) add(`${at} note has ${sentences(diagram.note).length} sentences; write at most 2`);
+    }
+    // A matrix is a real table, which is its own text equivalent; every other figure says in words what it shows.
+    const { description } = diagram;
+    if (diagram.type !== 'matrix' && !(isText(description) || (textList(description) && description.length > 0))) {
+      add(`${at} needs a description that says what position, width or length shows`);
+    }
+  });
+
+  const placed = new Map<string, number>();
+  for (const marker of markers) {
+    const where = `diagram marker "${marker.ids.join(' ')}"`;
+    if (marker.info !== 'diagram') add(`${where} opens with "${marker.info}"; write \`\`\`diagram and nothing else`);
+    if (marker.ids.length !== 1) add(`${where} must hold one diagram id, holds ${marker.ids.length}`);
+    for (const id of marker.ids) {
+      if (!ids.includes(id)) add(`${where} names "${id}", which diagrams does not list`);
+      placed.set(id, (placed.get(id) ?? 0) + 1);
+    }
+    if (!marker.inSection) add(`${where} must sit inside one of the body sections`);
+    else if (marker.afterHeading) add(`${where} sits directly after a heading; place it after the paragraph that names its parts`);
+  }
+  for (const id of ids) {
+    const count = placed.get(id) ?? 0;
+    if (count !== 1) add(`diagram "${id}" is placed by ${count} markers; place it exactly once`);
+  }
+  return found;
+}
 
 /** Words outside fenced code, so headings and prose count and code does not. */
 function bodyWords(body: string) {
@@ -121,6 +198,8 @@ function pageProblems(page: DiscoveredStudyPage, context: Context): string[] {
   if ('examples' in data && (examples.length < 1 || examples.length > 2)) add(`examples needs 1 or 2 items, has ${examples.length}`);
   const minutes = Math.ceil(words / 200) + (examples.length ? 1 : 0);
   if (data.minutes !== minutes) add(`minutes is ${String(data.minutes)}; ${words} words${examples.length ? ' and an example' : ''} make ${minutes}`);
+  // Figures add nothing to the minutes (owner, 2026-11-28): their markers are fences, which bodyWords skips.
+  found.push(...diagramProblems(data, page.body));
 
   const prerequisites = data.prerequisites ?? [];
   if (!Array.isArray(prerequisites)) add('prerequisites must be a list');
@@ -453,6 +532,70 @@ describe('the Study checks catch planted mistakes', () => {
     expect(found).toContain(`concept ${first.id} needs a slug`);
     expect(found).toContain('a slug repeats within a module');
     expect(found).toContain(`${second.sources[0].url} is both`);
+  });
+
+  describe('diagrams', () => {
+    const shapes = pages.find(({ id }) => id === 'testing-foundations/test-shapes');
+    const marker = '```diagram\ntest-shapes\n```';
+    const figure = () => (shapes!.frontmatter.diagrams as Array<Record<string, unknown>>)[0];
+    const withFigure = (changes: Record<string, unknown>) => ({ diagrams: [{ ...figure(), ...changes }] });
+    /** The test shapes page with fields replaced; a field set to undefined is removed. */
+    const plantShapes = (frontmatter: Record<string, unknown> = {}, body?: string) => ({
+      ...shapes!,
+      frontmatter: Object.fromEntries(Object.entries({ ...shapes!.frontmatter, ...frontmatter }).filter(([, value]) => value !== undefined)),
+      body: body ?? shapes!.body,
+    });
+    /** The test shapes body with its marker moved: `edit` gets the body without it. */
+    const moved = (edit: (body: string) => string) => edit(shapes!.body.replace(`\n${marker}\n`, ''));
+
+    it('accepts the test shapes page, whose figure sits after the first paragraph', () => {
+      expect(shapes, 'the test shapes page').toBeDefined();
+      expect(shapes!.body, 'the test shapes marker').toContain(marker);
+      expect(pageProblems(plantShapes(), context)).toEqual([]);
+    });
+
+    it('adds no words for a marker, so a figure leaves the minutes alone', () => {
+      expect(shapes, 'the test shapes page').toBeDefined();
+      expect(bodyWords(shapes!.body)).toBe(bodyWords(shapes!.body.replace(marker, '')));
+    });
+
+    it('accepts a matrix without a description', () => {
+      expect(shapes, 'the test shapes page').toBeDefined();
+      expect(pageProblems(plantShapes(withFigure({ type: 'matrix', description: undefined })), context)).toEqual([]);
+    });
+
+    it.each([
+      ['a diagram no marker places', {}, moved((body) => body), 'diagram "test-shapes" is placed by 0 markers'],
+      ['a diagram placed twice', {}, `${shapes?.body}\n${marker}\n`, 'diagram "test-shapes" is placed by 2 markers'],
+      ['a marker naming an unlisted diagram', {}, shapes?.body.replace(marker, '```diagram\nrisk-matrix\n```'), 'names "risk-matrix", which diagrams does not list'],
+      ['a marker holding two ids', {}, shapes?.body.replace(marker, '```diagram\ntest-shapes\nrisk-matrix\n```'), 'must hold one diagram id, holds 2'],
+      ['a marker with more after the word diagram', {}, shapes?.body.replace(marker, '```diagram wide\ntest-shapes\n```'), 'opens with "diagram wide"'],
+      ['a marker before the first section', {}, moved((body) => `${marker}\n\n${body}`), 'must sit inside one of the body sections'],
+      ['a marker directly after a heading', {}, moved((body) => body.replace('## How it works\n', `## How it works\n\n${marker}\n`)), 'sits directly after a heading'],
+      ['a marker with no diagrams field', { diagrams: undefined }, undefined, 'diagram marker(s) but no diagrams field'],
+      ['three diagrams', { diagrams: [figure(), { ...figure(), id: 'two' }, { ...figure(), id: 'three' }] }, undefined, 'diagrams needs 1 or 2 items, has 3'],
+      ['a repeated id', { diagrams: [figure(), figure()] }, undefined, 'diagrams[1] repeats id "test-shapes"'],
+      ['an id that is not a slug', withFigure({ id: 'Test shapes' }), undefined, 'id "Test shapes" must be lowercase words joined by hyphens'],
+      ['an eight-word title', withFigure({ title: 'Where each of the shapes puts the effort' }), undefined, 'title has 8 words; write at most 7'],
+      ['a title with a full stop', withFigure({ title: 'Where each shape puts the effort.' }), undefined, 'title ends with a full stop'],
+      ['a title with Figure', withFigure({ title: 'Figure 1: test shapes' }), undefined, 'title uses "Figure"'],
+      ['a title with Diagram of', withFigure({ title: 'Diagram of the test shapes' }), undefined, 'title uses "Diagram of"'],
+      ['a title with This shows', withFigure({ title: 'This shows the test shapes' }), undefined, 'title uses "This shows"'],
+      ['a three-sentence note', withFigure({ note: 'Wider bars mean more tests. Widths show emphasis. They are not measured.' }), undefined, 'note has 3 sentences; write at most 2'],
+      ['a layer stack without a description', withFigure({ description: undefined }), undefined, 'diagrams[0] needs a description'],
+    ])('reports %s', (_name, frontmatter, body, message) => {
+      expect(shapes, 'the test shapes page').toBeDefined();
+      expect(pageProblems(plantShapes(frontmatter as Record<string, unknown>, body), context).join('\n')).toContain(message);
+    });
+
+    it('reports a semicolon in a diagram description', () => {
+      expect(shapes, 'the test shapes page').toBeDefined();
+      const source = readFileSync(join(root, shapes!.file), 'utf8');
+      const planted = source.replace('A wider bar means more tests at that layer.', 'A wider bar means more tests; widths are not measured.');
+      expect(planted, 'the description sentence was replaced').not.toBe(source);
+      expect(scanProse(shapes!.file, source).findings).toEqual([]);
+      expect(scanProse(shapes!.file, planted).findings.map(({ rule }) => rule)).toContain('semicolon');
+    });
   });
 
   it('reports a module whose stage, title or file name differs from the topic map', () => {

@@ -234,6 +234,98 @@ test('the page object page gives both sides of the assertion dispute, with their
   await expect(page.getByRole('link', { name: /^Framework design: \d+ questions$/ })).toBeVisible();
 });
 
+// Concept diagrams (diagram plan, section 4): one figure per frontmatter entry, each after a paragraph
+// of the body, captioned from the frontmatter, with no marker left in the page. At 1280, 360 and
+// 320px the page never scrolls sideways and no part of a figure spills out of the figure or its box.
+
+interface DiagramData {
+  id: string;
+  type: string;
+  title: string;
+  note?: string;
+  shapes?: Array<{ name: string; layers: Array<{ label: string; widest?: boolean }> }>;
+}
+const withDiagrams = pages.filter(({ frontmatter }) => Array.isArray(frontmatter.diagrams));
+const diagramsOf = (study: (typeof pages)[number]) => study.frontmatter.diagrams as DiagramData[];
+
+/** Parts that spill out of their figure, and boxes whose content is wider than they are. */
+function figureOverflow() {
+  const name = (element: Element) => `${element.tagName.toLowerCase()}${element.className ? `.${String(element.className).split(' ')[0]}` : ''} "${(element.textContent ?? '').trim().slice(0, 30)}"`;
+  return [...document.querySelectorAll('figure[data-diagram]')].flatMap((figure) => {
+    const box = figure.getBoundingClientRect();
+    const found: string[] = [];
+    if (figure.scrollWidth > figure.clientWidth) found.push(`${name(figure)} scrolls ${figure.scrollWidth - figure.clientWidth}px sideways`);
+    for (const part of figure.querySelectorAll('*')) {
+      if (part.closest('.visually-hidden')) continue;
+      const rect = part.getBoundingClientRect();
+      if (!rect.width && !rect.height) continue;
+      if (rect.left < box.left - 0.5 || rect.right > box.right + 0.5) found.push(`${name(part)} spills out of its figure`);
+      if (part.clientWidth && part.scrollWidth > part.clientWidth + 1) found.push(`${name(part)} holds content ${part.scrollWidth - part.clientWidth}px wider than its box`);
+    }
+    return found;
+  });
+}
+
+test('at least one Study page has a concept diagram', () => {
+  expect(withDiagrams.length).toBeGreaterThan(0);
+});
+
+for (const study of withDiagrams) {
+  test(`/${study.path} shows each diagram once, after a paragraph, captioned from its frontmatter`, async ({ page }) => {
+    await page.goto(study.path);
+    const body = page.locator('.study-body');
+    await expect(body.locator('figure[data-diagram]')).toHaveCount(diagramsOf(study).length);
+    await expect(page.locator('.language-diagram')).toHaveCount(0);
+    await expect(page.getByText(/```diagram/)).toHaveCount(0);
+    for (const { id, type, title, note, shapes } of diagramsOf(study)) {
+      const figure = page.locator(`.study-body > figure[data-diagram="${type}"]:has(> figcaption#dg-${id})`);
+      await expect(figure, `figure ${id} is a direct part of the body`).toHaveCount(1);
+      expect(await figure.evaluate((element) => element.previousElementSibling?.tagName), `figure ${id} follows a paragraph`).toBe('P');
+      await expect(figure.locator('.dg-title')).toHaveText(title);
+      if (note) await expect(figure.locator('.dg-note')).toHaveText(note);
+      await expect(page.getByRole('figure', { name: new RegExp(`^${title}`) })).toHaveCount(1);
+      // A layer stack is one named list per shape, top to bottom, with the widest layer said in words.
+      for (const { name, layers } of shapes ?? []) {
+        await expect(figure.getByRole('list', { name, exact: true }).getByRole('listitem'))
+          .toHaveText(layers.map(({ label, widest }) => `${label}${widest ? ', widest' : ''}`));
+      }
+    }
+  });
+
+  for (const width of [1280, 360, 320]) {
+    test(`/${study.path} figures fit at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(study.path);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
+      expect(await page.evaluate(figureOverflow)).toEqual([]);
+      // Each shape's widest layer still draws widest, and the shapes sit side by side only on a wide figure.
+      for (const figure of await page.locator('figure[data-diagram="layer-stack"]').all()) {
+        const shapes = await figure.locator('.dg-shape').evaluateAll((elements) => elements.map((shape) => ({
+          left: Math.round(shape.getBoundingClientRect().left),
+          top: Math.round(shape.getBoundingClientRect().top),
+          widest: Math.round(shape.querySelector('li[data-widest]')!.getBoundingClientRect().width),
+          others: [...shape.querySelectorAll('li:not([data-widest])')].map((bar) => Math.round(bar.getBoundingClientRect().width)),
+        })));
+        for (const { widest, others } of shapes) expect(Math.max(...others), 'the widest layer draws widest').toBeLessThan(widest);
+        const sideBySide = new Set(shapes.map(({ top }) => top)).size === 1;
+        expect(sideBySide, width >= 1280 ? 'shapes side by side' : 'shapes stacked').toBe(width >= 1280);
+      }
+    });
+  }
+}
+
+test('a diagram part wider than its figure is reported', async ({ page }) => {
+  const study = withDiagrams[0];
+  expect(study, 'a page with a diagram').toBeDefined();
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto(study.path);
+  expect(await page.evaluate(figureOverflow)).toEqual([]);
+  await page.addStyleTag({ content: 'figure[data-diagram] li { min-inline-size: 0; inline-size: 1.5rem; overflow: hidden; }' });
+  expect((await page.evaluate(figureOverflow)).join('\n')).toMatch(/holds content \d+px wider than its box/);
+  await page.addStyleTag({ content: 'figure[data-diagram] .dg-layers { max-inline-size: none; inline-size: 40rem; }' });
+  expect((await page.evaluate(figureOverflow)).join('\n')).toMatch(/spills out of its figure/);
+});
+
 test.describe('at 360px', () => {
   test.use({ viewport: { width: 360, height: 760 } });
 

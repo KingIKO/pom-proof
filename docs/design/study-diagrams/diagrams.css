@@ -1,0 +1,491 @@
+/* Study diagram options A (outline), B (tinted) and C (drawn).
+   Design mockup only: every colour, size and space comes from src/styles/tokens.css.
+   Diagram parts are square-cornered so they never read as buttons (6px) or chips (pill). */
+
+/* ---------- Shared frame ---------- */
+
+.dg {
+  container-type: inline-size;
+  margin: var(--space-24) 0;
+  padding: var(--space-16) var(--space-24) var(--space-24);
+}
+.dg > figcaption { margin-block-end: var(--space-16); }
+/* The prose column breaks long words anywhere; labels inside a figure wrap at spaces only. */
+.dg, .dg :is(th, td) { overflow-wrap: normal; }
+.dg-title { display: block; font-size: var(--type-16); font-weight: var(--weight-bold); line-height: 1.3; }
+.dg-note { display: block; margin-block-start: var(--space-4); color: var(--text2); font-size: var(--type-14); line-height: 1.45; }
+.dg h3 { margin: 0; font-size: var(--type-14); font-weight: var(--weight-bold); line-height: 1.3; }
+.dg-label {
+  color: var(--text3);
+  font-size: var(--type-13);
+  font-weight: var(--weight-bold);
+  font-variant-caps: all-small-caps;
+  letter-spacing: .06em;
+  line-height: 1.2;
+}
+
+/* ---------- 1. Test shapes: centred bars on one scale (A and B) ---------- */
+
+.dg-shapes-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-24);
+}
+.dg-shape { display: grid; grid-template-rows: auto 1fr; gap: var(--space-8); min-inline-size: 0; }
+.dg-shape > h3 { text-align: center; }
+.dg-layers {
+  display: grid;
+  align-content: end;
+  gap: var(--space-4);
+  inline-size: 100%;
+  max-inline-size: 16rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.dg-layers > li {
+  display: grid;
+  place-items: center;
+  inline-size: calc(var(--w) * 100%);
+  /* A narrow bar grows to its longest word rather than letting the label spill out. */
+  min-inline-size: min-content;
+  min-block-size: 2.25rem;
+  margin-inline: auto;
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--type-13);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  text-align: center;
+}
+
+@container (width < 34rem) {
+  .dg-shapes-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-24); }
+}
+
+/* ---------- 2. Number line ---------- */
+
+.dg-line-narrow { display: none; }
+.dg-line {
+  position: relative;
+  display: grid;
+  grid-template-columns: 6.5rem repeat(21, minmax(0, 1fr));
+  align-items: center;
+  row-gap: var(--space-8);
+}
+.dg-line > .dg-label { grid-column: 1; padding-inline-end: var(--space-8); }
+.dg-band {
+  grid-row: 1;
+  align-self: stretch;
+  display: grid;
+  align-content: center;
+  margin-inline: 3px;
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--type-13);
+  line-height: 1.25;
+  text-align: center;
+}
+.dg-band strong { display: block; font-size: var(--type-14); }
+.dg-num {
+  grid-row: 2;
+  position: relative;
+  padding-block-start: var(--space-8);
+  color: var(--text2);
+  font-size: var(--type-13);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+}
+.dg-num::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: calc(50% - .5px);
+  inline-size: 1px;
+  block-size: 5px;
+  background: var(--borderControl);
+}
+.dg-axis {
+  grid-row: 2;
+  grid-column: 2 / -1;
+  align-self: start;
+  block-size: 1px;
+  background: var(--borderControl);
+}
+.dg-mark {
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  inline-size: 1.625rem;
+  block-size: 1.625rem;
+  font-size: var(--type-13);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.dg-mark.two { grid-row: 3; }
+.dg-mark.three { grid-row: 4; }
+.dg-edge {
+  grid-row: 1 / 5;
+  align-self: stretch;
+  justify-self: start;
+  inline-size: 0;
+  margin-inline-start: -1px;
+  border-inline-start: 2px solid;
+  pointer-events: none;
+}
+.dg-legend { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-16); margin: 0 0 var(--space-12); padding: 0; list-style: none; font-size: var(--type-13); }
+.dg-legend li { display: inline-flex; align-items: center; gap: var(--space-8); }
+.dg-legend .dg-mark { inline-size: .875rem; block-size: .875rem; }
+
+/* Narrow: two zoomed segments, one per edge, six values each. */
+.dg-seg { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: center; row-gap: var(--space-8); position: relative; }
+.dg-seg + h3 { margin-block-start: var(--space-16); }
+.dg-line-narrow > h3 { margin-block-end: var(--space-8); }
+.dg-seg .dg-axis { grid-column: 1 / -1; }
+
+@container (width < 34rem) {
+  .dg-line-wide { display: none; }
+  .dg-line-narrow { display: block; }
+}
+
+/* ---------- 3. Risk matrix ---------- */
+
+.dg-scroll { overflow-x: auto; }
+.dg-risk { inline-size: 100%; table-layout: fixed; border-collapse: collapse; }
+.dg-risk :is(th, td) { padding: var(--space-8); border: 0; font-size: var(--type-14); line-height: 1.3; text-align: start; vertical-align: top; }
+.dg-risk .dg-axis-x { padding-block: 0 var(--space-4); text-align: center; }
+.dg-risk col.dg-col-head { inline-size: 5.5rem; }
+.dg-risk thead th:not(.dg-axis-x, .dg-corner) { color: var(--text2); font-size: var(--type-13); font-weight: var(--weight-medium); text-align: center; vertical-align: bottom; }
+.dg-risk .dg-corner { text-align: end; vertical-align: bottom; }
+.dg-risk tbody th[scope="row"] { color: var(--text2); font-size: var(--type-13); font-weight: var(--weight-medium); text-align: end; vertical-align: middle; }
+.dg-risk tbody td { block-size: 5.25rem; }
+.dg-level { display: block; font-weight: var(--weight-medium); }
+.dg-risk td[data-level="high"] .dg-level { font-weight: var(--weight-bold); }
+.dg-item {
+  display: block;
+  margin-block-start: var(--space-8);
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--type-13);
+  line-height: 1.25;
+}
+.dg-risk-key { margin: var(--space-12) 0 0; color: var(--text2); font-size: var(--type-13); }
+
+@container (width < 34rem) {
+  /* On a phone the cells are about 60px wide. The columns size to their words, and if the
+     user's own text spacing still makes the grid too wide, it scrolls inside its box. */
+  .dg-risk { table-layout: auto; }
+  .dg-risk :is(th, td) { padding: var(--space-4) 2px; }
+  .dg-risk tbody td { padding-inline: var(--space-4); }
+  .dg-risk col.dg-col-head { inline-size: 3.5rem; }
+  .dg-risk tbody td { block-size: 4.5rem; font-size: var(--type-13); }
+  .dg-item { padding: 2px; }
+}
+/* Phones: the figure gives its side padding to the diagram. */
+@media (width < 36rem) {
+  .dg { padding: var(--space-16); }
+}
+
+/* ======================================================================
+   Option A, outline: pale canvas parts, 1px borderControl lines, one cobalt
+   emphasis per figure (badgeBg, 1px primary, bold badgeText). No 2px
+   primary outlines: that is the focus ring.
+   ====================================================================== */
+
+[data-style="a"] .dg-layers > li { border: 1px solid var(--borderControl); background: var(--canvas); color: var(--text); }
+[data-style="a"] .dg-layers > li[data-most] { border-color: var(--primary); background: var(--badgeBg); color: var(--badgeText); font-weight: var(--weight-bold); }
+
+[data-style="a"] .dg-band { border: 1px solid var(--borderControl); background: var(--canvas); color: var(--text2); }
+[data-style="a"] .dg-band strong { color: var(--text); }
+[data-style="a"] .dg-mark.two { background: var(--text); color: var(--surface); }
+[data-style="a"] .dg-mark.three { border: 2px solid var(--text); background: var(--surface); color: var(--text); }
+[data-style="a"] .dg-edge { border-color: var(--primary); }
+
+[data-style="a"] .dg-risk tbody td { border: 1px solid var(--borderControl); background: var(--surface); }
+[data-style="a"] .dg-risk td[data-level="high"] { background: var(--badgeBg); color: var(--badgeText); }
+[data-style="a"] .dg-item { border: 1px solid var(--borderControl); background: var(--surface); color: var(--text); }
+
+/* ======================================================================
+   Option B, tinted: the site's own tints. Neutral parts use the pressed
+   toggle look (badgeBg, 1px primary). Judgements use the result colours:
+   accept in pass, reject in fail, risk levels in warn and fail.
+   ====================================================================== */
+
+[data-style="b"] .dg-layers > li { border: 1px solid var(--primary); background: var(--badgeBg); color: var(--badgeText); }
+[data-style="b"] .dg-layers > li[data-most] { background: var(--primary); color: var(--surface); font-weight: var(--weight-bold); }
+
+[data-style="b"] .dg-band { border: 1px solid var(--fail); border-block-start-width: 3px; background: var(--failTint); color: var(--fail); }
+[data-style="b"] .dg-band.accept { border-color: var(--pass); background: var(--passTint); color: var(--pass); }
+[data-style="b"] .dg-mark.two { background: var(--text); color: var(--surface); }
+[data-style="b"] .dg-mark.three { border: 2px solid var(--text); background: var(--surface); color: var(--text); }
+[data-style="b"] .dg-edge { border-color: var(--text); }
+
+[data-style="b"] .dg-risk tbody td { border: 1px solid var(--borderControl); background: var(--surface); }
+[data-style="b"] .dg-risk td[data-level="low"] .dg-level { color: var(--text2); }
+[data-style="b"] .dg-risk td[data-level="medium"] { background: var(--warnTint); }
+[data-style="b"] .dg-risk td[data-level="medium"] .dg-level { color: var(--warn); }
+[data-style="b"] .dg-risk td[data-level="high"] { background: var(--failTint); }
+[data-style="b"] .dg-risk td[data-level="high"] .dg-level { color: var(--fail); }
+[data-style="b"] .dg-item { border: 1px solid var(--borderControl); background: var(--surface); color: var(--text); }
+
+/* ======================================================================
+   Option C, drawn: textbook figures. Literal silhouettes cut with
+   clip-path (no SVG), a real axis line with ticks and brackets, a
+   one-hue matrix with axis arrows. Solid cobalt fills, white text.
+   ====================================================================== */
+
+[data-style="c"] .dg-lit {
+  display: grid;
+  align-content: end;
+  gap: 3px;
+  inline-size: 100%;
+  max-inline-size: 16rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+[data-style="c"] .dg-lit > li {
+  --mid: calc((var(--top) + var(--bot)) / 2);
+  display: grid;
+  place-items: center;
+  block-size: var(--h, 3rem);
+  padding: var(--space-4) 0;
+  background: var(--primary);
+  color: var(--surface);
+  font-size: var(--type-13);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  text-align: center;
+  clip-path: polygon(
+    calc(50% - var(--top) / 2) 0, calc(50% + var(--top) / 2) 0,
+    calc(50% + var(--mid) / 2) 50%,
+    calc(50% + var(--bot) / 2) 100%, calc(50% - var(--bot) / 2) 100%,
+    calc(50% - var(--mid) / 2) 50%);
+}
+[data-style="c"] .dg-lit > li > span { max-inline-size: max(2rem, calc(min(var(--top), var(--bot)) - .25rem)); }
+[data-style="c"] .dg-lit > li.tip { place-items: end center; }
+
+[data-style="c"] .dg-line { row-gap: var(--space-8); }
+[data-style="c"] .dg-band {
+  position: relative;
+  margin-inline: 4px;
+  padding: 0 0 var(--space-16);
+  color: var(--text2);
+}
+/* A bracket under the label: a 2px line with short ends pointing at the axis. */
+[data-style="c"] .dg-band::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 8px;
+  border: 2px solid var(--text);
+  border-block-end: 0;
+}
+[data-style="c"] .dg-band strong { color: var(--text); }
+[data-style="c"] .dg-axis { block-size: 2px; background: var(--text); }
+[data-style="c"] .dg-num::before { inline-size: 2px; inset-inline-start: calc(50% - 1px); block-size: 7px; inset-block-start: -3px; background: var(--text); }
+[data-style="c"] .dg-num { padding-block-start: var(--space-12); color: var(--text); }
+[data-style="c"] .dg-mark.two { background: var(--primary); color: var(--surface); }
+[data-style="c"] .dg-mark.three { border: 2px solid var(--primary); background: var(--surface); color: var(--primary); }
+[data-style="c"] .dg-edge { border-inline-start-style: dashed; border-color: var(--primary); }
+
+[data-style="c"] .dg-risk { border-collapse: separate; border-spacing: 4px; }
+[data-style="c"] .dg-risk tbody td { border: 1px solid var(--borderControl); background: var(--surface); }
+[data-style="c"] .dg-risk td[data-level="medium"] { border-color: var(--primary); background: var(--badgeBg); color: var(--badgeText); }
+[data-style="c"] .dg-risk td[data-level="high"] { border-color: var(--primary); background: var(--primary); color: var(--surface); }
+[data-style="c"] .dg-item { border: 1px solid currentColor; }
+[data-style="c"] .dg-risk .dg-axis-x { padding-block: var(--space-4) 0; }
+
+@container (width < 34rem) {
+  [data-style="c"] .dg-risk { border-spacing: 2px; }
+}
+
+/* ======================================================================
+   Option B2, tinted and calm (Kingsley's pick, refined 2026-11-28).
+   Light tints carry the character; lines only where they carry meaning.
+   Component tokens are derived from tokens.css with color-mix.
+   ====================================================================== */
+
+[data-style="b2"] {
+  --dg-part: var(--badgeBg);
+  --dg-part-strong: color-mix(in srgb, var(--primary) 16%, var(--surface));
+  --dg-part-edge: color-mix(in srgb, var(--primary) 66%, var(--surface));
+  --dg-accept-bg: var(--passTint);
+  --dg-accept-text: var(--pass);
+  --dg-reject-bg: var(--failTint);
+  --dg-reject-text: var(--fail);
+  --dg-low: var(--canvas);
+  --dg-medium: color-mix(in srgb, var(--accent) 28%, var(--surface));
+  --dg-high: color-mix(in srgb, var(--fail) 13%, var(--surface));
+  --dg-edge: var(--text2);
+  --dg-mark: var(--text);
+  margin-block: var(--space-32);
+  padding: var(--space-24);
+}
+[data-style="b2"] > figcaption { margin-block-end: var(--space-24); }
+[data-style="b2"] .dg-note { max-inline-size: 60ch; }
+/* Axis names use the site's section-label values exactly. */
+[data-style="b2"] .dg-label { line-height: 1.3; }
+
+/* Test shapes: soft blue bars, one thin edge at 3:1, the widest layer a step stronger and bold. */
+[data-style="b2"] .dg-shapes-row { gap: var(--space-32); }
+[data-style="b2"] .dg-shape > h3 { font-weight: var(--weight-medium); }
+[data-style="b2"] .dg-layers { gap: var(--space-8); }
+[data-style="b2"] .dg-layers > li {
+  min-block-size: 2rem;
+  border: 1px solid var(--dg-part-edge);
+  background: var(--dg-part);
+  color: var(--text);
+  font-weight: var(--weight-regular);
+}
+[data-style="b2"] .dg-layers > li[data-most] { background: var(--dg-part-strong); font-weight: var(--weight-bold); }
+
+/* Number line: two rows only. Tinted bands for the expected result, then the values, with the
+   checked values boxed in place. The boundary lines carry the edges. */
+[data-style="b2"] .dg-legend { gap: var(--space-4) var(--space-24); margin-block-end: var(--space-16); color: var(--text2); }
+[data-style="b2"] .dg-legend .dg-mark.two { background: var(--dg-mark); }
+[data-style="b2"] .dg-legend .dg-mark.three { border: 2px solid var(--dg-mark); background: var(--surface); }
+.dg2-line {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  row-gap: var(--space-8);
+  align-items: center;
+}
+.dg2-band {
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  min-block-size: 2rem;
+  margin-inline: 4px;
+  padding: var(--space-4);
+  font-size: var(--type-13);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+}
+.dg2-band.accept { background: var(--dg-accept-bg); color: var(--dg-accept-text); }
+.dg2-band.reject { background: var(--dg-reject-bg); color: var(--dg-reject-text); }
+.dg2-num {
+  grid-row: 2;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  inline-size: 1.625rem;
+  block-size: 1.625rem;
+  color: var(--text2);
+  font-size: var(--type-13);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.dg2-num.two { background: var(--dg-mark); color: var(--surface); font-weight: var(--weight-bold); }
+.dg2-num.three { border: 2px solid var(--dg-mark); color: var(--text); font-weight: var(--weight-bold); }
+.dg2-line > .dg-edge { grid-row: 1 / 3; border-color: var(--dg-edge); }
+.dg2-narrow { display: none; }
+.dg2-narrow > h3 { margin-block: var(--space-16) var(--space-8); font-size: var(--type-13); font-weight: var(--weight-medium); color: var(--text2); }
+.dg2-narrow > h3:first-child { margin-block-start: 0; }
+@container (width < 34rem) {
+  .dg2-wide { display: none; }
+  .dg2-narrow { display: block; }
+}
+
+/* Risk matrix: no grid lines. Cells are tinted blocks with a small gap; the level word is always
+   written, so the tint never carries the level alone. */
+[data-style="b2"] .dg-risk { border-collapse: separate; border-spacing: var(--space-4); }
+[data-style="b2"] .dg-risk tbody td { border: 0; background: var(--dg-low); color: var(--text); }
+[data-style="b2"] .dg-risk td[data-level="medium"] { background: var(--dg-medium); }
+[data-style="b2"] .dg-risk td[data-level="high"] { background: var(--dg-high); }
+[data-style="b2"] .dg-item { margin-block-start: var(--space-4); padding: 0; border: 0; color: var(--text2); }
+@container (width < 34rem) {
+  [data-style="b2"] .dg-risk { border-spacing: 2px; }
+  [data-style="b2"] .dg-risk col.dg-col-head { inline-size: 3.25rem; }
+  /* The row heads set the first column; the longer "Likelihood" label may reach into the empty
+     space above the first column of cells instead of widening the grid. */
+  [data-style="b2"] .dg-risk .dg-corner { position: relative; }
+  [data-style="b2"] .dg-risk .dg-corner > .dg-label { position: absolute; inset-inline-start: 2px; inset-block-end: var(--space-4); white-space: nowrap; }
+  [data-style="b2"] .dg-item { padding: 0; }
+}
+@media (width < 36rem) {
+  [data-style="b2"] { padding: var(--space-16); }
+  [data-style="b2"] > figcaption { margin-block-end: var(--space-16); }
+}
+
+/* ======================================================================
+   B2, more kinds (2026-11-28): timeline, blocks and a yes/no matrix.
+   Same tokens as the B2 block above. No new colours, line weights or radii.
+   ====================================================================== */
+
+[data-style="b2"] :is(.tl-lane, .bk-panel) > h3 { margin: 0 0 var(--space-8); font-size: var(--type-14); font-weight: var(--weight-medium); }
+[data-style="b2"] :is(ul, ol).dg-plain { margin: 0; padding: 0; list-style: none; }
+
+/* Timeline: rows of bars on one shared time grid. A row has a name, its bars and an optional
+   outcome. A lane groups rows under a heading; a 2px line marks a moment across the lane. */
+.tl { display: grid; gap: var(--space-24); }
+.tl-grid {
+  --tl-name: 9.5rem;
+  display: grid;
+  grid-template-columns: var(--tl-name) var(--tl-cols, repeat(var(--n), minmax(0, 1fr)));
+  row-gap: var(--space-8);
+  align-items: center;
+}
+.tl-name { grid-column: 1; padding-inline-end: var(--space-12); color: var(--text); font-size: var(--type-13); font-weight: var(--weight-medium); line-height: 1.3; }
+.tl-name[data-strong] { font-weight: var(--weight-bold); }
+.tl-name > span { display: block; color: var(--text2); font-weight: var(--weight-regular); }
+.tl-bar { align-self: stretch; min-block-size: 2rem; margin-inline: 2px; border: 1px solid var(--dg-part-edge); background: var(--dg-part); }
+.tl-bar[data-strong] { background: var(--dg-part-strong); }
+.tl-out { padding-inline-start: var(--space-8); color: var(--text2); font-size: var(--type-13); line-height: 1.25; }
+.tl-mark { justify-self: start; padding-inline-start: var(--space-8); color: var(--text2); font-size: var(--type-13); font-weight: var(--weight-medium); line-height: 1.2; white-space: nowrap; }
+.tl-mark[data-side="before"] { justify-self: end; padding-inline: 0 var(--space-8); }
+.tl-head { color: var(--text2); font-size: var(--type-13); font-weight: var(--weight-medium); line-height: 1.2; text-align: center; }
+.tl-grid > .dg-edge { border-color: var(--dg-edge); }
+.tl-axis { justify-self: end; }
+@container (width < 34rem) {
+  .tl-grid { --tl-name: 5.25rem; }
+  .tl-name { padding-inline-end: var(--space-8); }
+}
+
+/* Blocks: boxes whose boundary means something (white, 1px edge), filled parts inside them,
+   and arrows between neighbours. One kind of part per figure may be strong. */
+.bk { display: grid; align-content: start; gap: var(--space-8); }
+.bk-row { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: var(--space-16); }
+.bk-box { display: grid; align-content: start; gap: var(--space-8); padding: var(--space-12); border: 1px solid var(--dg-part-edge); background: var(--surface); }
+.bk-box[data-strong] { background: var(--dg-part-strong); }
+.bk-title { color: var(--text); font-size: var(--type-14); font-weight: var(--weight-medium); line-height: 1.3; }
+.bk-box[data-strong] > .bk-title { font-weight: var(--weight-bold); }
+.bk-part { padding: var(--space-8) var(--space-12); background: var(--dg-part); color: var(--text); font-size: var(--type-13); font-weight: var(--weight-medium); line-height: 1.25; }
+.bk-part[data-strong] { background: var(--dg-part-strong); font-weight: var(--weight-bold); }
+.bk-box[data-strong] .bk-part { background: var(--surface); font-weight: var(--weight-regular); }
+[data-style="b2"] .bk-items.dg-plain { margin-block-start: var(--space-4); color: var(--text2); font-weight: var(--weight-regular); }
+.bk-arrows { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: var(--space-16); justify-items: center; color: var(--text2); font-size: var(--type-16); line-height: 1; }
+.bk-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-32); }
+.bk-panel { display: grid; grid-template-rows: auto 1fr auto; align-content: start; }
+.bk-result { margin: var(--space-16) 0 0; color: var(--text); font-size: var(--type-16); font-weight: var(--weight-bold); line-height: 1.3; }
+@container (width < 34rem) {
+  .bk-pair { grid-template-columns: minmax(0, 1fr); gap: var(--space-24); }
+  .bk-row, .bk-arrows { gap: var(--space-8); }
+  .bk-box { padding: var(--space-8); }
+  .bk-part { padding: var(--space-4); }
+}
+
+/* Yes/no matrix: a real table, a word in every cell. Yes and Can sit on the part tint; Yes is
+   bold. No sits on the plain level fill in secondary text. */
+.yn { inline-size: 100%; table-layout: fixed; border-collapse: separate; border-spacing: var(--space-4); }
+.yn :is(th, td) { padding: var(--space-8); border: 0; font-size: var(--type-14); line-height: 1.3; vertical-align: middle; }
+.yn col.yn-col-head { inline-size: 5.5rem; }
+.yn thead th { color: var(--text2); font-size: var(--type-13); font-weight: var(--weight-medium); text-align: center; vertical-align: bottom; }
+.yn tbody th { color: var(--text); font-weight: var(--weight-medium); text-align: start; }
+.yn tbody td { block-size: 2.75rem; background: var(--dg-low); color: var(--text2); text-align: center; }
+.yn td[data-value="yes"] { background: var(--dg-part); color: var(--text); font-weight: var(--weight-bold); }
+.yn td[data-value="can"] { background: var(--dg-part); color: var(--text); }
+.yn-narrow { display: none; }
+/* Narrow: the doubles become the columns and each question heads its own row of answers. */
+.yn-narrow .yn { table-layout: auto; border-spacing: 2px; }
+.yn-narrow .yn :is(th, td) { padding: var(--space-4) 2px; font-size: var(--type-13); }
+.yn-narrow .yn thead th { color: var(--text); }
+.yn-narrow .yn tbody td { block-size: 2.25rem; }
+.yn-narrow .yn tbody th[scope="rowgroup"] { padding: var(--space-12) 0 var(--space-4); color: var(--text2); text-align: start; }
+.yn-narrow .yn tbody:first-of-type th[scope="rowgroup"] { padding-block-start: var(--space-8); }
+@container (width < 34rem) {
+  .yn-wide { display: none; }
+  .yn-narrow { display: block; }
+}

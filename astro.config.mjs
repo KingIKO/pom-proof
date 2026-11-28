@@ -13,7 +13,8 @@ export default defineConfig({
   devToolbar: { enabled: false },
   integrations: [preact(), sitemap({ filter: (page) => !new URL(page).pathname.startsWith(`${base}/questions/fragments/`) })],
   markdown: {
-    syntaxHighlight: 'shiki',
+    // A ```diagram fence is a Study diagram marker, split out by studyBodyParts; it is never code.
+    syntaxHighlight: { type: 'shiki', excludeLangs: ['diagram'] },
     shikiConfig: { ...shikiConfig, langs: [xpath] },
   },
 });

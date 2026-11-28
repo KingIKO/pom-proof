@@ -1,0 +1,24 @@
+---
+import type { Diagram } from '../../../lib/diagram-schema';
+import { inline } from '../study';
+import LayerStack from './LayerStack.astro';
+import '../../../styles/diagrams.css';
+
+interface Props {
+  diagram: Diagram;
+}
+
+// The figure shell from the diagram spec: the caption first, so a reader knows what to look for,
+// then the description a screen reader needs in place of the picture, then the drawing.
+const { diagram } = Astro.props;
+const captionId = `dg-${diagram.id}`;
+const description = [diagram.description ?? []].flat();
+---
+<figure data-diagram={diagram.type} data-card>
+  <figcaption class="dg-caption" id={captionId}>
+    <span class="dg-title" set:html={inline(diagram.title)} />
+    {diagram.note && <span class="dg-note" set:html={` ${inline(diagram.note)}`} />}
+  </figcaption>
+  {description.map((text) => <p class="visually-hidden" set:html={inline(text)} />)}
+  {diagram.type === 'layer-stack' && <LayerStack diagram={diagram} idPrefix={captionId} />}
+</figure>

@@ -102,6 +102,23 @@
   --rule: 1px solid var(--line);
 }
 
+/* Study diagram parts (.notes/study/diagram-spec.md, B2). Scoped to the figure, so no other
+   surface picks them up. Hue lives in fills; every fill sits behind a written word or a 3:1 line. */
+figure[data-diagram] {
+  --dg-part: var(--badgeBg);
+  --dg-part-strong: color-mix(in srgb, var(--primary) 16%, var(--surface));
+  --dg-part-edge: color-mix(in srgb, var(--primary) 66%, var(--surface));
+  --dg-accept-bg: var(--passTint);
+  --dg-accept-text: var(--pass);
+  --dg-reject-bg: var(--failTint);
+  --dg-reject-text: var(--fail);
+  --dg-low: var(--canvas);
+  --dg-medium: color-mix(in srgb, var(--accent) 28%, var(--surface));
+  --dg-high: color-mix(in srgb, var(--fail) 13%, var(--surface));
+  --dg-edge: var(--text2);
+  --dg-mark: var(--text);
+}
+
 @media (width < 60rem) {
   :root { --gutter: var(--space-24); }
 }

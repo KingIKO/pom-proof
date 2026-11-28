@@ -14,6 +14,33 @@ useWhen:
 avoidWhen:
   - You are adding cases just to meet a target percentage.
 questionTopics: [fundamentals, automation-strategy]
+diagrams:
+  - id: test-shapes
+    type: layer-stack
+    title: Where each shape puts the effort
+    note: Wider bars mean more tests. Widths show emphasis, not measurements.
+    description:
+      - Each list gives a shape's layers from the top of the drawing to the bottom. A wider bar means more tests at that layer.
+      - In the pyramid, Unit is widest, Service is narrower and UI is narrowest.
+      - In the trophy, Integration is widest, then Static, then Unit. End-to-end is narrowest.
+      - In the honeycomb, Integration is widest, then Implementation detail. Integrated is narrowest.
+    shapes:
+      - name: Pyramid
+        layers:
+          - { label: UI, width: 1 }
+          - { label: Service, width: 3 }
+          - { label: Unit, width: 5, widest: true }
+      - name: Trophy
+        layers:
+          - { label: End-to-end, width: 2 }
+          - { label: Integration, width: 5, widest: true }
+          - { label: Unit, width: 3 }
+          - { label: Static, width: 4 }
+      - name: Honeycomb
+        layers:
+          - { label: Integrated, width: 2 }
+          - { label: Integration, width: 5, widest: true }
+          - { label: Implementation detail, width: 3 }
 sources:
   - { label: "ISTQB: Foundation Level syllabus, section 5.1.6", url: "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", type: primary }
   - { label: "Martin Fowler: Test pyramid", url: "https://martinfowler.com/bliki/TestPyramid.html", type: practitioner }
@@ -48,11 +75,15 @@ expertsDisagree:
 ---
 ## What it is
 
-A test shape is a picture of where a team puts its testing effort. The pyramid has a wide unit base and a narrow end-to-end top. End-to-end tests check a whole flow across the product. The trophy and honeycomb both put integration in the widest part, but they draw the boundary around different code.
+A test shape is a picture of where a team puts its testing effort. This page compares three: the pyramid, the trophy and the honeycomb. The trophy and honeycomb both put integration in the widest part, but they draw the boundary around different code.
+
+```diagram
+test-shapes
+```
 
 ## How it works
 
-The original pyramid puts service tests between unit tests and user interface tests. The trophy adds static checks, such as type checking, which inspect code without running the app. The honeycomb focuses on a microservice, a small piece of a larger system that other code can use through an interface.
+The original pyramid names its top layer UI, for tests that drive the product through its user interface. Its service tests work through a layer below the interface, such as an API. In the trophy, the top layer holds end-to-end tests, which check a whole flow across the product. The trophy adds static checks, such as type checking, which inspect code without running the app. The honeycomb focuses on a microservice, a small piece of a larger system that other code can use through an interface.
 
 Google's SMURF checklist asks five questions about a test:
 

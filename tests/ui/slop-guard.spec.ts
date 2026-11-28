@@ -6,13 +6,14 @@ import { discoverQuestions, questionExamples } from '../support/questions';
 import { expandQuestion } from '../support/review';
 import { openWorkspace, resultPanel, submitStructured } from '../support/workspace';
 
-// The redesign plan's slop guard (section 4): bans on decoration, radius by role, one shadow token,
+// The redesign plan's slop guard (section 4), plus the Study diagram spec's clip-path ban: bans on
+// decoration, radius by role, one shadow token,
 // one filled primary per page state, a 2px focus ring at 3:1, the self-hosted Figtree face, and the
 // first item of each list page above the fold at 1440x900. Light theme only.
 
 type Rule =
   | 'gradient' | 'box-shadow' | 'text-shadow' | 'border-radius' | 'backdrop-filter' | 'blur'
-  | 'emoji' | 'em dash' | 'decorative image' | 'filled primary' | 'stuck' | 'focus ring';
+  | 'emoji' | 'em dash' | 'decorative image' | 'filled primary' | 'stuck' | 'focus ring' | 'clip-path';
 type Violation = { rule: Rule; where: string; value: string };
 type FocusState = { label: string; key: string; ring: boolean; problems: Violation[] };
 
@@ -61,9 +62,10 @@ function pageSamples() {
     // The question 2E built the page against; it has every answer section, sources included.
     if (route === 'questions/[topic]/[id]') return { route, urls: ['questions/playwright/independent-checkout-contexts/'], status: 200 };
     if (route === 'tracks/[role]') return { route, urls: tracks.slice(0, 1).map((file) => `tracks/${file.replace(/\.ya?ml$/, '')}/`), status: 200 };
-    // The Study pilot module, and its page with the most parts: two examples and a dispute.
+    // The Study pilot module, and the page with the first concept diagram (plus a dispute and a
+    // What changed box). Examples are scanned by the read-state test below.
     if (route === 'study/[module]') return { route, urls: ['study/framework-design/'], status: 200 };
-    if (route === 'study/[module]/[page]') return { route, urls: ['study/framework-design/page-object-model/'], status: 200 };
+    if (route === 'study/[module]/[page]') return { route, urls: ['study/testing-foundations/test-shapes/'], status: 200 };
     return { route, urls: [], status: 200 };
   });
 }
@@ -247,6 +249,9 @@ function installGuard() {
         if (style.textShadow !== 'none') add('text-shadow', where, style.textShadow);
         if (style.backdropFilter !== 'none') add('backdrop-filter', where, style.backdropFilter);
         if (/blur|drop-shadow/.test(style.filter)) add('blur', where, style.filter);
+        // Clipping cuts shapes out of boxes (diagram spec, Banned). inset(50%) clips a box to nothing:
+        // that is the visually hidden pattern (.visually-hidden, the skip link at rest), so it passes.
+        if (style.clipPath !== 'none' && style.clipPath !== 'inset(50%)') add('clip-path', where, style.clipPath);
         const radius = radiusProblem(element, style, pseudo);
         if (radius) add('border-radius', where, radius);
       }
@@ -665,6 +670,9 @@ test.describe('the guard catches planted slop', () => {
     { rule: 'backdrop-filter', css: 'header { backdrop-filter: blur(4px); }' },
     { rule: 'blur', css: 'main { filter: blur(1px); }' },
     { rule: 'text-shadow', css: 'h1 { text-shadow: 0 1px 2px rgb(0 0 0 / 30%); }' },
+    { rule: 'clip-path', css: 'main { clip-path: inset(0); }' },
+    { rule: 'clip-path', html: '<div style="clip-path: polygon(50% 0, 100% 100%, 0 100%); block-size: 40px">Planted shape</div>' },
+    { rule: 'clip-path', html: '<span class="visually-hidden">Planted hidden text</span>', allowed: true },
     { rule: 'filled primary', html: '<button type="button" class="button primary">Planted one</button><button type="button" class="button primary">Planted two</button>' },
     { rule: 'decorative image', html: '<svg width="8" height="8" aria-hidden="true"></svg>' },
     { rule: 'decorative image', html: '<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">' },
