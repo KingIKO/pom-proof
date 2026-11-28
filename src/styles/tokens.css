@@ -102,7 +102,7 @@
   --rule: 1px solid var(--line);
 }
 
-/* Study diagram parts (.notes/study/diagram-spec.md, B2). Scoped to the figure, so no other
+/* Study diagram parts (docs/design/study-diagrams/spec.md, B2). Scoped to the figure, so no other
    surface picks them up. Hue lives in fills; every fill sits behind a written word or a 3:1 line. */
 figure[data-diagram] {
   --dg-part: var(--badgeBg);

@@ -18,11 +18,11 @@ diagrams:
   - id: test-shapes
     type: layer-stack
     title: Where each shape puts the effort
-    note: Wider bars mean more tests. Widths show emphasis, not measurements.
+    note: Wider bars mean more testing effort. The widths are not measured.
     description:
-      - Each list gives a shape's layers from the top of the drawing to the bottom. A wider bar means more tests at that layer.
+      - Each list gives a shape's layers from the top of the drawing to the bottom. A wider bar means more effort at that layer.
       - In the pyramid, Unit is widest, Service is narrower and UI is narrowest.
-      - In the trophy, Integration is widest, then Static, then Unit. End-to-end is narrowest.
+      - In the trophy, Integration is widest. Unit and Static are narrower, and End-to-end is narrowest.
       - In the honeycomb, Integration is widest, then Implementation detail. Integrated is narrowest.
     shapes:
       - name: Pyramid
@@ -35,14 +35,15 @@ diagrams:
           - { label: End-to-end, width: 2 }
           - { label: Integration, width: 5, widest: true }
           - { label: Unit, width: 3 }
-          - { label: Static, width: 4 }
+          - { label: Static, width: 3 }
       - name: Honeycomb
         layers:
-          - { label: Integrated, width: 2 }
+          - { label: Integrated, width: 1 }
           - { label: Integration, width: 5, widest: true }
           - { label: Implementation detail, width: 3 }
 sources:
   - { label: "ISTQB: Foundation Level syllabus, section 5.1.6", url: "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", type: primary }
+  - { label: "Mike Cohn: The forgotten layer of the test automation pyramid", url: "https://www.mountaingoatsoftware.com/blog/the-forgotten-layer-of-the-test-automation-pyramid", type: primary }
   - { label: "Martin Fowler: Test pyramid", url: "https://martinfowler.com/bliki/TestPyramid.html", type: practitioner }
   - { label: "Google Testing Blog: Just say no to more end-to-end tests", url: "https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html", type: practitioner }
   - { label: "Kent C. Dodds: The testing trophy", url: "https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications", type: practitioner }
@@ -83,7 +84,9 @@ test-shapes
 
 ## How it works
 
-The original pyramid names its top layer UI, for tests that drive the product through its user interface. Its service tests work through a layer below the interface, such as an API. In the trophy, the top layer holds end-to-end tests, which check a whole flow across the product. The trophy adds static checks, such as type checking, which inspect code without running the app. The honeycomb focuses on a microservice, a small piece of a larger system that other code can use through an interface.
+The original pyramid names its top layer UI, for tests that drive the product through its user interface. Its service tests work through a layer below the interface, such as an API. In the trophy, the top layer holds end-to-end tests, which check a whole flow across the product. The trophy adds static checks, such as type checking, which inspect code without running the app.
+
+The honeycomb focuses on a microservice, a small piece of a larger system that other code can use through an interface. Its top layer holds integrated tests, which pass or fail depending on whether another service works. Its bottom layer holds implementation detail tests, which check a complex part of the code on its own.
 
 Google's SMURF checklist asks five questions about a test:
 

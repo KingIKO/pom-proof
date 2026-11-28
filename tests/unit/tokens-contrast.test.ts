@@ -81,11 +81,11 @@ const pairs: Array<{ fg: string; bg: string; min: number }> = [
   { fg: 'warn', bg: 'warnTint', min: text },
   { fg: 'onInkMuted', bg: 'ink', min: text },
   { fg: 'accent', bg: 'ink', min: nonText },
-  // Study diagrams (diagram spec, Contrast): labels in ink on every part fill, secondary text on the
-  // level fills, the accept and reject words on their bands, a white numeral on a filled marker,
-  // and the lines and markers that carry meaning against the card.
+  // Study diagrams (diagram spec, Contrast): labels in ink on every part fill, part items and other
+  // secondary text on the part and level fills, the accept and reject words on their bands, a white
+  // numeral on a filled marker, and the lines and markers that carry meaning against the card.
   ...['dg-part', 'dg-part-strong', 'dg-low', 'dg-medium', 'dg-high'].map((bg) => ({ fg: 'text', bg, min: text })),
-  ...['dg-low', 'dg-medium', 'dg-high'].map((bg) => ({ fg: 'text2', bg, min: text })),
+  ...['dg-part', 'dg-low', 'dg-medium', 'dg-high'].map((bg) => ({ fg: 'text2', bg, min: text })),
   { fg: 'dg-accept-text', bg: 'dg-accept-bg', min: text },
   { fg: 'dg-reject-text', bg: 'dg-reject-bg', min: text },
   { fg: white, bg: 'dg-mark', min: text },
@@ -137,6 +137,7 @@ describe('palette A contrast', () => {
   test.each([
     ['dg-part-edge', 'color-mix(in srgb, var(--primary) 40%, var(--surface))', 'dg-part-edge on surface'],
     ['dg-medium', 'var(--accent)', 'text2 on dg-medium'],
+    ['dg-part', 'var(--text3)', 'text2 on dg-part'],
   ])('a weakened diagram token %s (%s) is reported', (token, value, pair) => {
     const planted = tokensCss.replace(new RegExp(`(--${token}\\s*:\\s*)[^;]+;`), `$1${value};`);
     expect(planted, `${token} was replaced`).not.toBe(tokensCss);

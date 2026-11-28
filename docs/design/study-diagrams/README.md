@@ -44,4 +44,4 @@ Timeline, blocks and yes/no matrix, checked the same day on the three `b2-<kind>
 
 The test-doubles answers, the pytest-xdist session lane in the fixtures figure, the four test-doubles questions and the three tests in the page object figure are placeholders or examples for the writer to source or confirm.
 
-The risk ratings in the matrix (a double charge rated medium likelihood and high impact, the receipt layout medium likelihood and low impact) and the 3 by 3 level mapping are examples. The page writer has to confirm them. The widths of the test shape layers show emphasis, not measured ratios.
+The risk ratings in the matrix (a double charge rated medium likelihood and high impact, the receipt layout medium likelihood and low impact) and the 3 by 3 level mapping are examples. The page writer has to confirm them. The widths of the test shape layers show relative testing effort, as the page's sources describe it, and are not measured.

@@ -98,8 +98,9 @@ The measuring script also flags some pairs as failing that are not real failures
 - Centred bars, top to bottom from broad tests to narrow ones, all three shapes on one width scale (the column, at most 16rem).
 - Bar: `--dg-part` fill, 1px `--dg-part-edge`, 0 radius, at least 32px tall, 4px by 8px padding, label centred.
 - The widest layer of each shape: `--dg-part-strong` and bold. Width already shows it; the bold is the non-colour signal.
-- A bar never gets narrower than its longest word. Keep compound terms whole: write End‑to‑end with non-breaking hyphens (U+2011).
-- Widths show emphasis, not measured data. The caption says so.
+- A bar never gets narrower than its longest word. Compound terms stay whole: the component keeps a hyphenated word such as End-to-end on one line, so the content writes plain hyphens.
+- Widths show relative testing effort and are not measured. The caption says so.
+- Each layer's width comes from what the page's sources say about that layer, never from the mockup's symmetry. Layers the sources do not rank against each other get the same width.
 
 ### Number line
 

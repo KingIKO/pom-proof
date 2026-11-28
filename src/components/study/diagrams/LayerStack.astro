@@ -9,7 +9,9 @@ interface Props {
 }
 
 // One list per shape, its layers top to bottom as drawn, named by the shape's label. Width shows
-// emphasis; the widest layer also says so in words, because bold and width are visual only.
+// testing effort; the widest layer also says so in words, because bold and width are visual only.
+// The shape name is a label, not a paragraph, so a reader's paragraph spacing does not part it
+// from its bars. role="list" keeps the list a list where list-style: none would drop it.
 const { diagram, idPrefix } = Astro.props;
 const label = (text: string) => inline(text)
   .replace(/[^\s<>]*\p{L}-\p{L}[^\s<>]*/gu, (word) => `<span class="dg-word">${word}</span>`);
@@ -17,8 +19,8 @@ const label = (text: string) => inline(text)
 <div class="dg-shapes">
   {diagram.shapes.map((shape, index) => (
     <div class="dg-shape">
-      <p class="dg-shape-name" id={`${idPrefix}-shape-${index + 1}`} set:html={inline(shape.name)} />
-      <ol class="dg-layers" aria-labelledby={`${idPrefix}-shape-${index + 1}`}>
+      <div class="dg-shape-name" id={`${idPrefix}-shape-${index + 1}`} set:html={inline(shape.name)} />
+      <ol class="dg-layers" role="list" aria-labelledby={`${idPrefix}-shape-${index + 1}`}>
         {shape.layers.map(({ label: text, width, widest }) => (
           <li data-width={width} data-widest={widest ? '' : undefined}>
             <span set:html={label(text)} />{widest && <span class="visually-hidden">, widest</span>}

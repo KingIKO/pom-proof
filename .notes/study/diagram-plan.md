@@ -87,11 +87,11 @@ slop-guard:
 - New `clip-path` rule: report any computed `clip-path` other than `none`, allowing `inset(50%)` on a box ≤1px (visually hidden pattern: `tokens.css:215`, `workspace.css:67`, `Base.astro:138`). Plants: `main { clip-path: inset(0) }` fails; a `.visually-hidden` span allowed.
 - Study sample becomes `study/testing-foundations/test-shapes/`; page object keeps its a11y entry.
 
-tokens-contrast: read the `figure[data-diagram]` block. Text pairs 4.5:1: `text` on `dg-part`, `dg-part-strong`, `dg-low`, `dg-medium`, `dg-high`; `text2` on the three level fills; `dg-accept-text` on `dg-accept-bg`, `dg-reject-text` on `dg-reject-bg`; white on `dg-mark`. Graphic 3:1: `dg-part-edge`, `dg-edge`, `dg-mark` on `surface`. Plants: `dg-part-edge` mixed at 40%; `dg-medium` set to full `accent`.
+tokens-contrast: read the `figure[data-diagram]` block. Text pairs 4.5:1: `text` on `dg-part`, `dg-part-strong`, `dg-low`, `dg-medium`, `dg-high`; `text2` on `dg-part` (part items) and the three level fills; `dg-accept-text` on `dg-accept-bg`, `dg-reject-text` on `dg-reject-bg`; white on `dg-mark`. Graphic 3:1: `dg-part-edge`, `dg-edge`, `dg-mark` on `surface`. Plants: `dg-part-edge` mixed at 40%; `dg-medium` set to full `accent`.
 
-study.test.ts `pageProblems`: unique slug ids, ≤2 per page; each id named by exactly one marker, each marker holds one listed id; marker inside one of the four sections, never directly after a heading; title ≤7 words, no full stop, none of "Figure", "Diagram of", "This shows"; note ≤2 sentences; `description` unless matrix. Plants for each; marker adds 0 to `bodyWords`; semicolon in a diagram `description` reported.
+study.test.ts `pageProblems`: unique slug ids, ≤2 per page; each id named by exactly one marker, each marker holds one listed id; marker inside one of the four sections, never directly after a heading; title ≤7 words, no full stop, no leading "Figure 1" label, no "Diagram of" or "This shows"; note ≤2 sentences; `description` unless matrix; no backticks in any diagram text. Plants for each; marker adds 0 to `bodyWords`; semicolon in a diagram `description` reported.
 
-study.spec.ts: one `figure[data-diagram]` per entry, each after a `p` inside `.study-body`; caption matches frontmatter; no `language-diagram` left; at 320 and 360 px no horizontal scroll, no figure part overflows.
+study.spec.ts: one `figure[data-diagram]` per entry, each a direct child of `.study-body` that follows body content other than a heading (the same rule as study.test.ts); caption matches frontmatter; no `language-diagram` left; at 1280, 360 and 320 px no horizontal scroll, no figure part overflows; at 360 and 320 px with 200% text a part may use the card padding but never crosses the card edge, and no bar draws wider than its shape's widest.
 
 a11y.spec.ts: test shapes page at desktop and 320 px.
 
@@ -113,7 +113,7 @@ a11y.spec.ts: test shapes page at desktop and 320 px.
 ## 6. Build order
 
 1. iko-palette (parallel with 2, no repo files): mockups for timeline, blocks, yes/no matrix and page object figure at 1280, 360, 320 px; contrast against spec; SVG question; owner approval.
-2. iko-flow PR A: marker split, schema, shell, layer-stack, tokens, `diagrams.css`, test-shapes data and cuts, all section 4 tests except the SVG allowance. Commit `spec.md` as `.notes/study/diagram-spec.md` (and the design folder), note the SVG exception in `.notes/redesign-plan.md`. Done: four proof steps, `npm run verify`, figure checked at 320 px.
+2. iko-flow PR A: marker split, schema, shell, layer-stack, tokens, `diagrams.css`, test-shapes data and cuts, all section 4 tests except the SVG allowance. Commit the design folder with `spec.md` (`.notes/study/diagram-spec.md` is only a pointer to it, so there is one spec), note the SVG exception in `.notes/redesign-plan.md`. Done: four proof steps, `npm run verify`, figure checked at 320 px.
 3. Fresh iko-flow review + iko-palette check on PR A.
 4. iko-flow PR B (matrix, number-line) and PR C (timeline, blocks; after step 1), parallel.
 5. iko-bedrock per module after its components are on main; iko-proof reviews each against sources. Done: sourcing flags settled with URLs, body 200-450 words, `minutes` recomputed, page checked at 360 px.

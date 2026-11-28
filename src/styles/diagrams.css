@@ -1,4 +1,4 @@
-/* Study concept diagrams (.notes/study/diagram-spec.md, B2 "tinted and calm"). Colours come only
+/* Study concept diagrams (docs/design/study-diagrams/spec.md, B2 "tinted and calm"). Colours come only
    from the --dg-* tokens in tokens.css and the site's text tokens. Parts are square: the figure card
    is the only rounded thing in a diagram. */
 
@@ -65,7 +65,8 @@ figure[data-diagram] {
   line-height: 1.2;
   text-align: center;
 }
-.dg-layers > li[data-width="1"] { --dg-width: .2; }
+/* Width 1 is .3, not .2, so the narrowest bar still reads as a layer rather than a tag. */
+.dg-layers > li[data-width="1"] { --dg-width: .3; }
 .dg-layers > li[data-width="2"] { --dg-width: .4; }
 .dg-layers > li[data-width="3"] { --dg-width: .6; }
 .dg-layers > li[data-width="4"] { --dg-width: .8; }

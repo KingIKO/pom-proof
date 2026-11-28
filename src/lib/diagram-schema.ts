@@ -18,8 +18,9 @@ const base = {
 };
 
 /**
- * Bars stacked top to bottom, one stack per shape, all on one width scale. `width` is emphasis on a
- * 1 to 5 scale, not measured data; `widest` marks the one emphasised layer of a shape.
+ * Bars stacked top to bottom, one stack per shape, all on one width scale. `width` is relative
+ * testing effort on a 1 to 5 scale, taken from the page's sources and never measured; `widest`
+ * marks the one emphasised layer of a shape.
  */
 const layerStack = z.strictObject({
   ...base,

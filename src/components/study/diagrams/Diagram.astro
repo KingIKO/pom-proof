@@ -13,6 +13,12 @@ interface Props {
 const { diagram } = Astro.props;
 const captionId = `dg-${diagram.id}`;
 const description = [diagram.description ?? []].flat();
+
+// One component per kind. A kind the schema adds without a row here fails the type check, and data
+// that reaches this page with an unknown kind fails the build instead of drawing an empty figure.
+const components = { 'layer-stack': LayerStack } satisfies Record<Diagram['type'], unknown>;
+const Kind = (components as Partial<Record<string, typeof LayerStack>>)[diagram.type];
+if (!Kind) throw new Error(`Diagram "${diagram.id}" is a ${String(diagram.type)}, which has no component in Diagram.astro`);
 ---
 <figure data-diagram={diagram.type} data-card>
   <figcaption class="dg-caption" id={captionId}>
@@ -20,5 +26,5 @@ const description = [diagram.description ?? []].flat();
     {diagram.note && <span class="dg-note" set:html={` ${inline(diagram.note)}`} />}
   </figcaption>
   {description.map((text) => <p class="visually-hidden" set:html={inline(text)} />)}
-  {diagram.type === 'layer-stack' && <LayerStack diagram={diagram} idPrefix={captionId} />}
+  <Kind diagram={diagram} idPrefix={captionId} />
 </figure>

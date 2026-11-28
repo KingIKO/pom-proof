@@ -24,9 +24,23 @@ const slug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const pageId = /^[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /** A recap item may share at most this many words in a row with the body. */
 const sharedLimit = 4;
-/** Diagram captions (diagram spec, Captions): a short title that is not a label for the figure itself. */
+/**
+ * Diagram captions (diagram spec, Captions): a short title that is not a label for the figure itself,
+ * such as a leading "Figure 1". The word figure elsewhere in a title is fine.
+ */
 const titleWords = 7;
-const titleLabels = /\b(?:figure|diagram of|this shows)\b/i;
+const titleLabels = /^\s*(?:figure|fig\.)\s*\d+|\b(?:diagram of|this shows)\b/i;
+
+/** Every string a diagram shows or reads out, with where it sits; the id and type are not text. */
+function diagramTexts(value: unknown, at: string): Array<[string, string]> {
+  if (typeof value === 'string') return [[at, value]];
+  if (Array.isArray(value)) return value.flatMap((item, index) => diagramTexts(item, `${at}[${index}]`));
+  if (isRecord(value)) {
+    return Object.entries(value).filter(([key]) => key !== 'id' && key !== 'type')
+      .flatMap(([key, item]) => diagramTexts(item, `${at}.${key}`));
+  }
+  return [];
+}
 
 const isText = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
 const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -89,6 +103,10 @@ function diagramProblems(data: Record<string, unknown>, body: string): string[] 
     const { description } = diagram;
     if (diagram.type !== 'matrix' && !(isText(description) || (textList(description) && description.length > 0))) {
       add(`${at} needs a description that says what position, width or length shows`);
+    }
+    // Backticks would turn part of a bar label or caption into code; diagram text is plain words.
+    for (const [where, text] of diagramTexts(diagram, at)) {
+      if (text.includes('`')) add(`${where} uses backticks; write diagram text as plain words`);
     }
   });
 
@@ -559,6 +577,11 @@ describe('the Study checks catch planted mistakes', () => {
       expect(bodyWords(shapes!.body)).toBe(bodyWords(shapes!.body.replace(marker, '')));
     });
 
+    it('accepts the word figure later in a title', () => {
+      expect(shapes, 'the test shapes page').toBeDefined();
+      expect(pageProblems(plantShapes(withFigure({ title: 'How each shape figures the effort' })), context)).toEqual([]);
+    });
+
     it('accepts a matrix without a description', () => {
       expect(shapes, 'the test shapes page').toBeDefined();
       expect(pageProblems(plantShapes(withFigure({ type: 'matrix', description: undefined })), context)).toEqual([]);
@@ -578,11 +601,14 @@ describe('the Study checks catch planted mistakes', () => {
       ['an id that is not a slug', withFigure({ id: 'Test shapes' }), undefined, 'id "Test shapes" must be lowercase words joined by hyphens'],
       ['an eight-word title', withFigure({ title: 'Where each of the shapes puts the effort' }), undefined, 'title has 8 words; write at most 7'],
       ['a title with a full stop', withFigure({ title: 'Where each shape puts the effort.' }), undefined, 'title ends with a full stop'],
-      ['a title with Figure', withFigure({ title: 'Figure 1: test shapes' }), undefined, 'title uses "Figure"'],
+      ['a title that starts with Figure 1', withFigure({ title: 'Figure 1: test shapes' }), undefined, 'title uses "Figure 1"'],
+      ['a title that starts with Fig. 2', withFigure({ title: 'Fig. 2 the test shapes' }), undefined, 'title uses "Fig. 2"'],
       ['a title with Diagram of', withFigure({ title: 'Diagram of the test shapes' }), undefined, 'title uses "Diagram of"'],
       ['a title with This shows', withFigure({ title: 'This shows the test shapes' }), undefined, 'title uses "This shows"'],
-      ['a three-sentence note', withFigure({ note: 'Wider bars mean more tests. Widths show emphasis. They are not measured.' }), undefined, 'note has 3 sentences; write at most 2'],
+      ['a three-sentence note', withFigure({ note: 'Wider bars mean more testing effort. The widths are not measured. They are a guide.' }), undefined, 'note has 3 sentences; write at most 2'],
       ['a layer stack without a description', withFigure({ description: undefined }), undefined, 'diagrams[0] needs a description'],
+      ['backticks in a title', withFigure({ title: 'Where each `shape` puts the effort' }), undefined, 'diagrams[0].title uses backticks'],
+      ['backticks in a layer label', withFigure({ shapes: [{ name: 'Pyramid', layers: [{ label: '`unit`', width: 5, widest: true }] }] }), undefined, 'diagrams[0].shapes[0].layers[0].label uses backticks'],
     ])('reports %s', (_name, frontmatter, body, message) => {
       expect(shapes, 'the test shapes page').toBeDefined();
       expect(pageProblems(plantShapes(frontmatter as Record<string, unknown>, body), context).join('\n')).toContain(message);
@@ -591,7 +617,7 @@ describe('the Study checks catch planted mistakes', () => {
     it('reports a semicolon in a diagram description', () => {
       expect(shapes, 'the test shapes page').toBeDefined();
       const source = readFileSync(join(root, shapes!.file), 'utf8');
-      const planted = source.replace('A wider bar means more tests at that layer.', 'A wider bar means more tests; widths are not measured.');
+      const planted = source.replace('A wider bar means more effort at that layer.', 'A wider bar means more effort; widths are not measured.');
       expect(planted, 'the description sentence was replaced').not.toBe(source);
       expect(scanProse(shapes!.file, source).findings).toEqual([]);
       expect(scanProse(shapes!.file, planted).findings.map(({ rule }) => rule)).toContain('semicolon');
