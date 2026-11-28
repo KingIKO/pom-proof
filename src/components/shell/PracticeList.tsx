@@ -3,7 +3,7 @@ import type { CatalogProblem } from '../../lib/catalog';
 import type { ProgressAttempt } from '../../lib/contracts';
 import { difficultyLabel, kindLabel, problemStatus, statusLabel, topicLabel } from '../../lib/labels';
 import {
-  latestPracticeContext, nearestShown, practiceContextEvent, practiceLabel, practiceRowId, readPracticeContext,
+  allProblemsParam, latestPracticeContext, nearestShown, practiceContextEvent, practiceLabel, practiceRowId, readPracticeContext,
   writePracticeContext, type PracticeContext,
 } from '../../lib/practice-context';
 import {
@@ -74,10 +74,13 @@ function filterQuery(filters: Filters) {
   return setFilterParams(new URLSearchParams(), filters).toString();
 }
 
-/** Whether a query names any filter, even one whose values the list drops. */
-function hasFilterParams(search: string) {
+/**
+ * Whether a query names the list's view: any filter, even one whose values the list drops, or
+ * `view=all` for every problem. Only a query that names neither is a bare visit.
+ */
+function namesView(search: string) {
   const params = new URLSearchParams(search);
-  return ['q', ...facets].some((key) => params.has(key));
+  return ['q', ...facets].some((key) => params.has(key)) || params.get(allProblemsParam.key) === allProblemsParam.value;
 }
 
 const filtersOff = (filters: Filters) => !filters.q.trim() && facets.every((key) => !filters[key].length);
@@ -271,7 +274,7 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
         const active = stored ? findPracticeSet(stored, stored.activeId) : undefined;
         let selection: string | null = null;
         let state = stored;
-        if (active && !hasFilterParams(window.location.search)) {
+        if (active && !namesView(window.location.search)) {
           restored = readFilters(topics, active.query);
           const location = new URL(window.location.href);
           setFilterParams(location.searchParams, restored);
@@ -316,10 +319,16 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
     };
   }, []);
 
+  /**
+   * Shows the filters the learner chose and puts them in the URL. With none on, the URL says
+   * `view=all`, so a reload shows every problem rather than the active set.
+   */
   function applyFilters(next: Filters) {
     setFilters(next);
     const location = new URL(window.location.href);
     setFilterParams(location.searchParams, next);
+    if (filtersOff(next)) location.searchParams.set(allProblemsParam.key, allProblemsParam.value);
+    else location.searchParams.delete(allProblemsParam.key);
     window.history.replaceState(window.history.state, '', location);
   }
 

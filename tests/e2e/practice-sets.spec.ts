@@ -173,7 +173,7 @@ test('changed filters offer Update set and Save as new set, and names are checke
 test('filters matching no set show as unsaved, and matching filters choose their set', async ({ page }) => {
   const name = await savePairAsSet(page);
   await picker(page).selectOption({ label: 'All problems' });
-  await expect(page).toHaveURL(prefix);
+  await expect(page).toHaveURL(`${prefix}?view=all`);
   await expect(rows(page)).toHaveCount(catalog.length);
   await expect.poll(async () => (await stored(page)).activeId).toBeNull();
 
@@ -300,6 +300,54 @@ test('a set stays chosen while every filter is cleared, until Clear filters or A
   await expect(rows(page)).toHaveCount(catalog.length);
   await expect(picker(page).locator('option:checked')).toHaveText('All problems');
   await expect.poll(async () => (await stored(page)).activeId).toBeNull();
+});
+
+test('Back to a list whose last filter was unchecked shows every problem, not the set', async ({ page }) => {
+  const errors = watchErrors(page);
+  await openList(page);
+  await saveOneTopic(page, pair[0], 'One topic');
+  // A bare visit selects the set; unchecking its only box shows every problem and keeps it chosen.
+  await openList(page);
+  await expect(picker(page).locator('option:checked')).toHaveText('One topic');
+  await topicBox(page, pair[0]).uncheck();
+  await expect(page).toHaveURL(`${prefix}?view=all`);
+  await expect(rows(page)).toHaveCount(catalog.length);
+  const setId = (await stored(page)).activeId;
+  expect(setId).not.toBeNull();
+
+  const problem = catalog[1];
+  const rowId = `row-${problem.kind}-${problem.slug}`;
+  await rows(page).nth(1).getByRole('link').click();
+  await expect(heading(page, problem)).toBeVisible();
+  await expect(position(page)).toHaveText(`All problems: 2 of ${catalog.length}`);
+  await expect(page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Practice', exact: true }))
+    .toHaveAttribute('href', `${prefix}?view=all#${rowId}`);
+  await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Practice', exact: true }))
+    .toHaveAttribute('href', `${prefix}?view=all`);
+  await neighbours(page).locator('a.practice-return').click();
+
+  // The list the problem was opened from: every problem, its row marked, the set not applied.
+  await expect(page).toHaveURL(`${prefix}?view=all#${rowId}`);
+  await expect(rows(page)).toHaveCount(catalog.length);
+  await expect(filters(page).getByRole('checkbox', { checked: true })).toHaveCount(0);
+  await expect(page.locator('.title-band .page-meta')).toHaveText(`${catalog.length} problems`);
+  await expect(page.locator(`tr#${rowId}`)).toHaveAttribute('data-current', '');
+  await expect(page.locator(`tr#${rowId}`)).toBeInViewport();
+  await expect(page.locator(`tr#${rowId}`).getByRole('link')).toBeFocused();
+  await expect(picker(page).locator('option:checked')).toHaveText('All problems');
+  expect((await stored(page)).activeId, 'the active set is left as it was').toBe(setId);
+
+  // Any filter drops the marker, and none brings it back.
+  await topicBox(page, third).check();
+  await expect(page).toHaveURL(`${prefix}?topic=${third}#${rowId}`);
+  await topicBox(page, third).uncheck();
+  await expect(page).toHaveURL(`${prefix}?view=all#${rowId}`);
+
+  // The brand link is a bare visit, so it still applies the active set.
+  await page.getByRole('banner').getByRole('link', { name: 'POM Proof', exact: true }).click();
+  await expect(page).toHaveURL(`${prefix}?topic=${pair[0]}`);
+  await expect(picker(page).locator('option:checked')).toHaveText('One topic');
+  expect(errors, 'page errors').toEqual([]);
 });
 
 test('a set whose topics left Practice keeps the plain label and can be deleted', async ({ page }) => {
