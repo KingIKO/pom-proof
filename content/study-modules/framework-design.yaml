@@ -1,0 +1,4 @@
+title: Framework design
+stage: B
+order: 4
+summary: How to organise a test suite. It covers page objects and their alternatives, fixtures, test data, parameterised and data-driven tests, configuration and BDD.

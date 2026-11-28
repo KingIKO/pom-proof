@@ -1,0 +1,1003 @@
+{
+  "meta": {
+    "title": "POM Proof Study section topic map",
+    "researched": "2026-11-27",
+    "source_rule": "Every URL in a sources[] array was fetched during this research and returned HTTP 200 (all 135 unique URLs re-checked on 2026-11-27; redirecting URLs were replaced with their final address). type is 'primary' (official docs, specs, standards, syllabus, or the originator's own description of a pattern) or 'practitioner' (Fowler, Google, Kent C. Dodds and similar).",
+    "istqb_note": "The ISTQB CTFL v4.0.1 syllabus is a PDF (dated 2024-09-15). It was downloaded and read with pdftotext; section numbers in notes refer to it.",
+    "stages": [
+      {"stage": "A. Foundations", "modules": ["m1", "m2"]},
+      {"stage": "B. Automation craft", "modules": ["m3", "m4"]},
+      {"stage": "C. Tools", "modules": ["m5", "m6", "m7"]},
+      {"stage": "D. Running at scale and beyond", "modules": ["m8", "m9", "m10"]}
+    ],
+    "levels": "level 'core' marks the 31 pages to launch first; 'extended' pages can follow. The core/extended split is the researcher's judgement, not taken from a source.",
+    "counts": {"modules": 10, "concepts": 64, "core": 31}
+  },
+  "modules": [
+    {"id": "m1", "slug": "testing-foundations", "order": 1, "module": "Testing foundations", "summary": "Why testing exists, the vocabulary interviewers use, and how to decide where effort goes.", "prerequisites": []},
+    {"id": "m2", "slug": "test-design", "order": 2, "module": "Test design and manual testing", "summary": "Techniques for choosing test cases, exploring a product and reporting defects.", "prerequisites": ["m1"]},
+    {"id": "m3", "slug": "automation-fundamentals", "order": 3, "module": "Automation fundamentals", "summary": "Tool-neutral rules that make automated tests trustworthy: structure, isolation, locators, waits, assertions, flakiness, test doubles.", "prerequisites": ["m1"]},
+    {"id": "m4", "slug": "framework-design", "order": 4, "module": "Framework design", "summary": "How a suite is organised: page objects and their alternatives, fixtures, test data, parameters, configuration, BDD.", "prerequisites": ["m3"]},
+    {"id": "m5", "slug": "playwright", "order": 5, "module": "Playwright with TypeScript", "summary": "The same ideas in Playwright Test: locators, assertions, fixtures, auth state, network, projects, traces, snapshots.", "prerequisites": ["m3", "m4"]},
+    {"id": "m6", "slug": "selenium", "order": 6, "module": "Selenium 4 with Java and Python", "summary": "WebDriver and BiDi, Selenium locators and waits, page objects, Grid, and the pytest and JUnit runner features.", "prerequisites": ["m3", "m4"]},
+    {"id": "m7", "slug": "api-and-data", "order": 7, "module": "API, contract and database testing", "summary": "HTTP rules, API test design, REST Assured and Playwright requests, schemas, contracts, service doubles, SQL.", "prerequisites": ["m1", "m3"]},
+    {"id": "m8", "slug": "ci-and-scale", "order": 8, "module": "CI and running at scale", "summary": "Running suites in a pipeline: parallelism, sharding, retry policy, reports, hermetic environments.", "prerequisites": ["m3", "m5 or m6"]},
+    {"id": "m9", "slug": "accessibility-performance-security", "order": 9, "module": "Accessibility, performance and security", "summary": "Non-functional testing a QA or SDET is expected to speak to.", "prerequisites": ["m1"]},
+    {"id": "m10", "slug": "ai-assisted-testing", "order": 10, "module": "AI-assisted testing", "summary": "Test agents, browser control over MCP, reviewing generated tests, and testing LLM features.", "prerequisites": ["m5"]}
+  ],
+  "concepts": [
+    {
+      "id": "m1-c1", "slug": "why-we-test", "module": "Testing foundations", "order": 1, "level": "core",
+      "concept": "Why we test: objectives, defects and the seven principles",
+      "definition": "Testing evaluates a product to find defects, reduce risk and give evidence about quality; it cannot show that no defects remain.",
+      "practice": "Use the ISTQB vocabulary precisely: an error (human mistake) produces a defect, which can cause a failure, and a root cause sits behind the error. Know the seven principles, including 'exhaustive testing is impossible', early testing, 'tests wear out' and the absence-of-defects fallacy. The syllabus separates testing from debugging and from quality assurance (sections 1.1 to 1.3).",
+      "tradeoffs": {"use_when": "You need shared vocabulary for interviews and for arguing where test effort goes.", "avoid_when": "Reciting definitions with no example. Each principle should come with one case from your own work."},
+      "prerequisites": [],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Sections 1.1 to 1.3"},
+        {"url": "https://istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/", "type": "primary", "note": "Syllabus overview and chapter list"}
+      ]
+    },
+    {
+      "id": "m1-c2", "slug": "test-levels-and-types", "module": "Testing foundations", "order": 2, "level": "core",
+      "concept": "Test levels, test types and test sizes",
+      "definition": "Levels group tests by how much of the system is integrated; types group them by objective; sizes group them by the resources a test may use.",
+      "practice": "ISTQB v4.0.1 names five levels (component, component integration, system, system integration, acceptance) and four types (functional, non-functional, black-box, white-box). Google classifies by size instead: small tests have no network or database, medium tests stay on localhost, large tests may use anything. Fowler adds that 'unit' is ambiguous (sociable or solitary) and 'integration' is ambiguous (narrow or broad). Say which meaning you intend.",
+      "tradeoffs": {"use_when": "Planning a suite or answering 'what is the difference between X and Y tests'.", "avoid_when": "Arguing about labels. Teams define 'unit' and 'integration' differently, so state the scope and the dependencies the test touches."},
+      "prerequisites": ["m1-c1"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 2.2"},
+        {"url": "https://testing.googleblog.com/2010/12/test-sizes.html", "type": "practitioner", "note": "Small, medium, large by resource use"},
+        {"url": "https://abseil.io/resources/swe-book/html/ch11.html", "type": "practitioner", "note": "Test size and scope"},
+        {"url": "https://martinfowler.com/bliki/UnitTest.html", "type": "practitioner", "note": "Sociable and solitary unit tests"},
+        {"url": "https://martinfowler.com/bliki/IntegrationTest.html", "type": "practitioner", "note": "Narrow and broad integration tests"}
+      ]
+    },
+    {
+      "id": "m1-c3", "slug": "test-shapes", "module": "Testing foundations", "order": 3, "level": "core",
+      "concept": "Test shapes: pyramid, trophy and honeycomb",
+      "definition": "A test shape is a picture of how many tests to write at each scope.",
+      "practice": "Know the three shapes and who argues for each, then reason from trade-offs. The pyramid (many small tests, few through the UI) is in the ISTQB syllabus and in Google's 2015 '70/20/10' first guess. The trophy and honeycomb put most effort into integration tests. Fowler's 2021 article says much of the disagreement comes from different meanings of 'unit'. Google's 2024 SMURF post replaces the shape with five trade-offs to weigh per test: speed, maintainability, utilization, reliability, fidelity.",
+      "tradeoffs": {"use_when": "Deciding what scope a new test should have, or explaining a suite's balance.", "avoid_when": "Treating any ratio as a rule. Google's own post says the exact mix differs per team."},
+      "prerequisites": ["m1-c2"],
+      "changed": "Pyramid: Mike Cohn, 2009 book, described by Fowler in 2012. Trophy: Kent C. Dodds tweet 6 Feb 2018, article 3 June 2021. Honeycomb: Spotify, January 2018. Fowler's reconciliation: 2 June 2021. Google SMURF: 15 October 2024.",
+      "disputed": "d4",
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 5.1.6 Test Pyramid, 5.1.7 Testing Quadrants"},
+        {"url": "https://martinfowler.com/bliki/TestPyramid.html", "type": "practitioner"},
+        {"url": "https://martinfowler.com/articles/practical-test-pyramid.html", "type": "practitioner", "note": "26 February 2018; calls the pyramid 'overly simplistic' but a good rule of thumb"},
+        {"url": "https://martinfowler.com/articles/2021-test-shapes.html", "type": "practitioner"},
+        {"url": "https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications", "type": "practitioner"},
+        {"url": "https://kentcdodds.com/blog/write-tests", "type": "practitioner", "note": "'Write tests. Not too many. Mostly integration.'"},
+        {"url": "https://engineering.atspotify.com/2018/01/testing-of-microservices", "type": "practitioner", "note": "Testing honeycomb"},
+        {"url": "https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html", "type": "practitioner", "note": "70/20/10 first guess"},
+        {"url": "https://testing.googleblog.com/2024/10/smurf-beyond-test-pyramid.html", "type": "practitioner"}
+      ]
+    },
+    {
+      "id": "m1-c4", "slug": "risk-based-testing", "module": "Testing foundations", "order": 4, "level": "core",
+      "concept": "Risk-based testing and prioritisation",
+      "definition": "Risk-based testing orders and sizes test work by the likelihood and impact of what could go wrong.",
+      "practice": "Separate product risks from project risks, rate each by likelihood and impact, and let the result decide depth and order. ISTQB lists risk-based, coverage-based and requirements-based prioritisation; risk-based runs the tests covering the most important risks first. Google's 'Beyonce rule' adds a team habit: if you want a behaviour kept, put a test on it.",
+      "tradeoffs": {"use_when": "Time is short, a release is close, or you must explain why something was not tested.", "avoid_when": "Using a risk rating as cover for skipping tests nobody assessed. An unrated area is unknown, not low risk."},
+      "prerequisites": ["m1-c1"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Sections 5.1.5 and 5.2"},
+        {"url": "https://abseil.io/resources/swe-book/html/ch11.html", "type": "practitioner", "note": "The Beyonce Rule"}
+      ]
+    },
+    {
+      "id": "m1-c5", "slug": "shift-left-and-reviews", "module": "Testing foundations", "order": 5, "level": "extended",
+      "concept": "Shift left, static testing and reviews",
+      "definition": "Shift left means testing earlier in the lifecycle; static testing finds defects by examining work products without running them.",
+      "practice": "Review requirements and acceptance criteria before code exists, run static analysis and linters in the pipeline, and keep later testing. ISTQB states shift left 'does not mean that testing later in the SDLC should be neglected'. Know the review types from informal review to inspection. Playwright's own best practices recommend a lint rule (no-floating-promises) as a static check on test code.",
+      "tradeoffs": {"use_when": "Defects are being found late, or requirements are ambiguous.", "avoid_when": "Dropping system and acceptance testing because early checks exist."},
+      "prerequisites": ["m1-c1"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 2.1.5 and chapter 3"},
+        {"url": "https://playwright.dev/docs/best-practices", "type": "primary", "note": "Lint your tests"},
+        {"url": "https://web.dev/learn/testing", "type": "practitioner", "note": "Course includes a static analysis lesson"}
+      ]
+    },
+    {
+      "id": "m1-c6", "slug": "coverage", "module": "Testing foundations", "order": 6, "level": "extended",
+      "concept": "Coverage and what it does not tell you",
+      "definition": "Coverage measures how much of something (statements, branches, requirements) the tests exercised.",
+      "practice": "Use coverage to find untested code, not as a score for test quality. ISTQB defines statement and branch coverage; Fowler says coverage 'is a useful tool for finding untested parts of a codebase' and 'of little use as a numeric statement of how good your tests are'.",
+      "tradeoffs": {"use_when": "Looking for gaps, or agreeing a floor for new code.", "avoid_when": "Setting a high percentage as the goal. It invites tests that execute code without checking behaviour."},
+      "prerequisites": ["m1-c2"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 4.3"},
+        {"url": "https://martinfowler.com/bliki/TestCoverage.html", "type": "practitioner"}
+      ]
+    },
+
+    {
+      "id": "m2-c1", "slug": "equivalence-and-boundaries", "module": "Test design and manual testing", "order": 1, "level": "core",
+      "concept": "Equivalence partitioning and boundary value analysis",
+      "definition": "Equivalence partitioning groups inputs the system should treat the same; boundary value analysis tests the edges of those groups.",
+      "practice": "Pick one value per partition, valid and invalid, then add boundary values. The syllabus describes 2-value BVA (the boundary and its nearest neighbour in the adjacent partition) and a stricter 3-value form. State which one you applied.",
+      "tradeoffs": {"use_when": "Inputs are ranges, sizes, dates, counts or enumerations.", "avoid_when": "The behaviour depends on combinations of conditions or on history. Use decision tables or state transition testing there."},
+      "prerequisites": ["m1-c1"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Sections 4.2.1 and 4.2.2"}
+      ]
+    },
+    {
+      "id": "m2-c2", "slug": "decision-tables-and-state-transitions", "module": "Test design and manual testing", "order": 2, "level": "extended",
+      "concept": "Decision tables and state transition testing",
+      "definition": "Decision tables cover combinations of conditions and their outcomes; state transition testing covers how a system moves between states.",
+      "practice": "Use a decision table when rules combine (discounts, permissions, eligibility) and a state model when order matters (login lockout, order status, checkout). Both are black-box techniques in the syllabus, each with its own coverage measure.",
+      "tradeoffs": {"use_when": "Business rules with several conditions, or flows with states and events.", "avoid_when": "Single independent inputs, where partitions and boundaries are cheaper."},
+      "prerequisites": ["m2-c1"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Sections 4.2.3 and 4.2.4"}
+      ]
+    },
+    {
+      "id": "m2-c3", "slug": "exploratory-testing", "module": "Test design and manual testing", "order": 3, "level": "core",
+      "concept": "Exploratory testing and charters",
+      "definition": "In exploratory testing, tests are designed, run and evaluated at the same time while the tester learns the product.",
+      "practice": "Run it in time-boxed sessions guided by a charter, and write down what was covered and found. ISTQB describes session-based testing with a test charter; Fowler contrasts it with scripted testing, where each step and expected result is written in advance. Use both: scripted checks suit automation, exploration finds what nobody predicted.",
+      "tradeoffs": {"use_when": "New features, weak specifications, or after automation is green and you want unknown problems.", "avoid_when": "You need repeatable regression evidence. Exploration does not replace it."},
+      "prerequisites": ["m1-c1"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 4.4.2"},
+        {"url": "https://martinfowler.com/bliki/ExploratoryTesting.html", "type": "practitioner"}
+      ]
+    },
+    {
+      "id": "m2-c4", "slug": "acceptance-criteria-and-atdd", "module": "Test design and manual testing", "order": 4, "level": "extended",
+      "concept": "User stories, acceptance criteria and ATDD",
+      "definition": "Acceptance criteria are the conditions a story must meet to be accepted; ATDD writes the tests from them before the code.",
+      "practice": "Write criteria with the business, developer and tester together, in scenario form (Given/When/Then) or as a rule list, and derive tests before implementation. This is the collaboration that BDD tools assume.",
+      "tradeoffs": {"use_when": "Stories are ambiguous or rework is common.", "avoid_when": "One person writes the criteria alone after the code is done. The value is in the conversation."},
+      "prerequisites": ["m1-c5"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 4.5"},
+        {"url": "https://cucumber.io/docs/bdd/", "type": "primary", "note": "Discovery, Formulation, Automation"}
+      ]
+    },
+    {
+      "id": "m2-c5", "slug": "defect-reports", "module": "Test design and manual testing", "order": 5, "level": "core",
+      "concept": "Defect reports",
+      "definition": "A defect report gives the people fixing a problem enough information to reproduce and resolve it.",
+      "practice": "Include an identifier, a short title, when and by whom it was seen, the test object and environment, steps to reproduce, expected and actual results, severity and priority. The syllabus lists these fields and the three purposes of a report: enable the fix, track quality, improve the process.",
+      "tradeoffs": {"use_when": "Every defect you log, and every 'how do you write a bug report' interview question.", "avoid_when": "Filing without reproduction steps or evidence. Attach a trace, screenshot or log."},
+      "prerequisites": ["m1-c1"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 5.5"}
+      ]
+    },
+    {
+      "id": "m2-c6", "slug": "confirmation-and-regression", "module": "Test design and manual testing", "order": 6, "level": "extended",
+      "concept": "Confirmation and regression testing",
+      "definition": "Confirmation testing checks that a defect is fixed; regression testing checks that a change broke nothing else.",
+      "practice": "Rerun the failing test for the fix, then run regression tests sized by the risk of the change. Regression suites are the first candidates for automation because they repeat.",
+      "tradeoffs": {"use_when": "After every fix and every change.", "avoid_when": "Rerunning everything blindly on a large suite. Choose by impact and risk."},
+      "prerequisites": ["m1-c4"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 2.2.3"}
+      ]
+    },
+    {
+      "id": "m2-c7", "slug": "test-plans-and-exit-criteria", "module": "Test design and manual testing", "order": 7, "level": "extended",
+      "concept": "Test plans, entry criteria and exit criteria",
+      "definition": "A test plan states scope, approach, risks and schedule; entry and exit criteria say when testing can start and when it is done.",
+      "practice": "Keep the plan short and tied to risk. Agree exit criteria the team can measure. In agile teams the tester contributes to iteration and release planning instead of writing a long document.",
+      "tradeoffs": {"use_when": "Release planning, regulated work, or a new team that needs an agreed approach.", "avoid_when": "Writing a heavy plan nobody reads for a small change."},
+      "prerequisites": ["m1-c4"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 5.1"}
+      ]
+    },
+
+    {
+      "id": "m3-c1", "slug": "what-to-automate", "module": "Automation fundamentals", "order": 1, "level": "core",
+      "concept": "What to automate and what to leave alone",
+      "definition": "Automation pays off where a check repeats, is stable and has a clear expected result.",
+      "practice": "Automate regression checks and keep most of them below the UI. ISTQB lists the risks: unrealistic expectations, underestimated maintenance, using a tool where manual testing fits better, and relying on the tool instead of critical thinking. Selenium's docs list things not to automate through the browser: captchas, file downloads, HTTP response codes, third-party logins, two-factor auth, performance testing, link spidering.",
+      "tradeoffs": {"use_when": "The check runs often and the feature is stable enough to keep the script alive.", "avoid_when": "One-off checks, features still changing daily, or anything that needs human judgement such as look and feel."},
+      "prerequisites": ["m1-c3"],
+      "sources": [
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 6.2"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/discouraged/", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/testing_types/", "type": "primary"},
+        {"url": "https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html", "type": "practitioner"}
+      ]
+    },
+    {
+      "id": "m3-c2", "slug": "test-anatomy", "module": "Automation fundamentals", "order": 2, "level": "core",
+      "concept": "Test anatomy: Arrange-Act-Assert and Given-When-Then",
+      "definition": "A test has distinct parts in order: set up, do one thing, check the result, clean up.",
+      "practice": "Write each test as three visible blocks. Bill Wake named Arrange-Act-Assert in 2001; Meszaros calls it the Four Phase Test (setup, exercise, verify, teardown); Given-When-Then is the same structure from BDD. Google's guidance adds: test behaviours, not methods; name tests after the behaviour; keep logic out of tests.",
+      "tradeoffs": {"use_when": "Every automated test.", "avoid_when": "One test that acts and asserts many times in a row for unrelated behaviours. Split it unless the steps are one user journey."},
+      "prerequisites": [],
+      "sources": [
+        {"url": "https://xp123.com/3a-arrange-act-assert/", "type": "primary", "note": "Originator's description"},
+        {"url": "http://xunitpatterns.com/Four%20Phase%20Test.html", "type": "primary", "note": "Originator's description"},
+        {"url": "https://martinfowler.com/bliki/GivenWhenThen.html", "type": "practitioner"},
+        {"url": "https://abseil.io/resources/swe-book/html/ch12.html", "type": "practitioner"}
+      ]
+    },
+    {
+      "id": "m3-c3", "slug": "test-independence", "module": "Automation fundamentals", "order": 3, "level": "core",
+      "concept": "Test independence and isolation",
+      "definition": "An independent test passes or fails on its own, in any order, alone or in parallel.",
+      "practice": "Give every test its own state. Playwright runs each test in a fresh BrowserContext. Selenium's docs say to start a fresh browser per test, avoid sharing state, and never rely on test order. Cypress says to test specs in isolation and set state programmatically.",
+      "tradeoffs": {"use_when": "Always. Parallel runs, retries and sharding all depend on it.", "avoid_when": "Chaining tests so one creates data for the next. If setup is slow, move it to a fixture or an API call, not to another test."},
+      "prerequisites": ["m3-c2"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/browser-contexts", "type": "primary"},
+        {"url": "https://playwright.dev/docs/best-practices", "type": "primary", "note": "Make tests as isolated as possible"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/avoid_sharing_state/", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/fresh_browser_per_test/", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/discouraged/test_dependency/", "type": "primary"},
+        {"url": "https://docs.cypress.io/app/core-concepts/best-practices", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m3-c4", "slug": "locator-strategy", "module": "Automation fundamentals", "order": 4, "level": "core",
+      "concept": "Locator strategy",
+      "definition": "A locator is how a test finds an element; the strategy decides what the test is coupled to.",
+      "practice": "Prefer locators a user or assistive technology would recognise, and fall back to an explicit test id. Playwright recommends 'user-facing attributes and explicit contracts' such as getByRole. Testing Library ranks getByRole first and getByTestId last. Selenium's guidance prefers a unique id, then CSS, with XPath last. Cypress recommends dedicated data-* attributes. All four agree on avoiding selectors tied to styling or DOM structure.",
+      "tradeoffs": {"use_when": "Role and label locators when the app has accessible markup. Test ids when text changes often, is translated, or the element has no accessible name.", "avoid_when": "Long CSS or XPath chains, class names used for styling, and index-based selectors."},
+      "prerequisites": ["m3-c2"],
+      "changed": "Playwright added getByRole, getByText, getByLabel, getByTestId and related locators in v1.27, released 7 October 2022. Its test generator now picks role, text and test id locators first.",
+      "disputed": "d5",
+      "sources": [
+        {"url": "https://playwright.dev/docs/locators", "type": "primary"},
+        {"url": "https://playwright.dev/docs/best-practices", "type": "primary"},
+        {"url": "https://testing-library.com/docs/queries/about/", "type": "primary", "note": "Query priority"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/locators/", "type": "primary"},
+        {"url": "https://docs.cypress.io/app/core-concepts/best-practices", "type": "primary", "note": "data-* attributes"},
+        {"url": "https://playwright.dev/docs/release-notes", "type": "primary", "note": "Version 1.27"}
+      ]
+    },
+    {
+      "id": "m3-c5", "slug": "waiting-and-synchronisation", "module": "Automation fundamentals", "order": 5, "level": "core",
+      "concept": "Waiting and synchronisation",
+      "definition": "Synchronisation makes the test act only when the application is ready.",
+      "practice": "Wait for a condition, never for a fixed time. Playwright runs actionability checks (visible, stable, enabled, receives events) before each action. Selenium offers implicit and explicit waits and warns 'Do not mix implicit and explicit waits'. Cypress lists arbitrary cy.wait(Number) as an anti-pattern.",
+      "tradeoffs": {"use_when": "Explicit condition waits whenever the tool does not wait for you.", "avoid_when": "Sleep calls, and raising global timeouts to hide a slow or racing page."},
+      "prerequisites": ["m3-c4"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/actionability", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/webdriver/waits/", "type": "primary"},
+        {"url": "https://docs.cypress.io/app/core-concepts/best-practices", "type": "primary", "note": "Unnecessary waiting"}
+      ]
+    },
+    {
+      "id": "m3-c6", "slug": "assertions-that-retry", "module": "Automation fundamentals", "order": 6, "level": "core",
+      "concept": "Assertions that retry and fail clearly",
+      "definition": "An assertion states the expected outcome; a retrying assertion keeps checking until it holds or times out.",
+      "practice": "Assert on what the user sees and use the tool's retrying form. Playwright calls these web-first assertions (await expect(locator).toBeVisible()) and warns against reading a value once and asserting on it. Google's guidance: test state, not interactions, and write clear failure messages.",
+      "tradeoffs": {"use_when": "Any check on UI state that can change asynchronously.", "avoid_when": "Asserting on implementation details, or piling unrelated assertions into one test so the first failure hides the rest."},
+      "prerequisites": ["m3-c5"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-assertions", "type": "primary"},
+        {"url": "https://playwright.dev/docs/best-practices", "type": "primary", "note": "Use web first assertions"},
+        {"url": "https://abseil.io/resources/swe-book/html/ch12.html", "type": "practitioner"}
+      ]
+    },
+    {
+      "id": "m3-c7", "slug": "flaky-tests", "module": "Automation fundamentals", "order": 7, "level": "core",
+      "concept": "Flaky tests: causes and fixes",
+      "definition": "A flaky test passes and fails on the same code.",
+      "practice": "Find the cause before reaching for a retry. Fowler lists five causes: lack of isolation, asynchronous behaviour, remote services, time, resource leaks. pytest's docs tie flakiness to uncontrolled system state. Quarantine a flaky test quickly so the suite stays trusted, then fix it. Control the clock when a test depends on time.",
+      "tradeoffs": {"use_when": "Retries as a detection signal (Playwright marks a test that passes on retry as flaky) and quarantine as a short-term holding area.", "avoid_when": "Permanent reruns or a quarantine nobody empties. pytest calls that approach 'rather dangerous'."},
+      "prerequisites": ["m3-c3", "m3-c5"],
+      "disputed": "d6",
+      "sources": [
+        {"url": "https://docs.pytest.org/en/stable/explanation/flaky.html", "type": "primary"},
+        {"url": "https://playwright.dev/docs/test-retries", "type": "primary"},
+        {"url": "https://playwright.dev/docs/clock", "type": "primary"},
+        {"url": "https://martinfowler.com/articles/nonDeterminism.html", "type": "practitioner", "note": "14 April 2011"},
+        {"url": "https://testing.googleblog.com/2016/05/flaky-tests-at-google-and-how-we.html", "type": "practitioner", "note": "About 1.5% of runs flaky; almost 16% of tests show some flakiness"}
+      ]
+    },
+    {
+      "id": "m3-c8", "slug": "test-doubles", "module": "Automation fundamentals", "order": 8, "level": "core",
+      "concept": "Test doubles: dummies, stubs, spies, mocks and fakes",
+      "definition": "A test double replaces a real dependency so the test can run faster, more reliably or in a controlled state.",
+      "practice": "Use the names from Meszaros (dummy, fake, stub, spy, mock) and know that 'mock' is often used loosely for all of them. Prefer the real thing or a fake when it is fast and deterministic; double what you do not control, such as third-party services. Fowler's 2007 article explains the classical (state verification) and mockist (behaviour verification) schools.",
+      "tradeoffs": {"use_when": "The dependency is slow, unreliable, costly or outside your control.", "avoid_when": "Doubling so much that the test only proves the mocks agree with themselves. Google lists the costs: harder to read, harder to maintain, less assurance."},
+      "prerequisites": ["m1-c2"],
+      "disputed": "d3",
+      "sources": [
+        {"url": "http://xunitpatterns.com/Test%20Double.html", "type": "primary", "note": "Originator's description"},
+        {"url": "https://playwright.dev/docs/mock", "type": "primary"},
+        {"url": "https://martinfowler.com/bliki/TestDouble.html", "type": "practitioner"},
+        {"url": "https://martinfowler.com/articles/mocksArentStubs.html", "type": "practitioner", "note": "2 January 2007"},
+        {"url": "https://testing.googleblog.com/2013/05/testing-on-toilet-dont-overuse-mocks.html", "type": "practitioner"},
+        {"url": "https://abseil.io/resources/swe-book/html/ch13.html", "type": "practitioner", "note": "Prefer realism over isolation"}
+      ]
+    },
+
+    {
+      "id": "m4-c1", "slug": "page-object-model", "module": "Framework design", "order": 1, "level": "core",
+      "concept": "Page Object Model",
+      "definition": "A page object wraps a page or part of a page in a class, so tests call its methods instead of touching selectors.",
+      "practice": "Keep selectors and page actions in the object and intent in the test. Model components (header, form, table row), not only whole pages. Decide your assertion rule and say why: Selenium says page objects 'should never make verifications or assertions', Fowler favours none, and Playwright's own example asserts inside a page object method. Playwright still documents page objects as 'one such approach' for large suites.",
+      "tradeoffs": {"use_when": "Several tests touch the same screens and selector changes are costing you.", "avoid_when": "A small suite, or page classes that grow into large inheritance trees and hide what a test does."},
+      "prerequisites": ["m3-c4"],
+      "disputed": "d1",
+      "sources": [
+        {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/page_object_models/", "type": "primary"},
+        {"url": "https://playwright.dev/docs/pom", "type": "primary"},
+        {"url": "https://martinfowler.com/bliki/PageObject.html", "type": "practitioner", "note": "10 September 2013"}
+      ]
+    },
+    {
+      "id": "m4-c2", "slug": "beyond-page-objects", "module": "Framework design", "order": 2, "level": "extended",
+      "concept": "Beyond page objects: component objects, Screenplay, app actions and DSLs",
+      "definition": "These are other ways to structure UI test code: by component, by actor and task, by direct calls into the app, or by a domain language.",
+      "practice": "Know what each one solves. Page component objects split large pages. Screenplay models actors with abilities performing tasks and asking questions, and aims at large suites. App actions (Cypress) set state by calling application code and skip the UI for setup. Selenium's docs also describe a domain-specific language and LoadableComponent.",
+      "tradeoffs": {"use_when": "Page classes have become large or duplicated, or UI setup is making tests slow.", "avoid_when": "Adding Screenplay's extra layers to a small suite, or using app actions where the test must prove the UI path works."},
+      "prerequisites": ["m4-c1"],
+      "disputed": "d1",
+      "sources": [
+        {"url": "https://www.selenium.dev/documentation/test_practices/design_strategies/", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/domain_specific_language/", "type": "primary"},
+        {"url": "https://serenity-js.org/handbook/design/screenplay-pattern/", "type": "primary"},
+        {"url": "https://www.cypress.io/blog/stop-using-page-objects-and-start-using-app-actions", "type": "practitioner", "note": "3 January 2019; now carries a note calling it an opinion piece"}
+      ]
+    },
+    {
+      "id": "m4-c3", "slug": "fixtures-and-setup", "module": "Framework design", "order": 3, "level": "core",
+      "concept": "Fixtures and setup/teardown",
+      "definition": "A fixture provides what a test needs and cleans it up afterwards.",
+      "practice": "Prefer fixtures to before/after hooks for shared setup. Playwright lists the advantages: setup and teardown sit together, fixtures are reusable across files, created on demand, composable and flexible. pytest fixtures use yield for teardown and scopes for cost. For one-time setup such as login, Playwright recommends project dependencies over globalSetup.",
+      "tradeoffs": {"use_when": "Setup is repeated, needs cleanup, or differs per test.", "avoid_when": "Wide-scope fixtures that hold mutable state shared between tests. That breaks isolation."},
+      "prerequisites": ["m3-c3"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-fixtures", "type": "primary"},
+        {"url": "https://playwright.dev/docs/test-global-setup-teardown", "type": "primary"},
+        {"url": "https://docs.pytest.org/en/stable/how-to/fixtures.html", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m4-c4", "slug": "test-data", "module": "Framework design", "order": 4, "level": "core",
+      "concept": "Test data: builders, object mothers and seeding through APIs",
+      "definition": "Test data management is how each test gets the records it needs in a known state.",
+      "practice": "Create data per test through an API or the database, not through the UI. Selenium's docs say 'Selenium should not be used to prepare a test case'. In code, a test data builder gives sensible defaults and lets each test override what matters; Fowler notes that object mothers couple many tests to the same standard data.",
+      "tradeoffs": {"use_when": "Builders or factories when tests need varied data. Shared seed data only for read-only reference records.", "avoid_when": "Tests that depend on records another test created, or on a shared account that parallel tests mutate."},
+      "prerequisites": ["m3-c3"],
+      "sources": [
+        {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/generating_application_state/", "type": "primary"},
+        {"url": "https://playwright.dev/docs/best-practices", "type": "primary", "note": "Testing with a database"},
+        {"url": "http://www.natpryce.com/articles/000714.html", "type": "primary", "note": "Originator's description of test data builders"},
+        {"url": "https://martinfowler.com/bliki/ObjectMother.html", "type": "practitioner"}
+      ]
+    },
+    {
+      "id": "m4-c5", "slug": "parameterised-tests", "module": "Framework design", "order": 5, "level": "extended",
+      "concept": "Parameterised and data-driven tests",
+      "definition": "A parameterised test runs the same steps with different inputs and expected results.",
+      "practice": "Use it for one behaviour with many data rows, and give each row a readable name. Playwright generates tests in a loop or from projects; pytest uses @pytest.mark.parametrize; JUnit 5 uses @ParameterizedTest (its newer @ParameterizedClass is marked experimental); Gherkin uses Scenario Outline with Examples.",
+      "tradeoffs": {"use_when": "Boundary and partition tables, role matrices, locale sets.", "avoid_when": "Rows that need different steps or assertions. Branching inside a parameterised test hides intent."},
+      "prerequisites": ["m2-c1", "m3-c2"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-parameterize", "type": "primary"},
+        {"url": "https://docs.pytest.org/en/stable/how-to/parametrize.html", "type": "primary"},
+        {"url": "https://docs.junit.org/current/writing-tests/parameterized-classes-and-tests.html", "type": "primary"},
+        {"url": "https://cucumber.io/docs/gherkin/reference/", "type": "primary"},
+        {"url": "https://docs.junit.org/5.13.0/release-notes/", "type": "primary", "note": "Added 2026-11-27 after review, HTTP 200. 5.13.0, released 30 May 2025, introduced @ParameterizedClass."},
+        {"url": "https://docs.pytest.org/en/stable/reference/reference.html#pytest.param", "type": "primary", "note": "Added 2026-11-27 after review, HTTP 200. Documents the id argument of pytest.param."}
+      ]
+    },
+    {
+      "id": "m4-c6", "slug": "configuration-and-secrets", "module": "Framework design", "order": 6, "level": "extended",
+      "concept": "Configuration, environments and secrets",
+      "definition": "Configuration is everything that changes between environments; secrets are the parts that must never be committed.",
+      "practice": "Keep config out of code and read it from the environment. The twelve-factor test: could the repository be made public without leaking a credential? In Playwright, use projects for browser and environment variants and keep stored auth state in a gitignored folder. In CI, pass secrets through the platform's secret store, which redacts them from logs.",
+      "tradeoffs": {"use_when": "The suite runs against more than one environment or in CI.", "avoid_when": "Hard-coded URLs, credentials in the repository, or one config file with if-branches per environment."},
+      "prerequisites": ["m4-c3"],
+      "sources": [
+        {"url": "https://12factor.net/config", "type": "primary"},
+        {"url": "https://playwright.dev/docs/test-projects", "type": "primary"},
+        {"url": "https://playwright.dev/docs/auth", "type": "primary"},
+        {"url": "https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m4-c7", "slug": "bdd-and-keyword-driven", "module": "Framework design", "order": 7, "level": "extended",
+      "concept": "BDD, Gherkin and keyword-driven tests",
+      "definition": "BDD is a way for business and technical people to agree on behaviour through examples; Gherkin is the Given/When/Then syntax that records them.",
+      "practice": "Treat BDD as collaboration first. Cucumber's docs describe three practices: Discovery, Formulation, Automation. Write declarative scenarios (what, not how) and avoid feature-coupled step definitions. If nobody outside the test team reads the feature files, plain code tests are usually cheaper. Robot Framework offers the related keyword-driven style.",
+      "tradeoffs": {"use_when": "Product owners or analysts read and shape the scenarios.", "avoid_when": "Gherkin is only a wrapper over UI scripts. Cucumber's creator wrote in 2014: 'If you think Cucumber is a testing tool, please read on, because you are wrong.'"},
+      "prerequisites": ["m2-c4", "m3-c2"],
+      "disputed": "d2",
+      "sources": [
+        {"url": "https://cucumber.io/docs/bdd/", "type": "primary"},
+        {"url": "https://cucumber.io/docs/gherkin/reference/", "type": "primary"},
+        {"url": "https://cucumber.io/docs/bdd/better-gherkin/", "type": "primary"},
+        {"url": "https://cucumber.io/docs/guides/anti-patterns/", "type": "primary"},
+        {"url": "https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html", "type": "primary"},
+        {"url": "https://dannorth.net/blog/introducing-bdd/", "type": "practitioner", "note": "20 September 2006"},
+        {"url": "https://cucumber.io/blog/collaboration/the-worlds-most-misunderstood-collaboration-tool/", "type": "practitioner", "note": "Aslak Hellesoy, 3 March 2014"},
+        {"url": "https://automationpanda.com/2017/07/26/bdd-automation-without-collaboration/", "type": "practitioner", "note": "Andy Knight, 26 July 2017"}
+      ]
+    },
+
+    {
+      "id": "m5-c1", "slug": "locators-and-auto-waiting", "module": "Playwright with TypeScript", "order": 1, "level": "core",
+      "concept": "Playwright locators and auto-waiting",
+      "definition": "A Playwright Locator describes how to find an element at the moment of use, and every action waits until the element is actionable.",
+      "practice": "Use getByRole, getByLabel, getByText and getByTestId, and narrow with chaining and filtering instead of long CSS. Let auto-waiting do the waiting; do not add manual waits before actions. Use codegen to suggest a locator, then review it.",
+      "tradeoffs": {"use_when": "All element interaction in Playwright tests.", "avoid_when": "page.locator with deep CSS or XPath, and waitForTimeout."},
+      "prerequisites": ["m3-c4", "m3-c5"],
+      "changed": "User-facing getBy locators arrived in v1.27 (7 October 2022).",
+      "sources": [
+        {"url": "https://playwright.dev/docs/locators", "type": "primary"},
+        {"url": "https://playwright.dev/docs/actionability", "type": "primary"},
+        {"url": "https://playwright.dev/docs/codegen", "type": "primary"},
+        {"url": "https://playwright.dev/docs/release-notes", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m5-c2", "slug": "web-first-assertions", "module": "Playwright with TypeScript", "order": 2, "level": "core",
+      "concept": "Web-first assertions and timeouts",
+      "definition": "Web-first assertions are async expect matchers that retry until the condition holds or the expect timeout ends.",
+      "practice": "Always await expect(locator) matchers. Know the two default limits: 30 seconds per test and 5 seconds per expect. Change a timeout for a known slow step, not globally. Turn on the no-floating-promises lint rule so a missing await is caught.",
+      "tradeoffs": {"use_when": "Every UI assertion.", "avoid_when": "expect(await locator.isVisible()).toBe(true), which reads once and does not retry."},
+      "prerequisites": ["m3-c6"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-assertions", "type": "primary"},
+        {"url": "https://playwright.dev/docs/test-timeouts", "type": "primary"},
+        {"url": "https://playwright.dev/docs/best-practices", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m5-c3", "slug": "custom-fixtures", "module": "Playwright with TypeScript", "order": 3, "level": "core",
+      "concept": "Custom fixtures in Playwright Test",
+      "definition": "test.extend adds your own fixtures (page objects, API clients, seeded data) that tests request by name.",
+      "practice": "Hand page objects and data to tests through fixtures, with teardown after the use() call. Use worker-scoped fixtures for costly shared resources and mergeTests to combine fixture sets from several modules.",
+      "tradeoffs": {"use_when": "Setup is shared across files or needs guaranteed cleanup.", "avoid_when": "A fixture used by one test. Inline setup reads better."},
+      "prerequisites": ["m4-c3"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-fixtures", "type": "primary"},
+        {"url": "https://playwright.dev/docs/pom", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m5-c4", "slug": "contexts-and-auth-state", "module": "Playwright with TypeScript", "order": 4, "level": "core",
+      "concept": "Browser contexts and authentication state",
+      "definition": "A BrowserContext is an isolated browser profile; storageState saves a logged-in session so tests can reuse it.",
+      "practice": "Log in once in a setup project, save storageState under playwright/.auth, add that folder to .gitignore, and load it in the test projects. When tests change server-side state, use one account per parallel worker.",
+      "tradeoffs": {"use_when": "Most tests need a signed-in user.", "avoid_when": "Tests of the login flow itself, or one shared account that parallel tests mutate."},
+      "prerequisites": ["m3-c3", "m5-c3"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/browser-contexts", "type": "primary"},
+        {"url": "https://playwright.dev/docs/auth", "type": "primary"},
+        {"url": "https://playwright.dev/docs/test-global-setup-teardown", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m5-c5", "slug": "network-mocking-and-api-calls", "module": "Playwright with TypeScript", "order": 5, "level": "extended",
+      "concept": "Network mocking and API calls from tests",
+      "definition": "page.route intercepts browser requests; the request fixture sends HTTP calls directly.",
+      "practice": "Mock third-party services and hard-to-reach states (errors, empty lists). Use API calls to seed and clean data and to check server state after a UI action. Playwright's best practices say to test only what you control.",
+      "tradeoffs": {"use_when": "External dependencies, error paths, fast setup.", "avoid_when": "Mocking your own backend in every test. Then nothing proves the front end and API work together."},
+      "prerequisites": ["m3-c8"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/mock", "type": "primary"},
+        {"url": "https://playwright.dev/docs/network", "type": "primary"},
+        {"url": "https://playwright.dev/docs/api-testing", "type": "primary"},
+        {"url": "https://playwright.dev/docs/best-practices", "type": "primary", "note": "Avoid testing third-party dependencies"}
+      ]
+    },
+    {
+      "id": "m5-c6", "slug": "projects-and-sharding", "module": "Playwright with TypeScript", "order": 6, "level": "extended",
+      "concept": "Projects, parallel workers and sharding",
+      "definition": "Projects run the same tests under different configurations; workers run tests in parallel on one machine; shards split a run across machines.",
+      "practice": "Use projects for browsers, devices and setup dependencies. Tests must be isolated before you raise workers. Split long suites with --shard=1/3 and merge the blob reports. Note the CI doc's default advice: workers: 1 on CI for stability unless the runner is powerful.",
+      "tradeoffs": {"use_when": "The suite is slow or must cover several browsers.", "avoid_when": "Raising parallelism on a suite with shared state. Fix isolation first."},
+      "prerequisites": ["m3-c3"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-projects", "type": "primary"},
+        {"url": "https://playwright.dev/docs/test-parallel", "type": "primary"},
+        {"url": "https://playwright.dev/docs/test-sharding", "type": "primary"},
+        {"url": "https://playwright.dev/docs/ci", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m5-c7", "slug": "traces-reports-and-retries", "module": "Playwright with TypeScript", "order": 7, "level": "core",
+      "concept": "Debugging with traces, reports and retries",
+      "definition": "A trace is a recording of a test run (actions, DOM snapshots, network, console) that opens in the Trace Viewer.",
+      "practice": "Set trace: 'on-first-retry' in CI and open the trace before rerunning anything. Use the HTML reporter locally and a CI-friendly reporter in the pipeline. Treat a test that passed on retry as a bug to investigate.",
+      "tradeoffs": {"use_when": "Any CI failure you cannot reproduce locally.", "avoid_when": "Recording traces for every passing test in large suites, which costs time and storage."},
+      "prerequisites": ["m3-c7"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/trace-viewer", "type": "primary"},
+        {"url": "https://playwright.dev/docs/test-reporters", "type": "primary"},
+        {"url": "https://playwright.dev/docs/test-retries", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m5-c8", "slug": "visual-and-aria-snapshots", "module": "Playwright with TypeScript", "order": 8, "level": "extended",
+      "concept": "Visual and ARIA snapshots",
+      "definition": "A visual snapshot compares screenshots; an ARIA snapshot compares the page's accessibility tree as text.",
+      "practice": "Use toHaveScreenshot for layout and styling regressions and generate baselines in the same environment as CI, because rendering differs by OS and browser. Use toMatchAriaSnapshot to check structure with less noise than pixels.",
+      "tradeoffs": {"use_when": "Stable pages where appearance or structure matters.", "avoid_when": "Dynamic content with no masking, or as a replacement for behaviour assertions."},
+      "prerequisites": ["m5-c2"],
+      "changed": "toMatchAriaSnapshot was added in v1.49, released 18 November 2024.",
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-snapshots", "type": "primary"},
+        {"url": "https://playwright.dev/docs/aria-snapshots", "type": "primary"},
+        {"url": "https://playwright.dev/docs/release-notes", "type": "primary"}
+      ]
+    },
+
+    {
+      "id": "m6-c1", "slug": "webdriver-classic-and-bidi", "module": "Selenium 4 with Java and Python", "order": 1, "level": "core",
+      "concept": "WebDriver Classic and WebDriver BiDi",
+      "definition": "WebDriver Classic is the request/response protocol Selenium drives browsers with; WebDriver BiDi adds a two-way channel so the browser can push events.",
+      "practice": "Know both and where things are heading. Selenium's docs call BiDi the W3C standard and 'the cross-browser replacement for the Chrome DevTools Protocol', and say CDP support is temporary. Enable BiDi with the webSocketUrl capability and prefer it to CDP-only code for logs, network events and interception. The spec is still a W3C Editor's Draft.",
+      "tradeoffs": {"use_when": "You need console logs, network events or interception in Selenium across browsers.", "avoid_when": "Writing new CDP-specific code. It is Chromium-only and Selenium marks it temporary."},
+      "prerequisites": ["m3-c5"],
+      "changed": "Firefox announced CDP deprecation from Firefox 129 on 28 May 2024. Selenium's BiDi page (last modified 15 August 2026) says it is moving its implementation from Classic to BiDi. W3C draft dated 26 November 2026.",
+      "sources": [
+        {"url": "https://www.selenium.dev/documentation/webdriver/bidi/", "type": "primary"},
+        {"url": "https://w3c.github.io/webdriver-bidi/", "type": "primary"},
+        {"url": "https://fxdx.dev/deprecating-cdp-support-in-firefox-embracing-the-future-with-webdriver-bidi/", "type": "primary", "note": "Mozilla, 28 May 2024"},
+        {"url": "https://developer.chrome.com/blog/webdriver-bidi", "type": "primary"},
+        {"url": "https://pptr.dev/webdriver-bidi", "type": "primary", "note": "Puppeteer supports BiDi with Chrome and Firefox"}
+      ]
+    },
+    {
+      "id": "m6-c2", "slug": "selenium-locators", "module": "Selenium 4 with Java and Python", "order": 2, "level": "extended",
+      "concept": "Selenium locators",
+      "definition": "Selenium finds elements with By strategies (id, name, CSS selector, XPath, link text and others) plus relative locators.",
+      "practice": "Follow Selenium's own order: a unique id first, then a CSS selector, with XPath as the last choice. Ask developers for stable ids or data attributes where none exist.",
+      "tradeoffs": {"use_when": "CSS for most cases. XPath when you must match by text or walk up the tree.", "avoid_when": "Absolute XPath and selectors built on layout position."},
+      "prerequisites": ["m3-c4"],
+      "sources": [
+        {"url": "https://www.selenium.dev/documentation/webdriver/elements/locators/", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/locators/", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m6-c3", "slug": "selenium-waits", "module": "Selenium 4 with Java and Python", "order": 3, "level": "core",
+      "concept": "Selenium waits",
+      "definition": "Selenium does not wait for elements by default; implicit waits apply globally and explicit waits poll for a stated condition.",
+      "practice": "Use explicit waits (WebDriverWait with a condition) and leave the implicit wait at zero. The docs warn: 'Do not mix implicit and explicit waits', because the combined wait time becomes unpredictable.",
+      "tradeoffs": {"use_when": "Any element or state that appears asynchronously.", "avoid_when": "Thread.sleep or time.sleep, and a large implicit wait set to hide timing problems."},
+      "prerequisites": ["m3-c5"],
+      "sources": [
+        {"url": "https://www.selenium.dev/documentation/webdriver/waits/", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m6-c4", "slug": "page-objects-and-loadable-component", "module": "Selenium 4 with Java and Python", "order": 4, "level": "extended",
+      "concept": "Page objects and LoadableComponent in Selenium",
+      "definition": "Selenium's documented way to structure UI tests: page objects, page component objects and the LoadableComponent base class.",
+      "practice": "Keep assertions in tests, with one exception: the page object may verify that the right page loaded. Return the next page object from navigation methods. Use page component objects for repeated parts of a page.",
+      "tradeoffs": {"use_when": "Java or Python suites beyond a handful of tests.", "avoid_when": "Exposing WebElements publicly from the page object, which leaks selectors into tests."},
+      "prerequisites": ["m4-c1"],
+      "sources": [
+        {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/page_object_models/", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/design_strategies/", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m6-c5", "slug": "grid-and-clean-sessions", "module": "Selenium 4 with Java and Python", "order": 5, "level": "extended",
+      "concept": "Selenium Grid and clean sessions",
+      "definition": "Grid routes WebDriver sessions to remote browsers so tests run in parallel across machines and browser versions.",
+      "practice": "Use Grid for parallel and cross-browser runs, and start each test with a fresh browser session. Parallel runs only work when tests share no state.",
+      "tradeoffs": {"use_when": "The suite is slow on one machine or needs several browser and OS combinations.", "avoid_when": "A small suite that runs quickly locally. Grid adds infrastructure to maintain."},
+      "prerequisites": ["m3-c3"],
+      "sources": [
+        {"url": "https://www.selenium.dev/documentation/grid/", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/fresh_browser_per_test/", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m6-c6", "slug": "pytest-and-junit-runners", "module": "Selenium 4 with Java and Python", "order": 6, "level": "extended",
+      "concept": "Runner features: pytest and JUnit 5",
+      "definition": "Selenium is a browser library; the test runner supplies fixtures, parameters, ordering and reports.",
+      "practice": "In Python, create and quit the driver in a pytest fixture with yield, and parametrize data. In Java, use JUnit 5 lifecycle methods and @ParameterizedTest. Keep the driver per test, not static and shared.",
+      "tradeoffs": {"use_when": "Any Selenium suite.", "avoid_when": "Session-scoped or static drivers shared across tests in parallel runs."},
+      "prerequisites": ["m4-c3", "m4-c5"],
+      "sources": [
+        {"url": "https://docs.pytest.org/en/stable/how-to/fixtures.html", "type": "primary"},
+        {"url": "https://docs.pytest.org/en/stable/how-to/parametrize.html", "type": "primary"},
+        {"url": "https://docs.junit.org/current/writing-tests/parameterized-classes-and-tests.html", "type": "primary"}
+      ]
+    },
+
+    {
+      "id": "m7-c1", "slug": "http-semantics", "module": "API, contract and database testing", "order": 1, "level": "core",
+      "concept": "HTTP semantics for testers",
+      "definition": "HTTP defines what each method and status code means, including which methods are safe and which are idempotent.",
+      "practice": "Learn the definitions from RFC 9110: safe methods are essentially read-only, and an idempotent method has the same intended effect when repeated. Test that the API honours them: repeat a PUT or DELETE, check status code classes, check headers such as Content-Type.",
+      "tradeoffs": {"use_when": "Designing API tests and answering 'PUT vs POST vs PATCH' questions.", "avoid_when": "Assuming every API follows the RFC. Many do not, so check the API's own contract too."},
+      "prerequisites": [],
+      "changed": "RFC 9110 (June 2022) is the current HTTP semantics standard and obsoletes RFC 7231.",
+      "sources": [
+        {"url": "https://www.rfc-editor.org/rfc/rfc9110.html", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m7-c2", "slug": "api-test-design", "module": "API, contract and database testing", "order": 2, "level": "core",
+      "concept": "API test design: what to assert",
+      "definition": "An API test sends a request and checks the status, body, headers and side effects against the contract.",
+      "practice": "Cover the happy path, validation errors, authentication and authorisation, and state changes. Check object-level authorisation by asking for another user's resource: it is first on the OWASP API Security Top 10 (2023). Derive cases from the OpenAPI description where one exists.",
+      "tradeoffs": {"use_when": "Business rules and error handling, which are faster and steadier to test below the UI.", "avoid_when": "Asserting whole response bodies byte for byte. Assert the fields that matter and validate the rest by schema."},
+      "prerequisites": ["m7-c1", "m2-c1"],
+      "sources": [
+        {"url": "https://spec.openapis.org/oas/latest.html", "type": "primary"},
+        {"url": "https://api-security.owasp.org/editions/2023/en/0x11-t10/", "type": "primary"},
+        {"url": "https://playwright.dev/docs/api-testing", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m7-c3", "slug": "api-tests-in-code", "module": "API, contract and database testing", "order": 3, "level": "extended",
+      "concept": "API tests in code: REST Assured and Playwright requests",
+      "definition": "REST Assured is a Java library with a given/when/then style for HTTP tests; Playwright's APIRequestContext does the same job in TypeScript.",
+      "practice": "In REST Assured, put shared base URI, headers and expectations in RequestSpecBuilder and ResponseSpecBuilder. In Playwright, use the request fixture for pure API tests and for setup inside UI tests. Keep auth and base URL in configuration.",
+      "tradeoffs": {"use_when": "API regression suites kept in code beside the UI tests.", "avoid_when": "Copying the same headers and status checks into every test. Reuse specifications."},
+      "prerequisites": ["m7-c2"],
+      "changed": "REST Assured documentation moved from the GitHub wiki to rest-assured.io; the site shows version 7.0.0.",
+      "sources": [
+        {"url": "https://rest-assured.io/", "type": "primary"},
+        {"url": "https://rest-assured.io/docs/usage/specification-reuse/", "type": "primary"},
+        {"url": "https://rest-assured.io/docs/usage/examples/", "type": "primary"},
+        {"url": "https://playwright.dev/docs/api-testing", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m7-c4", "slug": "schema-validation", "module": "API, contract and database testing", "order": 4, "level": "extended",
+      "concept": "Schema validation with OpenAPI and JSON Schema",
+      "definition": "OpenAPI describes an HTTP API in a language-neutral document; JSON Schema describes and validates the shape of JSON.",
+      "practice": "Validate responses against a schema to catch missing fields, wrong types and broken required rules, and keep value assertions for business logic.",
+      "tradeoffs": {"use_when": "Many endpoints, or responses with many fields.", "avoid_when": "Relying on schema checks alone. A response can match the schema and still be wrong."},
+      "prerequisites": ["m7-c2"],
+      "changed": "The latest OpenAPI Specification is v3.2.1, dated 10 September 2026.",
+      "sources": [
+        {"url": "https://spec.openapis.org/oas/latest.html", "type": "primary"},
+        {"url": "https://json-schema.org/learn/getting-started-step-by-step", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m7-c5", "slug": "contract-testing", "module": "API, contract and database testing", "order": 5, "level": "extended",
+      "concept": "Consumer-driven contract testing",
+      "definition": "A contract test checks that the messages a consumer expects match what the provider really sends, without running both together.",
+      "practice": "Use Pact when your team owns or works closely with both sides. Consumer tests generate the contract and the provider verifies it. Keep contract tests about message shape; Pact's docs separate them from functional tests that check side effects.",
+      "tradeoffs": {"use_when": "Microservices inside one organisation where end-to-end tests are slow.", "avoid_when": "Public APIs, providers whose team will not use Pact, and performance or provider functional testing. Pact's docs list these as poor fits."},
+      "prerequisites": ["m7-c2", "m3-c8"],
+      "sources": [
+        {"url": "https://docs.pact.io/", "type": "primary"},
+        {"url": "https://docs.pact.io/getting_started/what_is_pact_good_for", "type": "primary"},
+        {"url": "https://docs.pact.io/consumer/contract_tests_not_functional_tests", "type": "primary"},
+        {"url": "https://martinfowler.com/bliki/ContractTest.html", "type": "practitioner", "note": "12 January 2011"}
+      ]
+    },
+    {
+      "id": "m7-c6", "slug": "mocks-or-real-dependencies", "module": "API, contract and database testing", "order": 6, "level": "extended",
+      "concept": "Mocks or real dependencies at the service boundary",
+      "definition": "The choice between replacing a dependency with a stub server and running a real instance of it in the test.",
+      "practice": "Run dependencies you own for real when you can do it quickly and repeatably, for example a database in a throwaway container. Stub services you do not control, and back the stubs with contract tests so they stay honest. Fowler's pairing is narrow integration tests plus contract tests.",
+      "tradeoffs": {"use_when": "Real: your own database, queue or service. Stub: third parties, paid APIs, error states you cannot trigger.", "avoid_when": "Stubs with no check against the real service, or real shared environments that make tests slow and flaky."},
+      "prerequisites": ["m3-c8"],
+      "disputed": "d3",
+      "sources": [
+        {"url": "https://testcontainers.com/", "type": "primary", "note": "'Unit tests with real dependencies'"},
+        {"url": "https://wiremock.org/docs/", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/encouraged/mock_external_services/", "type": "primary"},
+        {"url": "https://playwright.dev/docs/best-practices", "type": "primary"},
+        {"url": "https://martinfowler.com/bliki/IntegrationTest.html", "type": "practitioner"},
+        {"url": "https://abseil.io/resources/swe-book/html/ch13.html", "type": "practitioner"}
+      ]
+    },
+    {
+      "id": "m7-c7", "slug": "sql-joins-and-aggregates", "module": "API, contract and database testing", "order": 7, "level": "core",
+      "concept": "SQL for testers: joins and aggregates",
+      "definition": "SQL lets a tester read the database to verify what the application stored.",
+      "practice": "Be fluent in SELECT with WHERE, inner and left outer joins, GROUP BY with aggregates, and HAVING. Use a left join to find orphans and missing rows, and GROUP BY with HAVING count(*) > 1 to find duplicates.",
+      "tradeoffs": {"use_when": "Verifying side effects, preparing data, investigating a defect.", "avoid_when": "Asserting on tables in UI tests when an API check gives the same proof with less coupling to the schema."},
+      "prerequisites": [],
+      "sources": [
+        {"url": "https://www.postgresql.org/docs/current/tutorial-join.html", "type": "primary"},
+        {"url": "https://www.postgresql.org/docs/current/tutorial-agg.html", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m7-c8", "slug": "data-integrity", "module": "API, contract and database testing", "order": 8, "level": "extended",
+      "concept": "Data integrity: constraints and transactions",
+      "definition": "Constraints (NOT NULL, UNIQUE, primary key, foreign key, CHECK) and transactions keep stored data valid.",
+      "practice": "Test that invalid data is rejected at the database as well as the UI, and that multi-step operations are all-or-nothing: a failure part way through leaves no partial rows. PostgreSQL's tutorial describes a transaction as bundling steps into 'a single, all-or-nothing operation'.",
+      "tradeoffs": {"use_when": "Payments, inventory, anything where partial writes cause harm.", "avoid_when": "Using transactions to roll back test data when the app under test commits on another connection. The rollback will not undo it."},
+      "prerequisites": ["m7-c7"],
+      "sources": [
+        {"url": "https://www.postgresql.org/docs/current/ddl-constraints.html", "type": "primary"},
+        {"url": "https://www.postgresql.org/docs/current/tutorial-transactions.html", "type": "primary"}
+      ]
+    },
+
+    {
+      "id": "m8-c1", "slug": "tests-in-ci", "module": "CI and running at scale", "order": 1, "level": "core",
+      "concept": "Tests in the CI pipeline",
+      "definition": "Continuous integration builds and tests every push so a broken change is found within minutes.",
+      "practice": "Make the build self-testing, keep it fast, and fix a broken build straight away (Fowler's practices). Run fast checks on every push and slower suites on merge or on a schedule. Playwright's CI guide covers installing browsers and running the suite on common CI providers.",
+      "tradeoffs": {"use_when": "Any suite meant to protect a main branch.", "avoid_when": "A pipeline people ignore because it is slow or red. A suite nobody trusts has no value."},
+      "prerequisites": ["m3-c1"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/ci", "type": "primary"},
+        {"url": "https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations", "type": "primary"},
+        {"url": "https://martinfowler.com/articles/continuousIntegration.html", "type": "practitioner"}
+      ]
+    },
+    {
+      "id": "m8-c2", "slug": "parallelism-and-sharding", "module": "CI and running at scale", "order": 2, "level": "extended",
+      "concept": "Parallelism and sharding in CI",
+      "definition": "Parallelism runs tests at the same time on one machine; sharding splits the suite across machines.",
+      "practice": "Shard with a CI matrix and merge the reports. In Playwright, run each shard with --shard=x/y and the blob reporter, then merge-reports. Set fail-fast deliberately: leaving shards running shows all failures. In Selenium, a Grid provides the parallel sessions.",
+      "tradeoffs": {"use_when": "The run time is too long for the feedback you need.", "avoid_when": "Tests share accounts or data. Parallel runs will expose that as flakiness."},
+      "prerequisites": ["m3-c3", "m8-c1"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-sharding", "type": "primary"},
+        {"url": "https://playwright.dev/docs/test-parallel", "type": "primary"},
+        {"url": "https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/grid/", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m8-c3", "slug": "retry-and-quarantine", "module": "CI and running at scale", "order": 3, "level": "extended",
+      "concept": "Retry and quarantine policy",
+      "definition": "A policy for what happens when a test fails intermittently in CI.",
+      "practice": "Allow a small number of CI retries so one flake does not block a merge, report every test that needed a retry, and give each one an owner and a deadline. Quarantine blocks nothing but must be emptied.",
+      "tradeoffs": {"use_when": "Large suites where some flakiness is unavoidable. Google reports about 1.5% of all test runs flaky.", "avoid_when": "Retries with no reporting. They hide real intermittent product bugs."},
+      "prerequisites": ["m3-c7"],
+      "disputed": "d6",
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-retries", "type": "primary"},
+        {"url": "https://docs.pytest.org/en/stable/explanation/flaky.html", "type": "primary"},
+        {"url": "https://testing.googleblog.com/2016/05/flaky-tests-at-google-and-how-we.html", "type": "practitioner"},
+        {"url": "https://martinfowler.com/articles/nonDeterminism.html", "type": "practitioner"}
+      ]
+    },
+    {
+      "id": "m8-c4", "slug": "reports-and-artefacts", "module": "CI and running at scale", "order": 4, "level": "extended",
+      "concept": "Reports, traces and artefacts",
+      "definition": "The evidence a pipeline keeps after a run: results, logs, traces, screenshots, videos.",
+      "practice": "Publish an HTML report and upload traces for failed tests as CI artefacts, so a failure can be diagnosed without a rerun. Pick reporters per audience: list or dot for the log, HTML for people, JUnit XML or JSON for other tools.",
+      "tradeoffs": {"use_when": "Every CI run.", "avoid_when": "Keeping every video and trace for passing tests indefinitely. Set retention."},
+      "prerequisites": ["m8-c1"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-reporters", "type": "primary"},
+        {"url": "https://playwright.dev/docs/trace-viewer", "type": "primary"},
+        {"url": "https://playwright.dev/docs/ci", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m8-c5", "slug": "hermetic-environments", "module": "CI and running at scale", "order": 5, "level": "extended",
+      "concept": "Hermetic test environments",
+      "definition": "A hermetic test brings up everything it needs itself and depends on nothing shared or external.",
+      "practice": "Start the system under test and its dependencies on the test machine or in containers, with seeded data, and block outside network calls. Google describes a hermetic server as one that starts on a single machine with no network connection and still works. Higher fidelity costs speed and reliability, so keep the largest tests few.",
+      "tradeoffs": {"use_when": "Shared test environments are causing failures unrelated to the change.", "avoid_when": "You need to prove the real deployment and configuration. That needs some tests against a production-like environment."},
+      "prerequisites": ["m7-c6"],
+      "sources": [
+        {"url": "https://testcontainers.com/", "type": "primary"},
+        {"url": "https://testing.googleblog.com/2012/10/hermetic-servers.html", "type": "practitioner"},
+        {"url": "https://abseil.io/resources/swe-book/html/ch14.html", "type": "practitioner"}
+      ]
+    },
+
+    {
+      "id": "m9-c1", "slug": "accessibility-testing", "module": "Accessibility, performance and security", "order": 1, "level": "core",
+      "concept": "Accessibility testing",
+      "definition": "Accessibility testing checks that people with disabilities can perceive, operate and understand the product, measured against WCAG.",
+      "practice": "Run an automated scan (axe-core, for example through @axe-core/playwright) in the suite and add manual checks with keyboard and screen reader. W3C WAI states that no tool alone can determine conformance. axe-core says it finds on average 57% of WCAG issues automatically.",
+      "tradeoffs": {"use_when": "Automated scans on every key page and state; manual review for new flows.", "avoid_when": "Reporting 'accessible' from a clean automated scan."},
+      "prerequisites": ["m3-c4"],
+      "changed": "WCAG 2.2 is the current W3C Recommendation; the published edition is dated 12 December 2024.",
+      "sources": [
+        {"url": "https://www.w3.org/TR/WCAG22/", "type": "primary"},
+        {"url": "https://www.w3.org/WAI/test-evaluate/", "type": "primary"},
+        {"url": "https://playwright.dev/docs/accessibility-testing", "type": "primary"},
+        {"url": "https://github.com/dequelabs/axe-core", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m9-c2", "slug": "load-and-performance", "module": "Accessibility, performance and security", "order": 2, "level": "extended",
+      "concept": "Load and performance testing",
+      "definition": "Performance testing measures how the system behaves under a defined load.",
+      "practice": "Name the test type and its purpose: smoke, average-load, stress, soak, spike, breakpoint (k6's terms). Set thresholds as pass/fail criteria tied to service level objectives, such as an error rate and a 95th percentile response time. Do not measure performance with UI automation; Selenium's docs discourage it.",
+      "tradeoffs": {"use_when": "Before launches, after architecture changes, and on a schedule for key endpoints.", "avoid_when": "Running load against shared or production systems without agreement, or reading averages without percentiles."},
+      "prerequisites": ["m7-c1"],
+      "sources": [
+        {"url": "https://grafana.com/docs/k6/latest/testing-guides/test-types/", "type": "primary"},
+        {"url": "https://grafana.com/docs/k6/latest/using-k6/thresholds/", "type": "primary"},
+        {"url": "https://www.selenium.dev/documentation/test_practices/discouraged/", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m9-c3", "slug": "core-web-vitals", "module": "Accessibility, performance and security", "order": 3, "level": "extended",
+      "concept": "Web performance: Core Web Vitals",
+      "definition": "Core Web Vitals are Google's user-centred page metrics: LCP for loading, INP for interactivity, CLS for visual stability.",
+      "practice": "Know the 'good' thresholds: LCP within 2.5 seconds, INP of 200 milliseconds or less, CLS of 0.1 or less, judged at the 75th percentile of page loads across mobile and desktop.",
+      "tradeoffs": {"use_when": "Front-end performance budgets and release checks.", "avoid_when": "Treating a single lab run as the user experience. The thresholds are defined on field data percentiles."},
+      "prerequisites": [],
+      "sources": [
+        {"url": "https://web.dev/articles/vitals", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m9-c4", "slug": "security-testing-basics", "module": "Accessibility, performance and security", "order": 4, "level": "extended",
+      "concept": "Security testing basics",
+      "definition": "Security testing looks for weaknesses an attacker could use, guided by shared risk lists and test guides.",
+      "practice": "Know the OWASP Top 10 as an awareness list (current release: 2025, led by Broken Access Control), use the Web Security Testing Guide for how to test, and ASVS for requirements to verify against. A QA engineer should at least test access control and input handling on every feature.",
+      "tradeoffs": {"use_when": "Test design for auth, permissions, input and session features.", "avoid_when": "Presenting a Top 10 checklist as a penetration test. It is a starting list, not full coverage."},
+      "prerequisites": ["m1-c4"],
+      "changed": "OWASP Top 10:2025 is the current release (2021 before it); it lists A03 Software Supply Chain Failures. WSTG stable is v4.2. ASVS is at 5.0.0.",
+      "sources": [
+        {"url": "https://owasp.org/projects/top-ten", "type": "primary"},
+        {"url": "https://top10.owasp.org/2025/", "type": "primary"},
+        {"url": "https://owasp.org/projects/web-security-testing-guide", "type": "primary"},
+        {"url": "https://asvs.owasp.org/", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m9-c5", "slug": "api-security-testing", "module": "Accessibility, performance and security", "order": 5, "level": "extended",
+      "concept": "API security testing",
+      "definition": "API security testing checks that an API enforces who may do what to which object.",
+      "practice": "Start with the OWASP API Security Top 10 (2023). API1 is Broken Object Level Authorization: request another user's object id and expect a refusal. Add tests for authentication, excessive data in responses and rate limits.",
+      "tradeoffs": {"use_when": "Every API with user-owned resources.", "avoid_when": "Testing authorisation only through the UI, which hides ids the API still accepts."},
+      "prerequisites": ["m7-c2", "m9-c4"],
+      "sources": [
+        {"url": "https://api-security.owasp.org/editions/2023/en/0x11-t10/", "type": "primary"}
+      ]
+    },
+
+    {
+      "id": "m10-c1", "slug": "ai-test-agents", "module": "AI-assisted testing", "order": 1, "level": "core",
+      "concept": "AI test agents: plan, generate, heal",
+      "definition": "Test agents are LLM-driven helpers that explore an app, write tests from a plan and repair failing ones.",
+      "practice": "Playwright ships three agents (planner, generator, healer), set up with npx playwright init-agents. Give the planner a clear request and a seed test, read the plan before generating, and review generated tests like any other code. A healer that changes a test to make it pass can hide a real defect, so review every heal.",
+      "tradeoffs": {"use_when": "Drafting coverage for a new area, or first-pass repair of broken locators.", "avoid_when": "Merging generated or healed tests unread, or letting an agent decide the expected result."},
+      "prerequisites": ["m5-c1", "m5-c3"],
+      "changed": "Playwright Test Agents were introduced in v1.56, released 6 October 2025.",
+      "sources": [
+        {"url": "https://playwright.dev/docs/test-agents", "type": "primary"},
+        {"url": "https://playwright.dev/docs/release-notes", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m10-c2", "slug": "browser-control-through-mcp", "module": "AI-assisted testing", "order": 2, "level": "extended",
+      "concept": "Browser control through MCP",
+      "definition": "The Playwright MCP server lets an LLM drive a browser through the Model Context Protocol.",
+      "practice": "Know how it works: the model receives structured accessibility snapshots of the page, not screenshots, so it needs no vision model. This is the same accessibility tree that role locators and ARIA snapshots use, so accessible markup helps both people and agents.",
+      "tradeoffs": {"use_when": "Exploration, reproducing a bug from a description, drafting tests with an assistant.", "avoid_when": "Using a live agent session as the regression suite. It is slower, costs tokens and is not deterministic."},
+      "prerequisites": ["m5-c1"],
+      "sources": [
+        {"url": "https://github.com/microsoft/playwright-mcp", "type": "primary"},
+        {"url": "https://playwright.dev/docs/aria-snapshots", "type": "primary"}
+      ]
+    },
+    {
+      "id": "m10-c3", "slug": "reviewing-ai-written-tests", "module": "AI-assisted testing", "order": 3, "level": "extended",
+      "concept": "Reviewing AI-written tests",
+      "definition": "A review checklist for tests produced by a code generator or an assistant.",
+      "practice": "Check the same things as for human-written tests: does it assert user-visible behaviour, is it isolated, are the locators user-facing, are assertions web-first, would it fail if the feature broke? ISTQB's automation risks apply directly: relying on a tool too much and 'ignoring the need of human critical thinking'. The checklist itself is our synthesis of these sources, not a published standard.",
+      "tradeoffs": {"use_when": "Any generated test before it is merged.", "avoid_when": "Accepting a test because it passes. A test that cannot fail proves nothing."},
+      "prerequisites": ["m3-c6", "m10-c1"],
+      "sources": [
+        {"url": "https://playwright.dev/docs/best-practices", "type": "primary"},
+        {"url": "https://playwright.dev/docs/codegen", "type": "primary"},
+        {"url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "type": "primary", "note": "Section 6.2 risks of test automation"}
+      ]
+    },
+    {
+      "id": "m10-c4", "slug": "testing-llm-features", "module": "AI-assisted testing", "order": 4, "level": "extended",
+      "concept": "Testing LLM features",
+      "definition": "Testing a product feature built on a large language model, where output varies and new risks apply.",
+      "practice": "Use the OWASP Top 10 for LLM Applications (2025) as the risk list: LLM01 Prompt Injection, LLM02 Sensitive Information Disclosure, LLM06 Excessive Agency, LLM07 System Prompt Leakage and others. Test with hostile inputs, check what the feature is allowed to do, and assert on properties of the output instead of exact text.",
+      "tradeoffs": {"use_when": "Any feature that sends user input to a model or lets a model call tools.", "avoid_when": "Exact-string assertions on model output, which fail for harmless variation."},
+      "prerequisites": ["m9-c4"],
+      "sources": [
+        {"url": "https://genai.owasp.org/llm-top-10/", "type": "primary"}
+      ]
+    }
+  ],
+  "disagreements": [
+    {
+      "id": "d1",
+      "topic": "Page objects, Screenplay or no abstraction; and assertions inside page objects",
+      "positions": [
+        {"side": "Page objects, no assertions inside", "claim": "Selenium: page objects 'should never make verifications or assertions' (loaded-page check excepted). Fowler: 'I favor having no assertions in page objects', while noting 'differences of opinion'.", "sources": ["https://www.selenium.dev/documentation/test_practices/encouraged/page_object_models/", "https://martinfowler.com/bliki/PageObject.html"]},
+        {"side": "Page objects, assertions allowed", "claim": "Playwright's official page object example calls expect(...).toBeVisible() inside a page object method.", "sources": ["https://playwright.dev/docs/pom"]},
+        {"side": "Screenplay", "claim": "Serenity/JS presents Screenplay (actors, abilities, tasks, questions) as the design for large suites and cites 'Beyond Page Objects' (2016).", "sources": ["https://serenity-js.org/handbook/design/screenplay-pattern/"]},
+        {"side": "No page objects", "claim": "Cypress blog (Gleb Bahmutov, 3 January 2019) argues for app actions instead of page objects; Cypress best practices list 'sharing page objects' beside UI login as an anti-pattern. The blog now carries a note that it was an opinion piece and that page objects are widely and successfully used with Cypress.", "sources": ["https://www.cypress.io/blog/stop-using-page-objects-and-start-using-app-actions", "https://docs.cypress.io/app/core-concepts/best-practices"]}
+      ],
+      "stronger_evidence": "No measured comparison was found. The three tool makers each document page objects as valid; the open point is assertions, where Selenium and Fowler agree and Playwright's example differs.",
+      "site_recommendation": "Teach page objects as the default, state the assertion disagreement openly, and let the reader see both forms."
+    },
+    {
+      "id": "d2",
+      "topic": "Is BDD worth it",
+      "positions": [
+        {"side": "Yes, as collaboration", "claim": "Cucumber docs define BDD as closing the gap between business and technical people through Discovery, Formulation and Automation. Dan North introduced it in 2006 to fix confusion in teaching TDD.", "sources": ["https://cucumber.io/docs/bdd/", "https://dannorth.net/blog/introducing-bdd/"]},
+        {"side": "Not as a test tool alone", "claim": "Aslak Hellesoy (Cucumber's creator, 2014): 'If you think Cucumber is a testing tool, please read on, because you are wrong.' Andy Knight (2017): developers see the feature file layer as unnecessary 'plaster' over test cases, and 'Without full team collaboration and cooperation, the justification for BDD diminishes.'", "sources": ["https://cucumber.io/blog/collaboration/the-worlds-most-misunderstood-collaboration-tool/", "https://automationpanda.com/2017/07/26/bdd-automation-without-collaboration/"]}
+      ],
+      "stronger_evidence": "Both sides agree on the condition: the value depends on non-testers taking part. No data on cost or defect rates was found.",
+      "site_recommendation": "Present BDD as conditional: worth it when the business reads the scenarios, overhead when it does not."
+    },
+    {
+      "id": "d3",
+      "topic": "Mocks or real dependencies",
+      "positions": [
+        {"side": "Prefer real or fake", "claim": "Google: overusing mocks makes tests harder to understand and maintain and gives less assurance; the SWE book says 'Prefer Realism Over Isolation'. Testcontainers markets 'Unit tests with real dependencies'.", "sources": ["https://testing.googleblog.com/2013/05/testing-on-toilet-dont-overuse-mocks.html", "https://abseil.io/resources/swe-book/html/ch13.html", "https://testcontainers.com/"]},
+        {"side": "Double what you do not control", "claim": "Playwright: 'Only test what you control' and mock third-party responses. Selenium recommends mocking external services. Fowler: run against a double and keep it honest with separate contract tests.", "sources": ["https://playwright.dev/docs/best-practices", "https://www.selenium.dev/documentation/test_practices/encouraged/mock_external_services/", "https://martinfowler.com/bliki/ContractTest.html"]},
+        {"side": "Two schools", "claim": "Fowler (2007) describes classical and mockist TDD as different philosophies and does not declare a winner.", "sources": ["https://martinfowler.com/articles/mocksArentStubs.html"]}
+      ],
+      "stronger_evidence": "The positions answer different questions. 'Prefer real' is about code you own; 'mock it' is about systems you do not control. Read that way they do not conflict.",
+      "site_recommendation": "Teach the ownership rule, then the classical and mockist terms for interviews."
+    },
+    {
+      "id": "d4",
+      "topic": "Pyramid, trophy or honeycomb",
+      "positions": [
+        {"side": "Pyramid", "claim": "ISTQB syllabus section 5.1.6; Google 2015 suggests 70% unit, 20% integration, 10% end-to-end as a first guess.", "sources": ["https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html", "https://martinfowler.com/bliki/TestPyramid.html"]},
+        {"side": "Trophy and honeycomb", "claim": "Kent C. Dodds: 'Write tests. Not too many. Mostly integration.' Spotify: focus on integration tests, few implementation detail tests, ideally no integrated tests.", "sources": ["https://kentcdodds.com/blog/write-tests", "https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications", "https://engineering.atspotify.com/2018/01/testing-of-microservices"]},
+        {"side": "The shapes differ less than the words", "claim": "Fowler (2021) says the argument is clouded by different definitions of unit test. Google (2024) says to go beyond the pyramid and weigh SMURF trade-offs.", "sources": ["https://martinfowler.com/articles/2021-test-shapes.html", "https://testing.googleblog.com/2024/10/smurf-beyond-test-pyramid.html"]}
+      ],
+      "stronger_evidence": "No source offers measured results for one shape over another. The most recent primary statements (Fowler 2021, Google 2024) both move from shape to definitions and trade-offs.",
+      "site_recommendation": "Teach all three shapes in one page, then the trade-off view."
+    },
+    {
+      "id": "d5",
+      "topic": "Which locator first",
+      "positions": [
+        {"side": "Role and text first, test id as fallback", "claim": "Playwright and Testing Library.", "sources": ["https://playwright.dev/docs/locators", "https://testing-library.com/docs/queries/about/"]},
+        {"side": "Dedicated data attributes first", "claim": "Cypress: use data-* attributes to isolate selectors from CSS and JS changes; it also endorses Testing Library's approach.", "sources": ["https://docs.cypress.io/app/core-concepts/best-practices"]},
+        {"side": "Id, then CSS, XPath last", "claim": "Selenium's encouraged practices.", "sources": ["https://www.selenium.dev/documentation/test_practices/encouraged/locators/"]}
+      ],
+      "stronger_evidence": "Each is the tool maker's own guidance, so follow the tool in use. All agree on avoiding styling classes and structural selectors.",
+      "site_recommendation": "One tool-neutral page with the shared rule, then the per-tool order in the Playwright and Selenium modules."
+    },
+    {
+      "id": "d6",
+      "topic": "Retries for flaky tests",
+      "positions": [
+        {"side": "Retries are a normal feature", "claim": "Playwright has built-in retries and labels a test that passes on retry as flaky.", "sources": ["https://playwright.dev/docs/test-retries"]},
+        {"side": "Retries and quarantine are risky when permanent", "claim": "pytest's docs call permanent reruns or quarantine 'rather dangerous'. Fowler says quarantine must be short and the test fixed.", "sources": ["https://docs.pytest.org/en/stable/explanation/flaky.html", "https://martinfowler.com/articles/nonDeterminism.html"]}
+      ],
+      "stronger_evidence": "Compatible: retry to keep the pipeline moving, and track and fix every retried test.",
+      "site_recommendation": "Teach retries as detection, not as the fix."
+    }
+  ],
+  "recent_changes": [
+    {"area": "Playwright user-facing locators", "what": "getByRole, getByText, getByLabel, getByTestId and related locators added; docs and codegen now put role, text and test id first.", "when": "v1.27, released 2022-10-07", "sources": ["https://playwright.dev/docs/release-notes", "https://playwright.dev/docs/locators", "https://playwright.dev/docs/codegen"], "status": "verified (release date from the GitHub releases API)"},
+    {"area": "Playwright fixtures", "what": "Docs list fixture advantages over before/after hooks and recommend project dependencies over globalSetup. No dated change was found, and no page says to prefer fixtures over page-object inheritance; the POM page is still current.", "when": "no date verified", "sources": ["https://playwright.dev/docs/test-fixtures", "https://playwright.dev/docs/test-global-setup-teardown", "https://playwright.dev/docs/pom"], "status": "verified as current guidance; 'changed recently' not confirmed"},
+    {"area": "Playwright ARIA snapshots", "what": "toMatchAriaSnapshot added.", "when": "v1.49, released 2024-11-18", "sources": ["https://playwright.dev/docs/release-notes", "https://playwright.dev/docs/aria-snapshots"], "status": "verified"},
+    {"area": "Playwright Test Agents", "what": "Planner, generator and healer agents; npx playwright init-agents.", "when": "v1.56, released 2025-10-06", "sources": ["https://playwright.dev/docs/release-notes", "https://playwright.dev/docs/test-agents"], "status": "verified"},
+    {"area": "Selenium and WebDriver BiDi", "what": "BiDi is the W3C cross-browser replacement for CDP; Selenium says CDP support is temporary and it is moving from Classic to BiDi. Firefox deprecated CDP from version 129. The spec remains an Editor's Draft.", "when": "Mozilla post 2024-05-28; Selenium page modified 2026-08-15; W3C draft 2026-11-26", "sources": ["https://www.selenium.dev/documentation/webdriver/bidi/", "https://fxdx.dev/deprecating-cdp-support-in-firefox-embracing-the-future-with-webdriver-bidi/", "https://w3c.github.io/webdriver-bidi/"], "status": "verified"},
+    {"area": "Test shapes", "what": "Pyramid challenged by the trophy and honeycomb in 2018; Fowler reframed the debate as definitional in 2021; Google proposed SMURF trade-offs in 2024.", "when": "2018-01 (Spotify), 2018-02-06 (Dodds tweet), 2021-06-02 (Fowler), 2021-06-03 (Dodds article), 2024-10-15 (Google)", "sources": ["https://engineering.atspotify.com/2018/01/testing-of-microservices", "https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications", "https://martinfowler.com/articles/2021-test-shapes.html", "https://testing.googleblog.com/2024/10/smurf-beyond-test-pyramid.html"], "status": "verified"},
+    {"area": "AI-assisted testing", "what": "Playwright MCP server drives browsers from accessibility snapshots; Playwright agents shipped October 2025; OWASP publishes a 2025 LLM Top 10.", "when": "2025; MCP repo first-release date not captured", "sources": ["https://github.com/microsoft/playwright-mcp", "https://playwright.dev/docs/test-agents", "https://genai.owasp.org/llm-top-10/"], "status": "verified, except the MCP release date"},
+    {"area": "Standards and tool versions", "what": "ISTQB CTFL v4.0 (2023) and v4.0.1 (2024-09-15) include shift left, DevOps, the test pyramid and testing quadrants. OWASP Top 10:2025 is current. OWASP API Security Top 10 is the 2023 edition. ASVS is 5.0.0. WCAG 2.2 edition dated 2024-12-12. OpenAPI 3.2.1 dated 2026-09-10. RFC 9110 dated June 2022. REST Assured docs moved to rest-assured.io (v7.0.0). JUnit @ParameterizedClass is experimental.", "when": "as listed", "sources": ["https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "https://owasp.org/projects/top-ten", "https://api-security.owasp.org/editions/2023/en/0x11-t10/", "https://asvs.owasp.org/", "https://www.w3.org/TR/WCAG22/", "https://spec.openapis.org/oas/latest.html", "https://www.rfc-editor.org/rfc/rfc9110.html", "https://rest-assured.io/", "https://docs.junit.org/current/writing-tests/parameterized-classes-and-tests.html"], "status": "verified"}
+  ],
+  "existing_guides": [
+    {"name": "Software Engineering at Google (chapters 11 to 14)", "url": "https://abseil.io/resources/swe-book", "organisation": "Book chapters: Testing Overview, Unit Testing, Test Doubles, Larger Testing. Long prose with a TL;DR list at the end of each chapter.", "licence": "CC BY-NC-ND 4.0", "licence_status": "verified on the page", "reuse": "Link and quote briefly. No derivatives and no commercial use."},
+    {"name": "ISTQB CTFL syllabus v4.0.1", "url": "https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf", "organisation": "Six chapters with numbered sections, each with learning objectives and a knowledge level: fundamentals, testing in the SDLC, static testing, test analysis and design, managing test activities, test tools.", "licence": "Copyright ISTQB. 'Extracts, for non-commercial use, from this document may be copied if the source is acknowledged.'", "licence_status": "verified in the PDF", "reuse": "Use its section structure as a checklist for coverage; write original text."},
+    {"name": "web.dev Learn Testing", "url": "https://web.dev/learn/testing", "organisation": "A course of short articles in order (what testing is, types of automated testing, static analysis, tools, and more), each with a 'Read article' card.", "licence": "Google's developer site policy says content is CC BY 4.0 and code samples Apache 2.0 unless noted.", "licence_status": "reported: read on the Google Developers site policies page, not on the web.dev page footer", "reuse": "Confirm the footer before reusing anything."},
+    {"name": "goldbergyoni/javascript-testing-best-practices", "url": "https://github.com/goldbergyoni/javascript-testing-best-practices", "organisation": "Numbered sections with bullet counts: 0 Golden Rule (1), 1 Test Anatomy (12), 2 Backend (13), 3 Frontend (11), 4 Measuring Test Effectiveness (4), 5 Continuous Integration (9). Each bullet has Do, Otherwise and a code example.", "licence": "MIT", "licence_status": "verified in the LICENSE file", "reuse": "The Do / Otherwise / example pattern is a good model for a concept page."},
+    {"name": "Microsoft Engineering Fundamentals Playbook, automated testing", "url": "https://microsoft.github.io/code-with-engineering-playbook/automated-testing/", "organisation": "A fundamentals checklist followed by one section per test type.", "licence": "CC BY 4.0", "licence_status": "verified in the repository LICENSE file", "reuse": "Reusable with attribution."},
+    {"name": "roadmap.sh QA roadmap", "url": "https://roadmap.sh/qa", "organisation": "A visual node map of topics with progress tracking; the page content is rendered by script, so topic names were not read.", "licence": "Personal use only; republishing the content in any form is not allowed.", "licence_status": "verified in the repository licence file", "reuse": "Do not copy. Progress tracking is an idea worth borrowing."},
+    {"name": "OWASP Web Security Testing Guide", "url": "https://owasp.org/projects/web-security-testing-guide", "organisation": "Test categories with numbered test cases; stable v4.2.", "licence": "CC BY-SA 4.0", "licence_status": "verified on the project page", "reuse": "Share-alike applies to adaptations."},
+    {"name": "Playwright docs", "url": "https://playwright.dev/docs/best-practices", "organisation": "Guides grouped by task, with one best-practices page of short rules.", "licence": "Repository is Apache 2.0", "licence_status": "verified for the repository LICENSE; that it covers the docs text is inferred", "reuse": "Link, do not copy."},
+    {"name": "Selenium docs, test practices", "url": "https://www.selenium.dev/documentation/test_practices/discouraged/", "organisation": "Encouraged practices, discouraged practices, design strategies, testing types.", "licence": "Docs repository is Apache 2.0", "licence_status": "verified in the repository LICENSE file", "reuse": "Link, do not copy. The encouraged/discouraged split is a clear model."},
+    {"name": "Ministry of Testing", "url": "https://www.ministryoftesting.com/certifications", "organisation": "Community site with paid certificates, including Software Testing Essentials and a Foundation Certificate in Test Automation.", "licence": "not found", "licence_status": "not verified; terms page returned 404", "reuse": "Assume all rights reserved."},
+    {"name": "Test Automation University", "url": "https://testautomationu.applitools.com/learningpaths.html", "organisation": "Free video courses grouped into learning paths. The site is rendered by script, so the path list was not read.", "licence": "Footer: '(c) 2026 Applitools. All rights reserved.'", "licence_status": "footer verified; organisation reported", "reuse": "Link only."}
+  ],
+  "not_verified": [
+    "ISTQB CT-GenAI (Testing with Generative AI) page returned HTTP 500 on three attempts; no claim about it is made.",
+    "Calendar date of the first Playwright MCP release.",
+    "Whether the web.dev Learn Testing pages carry their own CC BY 4.0 footer.",
+    "roadmap.sh/qa topic names and Test Automation University course list (both rendered by script).",
+    "Ministry of Testing content licence.",
+    "Fowler, Kent C. Dodds and Google Testing Blog content licences were not checked; treat as all rights reserved.",
+    "The original publication date of WCAG 2.2 (only the 12 December 2024 edition date was read).",
+    "No measured study comparing page objects with Screenplay, or BDD with code-first tests, was found."
+  ]
+}

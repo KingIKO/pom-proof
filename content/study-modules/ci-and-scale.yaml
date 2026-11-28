@@ -1,0 +1,4 @@
+title: CI and running at scale
+stage: D
+order: 8
+summary: How to run suites in a pipeline. It covers parallel runs, sharding, retry policy, reports and self-contained test environments.

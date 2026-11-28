@@ -1,0 +1,4 @@
+title: API, contract and database testing
+stage: C
+order: 7
+summary: HTTP rules, API test design, schema checks, contract tests, service doubles and SQL for testers.

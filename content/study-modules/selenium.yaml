@@ -1,0 +1,4 @@
+title: Selenium 4 with Java and Python
+stage: C
+order: 6
+summary: WebDriver Classic and WebDriver BiDi, Selenium locators and waits, page objects, Selenium Grid, and the pytest and JUnit runner features.

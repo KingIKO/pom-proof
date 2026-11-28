@@ -68,26 +68,35 @@ Routes: `/study/`, `/study/<module>/`, `/study/<module>/<page>/`. Word slugs, so
 
 Content:
 - `content/study-modules/<module>.yaml`: `title`, `stage` (A to D), `order`, `summary`.
-- `content/study/<module>/<page>.md`: frontmatter as in the example in section 4, plus optional `expertsDisagree: [{ question, positions: [{ view, holdsWhen, source }] }]` with at least two positions.
+- `content/study/<module>/<page>.md`: frontmatter as in the example in section 4, plus optional `expertsDisagree: [{ question, note, positions: [{ view, holdsWhen, source }] }]` with at least two positions. `source` is one URL or a list, and each URL must also be in the page's `sources`.
+- The file name is the concept's `slug` in `.notes/study/topic-map.json`, and the folder is the module's `slug`. A page beyond the 64 planned concepts first gets its own concept entry in the map.
 - `examples` reuses `exampleSchema` (`src/content.config.ts`); `CodeExamples.astro` only needs its props type widened.
 
-Page template, top to bottom: title band with module breadcrumb and minutes, prerequisites, outcomes, body, example, "Use it when" and "Avoid it when", what changed (with the date checked), experts disagree, Practice this, sources, `Mark as read`, pager (Previous, Next, Module overview).
-- "Practice this" links to `/?topic=a,b` with a build-time count (`Practice 6 problems`) and to `/questions/?topic=x`; omitted when no problem matches.
+Page template, top to bottom: title band with module breadcrumb and minutes, summary, "Read first" (only prerequisites whose pages are written; hidden when none are), then "After this page, you can" beside a short recap ("Use it when" and "Avoid it when"), body, example, what changed (with the date checked), experts disagree, Sources, Practice this, `Mark as read`, pager (Previous, Next, Module overview). Decision (b) below.
+- "Practice this" links to `/?topic=a,b` with a build-time count (`Practice 6 problems`) and to `/questions/?topic=x`. The problems link is omitted when no problem matches; leave `practiceTopics` out when no problem is about the page's subject.
 - `Mark as read` is the page's one filled primary. Once clicked: `Read on 27 Nov` with a `Mark as unread` text button.
 - Read state: localStorage `pom-proof:study` as `{ version: 1, read: { "<module>/<page>": date } }`.
 
 Landing: four stage headings, ten module cards (one-line summary, page count, minutes, pages read), one `Start here` link to the first unread page.
 Module page: ordered page list with summary, minutes and read state.
 Left nav: all modules listed, only the current one open. Narrow screens: one `<details>` above the content.
-Header: five links, Practice, Study, Questions, Tracks, Progress. Changes the `section` union in `Base.astro` and the nav-count checks (`toHaveCount(4)`) in `foundation.spec.ts` and `links.spec.ts`. Check the header at 360px.
+Header: five links, Practice, Study, Questions, Tracks, Progress, once `showStudyInNav` is on (decision (a) below). The header and the 404 page both read the section list in `src/lib/site-nav.ts`. The nav-count checks in `foundation.spec.ts` and `links.spec.ts` read the switch, so they expect 4 while it is off and 5 after. Check the header at 360px.
 
-Launch scope: the 31 core pages, so every module has at least one page. Extended pages appear only when written; no placeholder pages. Adding a page later = one file with an `order` value.
+Launch scope: the 31 core pages, so every module has at least one page. Extended pages appear only when written; no placeholder pages. Adding a page later = one file named after its concept's slug, with an `order` value that only sorts it within the module.
+
+Decisions after the first review (owner, 2026-11-27):
+- (a) Study stays out of the header until the first 18 core pages are written and reviewed: stages A and B, which are testing foundations, test design, automation fundamentals and framework design. The shell merges with the Study link hidden. `showStudyInNav` in `src/lib/site-nav.ts` is the one switch, and a later one-line PR flips it. The routes still build and work by URL for writers and reviewers. The 404 page follows the same switch.
+- (b) "Use it when" and "Avoid it when" become a short recap at the top, beside "After this page, you can". The page ends with Sources, Practice this, `Mark as read` and the pager. The recap must not repeat the body's wording (section 4).
 
 ## 4. Study authoring
 
-Body: four headings in order `What it is`, `How it works`, `Why it helps`, `When not to use it`. 200 to 450 words outside code. `summary` at most 2 sentences. Each outcome 1 sentence, 2 to 4 per page. `minutes` = body words / 200 rounded up, plus 1 with an example. Original wording; sources only from the topic map (copied to `.notes/study/topic-map.json`).
+Body: four headings in order `What it is`, `How it works`, `Why it helps`, `When not to use it`. 200 to 450 words outside fenced code; the heading words count. `summary` at most 2 sentences. Each outcome 1 sentence, 2 to 4 per page. `minutes` = body words / 200 rounded up, plus 1 with an example. Original wording; sources only from `concepts[].sources` in the topic map (`.notes/study/topic-map.json`), with the type the map gives each one. `existing_guides` and other links in the map do not count.
 
-Example page `content/study/framework-design/parameterised-tests.md` (topic map m4-c5):
+Recap: each `useWhen` and `avoidWhen` item is one sentence that sums up the body in other words. Do not repeat the body's wording; the test rejects an item that shares more than four words in a row with the body. Write each item as a block list entry (`- item`), because a comma inside a `[flow, list]` splits one item into two.
+
+Prerequisites: list the pages, as `<module slug>/<concept slug>`, for exactly the concepts the map gives as this concept's `prerequisites`. An unwritten prerequisite stays out of "Read first" until its page exists.
+
+Example page `content/study/framework-design/parameterised-tests.md` (topic map m4-c5). This is the first draft; the committed file is the reference, because the accuracy review changed its wording and its example (whole cents instead of decimal money):
 
 ````md
 ---
@@ -101,8 +110,10 @@ prerequisites: [test-design/equivalence-and-boundaries, automation-fundamentals/
 outcomes:
   - Tell when a table of rows is clearer than separate tests.
   - Write a parameterised test that names each row.
-useWhen: [Boundary and partition tables, role matrices and locale sets.]
-avoidWhen: [Rows that need different steps or different assertions.]
+useWhen:
+  - Boundary and partition tables, role matrices and locale sets.
+avoidWhen:
+  - Rows that need different steps or different assertions.
 practiceTopics: [boundary-testing, equivalence-partitioning, decision-tables]
 questionTopics: [test-design, framework-design]
 examples:
@@ -158,7 +169,7 @@ Adding a case means adding one row. A reviewer can read the table and see which 
 If a row needs different steps or a different assertion, write a separate test for it. An `if` inside the test body shows this problem. The body then describes more than one behaviour, and a reader must trace each row separately.
 ````
 
-Validation in `tests/content/study.test.ts` (discovery in `tests/support/study.ts`): headings present and in order, word limits, `minutes` formula; prerequisites resolve with no cycles; each `practiceTopics` value matches at least one problem topic; at least one primary source per page and every URL appears in `.notes/study/topic-map.json`; plain-language check enforced on Study pages; `tests/content/examples.test.ts` parses Study snippets; `links.spec.ts` and `a11y.spec.ts` cover the new routes.
+Validation in `tests/content/study.test.ts` (discovery in `tests/support/study.ts`): headings present and in order, word limits, `minutes` formula; the file name is a planned concept slug, and the page's level matches the concept; prerequisites agree with the map's and have no cycles; the recap does not repeat the body; each `practiceTopics` value matches at least one problem topic; at least one primary source per page, and every URL is in a concept's `sources` with the same type; the map's slugs are unique and its prerequisites exist without cycles; plain-language check enforced on Study pages; `tests/content/examples.test.ts` parses Study snippets; `links.spec.ts` and `a11y.spec.ts` cover the new routes.
 
 Writers (iko-bedrock, one per module) own only `content/study/<module>/**`. Accuracy review (iko-proof) against the cited sources: every page with `whatChanged` or `expertsDisagree` in full; every page whose topic-map `practice` has no named source in full (m10-c3, m8-c3, m7-c7); one page in two of the rest; one factual error extends the review to the whole module. The page objects page must give both sides on assertions inside page objects.
 
@@ -178,6 +189,6 @@ Landing for each PR: `npm run verify`, PR to main as KingIKO, automatic Codex (A
 
 - Restored filters could surprise: only in-app links carry them, the picker and checked boxes show them. The brand link opens all problems, or the active practice set when one is active (owner decision, 2026-11-27). All problems in the picker clears the set.
 - A set filtering on status shrinks as problems get solved, so positions shift: allowed.
-- Five header links may wrap on phones: PR 3 checks 360px; fallback is letting the nav scroll sideways.
+- Five header links may wrap on phones: PR 3 checked 360px with five links, and below 36rem the links take their own row. While `showStudyInNav` is off the tests check four; the PR that flips it reruns the 360px checks with five.
 - Study text can go stale: `whatChanged.checked` shows on the page; a re-check is a content PR.
 - Scout-synthesised claims may be wrong: full iko-proof review of those pages.

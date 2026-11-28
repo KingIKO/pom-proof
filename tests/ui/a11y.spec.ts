@@ -16,6 +16,11 @@ const pages = [
   { name: 'question page', url: 'questions/playwright/independent-checkout-contexts/' },
   { name: 'tracks list', url: 'tracks/' },
   { name: 'track page', url: 'tracks/automation/' },
+  { name: 'study landing', url: 'study/' },
+  { name: 'study module page', url: 'study/framework-design/' },
+  // The two pilot pages: one with a dispute and two examples, one with a "what changed" box.
+  { name: 'study page object page', url: 'study/framework-design/page-object-model/' },
+  { name: 'study parameterised tests page', url: 'study/framework-design/parameterised-tests/' },
   { name: '404 page', url: 'this-page-does-not-exist/', status: 404 },
 ];
 
@@ -106,6 +111,27 @@ test('a revealed answer with a code example has no serious or critical axe viola
   await page.getByText('Show answer').click();
   await expect(page.getByRole('group', { name: 'Example language' }).first()).toBeVisible();
   await expectNoSeriousViolations(page, testInfo, 'revealed answer with an example');
+});
+
+test('a Study page marked as read, with its example switched, has no serious or critical axe violations', async ({ page }, testInfo) => {
+  await open(page, 'study/framework-design/parameterised-tests/');
+  await page.getByRole('button', { name: 'Mark as read' }).click();
+  await expect(page.getByRole('button', { name: 'Mark as unread' })).toBeFocused();
+  const languages = page.getByRole('group', { name: 'Example language' });
+  await languages.getByRole('button', { name: 'Python' }).click();
+  await expect(languages.getByRole('button', { name: 'Python' })).toHaveAttribute('aria-pressed', 'true');
+  await expectNoSeriousViolations(page, testInfo, 'read, example switched');
+});
+
+test('the Study module list folded on a narrow screen has no serious or critical axe violations', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 360, height: 760 });
+  await open(page, 'study/framework-design/page-object-model/');
+  const modules = page.locator('details[data-study-nav]');
+  await expect(modules).not.toHaveAttribute('open');
+  await expectNoSeriousViolations(page, testInfo, 'folded module list');
+  await modules.locator('summary').click();
+  await expect(page.getByRole('navigation', { name: 'Study modules' })).toBeVisible();
+  await expectNoSeriousViolations(page, testInfo, 'open module list');
 });
 
 test('code run results have no serious or critical axe violations', async ({ page }, testInfo) => {

@@ -1,7 +1,7 @@
 import { defineCollection, reference } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { problemSchema, roleSchema, textSchema } from './lib/problem-schema';
+import { idSchema, problemSchema, roleSchema, textSchema } from './lib/problem-schema';
 
 const load = (base: string, extension: 'md' | 'yaml') => glob({
   base: `./content/${base}`,
@@ -27,6 +27,23 @@ const exampleSchema = z.strictObject({
       'Multi-variant examples support only ts, js, python and java'),
 });
 
+const questionTopic = z.enum([
+  'fundamentals', 'test-design', 'bug-reports', 'agile', 'automation-strategy',
+  'locators-waits', 'flaky-tests', 'playwright', 'selenium', 'api',
+  'ci-git-docker', 'behavioral', 'leadership',
+  'framework-design', 'bdd', 'cypress', 'performance', 'security', 'ai-testing',
+  'system-design', 'sql', 'java', 'python', 'javascript-typescript', 'containers',
+]);
+
+/** A Study page id, `<module>/<page>`; a prerequisite may name a page that is not written yet. */
+const studyPageId = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  'Use <module>/<page> in lowercase words joined by hyphens');
+const studySource = z.strictObject({
+  label: textSchema,
+  url: z.url({ protocol: /^https$/ }),
+  type: z.enum(['primary', 'practitioner']),
+});
+
 export const collections = {
   problems: defineCollection({
     loader: load('problems', 'md'),
@@ -40,13 +57,7 @@ export const collections = {
     loader: load('questions', 'md'),
     schema: z.strictObject({
       title: textSchema,
-      topic: z.enum([
-        'fundamentals', 'test-design', 'bug-reports', 'agile', 'automation-strategy',
-        'locators-waits', 'flaky-tests', 'playwright', 'selenium', 'api',
-        'ci-git-docker', 'behavioral', 'leadership',
-        'framework-design', 'bdd', 'cypress', 'performance', 'security', 'ai-testing',
-        'system-design', 'sql', 'java', 'python', 'javascript-typescript', 'containers',
-      ]),
+      topic: questionTopic,
       roles: z.array(roleSchema).min(1),
       level: z.enum(['junior', 'mid', 'senior']),
       type: z.enum(['concept', 'scenario', 'behavioral', 'tooling']),
@@ -71,6 +82,51 @@ export const collections = {
         questions: z.array(reference('questions')),
       }).refine(({ problems, questions }) => problems.length + questions.length > 0,
         'Each section needs at least one problem or question')).min(1),
+    }),
+  }),
+  studyModules: defineCollection({
+    loader: load('study-modules', 'yaml'),
+    schema: z.strictObject({
+      title: textSchema,
+      stage: z.enum(['A', 'B', 'C', 'D']),
+      order: z.number().int().positive(),
+      summary: textSchema,
+    }),
+  }),
+  study: defineCollection({
+    loader: load('study', 'md'),
+    schema: z.strictObject({
+      title: textSchema,
+      module: idSchema,
+      order: z.number().int().positive(),
+      level: z.enum(['core', 'extended']),
+      summary: textSchema,
+      minutes: z.number().int().positive(),
+      prerequisites: z.array(studyPageId).default([]),
+      outcomes: z.array(textSchema).min(2).max(4),
+      useWhen: z.array(textSchema).min(1),
+      avoidWhen: z.array(textSchema).min(1),
+      practiceTopics: z.array(idSchema).default([]),
+      questionTopics: z.array(questionTopic).default([]),
+      examples: z.array(exampleSchema).min(1).max(2).optional(),
+      sources: z.array(studySource).min(1)
+        .refine((sources) => sources.some(({ type }) => type === 'primary'), 'List at least one primary source')
+        .refine((sources) => new Set(sources.map(({ url }) => url)).size === sources.length, 'List each source once'),
+      whatChanged: z.strictObject({
+        checked: z.coerce.date(),
+        items: z.array(textSchema).min(1),
+      }).optional(),
+      expertsDisagree: z.array(z.strictObject({
+        question: textSchema,
+        note: textSchema.optional(),
+        positions: z.array(z.strictObject({
+          view: textSchema,
+          holdsWhen: textSchema,
+          // One URL, or a list when a view rests on more than one source. Read as a list.
+          source: z.union([z.url({ protocol: /^https$/ }), z.array(z.url({ protocol: /^https$/ })).min(1)])
+            .transform((source) => (Array.isArray(source) ? source : [source])),
+        })).min(2),
+      })).min(1).optional(),
     }),
   }),
 };

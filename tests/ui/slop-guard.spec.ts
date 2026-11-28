@@ -61,6 +61,9 @@ function pageSamples() {
     // The question 2E built the page against; it has every answer section, sources included.
     if (route === 'questions/[topic]/[id]') return { route, urls: ['questions/playwright/independent-checkout-contexts/'], status: 200 };
     if (route === 'tracks/[role]') return { route, urls: tracks.slice(0, 1).map((file) => `tracks/${file.replace(/\.ya?ml$/, '')}/`), status: 200 };
+    // The Study pilot module, and its page with the most parts: two examples and a dispute.
+    if (route === 'study/[module]') return { route, urls: ['study/framework-design/'], status: 200 };
+    if (route === 'study/[module]/[page]') return { route, urls: ['study/framework-design/page-object-model/'], status: 200 };
     return { route, urls: [], status: 200 };
   });
 }
@@ -569,6 +572,15 @@ test('questions: an expanded card with a switchable code example has no slop', a
     await expect(languages.getByRole('button').nth(1)).toHaveAttribute('aria-pressed', 'true');
     expect(grouped(await scan(page)), 'switched example').toEqual([]);
   });
+});
+
+test('study: a page marked as read, with its example switched, has no slop', async ({ page }) => {
+  await settle(page, 'study/framework-design/parameterised-tests/', 200);
+  await page.getByRole('button', { name: 'Mark as read' }).click();
+  await expect(page.getByRole('button', { name: 'Mark as unread' })).toBeVisible();
+  await page.getByRole('group', { name: 'Example language' }).getByRole('button', { name: 'Python' }).click();
+  expect(grouped(await scan(page)), 'read, example switched').toEqual([]);
+  expect(grouped(await scanFocusStates(page)), 'read state focus states').toEqual([]);
 });
 
 test.describe('the first item is in view at 1440x900', () => {

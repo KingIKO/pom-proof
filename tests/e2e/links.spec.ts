@@ -1,9 +1,12 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { discoverProblems } from '../support/problems';
+import { discoverStudyPages, studyModulePaths } from '../support/study';
+import { showStudyInNav } from '../../src/lib/site-nav';
 
 const prefix = '/pom-proof/';
 const problems = discoverProblems();
-const indexPages = ['', 'questions/', 'tracks/', 'progress/'];
+const studyPages = discoverStudyPages();
+const indexPages = ['', 'study/', 'questions/', 'tracks/', 'progress/'];
 const entities: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", '#x27': "'" };
 const decode = (text: string) => text.replace(/&(amp|lt|gt|quot|#39|#x27);/g, (_, name: string) => entities[name]);
 
@@ -83,6 +86,17 @@ test('every internal link on every problem page answers 200 under /pom-proof/', 
   testInfo.annotations.push({ type: 'links', description: `${links.length} links from ${urls.length} problem pages, ${checked} distinct pages checked` });
 });
 
+// Study pages draw their read marks from a script but no links, so the rendered page holds every
+// link: the module list, prerequisites, Practice this, sources and the pager.
+test('every internal link on every Study module and page answers 200 under /pom-proof/', async ({ page, request, baseURL }, testInfo) => {
+  const paths = [...studyModulePaths(studyPages), ...studyPages.map(({ path }) => path)];
+  expect(studyPages.length, 'Study pages to crawl').toBeGreaterThan(0);
+  const links: Link[] = [];
+  for (const path of paths) links.push(...await renderedLinks(page, path));
+  const checked = await expectLinksResolve(request, new URL(baseURL!).origin, links);
+  testInfo.annotations.push({ type: 'links', description: `${links.length} links from ${paths.length} Study pages, ${checked} distinct pages checked` });
+});
+
 test('every practice list row links to its own problem page', async ({ page, request, baseURL }) => {
   await page.goto('');
   const rows = page.getByRole('table', { name: 'Practice problems' }).locator('tbody tr');
@@ -118,10 +132,15 @@ for (const path of ['this-page-does-not-exist/', 'practice/code/no-such-problem/
     await expect(page).toHaveTitle('Page not found | POM Proof');
     await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
     await expect(page.locator('main > .title-band h1'), 'the heading sits in the title band').toHaveText('Page not found');
-    await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveCount(4);
-    // The four sections, linked from the page body as well as the header.
+    await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveCount(showStudyInNav ? 5 : 4);
+    // The same sections, linked from the page body as well as the header. Study joins both with the switch.
+    const sections = page.getByRole('navigation', { name: 'Find a section' }).getByRole('link');
+    await expect(sections).toHaveText(showStudyInNav
+      ? ['Practice', 'Study', 'Questions', 'Tracks', 'Progress']
+      : ['Practice', 'Questions', 'Tracks', 'Progress']);
     const main = page.getByRole('main');
     await expect(main.getByRole('link', { name: 'Practice', exact: true })).toHaveAttribute('href', prefix);
+    if (showStudyInNav) await expect(main.getByRole('link', { name: 'Study', exact: true })).toHaveAttribute('href', `${prefix}study/`);
     await expect(main.getByRole('link', { name: 'Questions', exact: true })).toHaveAttribute('href', `${prefix}questions/`);
     await expect(main.getByRole('link', { name: 'Tracks', exact: true })).toHaveAttribute('href', `${prefix}tracks/`);
     await expect(main.getByRole('link', { name: 'Progress', exact: true })).toHaveAttribute('href', `${prefix}progress/`);
