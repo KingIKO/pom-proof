@@ -27,6 +27,30 @@
 
 .practice-continue { min-inline-size: 6.5rem; }
 
+.practice-complete {
+  margin: 0;
+  color: var(--pass);
+  font-size: var(--type-14);
+  font-weight: var(--weight-medium);
+}
+
+/* The practice set row above the filters: picker, actions, the inline form or confirm, and the status line. */
+.practice-sets {
+  display: grid;
+  margin-block-end: var(--space-16);
+  padding-block-end: var(--space-16);
+  border-block-end: 1px solid var(--divider);
+}
+
+.practice-sets > * + * { margin-block-start: var(--space-8); }
+.practice-sets > .set-status:empty { margin: 0; }
+.set-actions { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.set-form, .set-confirm { display: grid; gap: var(--space-8); }
+.set-label { font-size: var(--type-14); font-weight: var(--weight-medium); }
+.set-confirm p, .set-status, .set-note { margin: 0; font-size: var(--type-14); overflow-wrap: anywhere; }
+.set-status, .set-note { color: var(--text2); }
+.set-error { margin: 0; color: var(--fail); font-size: var(--type-13); }
+
 .practice-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--rail-width);
@@ -129,6 +153,8 @@
 @media (width < 60rem) {
   .practice-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-16); }
   .practice-layout > .filter-sidebar, .practice-results { grid-area: auto; }
+  /* The folded filter card follows, so the row needs no divider of its own. */
+  .practice-sets { padding-block-end: 0; border-block-end: 0; }
 }
 
 @media (width < 36rem) {
@@ -136,7 +162,7 @@
   .title-row:has(.practice-actions) { gap: var(--space-12) var(--space-16); }
   .title-actions:has(.practice-actions), .practice-actions { display: contents; }
   .practice-progress { grid-area: 2 / 1 / 3 / -1; }
-  .practice-continue { grid-area: 1 / 2; }
+  .practice-continue, .practice-complete { grid-area: 1 / 2; }
   .catalog-table .row-card { grid-template-columns: minmax(0, 1fr); padding: var(--space-16); }
   .catalog-table .row-card[data-current] { padding-inline-start: calc(var(--space-16) - 2px); }
   .catalog-meta { margin-block-start: var(--space-4); }

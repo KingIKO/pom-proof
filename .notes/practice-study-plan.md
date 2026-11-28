@@ -176,7 +176,7 @@ Landing for each PR: `npm run verify`, PR to main as KingIKO, automatic Codex (A
 
 ## 6. Risks and defaults
 
-- Restored filters could surprise: only in-app links carry them, the picker and checked boxes show them, and the brand link always opens all problems.
+- Restored filters could surprise: only in-app links carry them, the picker and checked boxes show them. The brand link opens all problems, or the active practice set when one is active (owner decision, 2026-11-27). All problems in the picker clears the set.
 - A set filtering on status shrinks as problems get solved, so positions shift: allowed.
 - Five header links may wrap on phones: PR 3 checks 360px; fallback is letting the nav scroll sideways.
 - Study text can go stale: `whatChanged.checked` shows on the page; a re-check is a content PR.

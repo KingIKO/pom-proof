@@ -3,11 +3,16 @@ import type { CatalogProblem } from '../../lib/catalog';
 import type { ProgressAttempt } from '../../lib/contracts';
 import { difficultyLabel, kindLabel, problemStatus, statusLabel, topicLabel } from '../../lib/labels';
 import {
-  latestPracticeContext, nearestShown, practiceContextEvent, practiceLabel, practiceRowId, readPracticeContext,
+  allProblemsParam, latestPracticeContext, nearestShown, practiceContextEvent, practiceLabel, practiceRowId, readPracticeContext,
   writePracticeContext, type PracticeContext,
 } from '../../lib/practice-context';
+import {
+  addPracticeSet, changePracticeSet, checkSetName, choosePracticeSet, deletePracticeSet, findMatchingSet, findPracticeSet,
+  onPracticeSetsChange, readPracticeSets, writePracticeSets, type PracticeSets,
+} from '../../lib/practice-sets';
 import { bestScores, onProgressChange, readProgress } from '../../lib/progress';
 import { problemUrl } from '../../lib/url';
+import PracticeSetRow, { type SetResult } from './PracticeSetRow';
 
 const groups = {
   status: { label: 'Status', options: statusLabel },
@@ -41,8 +46,9 @@ const topicLabels = new Map([
 ]);
 const displayTopic = (topic: string) => topicLabels.get(topic) ?? topicLabel(topic);
 
-function readFilters(topics: readonly Option[]): Filters {
-  const params = new URLSearchParams(window.location.search);
+/** The filters in a list query, by default the page's own. Values the list does not offer are dropped. */
+function readFilters(topics: readonly Option[], search = window.location.search): Filters {
+  const params = new URLSearchParams(search);
   const filters = { ...emptyFilters, q: params.get('q') ?? '' };
   for (const key of facets) {
     const values = new Set(params.get(key)?.split(',') ?? []);
@@ -66,6 +72,27 @@ function setFilterParams(params: URLSearchParams, filters: Filters) {
 /** The filters as the list URL writes them, without the leading `?`. */
 function filterQuery(filters: Filters) {
   return setFilterParams(new URLSearchParams(), filters).toString();
+}
+
+/**
+ * Whether a query names the list's view: any filter, even one whose values the list drops, or
+ * `view=all` for every problem. Only a query that names neither is a bare visit.
+ */
+function namesView(search: string) {
+  const params = new URLSearchParams(search);
+  return ['q', ...facets].some((key) => params.has(key)) || params.get(allProblemsParam.key) === allProblemsParam.value;
+}
+
+const filtersOff = (filters: Filters) => !filters.q.trim() && facets.every((key) => !filters[key].length);
+
+/** The filters with the search trimmed, as a set stores them. */
+const savedFilters = (filters: Filters): Filters => ({ ...filters, q: filters.q.trim() });
+
+/** Equal for filters that list the same problems, whatever order the values were chosen in. */
+function filterKey(filters: Filters) {
+  const sorted = savedFilters(filters);
+  for (const key of facets) sorted[key] = [...filters[key]].sort();
+  return filterQuery(sorted);
 }
 
 function filterLabel(filters: Filters) {
@@ -144,12 +171,6 @@ function useShownList() {
   return context;
 }
 
-/** The problems the list shows right now, in its order; the whole catalog until the list reports its rows. */
-function useShownProblems(problems: PracticeTarget[]) {
-  const context = useShownList();
-  return useMemo(() => context?.items.map(([id, title]) => ({ id, title })) ?? problems, [context, problems]);
-}
-
 /** The title band count: every problem, or how many of them the filters leave. */
 export function PracticeCount({ total }: { total: number }) {
   const context = useShownList();
@@ -158,10 +179,13 @@ export function PracticeCount({ total }: { total: number }) {
 
 export function PracticeProgress({ problems }: { problems: PracticeTarget[] }) {
   const attempts = useAttempts();
-  const shown = useShownProblems(problems);
+  const context = useShownList();
+  // The problems the list shows, in its order; the whole catalog until the list reports its rows.
+  const shown = useMemo(() => context?.items.map(([id, title]) => ({ id, title })) ?? problems, [context, problems]);
   const scores = bestScores(attempts);
   const solved = problems.filter(({ id }) => scores.get(id) === 1).length;
   const next = nextProblem(shown, attempts, scores);
+  const setComplete = Boolean(context?.savedSet) && shown.length > 0 && shown.every(({ id }) => scores.get(id) === 1);
 
   return (
     <div class="practice-actions">
@@ -169,7 +193,7 @@ export function PracticeProgress({ problems }: { problems: PracticeTarget[] }) {
         <span id="practice-solved"><strong>{solved}</strong> of {problems.length} solved</span>
         <progress class="progress-bar" aria-labelledby="practice-solved" value={solved} max={problems.length} />
       </div>
-      {next && (
+      {setComplete ? <p class="practice-complete">Set complete.</p> : next && (
         <a class="button primary practice-continue" href={problemUrl(next.id)} aria-label={`Continue: ${next.title}`}>
           Continue <span class="chevron right" aria-hidden="true" />
         </a>
@@ -189,6 +213,13 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
   const hashHandled = useRef(false);
   const earlierList = useRef<PracticeContext | null>(null);
   const published = useRef<Omit<PracticeContext, 'v'> | null>(null);
+  // Undefined until read, null when storage is unavailable, which hides the set row.
+  const [sets, setSets] = useState<PracticeSets | null | undefined>(undefined);
+  // The set this tab shows or edits. A bare visit in a later tab applies the stored active one.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedSet = sets ? findPracticeSet(sets, selectedId) : undefined;
+  // The set row's status line. The row stays on screen while it shows, even with nothing else in it.
+  const [rowStatus, setRowStatus] = useState('');
 
   // The list stored when the learner left, read before this page replaces it, so a row that has
   // since left the list (now solved under an Unattempted filter, say) can point to its neighbour.
@@ -207,6 +238,9 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
     role: filterOptions(rows, 'role'),
   }), [rows]);
   const topics = useMemo(() => topicOptions(problems), [problems]);
+  const selectedFilters = selectedSet ? readFilters(topics, selectedSet.query) : undefined;
+  // A set whose saved values the list no longer offers, such as a removed topic, filters nothing.
+  const retired = selectedFilters !== undefined && filtersOff(selectedFilters);
 
   useEffect(() => {
     const wide = window.matchMedia('(min-width: 60rem)');
@@ -218,30 +252,169 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
     return () => wide.removeEventListener('change', syncDisclosure);
   }, []);
 
+  function revealTopics(next: Filters) {
+    if (moreTopics.current && topics.slice(topicLimit).some(({ value }) => next.topic.includes(value))) {
+      moreTopics.current.open = true;
+    }
+  }
+
+  /** The saved set that lists the same problems as these filters: the active one when several do. */
+  function matchingSet(state: PracticeSets, next: Filters, tabSelection: string | null) {
+    const key = filterKey(next);
+    return findMatchingSet(state, (set) => filterKey(readFilters(topics, set.query)) === key, tabSelection);
+  }
+
   useEffect(() => {
-    const update = () => {
-      const restored = readFilters(topics);
-      setFilters(restored);
-      if (moreTopics.current && topics.slice(topicLimit).some(({ value }) => restored.topic.includes(value))) {
-        moreTopics.current.open = true;
+    const update = (first: boolean) => {
+      let restored = readFilters(topics);
+      if (first) {
+        // A bare visit applies the active set. A list URL with filters keeps them, and names a saved
+        // set only when it lists the same problems.
+        const stored = readPracticeSets();
+        const active = stored ? findPracticeSet(stored, stored.activeId) : undefined;
+        let selection: string | null = null;
+        let state = stored;
+        if (active && !namesView(window.location.search)) {
+          restored = readFilters(topics, active.query);
+          const location = new URL(window.location.href);
+          setFilterParams(location.searchParams, restored);
+          window.history.replaceState(window.history.state, '', location);
+          selection = active.id;
+        } else if (stored && !filtersOff(restored)) {
+          // A page load starts with no set chosen in this tab.
+          const match = matchingSet(stored, restored, null);
+          selection = match?.id ?? null;
+          if (match && stored.activeId !== match.id) {
+            const chosen = choosePracticeSet(stored, match.id);
+            if (writePracticeSets(chosen)) state = chosen;
+          }
+        }
+        setSets(state);
+        setSelectedId(selection);
       }
+      setFilters(restored);
+      revealTopics(restored);
     };
-    update();
-    window.addEventListener('popstate', update);
-    return () => window.removeEventListener('popstate', update);
+    update(true);
+    const onPopState = () => update(false);
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
   }, [topics]);
 
+  // Another tab may save, rename or delete sets. This tab keeps its list and drops a deleted selection.
+  useEffect(() => {
+    const reread = () => {
+      const next = readPracticeSets();
+      setSets(next);
+      setSelectedId((id) => (next && findPracticeSet(next, id) ? id : null));
+    };
+    const unsubscribe = onPracticeSetsChange(reread);
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) reread();
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('pageshow', onPageShow);
+    };
+  }, []);
+
+  /**
+   * Shows the filters the learner chose and puts them in the URL. With none on, the URL says
+   * `view=all`, so a reload shows every problem rather than the active set.
+   */
   function applyFilters(next: Filters) {
     setFilters(next);
     const location = new URL(window.location.href);
     setFilterParams(location.searchParams, next);
+    if (filtersOff(next)) location.searchParams.set(allProblemsParam.key, allProblemsParam.value);
+    else location.searchParams.delete(allProblemsParam.key);
     window.history.replaceState(window.history.state, '', location);
   }
 
-  function clearFilters() {
-    applyFilters(emptyFilters);
+  /** Re-reads the stored sets, applies the change and stores it; null when storage refuses it. */
+  function storeSets(change: (state: PracticeSets) => PracticeSets) {
+    const current = readPracticeSets();
+    if (!current) return null;
+    const next = change(current);
+    if (!writePracticeSets(next)) return null;
+    setSets(next);
+    return next;
+  }
+
+  function selectSet(id: string | null) {
+    setSelectedId(id);
+    if (sets && sets.activeId !== id) storeSets((state) => choosePracticeSet(state, id));
+  }
+
+  /**
+   * Filters the learner changed. A tab editing a set keeps it, even with every filter cleared, so
+   * Update set can store the new filters and never writes over another set. A tab with no set
+   * chosen picks up the saved set whose filters list the same problems.
+   */
+  function changeFilters(next: Filters) {
+    applyFilters(next);
+    setRowStatus('');
+    if (!sets || selectedId !== null || filtersOff(next)) return;
+    const match = matchingSet(sets, next, selectedId);
+    if (match) selectSet(match.id);
+  }
+
+  function focusFilters() {
     if (disclosure.current?.open) searchField.current?.focus();
     else disclosure.current?.querySelector('summary')?.focus();
+  }
+
+  /** Clear filters means all problems, so it also leaves the chosen set, as All problems does. */
+  function clearFilters() {
+    applyFilters(emptyFilters);
+    setRowStatus('');
+    selectSet(null);
+    focusFilters();
+  }
+
+  const storageFailure = { ok: false as const, message: 'The change could not be saved. Check your browser’s storage settings and try again.' };
+
+  function chooseSet(id: string | null) {
+    const set = sets && findPracticeSet(sets, id);
+    const next = set ? readFilters(topics, set.query) : emptyFilters;
+    applyFilters(next);
+    revealTopics(next);
+    selectSet(set ? set.id : null);
+  }
+
+  function saveSet(input: string): SetResult {
+    if (!sets || !currentFilters) return storageFailure;
+    const named = checkSetName(input, sets.sets);
+    if (!named.ok) return { ...named, field: true };
+    const next = storeSets((state) => addPracticeSet(state, named.name, filterQuery(savedFilters(currentFilters))));
+    if (!next) return storageFailure;
+    setSelectedId(next.activeId);
+    return { ok: true, message: `Saved “${named.name}”.` };
+  }
+
+  function updateSet(): SetResult {
+    if (!selectedSet || !currentFilters) return storageFailure;
+    const query = filterQuery(savedFilters(currentFilters));
+    return storeSets((state) => changePracticeSet(state, selectedSet.id, { query }))
+      ? { ok: true, message: `Updated “${selectedSet.name}”.` }
+      : storageFailure;
+  }
+
+  function renameSet(input: string): SetResult {
+    if (!sets || !selectedSet) return storageFailure;
+    const named = checkSetName(input, sets.sets, selectedSet.id);
+    if (!named.ok) return { ...named, field: true };
+    return storeSets((state) => changePracticeSet(state, selectedSet.id, { name: named.name }))
+      ? { ok: true, message: `Renamed to “${named.name}”.` }
+      : storageFailure;
+  }
+
+  function deleteSet(): SetResult {
+    if (!selectedSet) return storageFailure;
+    if (!storeSets((state) => deletePracticeSet(state, selectedSet.id))) return storageFailure;
+    setSelectedId(null);
+    return { ok: true, message: `Deleted “${selectedSet.name}”.` };
   }
 
   function checkbox(key: Facet, { value, label, count }: Option) {
@@ -251,7 +424,7 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
       <label class="check-row" key={value}>
         <input type="checkbox" name={key} value={value} checked={selected.includes(value)}
           disabled={currentFilters === null} aria-describedby={countId}
-          onChange={({ currentTarget }) => applyFilters({
+          onChange={({ currentTarget }) => changeFilters({
             ...filters,
             [key]: currentTarget.checked ? [...selected, value] : selected.filter((item) => item !== value),
           })} />
@@ -268,16 +441,23 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
       .some((part) => part.toLowerCase().includes(search))));
   const visibleIds = visible.map(({ id }) => id).join(' ');
 
+  // The chosen set names the list while the filters are still the set's own. A retired set filters
+  // nothing, so the list it would name is all problems and keeps the plain label.
+  const setShown = Boolean(selectedFilters && currentFilters && !retired
+    && filterKey(selectedFilters) === filterKey(currentFilters));
+  const listLabel = !currentFilters ? '' : setShown ? selectedSet!.name : filterLabel(currentFilters);
+
   // Other pages follow this list: Previous, Next, the position line, the way back and Continue.
   useEffect(() => {
     if (!currentFilters) return;
     published.current = {
       query: filterQuery(currentFilters),
-      label: filterLabel(currentFilters),
+      label: listLabel,
       items: visible.map(({ id, title }) => [id, title]),
+      savedSet: setShown,
     };
     writePracticeContext(published.current);
-  }, [currentFilters, visibleIds]);
+  }, [currentFilters, visibleIds, listLabel, setShown]);
 
   // A page restored from the back-forward cache shows the list it had, while another page may have
   // stored a different one since. Store this page's list again so links follow what is on screen.
@@ -313,10 +493,16 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
   }, [currentFilters]);
 
   const activeLabel = currentFilters ? filterLabel(currentFilters) : '';
+  const filtersOn = currentFilters !== null && !filtersOff(currentFilters);
 
   return (
     <div class="practice-layout">
       <aside class="filter-sidebar" aria-label="Practice sidebar">
+        {sets && currentFilters && (sets.sets.length > 0 || filtersOn || rowStatus) && (
+          <PracticeSetRow sets={sets} selected={selectedSet} changed={filtersOn && !setShown} filtersOn={filtersOn}
+            retired={retired} suggestedName={activeLabel} status={rowStatus} announce={setRowStatus} choose={chooseSet}
+            save={saveSet} update={updateSet} rename={renameSet} remove={deleteSet} focusFilters={focusFilters} />
+        )}
         <details class="filter-disclosure" ref={disclosure} open>
           <summary>
             <span class="filter-summary">{activeLabel ? `Filters: ${activeLabel}` : 'Filters'}</span>
@@ -326,7 +512,7 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
             <label for="practice-search" class="visually-hidden">Search</label>
             <input class="input" id="practice-search" type="search" name="q" ref={searchField}
               placeholder="Search problems" value={filters.q} disabled={currentFilters === null}
-              onInput={({ currentTarget }) => applyFilters({ ...filters, q: currentTarget.value })} />
+              onInput={({ currentTarget }) => changeFilters({ ...filters, q: currentTarget.value })} />
             {facets.map((key) => (
               <fieldset class="filter-group" key={key}>
                 <legend>{groups[key].label}</legend>
@@ -382,7 +568,7 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
           </table>
         ) : (
           <div class="empty-state" data-card="">
-            <p>No matching problems</p>
+            <p>{setShown && selectedFilters!.status.length > 0 ? 'No problems left in this set.' : 'No matching problems'}</p>
             <button type="button" class="button outline" onClick={clearFilters}>Clear filters</button>
           </div>
         )}

@@ -148,11 +148,17 @@ describe('links back to the list', () => {
     expect(practiceRowId('test-design/boundary-values')).toBe('row-test-design-boundary-values');
   });
 
-  it('carries the query and the row, and stays bare without them', () => {
+  it('carries the query and the row, and stays bare without a list', () => {
     const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     expect(practiceListHref()).toBe(`${base}/`);
+    expect(practiceListHref(undefined, 'sql/two')).toBe(`${base}/#row-sql-two`);
     expect(practiceListHref('topic=api')).toBe(`${base}/?topic=api`);
-    expect(practiceListHref('', 'sql/two')).toBe(`${base}/#row-sql-two`);
     expect(practiceListHref('topic=api', 'sql/two')).toBe(`${base}/?topic=api#row-sql-two`);
+  });
+
+  it('marks a list seen unfiltered, so a saved set is not applied over it', () => {
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    expect(practiceListHref('')).toBe(`${base}/?view=all`);
+    expect(practiceListHref('', 'sql/two')).toBe(`${base}/?view=all#row-sql-two`);
   });
 });

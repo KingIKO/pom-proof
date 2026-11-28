@@ -16,6 +16,8 @@ export interface PracticeContext {
   label: string;
   /** Problem id and title of each listed row, in the order the list shows them. */
   items: [id: string, title: string][];
+  /** True while the list shows a saved practice set unchanged. Only the list's own page reads it. */
+  savedSet?: boolean;
 }
 
 export interface LabelParts {
@@ -126,7 +128,18 @@ export function practiceRowId(id: string) {
   return `row-${id.replace('/', '-')}`;
 }
 
-/** The Practice list with the given query, scrolled to the problem's row when an id is given. */
-export function practiceListHref(query = '', id?: string) {
-  return `${url('/')}${query ? `?${query}` : ''}${id ? `#${practiceRowId(id)}` : ''}`;
+/**
+ * The list query parameter for every problem shown on purpose. A bare visit applies the active
+ * practice set; a list URL with this parameter, like one with filters, shows what it names.
+ */
+export const allProblemsParam = { key: 'view', value: 'all' } as const;
+
+/**
+ * The Practice list with the given query, scrolled to the problem's row when an id is given. An
+ * empty query is a list the learner saw unfiltered, so it says so with `view=all`. Without a
+ * query, as when the tab has no list yet, it is the plain list URL.
+ */
+export function practiceListHref(query?: string, id?: string) {
+  const search = query === undefined ? '' : `?${query || `${allProblemsParam.key}=${allProblemsParam.value}`}`;
+  return `${url('/')}${search}${id ? `#${practiceRowId(id)}` : ''}`;
 }

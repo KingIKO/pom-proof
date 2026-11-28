@@ -53,8 +53,12 @@ export default function ProgressDashboard({ problems, questionIds }: { problems:
         return;
       }
       const count = imported.snapshot.attempts.length;
+      const attemptsText = `${count} ${count === 1 ? 'attempt' : 'attempts'}`;
+      const sets = imported.sets;
       notifyProgressChange();
-      setMessage(`Imported ${count} ${count === 1 ? 'attempt' : 'attempts'}.`);
+      setMessage(sets === undefined
+        ? `Imported ${attemptsText}.`
+        : `Imported ${attemptsText} and ${sets} ${sets === 1 ? 'practice set' : 'practice sets'}.`);
     } catch {
       setMessage(storageMessage);
     }
@@ -124,14 +128,14 @@ export default function ProgressDashboard({ problems, questionIds }: { problems:
                 }} />
               <button class="button danger" type="button" disabled={!loaded} onClick={() => resetDialog.current?.showModal()}>Reset</button>
             </div>
-            <p class="muted">This browser saves your progress. Importing a file replaces your attempts. If the file includes question ratings, it replaces those too.</p>
+            <p class="muted">This browser saves your progress. Importing a file replaces your attempts. If the file includes question ratings or practice sets, it replaces those too.</p>
             <p class="progress-message" role="status">{message}</p>
           </section>
         </div>
       </div>
       <dialog ref={resetDialog} class="reset-dialog" aria-labelledby="reset-title" aria-describedby="reset-description">
         <h2 id="reset-title">Reset progress?</h2>
-        <p id="reset-description">Reset deletes all attempts and question ratings in this browser. It does not delete exported files.</p>
+        <p id="reset-description">Reset deletes all attempts and question ratings in this browser. It does not delete exported files. Practice sets stay.</p>
         <div class="progress-actions">
           <button class="button outline" type="button" autoFocus onClick={() => resetDialog.current?.close()}>Keep progress</button>
           <button class="button danger" type="button" onClick={resetProgress}>Reset progress</button>
