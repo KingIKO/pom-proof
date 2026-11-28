@@ -86,7 +86,10 @@ function exportedSets(storage: Pick<Storage, 'getItem'>) {
   }
 }
 
-export const createProgressStore = ((storage) => {
+/** The storage a progress store needs. `removeItem` is used, when present, to undo a failed import. */
+type ProgressStorage = Pick<Storage, 'getItem' | 'setItem'> & Partial<Pick<Storage, 'removeItem'>>;
+
+export const createProgressStore = ((storage: ProgressStorage) => {
   const read = () => {
     const stored = storage.getItem(progressStorageKey);
     if (stored === null) return empty();
@@ -121,17 +124,20 @@ export const createProgressStore = ((storage) => {
       if (decoded.sets !== undefined) writes.push([practiceSetsKey, JSON.stringify(decoded.sets), JSON.stringify(noPracticeSets())]);
       if (decoded.review !== undefined) writes.push([reviewStorageKey, JSON.stringify(decoded.review), '{}']);
       writes.push([progressStorageKey, JSON.stringify(decoded.snapshot), JSON.stringify(empty())]);
-      const done: [key: string, previous: string][] = [];
+      const done: [key: string, previous: string | null, empty: string][] = [];
       try {
         for (const [key, value, blank] of writes) {
-          const previous = storage.getItem(key) ?? blank;
+          const previous = storage.getItem(key);
           storage.setItem(key, value);
-          done.push([key, previous]);
+          done.push([key, previous, blank]);
         }
       } catch {
-        for (const [key, previous] of done.reverse()) {
+        for (const [key, previous, blank] of done.reverse()) {
           try {
-            storage.setItem(key, previous);
+            // A key that was missing before is removed again; a store without removeItem gets the empty value.
+            if (previous !== null) storage.setItem(key, previous);
+            else if (storage.removeItem) storage.removeItem(key);
+            else storage.setItem(key, blank);
           } catch {
             // Nothing more can be put back.
           }

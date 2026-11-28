@@ -47,8 +47,8 @@
 .set-actions { display: flex; flex-wrap: wrap; gap: var(--space-8); }
 .set-form, .set-confirm { display: grid; gap: var(--space-8); }
 .set-label { font-size: var(--type-14); font-weight: var(--weight-medium); }
-.set-confirm p, .set-status { margin: 0; font-size: var(--type-14); overflow-wrap: anywhere; }
-.set-status { color: var(--text2); }
+.set-confirm p, .set-status, .set-note { margin: 0; font-size: var(--type-14); overflow-wrap: anywhere; }
+.set-status, .set-note { color: var(--text2); }
 .set-error { margin: 0; color: var(--fail); font-size: var(--type-13); }
 
 .practice-layout {

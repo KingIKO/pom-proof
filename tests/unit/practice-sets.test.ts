@@ -174,6 +174,14 @@ describe('progress export and import with sets', () => {
     expect(Object.fromEntries(storage.items)).toEqual(before);
   });
 
+  it('removes sets again that were not stored before, when saving the attempts fails', () => {
+    const storage = { ...memoryStorage({}, progressStorageKey), removeItem(key: string) { storage.items.delete(key); } };
+    const imported = { version: 1, attempts: [attempt], sets: stored };
+    const result = createProgressStore(storage).importJson(JSON.stringify(imported));
+    expect(result).toMatchObject({ ok: false });
+    expect(Object.fromEntries(storage.items)).toEqual({});
+  });
+
   it('puts the sets and review cards back when saving the attempts fails', () => {
     const before = { [practiceSetsKey]: JSON.stringify(stored), [reviewKey]: JSON.stringify({}) };
     const storage = memoryStorage(before, progressStorageKey);

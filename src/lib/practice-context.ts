@@ -16,6 +16,8 @@ export interface PracticeContext {
   label: string;
   /** Problem id and title of each listed row, in the order the list shows them. */
   items: [id: string, title: string][];
+  /** True while the list shows a saved practice set unchanged. Only the list's own page reads it. */
+  savedSet?: boolean;
 }
 
 export interface LabelParts {

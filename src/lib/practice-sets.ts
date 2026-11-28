@@ -5,7 +5,6 @@
  * The sets live in localStorage and travel in progress exports as the optional `sets` field.
  */
 export const practiceSetsKey = 'pom-proof:practice-sets';
-export const shownSetEvent = 'pomproof:practice-set-shown';
 export const setNameLimit = 40;
 
 export interface PracticeSet {
@@ -140,19 +139,4 @@ export function deletePracticeSet(state: PracticeSets, id: string): PracticeSets
 
 export function choosePracticeSet(state: PracticeSets, id: string | null): PracticeSets {
   return { ...state, activeId: findPracticeSet(state, id) ? id : null };
-}
-
-let shownSet: string | null = null;
-
-/**
- * Tells the page's other parts which set the list shows unchanged, by name, or null when the
- * list shows filters that no set holds. Continue reads it to say when a set is complete.
- */
-export function announceShownSet(name: string | null) {
-  shownSet = name;
-  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(shownSetEvent, { detail: name }));
-}
-
-export function latestShownSet() {
-  return shownSet;
 }

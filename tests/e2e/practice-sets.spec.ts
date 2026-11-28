@@ -49,6 +49,11 @@ async function openList(page: Page, path = '') {
 
 const stored = (page: Page) => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), practiceSetsKey);
 
+/** Stores a solved attempt for each problem, replacing the attempts stored before. */
+const solve = (page: Page, problems: DiscoveredProblem[]) => page.evaluate(([key, ids]) => localStorage.setItem(key, JSON.stringify({
+  version: 1, attempts: ids.map((problemId) => ({ problemId, completedAt: '2026-11-27T09:00:00.000Z', score: 1 })),
+})), [progressStorageKey, problems.map(({ id }) => id)] as const);
+
 /** Checks the two most common topics and saves them as a set named after their on-screen labels. */
 async function savePairAsSet(page: Page) {
   await openList(page);
@@ -67,7 +72,7 @@ async function savePairAsSet(page: Page) {
   const name = `${names[0]} and ${names[1]}`;
   await nameField(page).fill(name);
   await button(page, 'Save set').click();
-  await expect(status(page)).toHaveText('Set saved.');
+  await expect(status(page)).toHaveText(`Saved “${name}”.`);
   await expect(picker(page)).toBeFocused();
   await expect(picker(page).locator('option:checked')).toHaveText(name);
   return name;
@@ -131,7 +136,8 @@ test('changed filters offer Update set and Save as new set, and names are checke
   await button(page, 'Save as new set').click();
   await nameField(page).fill(` ${name.toUpperCase()} `);
   await button(page, 'Save set').click();
-  await expect(setRow(page).getByText('A set with this name exists. Choose another name.')).toBeVisible();
+  // An alert, so pressing Enter in the field also reads the error out.
+  await expect(setRow(page).getByRole('alert')).toHaveText('A set with this name exists. Choose another name.');
   await expect(nameField(page)).toBeFocused();
   await expect(nameField(page)).toHaveAttribute('aria-invalid', 'true');
   await expect(nameField(page)).toHaveValue(` ${name.toUpperCase()} `);
@@ -148,7 +154,7 @@ test('changed filters offer Update set and Save as new set, and names are checke
   await button(page, 'Save as new set').click();
   await nameField(page).fill('Three topics');
   await button(page, 'Save set').click();
-  await expect(status(page)).toHaveText('Set saved.');
+  await expect(status(page)).toHaveText('Saved “Three topics”.');
   await expect(picker(page).locator('option:checked')).toHaveText('Three topics');
   await expect(picker(page).locator('option')).toHaveText(['All problems', name, 'Three topics']);
 
@@ -158,7 +164,7 @@ test('changed filters offer Update set and Save as new set, and names are checke
   await expect(rows(page)).toHaveCount(listed.length);
   await filters(page).getByRole('searchbox').fill('find');
   await button(page, 'Update set').click();
-  await expect(status(page)).toHaveText('Set updated.');
+  await expect(status(page)).toHaveText(`Updated “${name}”.`);
   await expect(button(page, 'Update set')).toHaveCount(0);
   expect((await stored(page)).sets[0].query).toBe(`q=find&${query}`);
   expect(errors, 'page errors').toEqual([]);
@@ -189,6 +195,116 @@ test('filters matching no set show as unsaved, and matching filters choose their
   await expect(page).toHaveURL(`${prefix}?${query}`);
 });
 
+/** Checks one topic and saves it as a set. */
+async function saveOneTopic(page: Page, topic: string, name: string) {
+  await topicBox(page, topic).check();
+  await button(page, 'Save as set').click();
+  await nameField(page).fill(name);
+  await button(page, 'Save set').click();
+  await expect(status(page)).toHaveText(`Saved “${name}”.`);
+}
+
+test('editing a set never writes over another set whose filters it passes through', async ({ page }) => {
+  const errors = watchErrors(page);
+  // "One topic" holds the first topic, "Two topics" the first two.
+  await openList(page);
+  await saveOneTopic(page, pair[0], 'One topic');
+  await topicBox(page, pair[1]).check();
+  await button(page, 'Save as new set').click();
+  await nameField(page).fill('Two topics');
+  await button(page, 'Save set').click();
+  await expect(status(page)).toHaveText('Saved “Two topics”.');
+  const before = await stored(page);
+
+  // Unchecking the second topic leaves exactly the filters of "One topic". The picker stays put.
+  await topicBox(page, pair[1]).uncheck();
+  await expect(picker(page).locator('option:checked')).toHaveText('Two topics');
+  await expect(button(page, 'Update set')).toBeVisible();
+  await topicBox(page, third).check();
+  await button(page, 'Update set').click();
+  await expect(status(page)).toHaveText('Updated “Two topics”.');
+  const after = await stored(page);
+  expect(after.sets[0], '"One topic" is unchanged').toEqual(before.sets[0]);
+  expect(after.sets[1].query).toBe(`topic=${encodeURIComponent(`${pair[0]},${third}`)}`);
+
+  // Rename also goes to the set this tab chose.
+  await topicBox(page, third).uncheck();
+  await expect(picker(page).locator('option:checked')).toHaveText('Two topics');
+  await button(page, 'Rename').click();
+  await expect(nameField(page)).toHaveValue('Two topics');
+  await nameField(page).fill('Renamed two');
+  await button(page, 'Rename set').click();
+  await expect(status(page)).toHaveText('Renamed to “Renamed two”.');
+  expect((await stored(page)).sets.map(({ name }: { name: string }) => name)).toEqual(['One topic', 'Renamed two']);
+  expect(errors, 'page errors').toEqual([]);
+});
+
+test('a set stays chosen while every filter is cleared, until Clear filters or All problems', async ({ page }) => {
+  await openList(page);
+  await saveOneTopic(page, pair[0], 'One topic');
+
+  // Unchecking the only box keeps the set, so checking a new one can still update it.
+  await topicBox(page, pair[0]).uncheck();
+  await expect(rows(page)).toHaveCount(catalog.length);
+  await expect(picker(page).locator('option:checked')).toHaveText('One topic');
+  await expect(button(page, 'Update set')).toHaveCount(0);
+  await topicBox(page, third).check();
+  await button(page, 'Update set').click();
+  await expect(status(page)).toHaveText('Updated “One topic”.');
+  expect((await stored(page)).sets[0].query).toBe(`topic=${third}`);
+
+  // Emptying the search keeps it too; Clear filters leaves it.
+  await filters(page).getByRole('searchbox').fill('no such problem');
+  await filters(page).getByRole('searchbox').fill('');
+  await expect(picker(page).locator('option:checked')).toHaveText('One topic');
+  await filters(page).getByRole('searchbox').fill('no such problem');
+  await expect(page.locator('.empty-state')).toContainText('No matching problems');
+  await page.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(rows(page)).toHaveCount(catalog.length);
+  await expect(picker(page).locator('option:checked')).toHaveText('All problems');
+  await expect.poll(async () => (await stored(page)).activeId).toBeNull();
+});
+
+test('a set whose topics left Practice keeps the plain label and can be deleted', async ({ page }) => {
+  const errors = watchErrors(page);
+  await openList(page);
+  await page.evaluate((key) => localStorage.setItem(key, JSON.stringify({
+    version: 1, activeId: 'retired-1',
+    sets: [{ id: 'retired-1', name: 'Retired topic', query: 'topic=no-such-topic', createdAt: '2026-11-01T00:00:00.000Z' }],
+  })), practiceSetsKey);
+  await openList(page);
+  await expect(rows(page)).toHaveCount(catalog.length);
+  await expect(picker(page).locator('option:checked')).toHaveText('Retired topic');
+  await expect(setRow(page).getByText('This set’s topics are no longer in Practice.')).toBeVisible();
+  await expect(page.locator('.title-band .page-meta')).toHaveText(`${catalog.length} problems`);
+
+  await rows(page).nth(1).getByRole('link').click();
+  await expect(heading(page, catalog[1])).toBeVisible();
+  await expect(position(page)).toHaveText(`All problems: 2 of ${catalog.length}`);
+  await expect(neighbours(page).locator('a.practice-return')).toHaveText('Back to practice');
+  await page.goBack();
+
+  await button(page, 'Delete').click();
+  await button(page, 'Delete set').click();
+  // Nothing else is left in the row, so it stays for its status and focus goes to the filters.
+  await expect(status(page)).toHaveText('Deleted “Retired topic”.');
+  await expect(picker(page)).toHaveCount(0);
+  await expect(filters(page).getByRole('searchbox')).toBeFocused();
+  expect(errors, 'page errors').toEqual([]);
+});
+
+test('a set of unattempted problems says when none are left', async ({ page }) => {
+  await openList(page, `?topic=${small}&status=unattempted`);
+  await button(page, 'Save as set').click();
+  await nameField(page).fill('Small, unattempted');
+  await button(page, 'Save set').click();
+  await expect(status(page)).toHaveText('Saved “Small, unattempted”.');
+  await solve(page, smallListed);
+  await page.reload();
+  await expect(rows(page)).toHaveCount(0);
+  await expect(page.locator('.empty-state')).toContainText('No problems left in this set.');
+});
+
 test('Rename changes the name everywhere and Delete asks first, keeping the filters', async ({ page }) => {
   const errors = watchErrors(page);
   const name = await savePairAsSet(page);
@@ -197,7 +313,7 @@ test('Rename changes the name everywhere and Delete asks first, keeping the filt
   await expect(nameField(page)).toHaveValue(name);
   await nameField(page).fill('My curriculum');
   await button(page, 'Rename set').click();
-  await expect(status(page)).toHaveText('Set renamed.');
+  await expect(status(page)).toHaveText('Renamed to “My curriculum”.');
   await expect(button(page, 'Rename')).toBeFocused();
   await expect(picker(page).locator('option:checked')).toHaveText('My curriculum');
   await rows(page).first().getByRole('link').click();
@@ -209,11 +325,15 @@ test('Rename changes the name everywhere and Delete asks first, keeping the filt
   await expect(button(page, 'Keep set')).toBeFocused();
   await button(page, 'Keep set').click();
   await expect(button(page, 'Delete')).toBeFocused();
+  await button(page, 'Delete').click();
+  await page.keyboard.press('Escape');
+  await expect(button(page, 'Delete set')).toHaveCount(0);
+  await expect(button(page, 'Delete')).toBeFocused();
   expect((await stored(page)).sets).toHaveLength(1);
 
   await button(page, 'Delete').click();
   await button(page, 'Delete set').click();
-  await expect(status(page)).toHaveText('Set deleted.');
+  await expect(status(page)).toHaveText('Deleted “My curriculum”.');
   await expect(picker(page)).toHaveCount(0);
   await expect(button(page, 'Save as set')).toBeFocused();
   await expect(rows(page)).toHaveCount(listed.length);
@@ -229,19 +349,15 @@ test('Continue stays in the set and gives way to Set complete when all are solve
   await button(page, 'Save as set').click();
   await nameField(page).fill('Small set');
   await button(page, 'Save set').click();
-  await expect(status(page)).toHaveText('Set saved.');
+  await expect(status(page)).toHaveText('Saved “Small set”.');
   await expect(continueLink(page)).toHaveAttribute('href', `${prefix}${smallListed[0].path}`);
 
-  const solve = (problems: DiscoveredProblem[]) => page.evaluate(([key, ids]) => localStorage.setItem(key, JSON.stringify({
-    version: 1, attempts: ids.map((problemId) => ({ problemId, completedAt: '2026-11-27T09:00:00.000Z', score: 1 })),
-  })), [progressStorageKey, problems.map(({ id }) => id)] as const);
-
-  await solve(smallListed.slice(0, -1));
+  await solve(page, smallListed.slice(0, -1));
   await page.goto('');
   await expect(continueLink(page)).toHaveAttribute('href', `${prefix}${smallListed.at(-1)!.path}`);
   await expect(page.getByText('Set complete.')).toHaveCount(0);
 
-  await solve(smallListed);
+  await solve(page, smallListed);
   await page.reload();
   await expect(page.getByText('Set complete.')).toBeVisible();
   await expect(continueLink(page)).toHaveCount(0);
@@ -270,6 +386,29 @@ test('another tab sees sets saved, renamed and deleted here', async ({ page, con
   await button(page, 'Delete set').click();
   await expect(picker(other)).toHaveCount(0);
   await expect(button(other, 'Save as set')).toBeVisible();
+});
+
+test('a Rename form closes when another tab deletes its set, and focus goes to the picker', async ({ page, context }) => {
+  const name = await savePairAsSet(page);
+  // A second set keeps the picker on screen once the first is gone.
+  await topicBox(page, third).check();
+  await button(page, 'Save as new set').click();
+  await nameField(page).fill('Three topics');
+  await button(page, 'Save set').click();
+  await expect(status(page)).toHaveText('Saved “Three topics”.');
+  await picker(page).selectOption({ label: name });
+
+  const other = await context.newPage();
+  await openList(other, `?${query}`);
+  await expect(picker(other).locator('option:checked')).toHaveText(name);
+  await button(other, 'Rename').click();
+  await expect(nameField(other)).toBeFocused();
+
+  await button(page, 'Delete').click();
+  await button(page, 'Delete set').click();
+  await expect(nameField(other)).toHaveCount(0);
+  await expect(picker(other)).toBeFocused();
+  await expect(picker(other).locator('option:checked')).toHaveText('Unsaved filters');
 });
 
 test('with local storage blocked the set row is hidden and the list still filters', async ({ page }) => {

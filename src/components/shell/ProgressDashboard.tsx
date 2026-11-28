@@ -135,7 +135,7 @@ export default function ProgressDashboard({ problems, questionIds }: { problems:
       </div>
       <dialog ref={resetDialog} class="reset-dialog" aria-labelledby="reset-title" aria-describedby="reset-description">
         <h2 id="reset-title">Reset progress?</h2>
-        <p id="reset-description">Reset deletes all attempts and question ratings in this browser. It does not delete exported files.</p>
+        <p id="reset-description">Reset deletes all attempts and question ratings in this browser. It does not delete exported files. Practice sets stay.</p>
         <div class="progress-actions">
           <button class="button outline" type="button" autoFocus onClick={() => resetDialog.current?.close()}>Keep progress</button>
           <button class="button danger" type="button" onClick={resetProgress}>Reset progress</button>
