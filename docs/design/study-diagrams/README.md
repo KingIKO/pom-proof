@@ -1,6 +1,6 @@
 # Study diagram options
 
-Three styles for concept diagrams on the Study pages, each applied to the same three figures: the test shapes, the equivalence and boundaries number line, and the risk matrix. Every value comes from `src/styles/tokens.css`. The layer stack (test shapes) is built in `src/components/study/diagrams/`; the other kinds are not built yet.
+Three styles for concept diagrams on the Study pages, each applied to the same three figures: the test shapes, the equivalence and boundaries number line, and the risk matrix. Every value comes from `src/styles/tokens.css`. The layer stack (test shapes) is live. The number line, matrix, timeline and blocks are built in `src/components/study/diagrams/` on branch `study-diagrams-c` (4c1092b) and have not landed. Approved and not built: the test levels growing pictures (A), the timeline with states (A) and the risk matrix axis names (B).
 
 Chosen on 2026-11-28: B, refined into B2 (tinted and calm) after Kingsley said B felt too busy. `spec.md` is the visual spec for B2; A, B and C are kept as the record of what was compared.
 
@@ -21,7 +21,10 @@ Chosen on 2026-11-28: B, refined into B2 (tinted and calm) after Kingsley said B
 - More B2 kinds, drawn after Kingsley approved B2: `b2-timeline.html`, `b2-blocks.html` and `b2-yes-no-matrix.html` (real page text around each figure), with PNGs `b2-<kind>-desktop.png` (1280 px), `b2-<kind>-360.png` and `b2-<kind>-320.png`. `compare-timeline.html`, `compare-blocks.html` and `compare-yes-no-matrix.html` show each figure at the 738 px desktop column and at the 313 px and 273 px figure widths of 360 and 320 px phones, as `compare-<kind>.png` (1500 px). Their styles are the `.tl-*`, `.bk-*` and `.yn*` rules at the end of `diagrams.css`.
 - Layer stack width limits (approved 2026-11-28, for iko-flow to build): `layer-stack-limits.css` (the CSS change), `layer-stack-limits-{before,after}-{1280,360,320,320-200}.png` (the live test shapes figure without and with that CSS, `320-200` at 320 px with 200% text), `compare-layer-stack-limits.html` and `compare-layer-stack-limits.png`.
 - Test levels, first drawings (not approved): `test-levels-peers.html` (version 1) and `test-levels-objects.html` (version 2) in the real page, `test-levels.css`, `test-levels-{peers,objects}-{desktop,360,320}.png`, `compare-test-levels.html` and `compare-test-levels.png`.
-- Test levels, rows over one picture (proposed, the redraw): `test-levels-rows.html` (the page with the figure and the trimmed list), `test-levels-rows.css`, page PNGs `test-levels-rows-{desktop,360,320}.png`, figure PNGs `test-levels-rows-figure-{desktop,360,320,320-200}.png`, the text around it as `test-levels-rows-text-{desktop,360}.png`, and `compare-test-levels-rows.html` and `compare-test-levels-rows.png` (the peers version beside the rows version, desktop and 360 px).
+- Assertions that retry, timeline with states (A approved 2026-11-28, for iko-flow to build): `retry-timeline-bars.html` (A) and `retry-timeline-reads.html` (B, not used), `retry-timeline.css`, and for each version page PNGs `-{desktop,360,320}.png` and figure PNGs `-figure-{desktop,360,320,320-200}.png`. `compare-retry-timeline.html` and `.png` show the built test drawing and both versions.
+- Risk matrix axis names (B approved 2026-11-28, for iko-flow to build): `risk-axis-arrows.html` (A, not used) and `risk-axis-side.html` (B), `risk-axis.css`, the same set of PNGs, and `compare-risk-axis.html` and `.png` at desktop, 360 and 320 px. `risk-axis-side-*.png` show B after its overflow fix. `compare-risk-axis.png` is the picture Kingsley chose from, before it; the side name moved by up to 2px.
+- Test levels, growing pictures (A approved 2026-11-28, for iko-flow to build once the current branch lands): `test-levels-growing-words.html` (variant A) and `test-levels-growing-questions.html` (variant B, not used), each with the figure and the trimmed list, `test-levels-growing.css`, and for each variant the page PNGs `-{desktop,360,320}.png`, figure PNGs `-figure-{desktop,360,320,320-200}.png` and text PNGs `-text-{desktop,360}.png`. `compare-test-levels-growing.html` and `compare-test-levels-growing.png` show the rows version and both variants, desktop and 360 px.
+- Test levels, rows over one picture (not approved): `test-levels-rows.html` (the page with the figure and the trimmed list), `test-levels-rows.css`, page PNGs `test-levels-rows-{desktop,360,320}.png`, figure PNGs `test-levels-rows-figure-{desktop,360,320,320-200}.png`, the text around it as `test-levels-rows-text-{desktop,360}.png`, and `compare-test-levels-rows.html` and `compare-test-levels-rows.png` (the peers version beside the rows version, desktop and 360 px).
 - `spec.md`: the B2 visual spec (tokens, measured contrast, type, spacing, narrow layouts, the SVG rule, banned items, rules for writers), now covering all five kinds.
 
 To view the HTML, serve the folder over HTTP (`python -m http.server --directory docs/design 8765`) and open `http://localhost:8765/study-diagrams/compare.html`.
@@ -60,5 +63,19 @@ Test levels rows, checked the same day:
 - Contrast: lowest text 6.28:1 (level words), lowest line or block 3.26:1 (target block and box edges); every target edge meets white.
 - Reflow: nothing spills at 1280, 1024, 768, 600, 360 or 320 px. With the text-spacing overrides the figure scrolls 31 px inside its own box at 320 px only. 200% text switches 320 and 360 px to the words layout.
 - Height at 360 px: 377 px, against 720 px for the peers version.
+
+Test levels growing pictures, checked the same day, both variants:
+
+- Slop guard: 0 violations at 1280, 360 and 320 px and on `compare-test-levels-growing.html`.
+- Contrast: lowest text 5.28:1 (the arrow on a link block; lowest words 5.86:1, the email title), lowest edge 3.26:1.
+- Reflow: nothing passes the card and no text leaves its box at 1280, 1024, 768, 600, 480, 412, 360 or 320 px, with or without the text-spacing overrides, or with 200% text (default font size 32 px, scrollbar shown) at 1280, 768, 360 and 320 px. The exceptions with 200% text and the overrides together are in `spec.md`.
+- Height at 360 px: 421 px.
+- The five-second test was the designer's own look at the 360 px PNGs. No learner has seen them.
+
+Assertions that retry timeline and risk matrix axis names, checked the same day on the built pages and CSS at 4c1092b, with scrollbars shown:
+
+- Slop guard: 0 violations on all four pages at 1280, 360 and 320 px and on both compare pages.
+- Contrast: every text pair at least 4.5:1 (lowest: matrix item on a High cell, 5.01:1) and every meaningful line at least 3:1 (lowest: part edge, 3.26:1).
+- Reflow: measured values are in `spec.md`. With the text-spacing overrides the approved risk matrix (B) scrolls 28 px in its own box at 320 px and 0 px at 360 px. The figures add no sideways scroll to their pages.
 
 The risk ratings in the matrix (a double charge rated medium likelihood and high impact, the receipt layout medium likelihood and low impact) and the 3 by 3 level mapping are examples. The page writer has to confirm them. The widths of the test shape layers show relative testing effort, as the page's sources describe it, and are not measured.
