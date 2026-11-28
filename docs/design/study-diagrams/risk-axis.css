@@ -1,0 +1,24 @@
+/* Risk matrix axis names (spec.md, "Risk matrix axis names"). Mockup over the built CSS at 4c1092b: only the two axis
+   names move, the rest of the matrix is the approved one. */
+
+/* A: both axis names share the first line, so the line of column names holds column names only. */
+.rx-a .rx-side { position: relative; padding-block: 0 var(--space-4); }
+.rx-a .rx-side > span { position: absolute; inset-inline-end: var(--space-8); inset-block-end: var(--space-4); white-space: nowrap; }
+@container (width < 34rem) {
+  .rx-a .rx-side > span { inset-inline: 2px auto; }
+}
+
+/* B: the likelihood name runs up the side, next to its three row names. */
+.rx-b .rx-axis { inline-size: 1.75rem; }
+/* The name is out of flow, centred on its column, so its line height never widens the column. The side paddings are
+   the column's least width: it shrinks from 1.125rem to that only when the table would otherwise scroll. Offsets are
+   physical, because logical ones follow the name's own vertical writing mode. */
+.rx-b tbody .rx-side { position: relative; padding: 0 .375rem; }
+.rx-b .rx-side > span { position: absolute; top: 50%; left: 50%; translate: -50% -50%; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; }
+@container (width < 34rem) {
+  .rx-b .rx-axis { inline-size: 1.125rem; }
+}
+/* 320 px: the extra column would make the table scroll, so cells give up 2px on each side. */
+@container (width < 16rem) {
+  .rx-b.dg-matrix-levels tbody td { padding-inline: 2px; }
+}
