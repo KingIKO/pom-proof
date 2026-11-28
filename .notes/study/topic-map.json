@@ -56,7 +56,7 @@
     {
       "id": "m1-c3", "slug": "test-shapes", "module": "Testing foundations", "order": 3, "level": "core",
       "concept": "Test shapes: pyramid, trophy and honeycomb",
-      "definition": "A test shape is a picture of how many tests to write at each scope.",
+      "definition": "A test shape is a picture of how much testing effort to spend at each scope.",
       "practice": "Know the three shapes and who argues for each, then reason from trade-offs. The pyramid (many small tests, few through the UI) is in the ISTQB syllabus and in Google's 2015 '70/20/10' first guess. The trophy and honeycomb put most effort into integration tests. Fowler's 2021 article says much of the disagreement comes from different meanings of 'unit'. Google's 2024 SMURF post replaces the shape with five trade-offs to weigh per test: speed, maintainability, utilization, reliability, fidelity.",
       "tradeoffs": {"use_when": "Deciding what scope a new test should have, or explaining a suite's balance.", "avoid_when": "Treating any ratio as a rule. Google's own post says the exact mix differs per team."},
       "prerequisites": ["m1-c2"],
