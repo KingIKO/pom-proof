@@ -1,0 +1,48 @@
+---
+import TitleBand from '../../../components/shell/TitleBand.astro';
+import StudyShell from '../../../components/study/StudyShell.astro';
+import { levelLabel, plural, stages, studyCatalog, studyPageUrl, type StudyModule } from '../../../components/study/study';
+import Base from '../../../layouts/Base.astro';
+import '../../../components/study/study.css';
+
+export async function getStaticPaths() {
+  const { modules } = await studyCatalog();
+  // A module with no written pages is listed as coming soon and gets no page of its own.
+  return modules.filter(({ pages }) => pages.length).map((module) => ({ params: { module: module.id }, props: { module, modules } }));
+}
+
+interface Props {
+  module: StudyModule;
+  modules: StudyModule[];
+}
+
+const { module, modules } = Astro.props;
+const stage = stages.find(({ id }) => id === module.stage)!;
+---
+<Base title={module.title} section="study" wide>
+  <TitleBand slot="title-band" title={module.title}
+    breadcrumbs={[{ label: 'Study', href: '/study/' }, { label: module.title }]}
+    meta={`Stage ${stage.id}, ${stage.name}. ${plural(module.pages.length, 'page')}, ${module.minutes} min.`} />
+  <StudyShell modules={modules} current={module.id}>
+    <p class="study-summary prose">{module.summary}</p>
+    <ol class="study-page-list" role="list" aria-label={`${module.title} pages`}>
+      {module.pages.map((page, index) => (
+        <li class="row-card study-page-card" data-card>
+          <span class="study-page-number" aria-hidden="true">{index + 1}</span>
+          <div class="study-page-copy">
+            <h2 class="study-card-title"><a class="stretched-link" href={studyPageUrl(page.id)}>{page.title}</a></h2>
+            <p class="study-card-summary">{page.summary}</p>
+            <p class="study-card-meta"><span>{page.minutes} min, {levelLabel[page.level]}</span></p>
+          </div>
+          <span class="status-chip" data-study-status={page.id}></span>
+        </li>
+      ))}
+    </ol>
+  </StudyShell>
+</Base>
+
+<script>
+  import { setupReadMarks } from '../../../components/study/study-client';
+
+  setupReadMarks();
+</script>

@@ -1,0 +1,66 @@
+---
+import { stages, studyModuleUrl, studyPageUrl, type StudyModule } from './study';
+
+interface Props {
+  modules: readonly StudyModule[];
+  /** The module being read; only its pages are listed. */
+  current: string;
+  /** The page being read, when this is a page rather than a module overview. */
+  page?: string;
+}
+
+const { modules, current, page } = Astro.props;
+const currentTitle = modules.find(({ id }) => id === current)?.title;
+---
+<div class="study-layout">
+  <aside class="study-sidebar" aria-label="Study sidebar">
+    <details class="filter-disclosure study-nav-disclosure" open data-study-nav>
+      <summary>
+        <span>Modules<span class="muted">: {currentTitle}</span></span>
+        <span class="chevron" aria-hidden="true"></span>
+      </summary>
+      <nav class="study-nav" aria-label="Study modules">
+        {stages.map(({ id: stage, label }) => (
+          <div class="study-nav-group">
+            <span class="section-label" id={`study-nav-stage-${stage}`}>{label}</span>
+            <ul class="study-nav-links" aria-labelledby={`study-nav-stage-${stage}`}>
+              {modules.filter((module) => module.stage === stage).map((module) => (
+                <li>
+                  {module.pages.length ? (
+                    <a href={studyModuleUrl(module.id)}
+                      aria-current={module.id === current ? (page ? 'true' : 'page') : undefined}>
+                      {module.title}
+                    </a>
+                  ) : (
+                    <span class="study-nav-soon">{module.title}<span class="study-nav-note">Coming soon</span></span>
+                  )}
+                  {module.id === current && (
+                    <ol class="study-nav-pages" aria-label={`Pages in ${module.title}`}>
+                      {module.pages.map((entry) => (
+                        <li>
+                          <a href={studyPageUrl(entry.id)} aria-current={entry.id === page ? 'page' : undefined}>
+                            <span>{entry.title}</span>
+                            <span class="status-chip" data-study-status={entry.id}></span>
+                          </a>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+    </details>
+  </aside>
+  <div class="study-main">
+    <slot />
+  </div>
+</div>
+
+<script>
+  import { setupNavDisclosure } from './study-client';
+
+  setupNavDisclosure();
+</script>

@@ -1,0 +1,4 @@
+title: Playwright with TypeScript
+stage: C
+order: 5
+summary: The same ideas in Playwright Test. It covers locators, assertions, fixtures, sign-in state, network control, projects, traces and snapshots.

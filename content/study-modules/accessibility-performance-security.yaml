@@ -1,0 +1,4 @@
+title: Accessibility, performance and security
+stage: D
+order: 9
+summary: Testing beyond features that a QA engineer or SDET is expected to discuss. It covers accessibility, load, page speed and security.

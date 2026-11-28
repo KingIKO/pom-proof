@@ -1,0 +1,55 @@
+---
+import TitleBand from '../../components/shell/TitleBand.astro';
+import { plural, stages, studyCatalog, studyHomeUrl, studyModuleUrl, studyPageUrl } from '../../components/study/study';
+import Base from '../../layouts/Base.astro';
+import '../../components/study/study.css';
+
+const { modules, pages } = await studyCatalog();
+const minutes = pages.reduce((total, page) => total + page.minutes, 0);
+const first = pages[0];
+---
+<Base title="Study" section="study" wide>
+  <TitleBand slot="title-band" title="Study"
+    breadcrumbs={[{ label: 'POM Proof', href: '/' }, { label: 'Study' }]}
+    meta={`Short pages on how QA work is done, in four stages. ${plural(pages.length, 'page')} so far, ${minutes} min in all.`}>
+    {first && (
+      <div slot="actions" class="study-start">
+        <a class="button primary" href={studyPageUrl(first.id)} data-study-start data-base={studyHomeUrl}
+          data-ids={pages.map(({ id }) => id).join(' ')}>Start here</a>
+        <p class="muted" data-study-finished hidden>You have read every page.</p>
+      </div>
+    )}
+  </TitleBand>
+  <p class="study-intro-text prose">Read the stages in order, or open the module you need. Each page explains one idea, shows an example, and says when to use it and when not to.</p>
+  {stages.map(({ id: stage, label }) => (
+    <section class="study-stage" aria-labelledby={`study-stage-${stage}`}>
+      <h2 id={`study-stage-${stage}`}>{label}</h2>
+      <ol class="study-module-grid" role="list">
+        {modules.filter((module) => module.stage === stage).map((module) => (
+          <li class="row-card study-module-card" data-card data-study-module={module.id}>
+            <h3 class="study-card-title">
+              {module.pages.length
+                ? <a class="stretched-link" href={studyModuleUrl(module.id)}>{module.title}</a>
+                : <span>{module.title}</span>}
+            </h3>
+            <p class="study-card-summary">{module.summary}</p>
+            <p class="study-card-meta">
+              {module.pages.length ? (
+                <>
+                  <span>{plural(module.pages.length, 'page')}, {module.minutes} min</span>
+                  <span class="status-chip pass" data-study-count data-ids={module.pages.map(({ id }) => id).join(' ')} hidden></span>
+                </>
+              ) : <span class="study-soon">Coming soon</span>}
+            </p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  ))}
+</Base>
+
+<script>
+  import { setupReadMarks } from '../../components/study/study-client';
+
+  setupReadMarks();
+</script>

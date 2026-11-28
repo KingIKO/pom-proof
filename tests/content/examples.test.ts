@@ -7,7 +7,8 @@ import ts from 'typescript';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { parseAllDocuments } from 'yaml';
 import { root } from '../support/problems';
-import { discoverQuestions, questionExamples, type DiscoveredQuestion } from '../support/questions';
+import { discoverQuestions, questionExamples, type DiscoveredQuestion, type QuestionExample } from '../support/questions';
+import { discoverStudyPages, studyExamples } from '../support/study';
 
 /**
  * The phase 5 plan's example validation: a syntax check per language, layout rules for every
@@ -21,12 +22,18 @@ const lineCap = 105;
 interface Snippet { name: string; lang: string; code: string }
 
 const questions = discoverQuestions();
-const snippets: Snippet[] = questions.flatMap((question) => questionExamples(question).flatMap((example, index) =>
+const studyPages = discoverStudyPages();
+const snippetsOf = (file: string, examples: QuestionExample[]): Snippet[] => examples.flatMap((example, index) =>
   (Array.isArray(example?.variants) ? example.variants : []).map((variant, position) => ({
-    name: `${question.file} examples[${index}].variants[${position}] (${variant.lang})`,
+    name: `${file} examples[${index}].variants[${position}] (${variant.lang})`,
     lang: String(variant.lang),
     code: String(variant.code ?? ''),
-  }))));
+  })));
+// Study pages share the example schema, so their snippets get the same checks.
+const snippets: Snippet[] = [
+  ...questions.flatMap((question) => snippetsOf(question.file, questionExamples(question))),
+  ...studyPages.flatMap((page) => snippetsOf(page.file, studyExamples(page))),
+];
 
 // ----- layout -----
 
@@ -570,7 +577,8 @@ describe('question examples', () => {
     const typed = snippets.filter(({ name }) => batch.types.has(name)).length;
     const tsCount = byLang.get('ts') ?? 0;
     console.log([
-      `Example variants: ${snippets.length} in ${questions.filter((question) => questionExamples(question).length).length} questions`,
+      `Example variants: ${snippets.length} in ${questions.filter((question) => questionExamples(question).length).length} questions`
+        + ` and ${studyPages.filter((page) => studyExamples(page).length).length} Study pages`,
       ...[...byLang].sort().map(([lang, count]) => `  ${lang.padEnd(11)} ${count}${reviewerOnly.has(lang) ? ' (layout only, reviewer reads)' : ''}`),
       `  type checked: ${typed} of ${tsCount} ts variants (the rest import other modules or none, and get syntax only)`,
       `  Python: ${batch.interpreter}`,

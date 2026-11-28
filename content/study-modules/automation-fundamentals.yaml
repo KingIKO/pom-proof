@@ -1,0 +1,4 @@
+title: Automation fundamentals
+stage: B
+order: 3
+summary: Rules that make automated tests trustworthy in any tool. They cover test structure, isolation, locators, waits, assertions, flaky tests and test doubles.

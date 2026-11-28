@@ -5,18 +5,22 @@ import { expect, test, type Page } from '@playwright/test';
 import { discoverProblems, root } from '../support/problems';
 import { discoverQuestions } from '../support/questions';
 import { expandQuestion } from '../support/review';
+import { discoverStudyPages, studyModulePaths } from '../support/study';
 
 const prefix = '/pom-proof/';
 const problems = discoverProblems();
 const questions = discoverQuestions();
+const studyPages = discoverStudyPages();
 const editorials = readdirSync(join(root, 'content', 'editorials')).filter((file) => file.endsWith('.md')).map((file) => file.slice(0, -3));
 const tracks = readdirSync(join(root, 'content', 'tracks')).filter((file) => /\.ya?ml$/.test(file)).map((file) => file.replace(/\.ya?ml$/, ''));
 const pages = [
-  '', 'questions/', 'tracks/', 'progress/',
+  '', 'study/', 'questions/', 'tracks/', 'progress/',
   ...problems.map(({ path }) => path),
   ...editorials.map((id) => `editorials/${id}/`),
   ...questions.map(({ path }) => path),
   ...tracks.map((role) => `tracks/${role}/`),
+  ...studyModulePaths(studyPages),
+  ...studyPages.map(({ path }) => path),
 ];
 
 /** Records every request, failure and page error so a page can prove it loaded only from below the base. */
@@ -75,7 +79,7 @@ for (const url of pages) {
     expect(response?.status()).toBe(200);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expectTitleBand(page);
-    await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveCount(4);
+    await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveCount(5);
     await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
     network.check();
   });

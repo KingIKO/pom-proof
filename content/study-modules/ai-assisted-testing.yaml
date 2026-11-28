@@ -1,0 +1,4 @@
+title: AI-assisted testing
+stage: D
+order: 10
+summary: Test agents, browser control through the Model Context Protocol (MCP), reviewing tests that AI wrote, and testing features built on large language models.

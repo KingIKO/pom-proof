@@ -1,0 +1,182 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import CodeExamples from '../../../components/questions/CodeExamples.astro';
+import TitleBand from '../../../components/shell/TitleBand.astro';
+import StudyShell from '../../../components/study/StudyShell.astro';
+import {
+  checkedDate, inline, levelLabel, plural, practiceLinks, prerequisitesOf, studyCatalog, studyModuleUrl,
+  studyPageUrl, type StudyModule, type StudyPageSummary,
+} from '../../../components/study/study';
+import Base from '../../../layouts/Base.astro';
+import '../../../styles/questions.css';
+import '../../../components/study/study.css';
+
+export async function getStaticPaths() {
+  const { modules, pages, entries } = await studyCatalog();
+  return pages.map((summary, index) => {
+    const [module, page] = summary.id.split('/');
+    return {
+      params: { module, page },
+      props: { entry: entries.get(summary.id)!, modules, previous: pages[index - 1], next: pages[index + 1] },
+    };
+  });
+}
+
+interface Props {
+  entry: CollectionEntry<'study'>;
+  modules: StudyModule[];
+  previous?: StudyPageSummary;
+  next?: StudyPageSummary;
+}
+
+const { entry, modules, previous, next } = Astro.props;
+const { Content } = await render(entry);
+const data = entry.data;
+const module = modules.find(({ id }) => id === data.module)!;
+const moduleTitle = (id: string) => modules.find((candidate) => candidate.id === id)?.title;
+const prerequisites = prerequisitesOf(entry, modules);
+const practice = await practiceLinks(entry);
+const sourceLabel = new Map(data.sources.map(({ url, label }) => [url, label]));
+---
+<Base title={data.title} section="study" wide>
+  <TitleBand slot="title-band" title={data.title}
+    breadcrumbs={[{ label: 'Study', href: '/study/' }, { label: module.title, href: `/study/${module.id}/` }, { label: data.title }]}
+    meta={`${data.minutes} min read, ${levelLabel[data.level]}`} />
+  <StudyShell modules={modules} current={module.id} page={entry.id}>
+    <article class="study-article">
+      <p class="study-summary prose">{data.summary}</p>
+
+      <div class="study-intro" data-card>
+        {prerequisites.length > 0 && (
+          <section aria-labelledby="study-read-first">
+            <h2 class="section-label" id="study-read-first">Read first</h2>
+            <ul class="study-list">
+              {prerequisites.map(({ title, href, moduleTitle: from }) => (
+                <li>
+                  {href ? <a href={href}>{title}</a> : <span>{title}</span>}
+                  <span class="muted">{href ? `, in ${from}` : `, in ${from}, not written yet`}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <section aria-labelledby="study-outcomes">
+          <h2 class="section-label" id="study-outcomes">After this page, you can</h2>
+          <ul class="study-list">
+            {data.outcomes.map((outcome) => <li set:html={inline(outcome)} />)}
+          </ul>
+        </section>
+      </div>
+
+      <div class="study-body prose"><Content /></div>
+
+      {data.examples && (
+        <section class="study-section" aria-labelledby="study-example">
+          <h2 id="study-example">{data.examples.length > 1 ? 'Examples' : 'Example'}</h2>
+          <div class="study-examples"><CodeExamples examples={data.examples} /></div>
+        </section>
+      )}
+
+      <div class="study-fit">
+        <section class="callout" data-card aria-labelledby="study-use">
+          <h2 class="section-label" id="study-use">Use it when</h2>
+          <ul class="study-list">{data.useWhen.map((item) => <li set:html={inline(item)} />)}</ul>
+        </section>
+        <section class="callout trap" data-card aria-labelledby="study-avoid">
+          <h2 class="section-label" id="study-avoid">Avoid it when</h2>
+          <ul class="study-list">{data.avoidWhen.map((item) => <li set:html={inline(item)} />)}</ul>
+        </section>
+      </div>
+
+      {data.whatChanged && (
+        <section class="study-section study-box" data-card aria-labelledby="study-changed">
+          <h2 id="study-changed">What changed</h2>
+          <p class="muted">Checked on {checkedDate(data.whatChanged.checked)}.</p>
+          <ul class="study-list">{data.whatChanged.items.map((item) => <li set:html={inline(item)} />)}</ul>
+        </section>
+      )}
+
+      {data.expertsDisagree && (
+        <section class="study-section" aria-labelledby="study-disagree">
+          <h2 id="study-disagree">Experts disagree</h2>
+          {data.expertsDisagree.map(({ question, note, positions }) => (
+            <div class="study-dispute">
+              <h3>{question}</h3>
+              {note && <p class="muted prose">{note}</p>}
+              <ol class="study-positions" role="list">
+                {positions.map(({ view, holdsWhen, source }) => (
+                  <li class="study-position" data-card>
+                    <p set:html={inline(view)} />
+                    <p class="section-label">Fits when</p>
+                    <p set:html={inline(holdsWhen)} />
+                    <p class="study-position-source muted">Source: <a href={source}>{sourceLabel.get(source)}</a></p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {(practice.problems || practice.questions.length > 0) && (
+        <section class="study-section" aria-labelledby="study-practice">
+          <h2 id="study-practice">Practice this</h2>
+          <ul class="study-actions" role="list">
+            {practice.problems && (
+              <li><a class="button outline" href={practice.problems.href} data-study-practice>Practice {plural(practice.problems.count, 'problem')}</a></li>
+            )}
+            {practice.questions.map(({ label, href, count }) => (
+              <li><a class="button outline" href={href}>{label}: {plural(count, 'question')}</a></li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section class="study-section" aria-labelledby="study-sources">
+        <h2 id="study-sources">Sources</h2>
+        <ul class="study-list study-sources">
+          {data.sources.map(({ label, url, type }) => (
+            <li><a href={url}>{label}</a><span class="muted">, {type === 'primary' ? 'primary source' : 'practitioner'}</span></li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="study-read" aria-label="Reading progress" data-study-read-control data-study-id={entry.id} hidden>
+        <div data-study-unread>
+          <button class="button primary" type="button" data-study-mark>Mark as read</button>
+        </div>
+        <div class="study-read-done" data-study-done hidden>
+          <span data-study-day></span>
+          <button class="button quiet" type="button" data-study-unmark>Mark as unread</button>
+        </div>
+        <p class="visually-hidden" role="status" data-study-announce></p>
+        <p class="study-read-error" role="alert" data-study-error hidden></p>
+      </section>
+    </article>
+
+    <nav class="study-pager" aria-label="Study pages">
+      {previous && (
+        <p class="previous">
+          <span class="muted">Previous</span>
+          <a href={studyPageUrl(previous.id)} rel="prev">{previous.title}</a>
+        </p>
+      )}
+      {next && (
+        <p class="next">
+          <span class="muted">{next.module === module.id ? 'Next' : `Next, in ${moduleTitle(next.module)}`}</span>
+          <a href={studyPageUrl(next.id)} rel="next">{next.title}</a>
+        </p>
+      )}
+      <a class="study-overview" href={studyModuleUrl(module.id)}>Module overview</a>
+    </nav>
+  </StudyShell>
+</Base>
+
+<script>
+  import { setupCodeExamples } from '../../../components/questions/code-examples';
+  import { setupReadMarks, setupReadToggle } from '../../../components/study/study-client';
+
+  setupCodeExamples();
+  setupReadMarks();
+  setupReadToggle();
+</script>

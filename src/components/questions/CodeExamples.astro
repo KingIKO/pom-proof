@@ -4,7 +4,8 @@ import type { CollectionEntry } from 'astro:content';
 import { shikiConfig } from '../../lib/shiki-config.mjs';
 
 interface Props {
-  examples: NonNullable<CollectionEntry<'questions'>['data']['examples']>;
+  /** Questions and Study pages share the example schema. */
+  examples: NonNullable<CollectionEntry<'questions' | 'study'>['data']['examples']>;
   questionTitle?: string;
 }
 
