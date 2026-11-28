@@ -1,4 +1,5 @@
 ---
+import { siteSections, type SectionId } from '../lib/site-nav';
 import { url } from '../lib/url';
 import figtreeLatin from '@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url';
 import '../styles/tokens.css';
@@ -6,18 +7,12 @@ import '../styles/components.css';
 
 interface Props {
   title: string;
-  section?: 'practice' | 'study' | 'questions' | 'tracks' | 'progress';
+  section?: SectionId;
   wide?: boolean;
 }
 
 const { title, section, wide } = Astro.props;
-const nav = [
-  { id: 'practice', label: 'Practice', href: url('/') },
-  { id: 'study', label: 'Study', href: url('/study/') },
-  { id: 'questions', label: 'Questions', href: url('/questions/') },
-  { id: 'tracks', label: 'Tracks', href: url('/tracks/') },
-  { id: 'progress', label: 'Progress', href: url('/progress/') },
-] as const;
+const nav = siteSections.map(({ id, label, path }) => ({ id, label, href: url(path) }));
 ---
 <!doctype html>
 <html lang="en">
@@ -148,7 +143,7 @@ const nav = [
   @media (width < 48rem) {
     .page-content { padding-block-start: var(--space-24); }
   }
-  /* Five links do not fit beside the brand on a phone, so the nav takes its own row below it. The
+  /* The section links do not fit beside the brand on a phone, so the nav takes its own row below it. The
      links spread across that row with 44px tall targets; the sideways scroll only remains as a
      fallback for screens narrower than 320px. */
   @media (width < 36rem) {
@@ -160,7 +155,8 @@ const nav = [
       overflow-x: auto;
       scrollbar-width: none;
     }
-    .site-nav ul { justify-content: space-between; gap: 0; max-inline-size: 26rem; padding: 0; }
+    /* The block padding keeps the links' focus ring inside the scrolling nav, which would clip it. */
+    .site-nav ul { justify-content: space-between; gap: 0; max-inline-size: 26rem; padding: var(--space-4) 0; }
     .site-nav a { min-block-size: 2.75rem; padding-inline: var(--space-4); font-size: var(--type-13); }
     .site-nav a[aria-current]::after { inset-block-end: 0; }
   }

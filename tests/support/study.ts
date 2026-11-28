@@ -72,16 +72,28 @@ export function studyModulePaths(pages = discoverStudyPages()) {
 }
 
 export interface TopicMapConcept {
+  /** Map id such as `m4-c1`; prerequisites name these. */
   id: string;
+  /** The page's file name, so the page is `content/study/<module slug>/<slug>.md`. */
+  slug: string;
   module: string;
   order: number;
   level: string;
   concept: string;
+  prerequisites: string[];
   sources: Array<{ url: string; type: string }>;
 }
 
+export interface TopicMapModule {
+  id: string;
+  /** The module's folder and file name in content/study and content/study-modules. */
+  slug: string;
+  order: number;
+  module: string;
+}
+
 export interface TopicMap {
-  modules: Array<{ id: string; order: number; module: string }>;
+  modules: TopicMapModule[];
   meta: { stages: Array<{ stage: string; modules: string[] }> };
   concepts: TopicMapConcept[];
 }
@@ -90,22 +102,20 @@ export function readTopicMap(): TopicMap {
   return JSON.parse(readFileSync(join(root, '.notes', 'study', 'topic-map.json'), 'utf8')) as TopicMap;
 }
 
-/** Every URL anywhere in the topic map, with the source types the map gives it (empty when untyped). */
-export function topicMapUrls(map: unknown = readTopicMap()) {
+/** The planned pages by id, `<module slug>/<concept slug>`, as the map lists them. */
+export function plannedPages(map: TopicMap = readTopicMap()) {
+  const moduleSlug = new Map(map.modules.map(({ module, slug }) => [module, slug]));
+  return new Map(map.concepts.map((concept) => [`${moduleSlug.get(concept.module)}/${concept.slug}`, concept]));
+}
+
+/**
+ * The URLs a page may cite: those in `concepts[].sources`, each with the type the map gives it.
+ * Links elsewhere in the map, such as `existing_guides` or disagreement notes, do not count.
+ */
+export function topicMapUrls(map: TopicMap = readTopicMap()) {
   const urls = new Map<string, Set<string>>();
-  const visit = (value: unknown) => {
-    if (typeof value === 'string') {
-      if (/^https?:\/\//.test(value) && !urls.has(value)) urls.set(value, new Set());
-    } else if (Array.isArray(value)) {
-      value.forEach(visit);
-    } else if (value && typeof value === 'object') {
-      const { url, type } = value as { url?: unknown; type?: unknown };
-      if (typeof url === 'string' && typeof type === 'string') {
-        urls.set(url, (urls.get(url) ?? new Set()).add(type));
-      }
-      Object.values(value).forEach(visit);
-    }
-  };
-  visit(map);
+  for (const { sources } of map.concepts) {
+    for (const { url, type } of sources) urls.set(url, (urls.get(url) ?? new Set()).add(type));
+  }
   return urls;
 }

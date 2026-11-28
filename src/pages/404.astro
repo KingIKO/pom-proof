@@ -1,15 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
 import TitleBand from '../components/shell/TitleBand.astro';
+import { siteSections } from '../lib/site-nav';
 import { url } from '../lib/url';
 ---
 <Base title="Page not found">
   <TitleBand slot="title-band" title="Page not found" meta="The address may be wrong, or the page may have moved. Check the address or choose a section below." narrow />
   <nav class="recovery-links" aria-label="Find a section">
-    <a class="button outline" href={url('/')}>Practice</a>
-    <a class="button outline" href={url('/questions/')}>Questions</a>
-    <a class="button outline" href={url('/tracks/')}>Tracks</a>
-    <a class="button outline" href={url('/progress/')}>Progress</a>
+    {siteSections.map(({ label, path }) => <a class="button outline" href={url(path)}>{label}</a>)}
   </nav>
 </Base>
 

@@ -1,5 +1,55 @@
-import { describe, expect, it } from 'vitest';
-import { decodeStudy, encodeStudy, formatDay, localDate } from '../../src/components/study/read-state';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  decodeStudy, encodeStudy, formatDay, isNewerStudy, localDate, setRead, studyKey, studyStorage,
+} from '../../src/components/study/read-state';
+
+/** A window with an in-memory localStorage; `blocked` makes every storage call throw. */
+function fakeWindow(stored: Record<string, string> = {}, blocked = false) {
+  const values = new Map(Object.entries(stored));
+  const refuse = () => { throw new DOMException('Blocked', 'SecurityError'); };
+  const localStorage = {
+    getItem: (key: string) => (blocked ? refuse() : values.get(key) ?? null),
+    setItem: (key: string, value: string) => (blocked ? refuse() : void values.set(key, value)),
+    removeItem: (key: string) => (blocked ? refuse() : void values.delete(key)),
+  };
+  vi.stubGlobal('window', { localStorage, dispatchEvent: () => true });
+  return values;
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('Study storage', () => {
+  it('reports a stored value from a newer version, and only then', () => {
+    expect(isNewerStudy(JSON.stringify({ version: 2, read: {} }))).toBe(true);
+    expect(isNewerStudy(encodeStudy({}))).toBe(false);
+    expect(isNewerStudy('not json')).toBe(false);
+    expect(isNewerStudy(null)).toBe(false);
+  });
+
+  it('leaves a newer stored value alone and says why', () => {
+    const newer = JSON.stringify({ version: 2, read: { 'framework-design/page-object-model': '2027-01-04' } });
+    const values = fakeWindow({ [studyKey]: newer });
+    expect(studyStorage()).toBe('newer');
+    expect(() => setRead('framework-design/parameterised-tests', true, '2026-11-27')).toThrow('newer version');
+    expect(values.get(studyKey)).toBe(newer);
+  });
+
+  it('reports blocked storage', () => {
+    fakeWindow({}, true);
+    expect(studyStorage()).toBe('blocked');
+    expect(() => setRead('framework-design/parameterised-tests', true)).toThrow();
+  });
+
+  it('saves a mark and leaves no probe behind', () => {
+    const values = fakeWindow();
+    expect(studyStorage()).toBe('ready');
+    setRead('framework-design/parameterised-tests', true, '2026-11-27');
+    expect([...values.keys()]).toEqual([studyKey]);
+    expect(decodeStudy(values.get(studyKey))).toEqual({ 'framework-design/parameterised-tests': '2026-11-27' });
+  });
+});
 
 describe('Study read state', () => {
   it('round-trips the stored marks', () => {

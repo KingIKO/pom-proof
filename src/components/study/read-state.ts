@@ -37,11 +37,41 @@ export function encodeStudy(read: ReadMap) {
   return JSON.stringify({ version: 1, read });
 }
 
+/** True when a later version of the site wrote the value, which this page must leave alone. */
+export function isNewerStudy(raw: string | null | undefined) {
+  try {
+    const value: unknown = JSON.parse(raw ?? 'null');
+    const version = value && typeof value === 'object' ? (value as { version?: unknown }).version : undefined;
+    return typeof version === 'number' && version > 1;
+  } catch {
+    return false;
+  }
+}
+
 export function readStudy(): ReadMap {
   try {
     return decodeStudy(window.localStorage.getItem(studyKey));
   } catch {
     return {};
+  }
+}
+
+export type StudyStorage = 'ready' | 'blocked' | 'newer';
+const probeKey = 'pom-proof:study-probe';
+
+/**
+ * Whether this page can save read marks: `blocked` when the browser refuses storage, `newer` when
+ * a later version of the site saved them in a form this page must not overwrite.
+ */
+export function studyStorage(): StudyStorage {
+  try {
+    const storage = window.localStorage;
+    if (isNewerStudy(storage.getItem(studyKey))) return 'newer';
+    storage.setItem(probeKey, '1');
+    storage.removeItem(probeKey);
+    return 'ready';
+  } catch {
+    return 'blocked';
   }
 }
 
@@ -51,12 +81,18 @@ export function localDate(now = new Date()) {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/** Marks or unmarks one page. Throws when the browser does not save, so the caller can say so. */
+/**
+ * Marks or unmarks one page. Throws when the browser does not save, or when a later version of
+ * the site wrote the stored value, so the caller can say so and nothing is overwritten.
+ */
 export function setRead(id: string, read: boolean, today = localDate()) {
-  const marks = readStudy();
+  const storage = window.localStorage;
+  const raw = storage.getItem(studyKey);
+  if (isNewerStudy(raw)) throw new Error('Read marks were saved by a newer version of the site');
+  const marks = decodeStudy(raw);
   if (read) marks[id] = today;
   else delete marks[id];
-  window.localStorage.setItem(studyKey, encodeStudy(marks));
+  storage.setItem(studyKey, encodeStudy(marks));
   window.dispatchEvent(new CustomEvent(studyChangeEvent));
 }
 

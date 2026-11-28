@@ -122,7 +122,9 @@ export const collections = {
         positions: z.array(z.strictObject({
           view: textSchema,
           holdsWhen: textSchema,
-          source: z.url({ protocol: /^https$/ }),
+          // One URL, or a list when a view rests on more than one source. Read as a list.
+          source: z.union([z.url({ protocol: /^https$/ }), z.array(z.url({ protocol: /^https$/ })).min(1)])
+            .transform((source) => (Array.isArray(source) ? source : [source])),
         })).min(2),
       })).min(1).optional(),
     }),

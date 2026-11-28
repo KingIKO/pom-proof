@@ -25,7 +25,7 @@ const stage = stages.find(({ id }) => id === module.stage)!;
     meta={`Stage ${stage.id}, ${stage.name}. ${plural(module.pages.length, 'page')}, ${module.minutes} min.`} />
   <StudyShell modules={modules} current={module.id}>
     <p class="study-summary prose">{module.summary}</p>
-    <ol class="study-page-list" role="list" aria-label={`${module.title} pages`}>
+    <ol class="study-page-list" role="list" data-study-pages>
       {module.pages.map((page, index) => (
         <li class="row-card study-page-card" data-card>
           <span class="study-page-number" aria-hidden="true">{index + 1}</span>

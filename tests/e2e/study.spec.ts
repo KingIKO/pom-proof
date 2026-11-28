@@ -1,9 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
+import { showStudyInNav, siteSections } from '../../src/lib/site-nav';
 import { discoverProblems } from '../support/problems';
 import { discoverStudyModules, discoverStudyPages } from '../support/study';
 
 // The Study section from the practice and study plan, section 3: landing, module page, left nav,
-// Mark as read, pager, Practice this and the five-link header.
+// the page order with the recap at the top, Mark as read, pager, Practice this and the header.
 
 const prefix = '/pom-proof/';
 const modules = discoverStudyModules().sort((a, b) => Number(a.data.order) - Number(b.data.order));
@@ -15,6 +16,13 @@ const reading = modules.flatMap(({ id }) => pages.filter(({ folder }) => folder 
   .sort((a, b) => Number(a.frontmatter.order) - Number(b.frontmatter.order)));
 
 const header = (page: Page) => page.getByRole('navigation', { name: 'Main' });
+
+/** The header Study link: present and current while the switch is on, absent while it is off. */
+async function expectHeaderStudy(page: Page, current: 'page' | 'location') {
+  const link = header(page).getByRole('link', { name: 'Study' });
+  if (showStudyInNav) await expect(link).toHaveAttribute('aria-current', current);
+  else await expect(link).toHaveCount(0);
+}
 
 test('the landing lists four stages and every module, with Coming soon for modules without pages', async ({ page }) => {
   await page.goto('study/');
@@ -35,26 +43,73 @@ test('the landing lists four stages and every module, with Coming soon for modul
       await expect(card).toContainText('Coming soon');
     }
   }
-  await expect(header(page).getByRole('link', { name: 'Study' })).toHaveAttribute('aria-current', 'page');
+  await expectHeaderStudy(page, 'page');
   await page.getByRole('link', { name: 'Start here' }).click();
   await expect(page).toHaveURL(`${prefix}${reading[0].path}`);
 });
 
 test('the module page lists its pages in order and the left nav opens only the current module', async ({ page }) => {
   await page.goto('study/framework-design/');
-  const list = page.getByRole('list', { name: 'Framework design pages', exact: true });
-  await expect(list.getByRole('heading', { level: 2 })).toHaveText(reading.filter(({ folder }) => folder === 'framework-design')
+  await expect(page.locator('[data-study-pages] h2')).toHaveText(reading.filter(({ folder }) => folder === 'framework-design')
     .map(({ frontmatter }) => String(frontmatter.title)));
+  // One list carries the name "Pages in Framework design": the one in the module nav.
+  await expect(page.getByRole('list', { name: /Framework design/ })).toHaveCount(1);
   const nav = page.getByRole('navigation', { name: 'Study modules' });
   await expect(nav.locator('.study-nav-pages')).toHaveCount(1);
   await expect(nav.getByRole('link', { name: 'Framework design' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('complementary')).toHaveCount(0);
 
   await page.goto(pageObjects);
   await expect(nav.locator('.study-nav-pages')).toHaveCount(1);
   await expect(nav.getByRole('list', { name: 'Pages in Framework design' })).toBeVisible();
   await expect(nav.getByRole('link', { name: 'Page Object Model' })).toHaveAttribute('aria-current', 'page');
   await expect(nav.getByRole('link', { name: 'Framework design' })).toHaveAttribute('aria-current', 'true');
-  await expect(header(page).getByRole('link', { name: 'Study' })).toHaveAttribute('aria-current', 'location');
+  await expectHeaderStudy(page, 'location');
+});
+
+test('a reading page opens with outcomes and the recap, and ends with sources, practice, the read mark and the pager', async ({ page }) => {
+  await page.goto(parameterised);
+  await expect(page.locator('.study-article h2')).toHaveText([
+    'After this page, you can', 'Use it when', 'Avoid it when',
+    'What it is', 'How it works', 'Why it helps', 'When not to use it',
+    'Example', 'What changed', 'Sources', 'Practice this',
+  ]);
+  await expect(page.locator('.study-intro .study-recap')).toContainText('Boundary and partition tables');
+  // Every region after the body, in order, with Mark as read and the pager last.
+  const order = await page.evaluate(() => [...document.querySelectorAll('.study-article > *, .study-pager')]
+    .map((element) => element.querySelector('h2')?.textContent
+      ?? (element.matches('[data-study-read-control]') ? 'read mark' : element.matches('.study-pager') ? 'pager' : element.className)));
+  expect(order.slice(-4)).toEqual(['Sources', 'Practice this', 'read mark', 'pager']);
+  // No prerequisite is written yet, so Read first stays out.
+  await expect(page.getByRole('heading', { name: 'Read first' })).toHaveCount(0);
+});
+
+test('the summary, code and boxes share one right edge, and a long code line scrolls inside its box', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(pageObjects);
+  await page.getByRole('group', { name: 'Example language' }).first().getByRole('button', { name: 'Java' }).click();
+  const edges = await page.evaluate(() => {
+    const right = (selector: string) => [...document.querySelectorAll(selector)]
+      .filter((element) => (element as HTMLElement).offsetParent)
+      .map((element) => Math.round(element.getBoundingClientRect().right));
+    return {
+      body: right('.study-body > p'),
+      summary: right('.study-summary'),
+      intro: right('.study-intro'),
+      code: right('.study-examples pre'),
+      positions: right('.study-positions'),
+    };
+  });
+  const [edge] = edges.body;
+  for (const [name, values] of Object.entries(edges)) {
+    for (const value of values) expect(value, `${name} right edge`).toBeLessThanOrEqual(edge);
+  }
+  for (const name of ['summary', 'intro', 'code', 'positions'] as const) expect(Math.max(...edges[name]), `${name} reaches the edge`).toBe(edge);
+  // On a phone the long Java line scrolls inside its box and the page itself does not.
+  await page.setViewportSize({ width: 360, height: 760 });
+  const java = page.locator('.study-examples pre').filter({ hasText: 'visibilityOfElementLocated' });
+  expect(await java.evaluate((pre) => pre.scrollWidth > pre.clientWidth), 'the long Java line scrolls').toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(360);
 });
 
 test('Mark as read survives a reload, shows on the module and landing, and Mark as unread clears it', async ({ page }) => {
@@ -72,8 +127,7 @@ test('Mark as read survives a reload, shows on the module and landing, and Mark 
   expect(stored).toEqual({ version: 1, read: { 'framework-design/page-object-model': expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) } });
 
   await page.goto('study/framework-design/');
-  await expect(page.getByRole('list', { name: 'Framework design pages', exact: true })
-    .locator('[data-study-status="framework-design/page-object-model"]')).toHaveText('Read');
+  await expect(page.locator('[data-study-pages] [data-study-status="framework-design/page-object-model"]')).toHaveText('Read');
   await page.goto('study/');
   const card = page.locator('[data-study-module="framework-design"]');
   const written = pages.filter(({ folder }) => folder === 'framework-design').length;
@@ -93,14 +147,36 @@ test('Mark as read survives a reload, shows on the module and landing, and Mark 
   await expect(page.getByRole('link', { name: 'Start here' })).toBeVisible();
 });
 
-test('a page that cannot save its read mark says so', async ({ page }) => {
+test('focus stays on the read control when another tab marks the page unread', async ({ page, context }) => {
+  await page.goto(pageObjects);
+  await page.getByRole('button', { name: 'Mark as read' }).click();
+  await expect(page.getByRole('button', { name: 'Mark as unread' })).toBeFocused();
+  const other = await context.newPage();
+  await other.goto(pageObjects);
+  await other.getByRole('button', { name: 'Mark as unread' }).click();
+  await expect(page.getByRole('button', { name: 'Mark as read' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Mark as read' })).toBeFocused();
+  await other.close();
+});
+
+test('blocked storage replaces Mark as read with a note', async ({ page }) => {
   await page.addInitScript(() => {
     Storage.prototype.setItem = () => { throw new DOMException('Blocked', 'SecurityError'); };
   });
   await page.goto(pageObjects);
-  await page.getByRole('button', { name: 'Mark as read' }).click();
-  await expect(page.getByRole('alert')).toHaveText('The browser could not save this. Check its storage settings and try again.');
-  await expect(page.getByRole('button', { name: 'Mark as read' })).toBeVisible();
+  await expect(page.locator('[data-study-unavailable]')).toHaveText('This browser is not saving data for this site, so pages cannot be marked as read.');
+  await expect(page.getByRole('button', { name: 'Mark as read' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Mark as unread' })).toBeHidden();
+});
+
+test('read marks saved by a newer version are left alone', async ({ page }) => {
+  const newer = JSON.stringify({ version: 2, read: { 'framework-design/page-object-model': '2027-01-04' } });
+  await page.goto('study/');
+  await page.evaluate((value) => localStorage.setItem('pom-proof:study', value), newer);
+  await page.goto(pageObjects);
+  await expect(page.locator('[data-study-unavailable]')).toHaveText('A newer version of this site saved your read marks. Reload the page to change them.');
+  await expect(page.getByRole('button', { name: 'Mark as read' })).toBeHidden();
+  expect(await page.evaluate(() => localStorage.getItem('pom-proof:study'))).toBe(newer);
 });
 
 test('the pager walks the pages in reading order and links the module overview', async ({ page }) => {
@@ -142,25 +218,28 @@ test('the language switcher changes the Study example', async ({ page }) => {
   await expect(figure.getByRole('region', { name: 'Code example: pytest' })).toContainText('@pytest.mark.parametrize');
 });
 
-test('the page object page gives both sides of the assertion dispute', async ({ page }) => {
+test('the page object page gives both sides of the assertion dispute, with their sources', async ({ page }) => {
   await page.goto(pageObjects);
-  const dispute = page.locator('section[aria-labelledby="study-disagree"]');
+  const dispute = page.locator('[data-study-disputes]');
   await expect(dispute.getByRole('heading', { name: 'Should a page object contain assertions?' })).toBeVisible();
-  const positions = dispute.getByRole('listitem');
+  const positions = dispute.locator('.study-position');
   await expect(positions).toHaveCount(2);
-  await expect(positions.nth(0).getByRole('link')).toHaveAttribute('href', 'https://www.selenium.dev/documentation/test_practices/encouraged/page_object_models/');
-  await expect(positions.nth(1).getByRole('link')).toHaveAttribute('href', 'https://playwright.dev/docs/pom');
-  await expect(page.getByText('not written yet')).toBeVisible();
+  await expect(positions.nth(0).getByRole('link')).toHaveText(['Selenium: Page object models', 'Martin Fowler: PageObject']);
+  await expect(positions.nth(1).getByRole('link')).toHaveText(['Martin Fowler: PageObject', 'Playwright: Page object models']);
+  await expect(positions.nth(1).getByRole('link').nth(1)).toHaveAttribute('href', 'https://playwright.dev/docs/pom');
+  // No practice problem is about page objects, so only the question links remain.
+  await expect(page.locator('[data-study-practice]')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /^Framework design: \d+ questions$/ })).toBeVisible();
 });
 
 test.describe('at 360px', () => {
   test.use({ viewport: { width: 360, height: 760 } });
 
   for (const path of ['study/', pageObjects]) {
-    test(`/${path} shows all five header links without overflow`, async ({ page }) => {
+    test(`/${path} shows every header link without overflow`, async ({ page }) => {
       await page.goto(path);
       const links = header(page).getByRole('link');
-      await expect(links).toHaveText(['Practice', 'Study', 'Questions', 'Tracks', 'Progress']);
+      await expect(links).toHaveText(siteSections.map(({ label }) => label));
       for (const link of await links.all()) {
         await expect(link).toBeInViewport({ ratio: 1 });
         const box = (await link.boundingBox())!;
@@ -171,6 +250,25 @@ test.describe('at 360px', () => {
     });
   }
 
+  test('a focused header link shows its whole focus ring inside the nav', async ({ page }) => {
+    await page.goto('study/');
+    const link = header(page).getByRole('link').first();
+    for (let step = 0; step < 5 && !await link.evaluate((element) => element === document.activeElement); step += 1) {
+      await page.keyboard.press('Tab');
+    }
+    await expect(link).toBeFocused();
+    const ring = await link.evaluate((element) => {
+      const style = getComputedStyle(element);
+      const nav = element.closest('nav')!.getBoundingClientRect();
+      const box = element.getBoundingClientRect();
+      const reach = parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
+      return { style: style.outlineStyle, width: parseFloat(style.outlineWidth), top: box.top - reach >= nav.top, bottom: box.bottom + reach <= nav.bottom };
+    });
+    expect(ring.style, 'a visible focus ring').not.toBe('none');
+    expect(ring.width).toBeGreaterThan(0);
+    expect({ top: ring.top, bottom: ring.bottom }, 'the ring fits inside the scrolling nav').toEqual({ top: true, bottom: true });
+  });
+
   test('the module list is one closed disclosure above the page', async ({ page }) => {
     await page.goto(pageObjects);
     const modules = page.locator('details[data-study-nav]');
@@ -179,5 +277,38 @@ test.describe('at 360px', () => {
     await modules.locator('summary').click();
     await expect(page.getByRole('navigation', { name: 'Study modules' }).getByRole('link', { name: 'Parameterised and data-driven tests' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(360);
+  });
+
+  test('the module list does not shift the page while it loads on a slow phone', async ({ page }) => {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+    await page.addInitScript(() => {
+      const shifts = { total: 0 };
+      (window as unknown as { studyShifts: typeof shifts }).studyShifts = shifts;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries() as Array<PerformanceEntry & { value: number; hadRecentInput: boolean }>) {
+          if (!entry.hadRecentInput) shifts.total += entry.value;
+        }
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    await page.goto(pageObjects, { waitUntil: 'load' });
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const total = await page.evaluate(() => (window as unknown as { studyShifts: { total: number } }).studyShifts.total);
+    // 0.1 is the "good" limit for cumulative layout shift in Core Web Vitals.
+    expect(total, 'cumulative layout shift').toBeLessThan(0.1);
+  });
+});
+
+test.describe('at 320px', () => {
+  test.use({ viewport: { width: 320, height: 760 } });
+
+  test('a lone Next or Previous link takes the whole pager row', async ({ page }) => {
+    for (const [path, rel] of [[reading[0].path, 'next'], [reading.at(-1)!.path, 'prev']] as const) {
+      await page.goto(path);
+      const pager = page.getByRole('navigation', { name: 'Study pages' });
+      const row = (await pager.boundingBox())!;
+      const lone = (await pager.locator(`a[rel="${rel}"]`).locator('..').boundingBox())!;
+      expect(Math.round(lone.width), `${rel} on /${path}`).toBe(Math.round(row.width));
+    }
   });
 });

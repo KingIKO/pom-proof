@@ -37,8 +37,7 @@ export interface Prerequisite {
   id: string;
   title: string;
   moduleTitle: string;
-  /** Set when the page is written; an unwritten page is listed as text. */
-  href?: string;
+  href: string;
 }
 
 export const studyHomeUrl = url('/study/');
@@ -47,9 +46,6 @@ export const studyPageUrl = (id: string) => url(`/study/${id}/`);
 
 export const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
 export const levelLabel = { core: 'core topic', extended: 'extended topic' } as const;
-
-/** "locator-strategy" reads "Locator strategy" until its page is written and has a title. */
-const titleFromSlug = (slug: string) => slug.slice(0, 1).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
 
 const fail = (message: string): never => {
   throw new Error(message);
@@ -63,7 +59,7 @@ function checkPage(page: PageEntry, moduleIds: ReadonlySet<string>) {
   if (!page.body?.trim()) fail(`Study page "${page.id}" needs a Markdown body`);
   const sources = new Set(page.data.sources.map(({ url: href }) => href));
   for (const { question, positions } of page.data.expertsDisagree ?? []) {
-    for (const { source } of positions) {
+    for (const source of positions.flatMap((position) => position.source)) {
       if (!sources.has(source)) fail(`Study page "${page.id}": the source ${source} in "${question}" must also be listed in sources`);
     }
   }
@@ -119,17 +115,15 @@ export async function studyCatalog() {
   return { modules, pages, entries };
 }
 
+/**
+ * The prerequisites whose pages are written, as links. One that is not written yet is left out;
+ * the Study content test lists those in its log.
+ */
 export function prerequisitesOf(page: PageEntry, modules: readonly StudyModule[]): Prerequisite[] {
-  return page.data.prerequisites.map((id) => {
-    const [moduleId, slug] = id.split('/');
-    const module = modules.find((candidate) => candidate.id === moduleId);
+  return page.data.prerequisites.flatMap((id) => {
+    const module = modules.find((candidate) => candidate.id === id.split('/')[0]);
     const written = module?.pages.find((candidate) => candidate.id === id);
-    return {
-      id,
-      title: written?.title ?? titleFromSlug(slug),
-      moduleTitle: module?.title ?? moduleId,
-      href: written ? studyPageUrl(id) : undefined,
-    };
+    return module && written ? [{ id, title: written.title, moduleTitle: module.title, href: studyPageUrl(id) }] : [];
   });
 }
 

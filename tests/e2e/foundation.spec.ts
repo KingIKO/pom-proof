@@ -6,6 +6,7 @@ import { discoverProblems, root } from '../support/problems';
 import { discoverQuestions } from '../support/questions';
 import { expandQuestion } from '../support/review';
 import { discoverStudyPages, studyModulePaths } from '../support/study';
+import { showStudyInNav } from '../../src/lib/site-nav';
 
 const prefix = '/pom-proof/';
 const problems = discoverProblems();
@@ -79,7 +80,7 @@ for (const url of pages) {
     expect(response?.status()).toBe(200);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expectTitleBand(page);
-    await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveCount(5);
+    await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveCount(showStudyInNav ? 5 : 4);
     await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
     network.check();
   });

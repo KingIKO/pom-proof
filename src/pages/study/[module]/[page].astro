@@ -48,48 +48,40 @@ const sourceLabel = new Map(data.sources.map(({ url, label }) => [url, label]));
 
       <div class="study-intro" data-card>
         {prerequisites.length > 0 && (
-          <section aria-labelledby="study-read-first">
-            <h2 class="section-label" id="study-read-first">Read first</h2>
+          <div class="study-read-first">
+            <h2 class="section-label">Read first</h2>
             <ul class="study-list">
               {prerequisites.map(({ title, href, moduleTitle: from }) => (
-                <li>
-                  {href ? <a href={href}>{title}</a> : <span>{title}</span>}
-                  <span class="muted">{href ? `, in ${from}` : `, in ${from}, not written yet`}</span>
-                </li>
+                <li><a href={href}>{title}</a><span class="muted">, in {from}</span></li>
               ))}
             </ul>
-          </section>
+          </div>
         )}
-        <section aria-labelledby="study-outcomes">
-          <h2 class="section-label" id="study-outcomes">After this page, you can</h2>
+        <div>
+          <h2 class="section-label">After this page, you can</h2>
           <ul class="study-list">
             {data.outcomes.map((outcome) => <li set:html={inline(outcome)} />)}
           </ul>
-        </section>
+        </div>
+        <div class="study-recap">
+          <h2 class="section-label">Use it when</h2>
+          <ul class="study-list">{data.useWhen.map((item) => <li set:html={inline(item)} />)}</ul>
+          <h2 class="section-label">Avoid it when</h2>
+          <ul class="study-list">{data.avoidWhen.map((item) => <li set:html={inline(item)} />)}</ul>
+        </div>
       </div>
 
       <div class="study-body prose"><Content /></div>
 
       {data.examples && (
-        <section class="study-section" aria-labelledby="study-example">
+        <section class="study-section">
           <h2 id="study-example">{data.examples.length > 1 ? 'Examples' : 'Example'}</h2>
           <div class="study-examples"><CodeExamples examples={data.examples} /></div>
         </section>
       )}
 
-      <div class="study-fit">
-        <section class="callout" data-card aria-labelledby="study-use">
-          <h2 class="section-label" id="study-use">Use it when</h2>
-          <ul class="study-list">{data.useWhen.map((item) => <li set:html={inline(item)} />)}</ul>
-        </section>
-        <section class="callout trap" data-card aria-labelledby="study-avoid">
-          <h2 class="section-label" id="study-avoid">Avoid it when</h2>
-          <ul class="study-list">{data.avoidWhen.map((item) => <li set:html={inline(item)} />)}</ul>
-        </section>
-      </div>
-
       {data.whatChanged && (
-        <section class="study-section study-box" data-card aria-labelledby="study-changed">
+        <section class="study-section study-box" data-card>
           <h2 id="study-changed">What changed</h2>
           <p class="muted">Checked on {checkedDate(data.whatChanged.checked)}.</p>
           <ul class="study-list">{data.whatChanged.items.map((item) => <li set:html={inline(item)} />)}</ul>
@@ -97,7 +89,7 @@ const sourceLabel = new Map(data.sources.map(({ url, label }) => [url, label]));
       )}
 
       {data.expertsDisagree && (
-        <section class="study-section" aria-labelledby="study-disagree">
+        <section class="study-section" data-study-disputes>
           <h2 id="study-disagree">Experts disagree</h2>
           {data.expertsDisagree.map(({ question, note, positions }) => (
             <div class="study-dispute">
@@ -109,7 +101,10 @@ const sourceLabel = new Map(data.sources.map(({ url, label }) => [url, label]));
                     <p set:html={inline(view)} />
                     <p class="section-label">Fits when</p>
                     <p set:html={inline(holdsWhen)} />
-                    <p class="study-position-source muted">Source: <a href={source}>{sourceLabel.get(source)}</a></p>
+                    <p class="study-position-source muted">
+                      {source.length > 1 ? 'Sources' : 'Source'}:{' '}
+                      {source.map((href, index) => <>{index > 0 && ', '}<a href={href}>{sourceLabel.get(href)}</a></>)}
+                    </p>
                   </li>
                 ))}
               </ol>
@@ -118,8 +113,17 @@ const sourceLabel = new Map(data.sources.map(({ url, label }) => [url, label]));
         </section>
       )}
 
+      <section class="study-section">
+        <h2 id="study-sources">Sources</h2>
+        <ul class="study-list study-sources">
+          {data.sources.map(({ label, url, type }) => (
+            <li><a href={url}>{label}</a><span class="muted">, {type === 'primary' ? 'primary source' : 'practitioner'}</span></li>
+          ))}
+        </ul>
+      </section>
+
       {(practice.problems || practice.questions.length > 0) && (
-        <section class="study-section" aria-labelledby="study-practice">
+        <section class="study-section">
           <h2 id="study-practice">Practice this</h2>
           <ul class="study-actions" role="list">
             {practice.problems && (
@@ -132,16 +136,7 @@ const sourceLabel = new Map(data.sources.map(({ url, label }) => [url, label]));
         </section>
       )}
 
-      <section class="study-section" aria-labelledby="study-sources">
-        <h2 id="study-sources">Sources</h2>
-        <ul class="study-list study-sources">
-          {data.sources.map(({ label, url, type }) => (
-            <li><a href={url}>{label}</a><span class="muted">, {type === 'primary' ? 'primary source' : 'practitioner'}</span></li>
-          ))}
-        </ul>
-      </section>
-
-      <section class="study-read" aria-label="Reading progress" data-study-read-control data-study-id={entry.id} hidden>
+      <div class="study-read" data-study-read-control data-study-id={entry.id} hidden>
         <div data-study-unread>
           <button class="button primary" type="button" data-study-mark>Mark as read</button>
         </div>
@@ -149,9 +144,10 @@ const sourceLabel = new Map(data.sources.map(({ url, label }) => [url, label]));
           <span data-study-day></span>
           <button class="button quiet" type="button" data-study-unmark>Mark as unread</button>
         </div>
+        <p class="study-read-note muted" tabindex="-1" data-study-unavailable hidden></p>
         <p class="visually-hidden" role="status" data-study-announce></p>
         <p class="study-read-error" role="alert" data-study-error hidden></p>
-      </section>
+      </div>
     </article>
 
     <nav class="study-pager" aria-label="Study pages">

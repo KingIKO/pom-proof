@@ -85,33 +85,28 @@
 }
 .study-page-copy { display: grid; gap: var(--space-4); min-inline-size: 0; }
 
-.study-article { min-inline-size: 0; }
+/* The article sets the one reading width at body text size, so the larger summary, the code and
+   the boxes all end at the same right edge as the prose. */
+.study-article { min-inline-size: 0; max-inline-size: var(--prose); }
 .study-intro {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
   gap: var(--space-16) var(--space-24);
-  max-inline-size: var(--prose);
   padding: var(--space-16) var(--space-24);
 }
 .study-intro .section-label { margin: 0 0 var(--space-4); }
+.study-read-first { grid-column: 1 / -1; }
+.study-recap .study-list + .section-label { margin-block-start: var(--space-12); }
 .study-list { margin: 0; padding-inline-start: 1.25rem; }
 .study-list > li + li { margin-block-start: var(--space-4); }
 .study-body > h2, .study-section > h2 { margin-block: var(--space-32) var(--space-8); }
 .study-body > :first-child { margin-block-start: var(--space-24); }
-.study-section { max-inline-size: var(--prose); }
-.study-section:has(.study-examples), .study-section:has(.study-positions) { max-inline-size: none; }
 .study-examples { display: grid; gap: var(--space-24); }
-/* The question bank pulls code into its card padding; a Study page has no card, so the box keeps to the column. */
-.study-examples .question-example > pre { margin-inline: 0; padding-inline: var(--space-12); }
+/* The question bank pulls code into its card padding; a Study page has no card, so the box keeps to
+   the column. A rare long line scrolls inside the box instead of wrapping mid-statement. */
+.study-examples .question-example > pre { margin-inline: 0; padding-inline: var(--space-12); overflow-x: auto; }
+.study-examples .question-example > pre .line { white-space: pre; overflow-wrap: normal; }
 
-.study-fit {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-  gap: var(--space-12);
-  max-inline-size: var(--prose);
-  margin-block-start: var(--space-32);
-}
-.study-fit .callout { padding: var(--space-12) var(--space-16); }
 .study-box { margin-block-start: var(--space-32); padding: var(--space-16) var(--space-24); }
 .study-box > h2 { margin: 0 0 var(--space-4); }
 .study-box > p { margin: 0 0 var(--space-8); }
@@ -137,6 +132,7 @@
 }
 .study-read [hidden], .study-read[hidden] { display: none; }
 .study-read-done { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-8); color: var(--pass); font-weight: var(--weight-medium); }
+.study-read-note { margin: 0; }
 .study-read-error { margin: 0; color: var(--fail); }
 
 .study-pager {
@@ -153,6 +149,8 @@
 .study-pager span { font-size: var(--type-14); }
 .study-pager .previous { grid-column: 1; }
 .study-pager .next { grid-column: 2; text-align: end; }
+/* A lone Previous or Next, on the first or last page, takes the whole row. */
+.study-pager > .next:first-child, .study-pager > .previous:has(+ .study-overview) { grid-column: 1 / -1; }
 .study-overview { grid-column: 1 / -1; justify-self: center; font-size: var(--type-14); }
 
 @media (width < 60rem) {

@@ -14,20 +14,20 @@
     "counts": {"modules": 10, "concepts": 64, "core": 31}
   },
   "modules": [
-    {"id": "m1", "order": 1, "module": "Testing foundations", "summary": "Why testing exists, the vocabulary interviewers use, and how to decide where effort goes.", "prerequisites": []},
-    {"id": "m2", "order": 2, "module": "Test design and manual testing", "summary": "Techniques for choosing test cases, exploring a product and reporting defects.", "prerequisites": ["m1"]},
-    {"id": "m3", "order": 3, "module": "Automation fundamentals", "summary": "Tool-neutral rules that make automated tests trustworthy: structure, isolation, locators, waits, assertions, flakiness, test doubles.", "prerequisites": ["m1"]},
-    {"id": "m4", "order": 4, "module": "Framework design", "summary": "How a suite is organised: page objects and their alternatives, fixtures, test data, parameters, configuration, BDD.", "prerequisites": ["m3"]},
-    {"id": "m5", "order": 5, "module": "Playwright with TypeScript", "summary": "The same ideas in Playwright Test: locators, assertions, fixtures, auth state, network, projects, traces, snapshots.", "prerequisites": ["m3", "m4"]},
-    {"id": "m6", "order": 6, "module": "Selenium 4 with Java and Python", "summary": "WebDriver and BiDi, Selenium locators and waits, page objects, Grid, and the pytest and JUnit runner features.", "prerequisites": ["m3", "m4"]},
-    {"id": "m7", "order": 7, "module": "API, contract and database testing", "summary": "HTTP rules, API test design, REST Assured and Playwright requests, schemas, contracts, service doubles, SQL.", "prerequisites": ["m1", "m3"]},
-    {"id": "m8", "order": 8, "module": "CI and running at scale", "summary": "Running suites in a pipeline: parallelism, sharding, retry policy, reports, hermetic environments.", "prerequisites": ["m3", "m5 or m6"]},
-    {"id": "m9", "order": 9, "module": "Accessibility, performance and security", "summary": "Non-functional testing a QA or SDET is expected to speak to.", "prerequisites": ["m1"]},
-    {"id": "m10", "order": 10, "module": "AI-assisted testing", "summary": "Test agents, browser control over MCP, reviewing generated tests, and testing LLM features.", "prerequisites": ["m5"]}
+    {"id": "m1", "slug": "testing-foundations", "order": 1, "module": "Testing foundations", "summary": "Why testing exists, the vocabulary interviewers use, and how to decide where effort goes.", "prerequisites": []},
+    {"id": "m2", "slug": "test-design", "order": 2, "module": "Test design and manual testing", "summary": "Techniques for choosing test cases, exploring a product and reporting defects.", "prerequisites": ["m1"]},
+    {"id": "m3", "slug": "automation-fundamentals", "order": 3, "module": "Automation fundamentals", "summary": "Tool-neutral rules that make automated tests trustworthy: structure, isolation, locators, waits, assertions, flakiness, test doubles.", "prerequisites": ["m1"]},
+    {"id": "m4", "slug": "framework-design", "order": 4, "module": "Framework design", "summary": "How a suite is organised: page objects and their alternatives, fixtures, test data, parameters, configuration, BDD.", "prerequisites": ["m3"]},
+    {"id": "m5", "slug": "playwright", "order": 5, "module": "Playwright with TypeScript", "summary": "The same ideas in Playwright Test: locators, assertions, fixtures, auth state, network, projects, traces, snapshots.", "prerequisites": ["m3", "m4"]},
+    {"id": "m6", "slug": "selenium", "order": 6, "module": "Selenium 4 with Java and Python", "summary": "WebDriver and BiDi, Selenium locators and waits, page objects, Grid, and the pytest and JUnit runner features.", "prerequisites": ["m3", "m4"]},
+    {"id": "m7", "slug": "api-and-data", "order": 7, "module": "API, contract and database testing", "summary": "HTTP rules, API test design, REST Assured and Playwright requests, schemas, contracts, service doubles, SQL.", "prerequisites": ["m1", "m3"]},
+    {"id": "m8", "slug": "ci-and-scale", "order": 8, "module": "CI and running at scale", "summary": "Running suites in a pipeline: parallelism, sharding, retry policy, reports, hermetic environments.", "prerequisites": ["m3", "m5 or m6"]},
+    {"id": "m9", "slug": "accessibility-performance-security", "order": 9, "module": "Accessibility, performance and security", "summary": "Non-functional testing a QA or SDET is expected to speak to.", "prerequisites": ["m1"]},
+    {"id": "m10", "slug": "ai-assisted-testing", "order": 10, "module": "AI-assisted testing", "summary": "Test agents, browser control over MCP, reviewing generated tests, and testing LLM features.", "prerequisites": ["m5"]}
   ],
   "concepts": [
     {
-      "id": "m1-c1", "module": "Testing foundations", "order": 1, "level": "core",
+      "id": "m1-c1", "slug": "why-we-test", "module": "Testing foundations", "order": 1, "level": "core",
       "concept": "Why we test: objectives, defects and the seven principles",
       "definition": "Testing evaluates a product to find defects, reduce risk and give evidence about quality; it cannot show that no defects remain.",
       "practice": "Use the ISTQB vocabulary precisely: an error (human mistake) produces a defect, which can cause a failure, and a root cause sits behind the error. Know the seven principles, including 'exhaustive testing is impossible', early testing, 'tests wear out' and the absence-of-defects fallacy. The syllabus separates testing from debugging and from quality assurance (sections 1.1 to 1.3).",
@@ -39,7 +39,7 @@
       ]
     },
     {
-      "id": "m1-c2", "module": "Testing foundations", "order": 2, "level": "core",
+      "id": "m1-c2", "slug": "test-levels-and-types", "module": "Testing foundations", "order": 2, "level": "core",
       "concept": "Test levels, test types and test sizes",
       "definition": "Levels group tests by how much of the system is integrated; types group them by objective; sizes group them by the resources a test may use.",
       "practice": "ISTQB v4.0.1 names five levels (component, component integration, system, system integration, acceptance) and four types (functional, non-functional, black-box, white-box). Google classifies by size instead: small tests have no network or database, medium tests stay on localhost, large tests may use anything. Fowler adds that 'unit' is ambiguous (sociable or solitary) and 'integration' is ambiguous (narrow or broad). Say which meaning you intend.",
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "id": "m1-c3", "module": "Testing foundations", "order": 3, "level": "core",
+      "id": "m1-c3", "slug": "test-shapes", "module": "Testing foundations", "order": 3, "level": "core",
       "concept": "Test shapes: pyramid, trophy and honeycomb",
       "definition": "A test shape is a picture of how many tests to write at each scope.",
       "practice": "Know the three shapes and who argues for each, then reason from trade-offs. The pyramid (many small tests, few through the UI) is in the ISTQB syllabus and in Google's 2015 '70/20/10' first guess. The trophy and honeycomb put most effort into integration tests. Fowler's 2021 article says much of the disagreement comes from different meanings of 'unit'. Google's 2024 SMURF post replaces the shape with five trade-offs to weigh per test: speed, maintainability, utilization, reliability, fidelity.",
@@ -75,7 +75,7 @@
       ]
     },
     {
-      "id": "m1-c4", "module": "Testing foundations", "order": 4, "level": "core",
+      "id": "m1-c4", "slug": "risk-based-testing", "module": "Testing foundations", "order": 4, "level": "core",
       "concept": "Risk-based testing and prioritisation",
       "definition": "Risk-based testing orders and sizes test work by the likelihood and impact of what could go wrong.",
       "practice": "Separate product risks from project risks, rate each by likelihood and impact, and let the result decide depth and order. ISTQB lists risk-based, coverage-based and requirements-based prioritisation; risk-based runs the tests covering the most important risks first. Google's 'Beyonce rule' adds a team habit: if you want a behaviour kept, put a test on it.",
@@ -87,7 +87,7 @@
       ]
     },
     {
-      "id": "m1-c5", "module": "Testing foundations", "order": 5, "level": "extended",
+      "id": "m1-c5", "slug": "shift-left-and-reviews", "module": "Testing foundations", "order": 5, "level": "extended",
       "concept": "Shift left, static testing and reviews",
       "definition": "Shift left means testing earlier in the lifecycle; static testing finds defects by examining work products without running them.",
       "practice": "Review requirements and acceptance criteria before code exists, run static analysis and linters in the pipeline, and keep later testing. ISTQB states shift left 'does not mean that testing later in the SDLC should be neglected'. Know the review types from informal review to inspection. Playwright's own best practices recommend a lint rule (no-floating-promises) as a static check on test code.",
@@ -100,7 +100,7 @@
       ]
     },
     {
-      "id": "m1-c6", "module": "Testing foundations", "order": 6, "level": "extended",
+      "id": "m1-c6", "slug": "coverage", "module": "Testing foundations", "order": 6, "level": "extended",
       "concept": "Coverage and what it does not tell you",
       "definition": "Coverage measures how much of something (statements, branches, requirements) the tests exercised.",
       "practice": "Use coverage to find untested code, not as a score for test quality. ISTQB defines statement and branch coverage; Fowler says coverage 'is a useful tool for finding untested parts of a codebase' and 'of little use as a numeric statement of how good your tests are'.",
@@ -113,7 +113,7 @@
     },
 
     {
-      "id": "m2-c1", "module": "Test design and manual testing", "order": 1, "level": "core",
+      "id": "m2-c1", "slug": "equivalence-and-boundaries", "module": "Test design and manual testing", "order": 1, "level": "core",
       "concept": "Equivalence partitioning and boundary value analysis",
       "definition": "Equivalence partitioning groups inputs the system should treat the same; boundary value analysis tests the edges of those groups.",
       "practice": "Pick one value per partition, valid and invalid, then add boundary values. The syllabus describes 2-value BVA (the boundary and its nearest neighbour in the adjacent partition) and a stricter 3-value form. State which one you applied.",
@@ -124,7 +124,7 @@
       ]
     },
     {
-      "id": "m2-c2", "module": "Test design and manual testing", "order": 2, "level": "extended",
+      "id": "m2-c2", "slug": "decision-tables-and-state-transitions", "module": "Test design and manual testing", "order": 2, "level": "extended",
       "concept": "Decision tables and state transition testing",
       "definition": "Decision tables cover combinations of conditions and their outcomes; state transition testing covers how a system moves between states.",
       "practice": "Use a decision table when rules combine (discounts, permissions, eligibility) and a state model when order matters (login lockout, order status, checkout). Both are black-box techniques in the syllabus, each with its own coverage measure.",
@@ -135,7 +135,7 @@
       ]
     },
     {
-      "id": "m2-c3", "module": "Test design and manual testing", "order": 3, "level": "core",
+      "id": "m2-c3", "slug": "exploratory-testing", "module": "Test design and manual testing", "order": 3, "level": "core",
       "concept": "Exploratory testing and charters",
       "definition": "In exploratory testing, tests are designed, run and evaluated at the same time while the tester learns the product.",
       "practice": "Run it in time-boxed sessions guided by a charter, and write down what was covered and found. ISTQB describes session-based testing with a test charter; Fowler contrasts it with scripted testing, where each step and expected result is written in advance. Use both: scripted checks suit automation, exploration finds what nobody predicted.",
@@ -147,7 +147,7 @@
       ]
     },
     {
-      "id": "m2-c4", "module": "Test design and manual testing", "order": 4, "level": "extended",
+      "id": "m2-c4", "slug": "acceptance-criteria-and-atdd", "module": "Test design and manual testing", "order": 4, "level": "extended",
       "concept": "User stories, acceptance criteria and ATDD",
       "definition": "Acceptance criteria are the conditions a story must meet to be accepted; ATDD writes the tests from them before the code.",
       "practice": "Write criteria with the business, developer and tester together, in scenario form (Given/When/Then) or as a rule list, and derive tests before implementation. This is the collaboration that BDD tools assume.",
@@ -159,7 +159,7 @@
       ]
     },
     {
-      "id": "m2-c5", "module": "Test design and manual testing", "order": 5, "level": "core",
+      "id": "m2-c5", "slug": "defect-reports", "module": "Test design and manual testing", "order": 5, "level": "core",
       "concept": "Defect reports",
       "definition": "A defect report gives the people fixing a problem enough information to reproduce and resolve it.",
       "practice": "Include an identifier, a short title, when and by whom it was seen, the test object and environment, steps to reproduce, expected and actual results, severity and priority. The syllabus lists these fields and the three purposes of a report: enable the fix, track quality, improve the process.",
@@ -170,7 +170,7 @@
       ]
     },
     {
-      "id": "m2-c6", "module": "Test design and manual testing", "order": 6, "level": "extended",
+      "id": "m2-c6", "slug": "confirmation-and-regression", "module": "Test design and manual testing", "order": 6, "level": "extended",
       "concept": "Confirmation and regression testing",
       "definition": "Confirmation testing checks that a defect is fixed; regression testing checks that a change broke nothing else.",
       "practice": "Rerun the failing test for the fix, then run regression tests sized by the risk of the change. Regression suites are the first candidates for automation because they repeat.",
@@ -181,7 +181,7 @@
       ]
     },
     {
-      "id": "m2-c7", "module": "Test design and manual testing", "order": 7, "level": "extended",
+      "id": "m2-c7", "slug": "test-plans-and-exit-criteria", "module": "Test design and manual testing", "order": 7, "level": "extended",
       "concept": "Test plans, entry criteria and exit criteria",
       "definition": "A test plan states scope, approach, risks and schedule; entry and exit criteria say when testing can start and when it is done.",
       "practice": "Keep the plan short and tied to risk. Agree exit criteria the team can measure. In agile teams the tester contributes to iteration and release planning instead of writing a long document.",
@@ -193,7 +193,7 @@
     },
 
     {
-      "id": "m3-c1", "module": "Automation fundamentals", "order": 1, "level": "core",
+      "id": "m3-c1", "slug": "what-to-automate", "module": "Automation fundamentals", "order": 1, "level": "core",
       "concept": "What to automate and what to leave alone",
       "definition": "Automation pays off where a check repeats, is stable and has a clear expected result.",
       "practice": "Automate regression checks and keep most of them below the UI. ISTQB lists the risks: unrealistic expectations, underestimated maintenance, using a tool where manual testing fits better, and relying on the tool instead of critical thinking. Selenium's docs list things not to automate through the browser: captchas, file downloads, HTTP response codes, third-party logins, two-factor auth, performance testing, link spidering.",
@@ -207,7 +207,7 @@
       ]
     },
     {
-      "id": "m3-c2", "module": "Automation fundamentals", "order": 2, "level": "core",
+      "id": "m3-c2", "slug": "test-anatomy", "module": "Automation fundamentals", "order": 2, "level": "core",
       "concept": "Test anatomy: Arrange-Act-Assert and Given-When-Then",
       "definition": "A test has distinct parts in order: set up, do one thing, check the result, clean up.",
       "practice": "Write each test as three visible blocks. Bill Wake named Arrange-Act-Assert in 2001; Meszaros calls it the Four Phase Test (setup, exercise, verify, teardown); Given-When-Then is the same structure from BDD. Google's guidance adds: test behaviours, not methods; name tests after the behaviour; keep logic out of tests.",
@@ -221,7 +221,7 @@
       ]
     },
     {
-      "id": "m3-c3", "module": "Automation fundamentals", "order": 3, "level": "core",
+      "id": "m3-c3", "slug": "test-independence", "module": "Automation fundamentals", "order": 3, "level": "core",
       "concept": "Test independence and isolation",
       "definition": "An independent test passes or fails on its own, in any order, alone or in parallel.",
       "practice": "Give every test its own state. Playwright runs each test in a fresh BrowserContext. Selenium's docs say to start a fresh browser per test, avoid sharing state, and never rely on test order. Cypress says to test specs in isolation and set state programmatically.",
@@ -237,7 +237,7 @@
       ]
     },
     {
-      "id": "m3-c4", "module": "Automation fundamentals", "order": 4, "level": "core",
+      "id": "m3-c4", "slug": "locator-strategy", "module": "Automation fundamentals", "order": 4, "level": "core",
       "concept": "Locator strategy",
       "definition": "A locator is how a test finds an element; the strategy decides what the test is coupled to.",
       "practice": "Prefer locators a user or assistive technology would recognise, and fall back to an explicit test id. Playwright recommends 'user-facing attributes and explicit contracts' such as getByRole. Testing Library ranks getByRole first and getByTestId last. Selenium's guidance prefers a unique id, then CSS, with XPath last. Cypress recommends dedicated data-* attributes. All four agree on avoiding selectors tied to styling or DOM structure.",
@@ -255,7 +255,7 @@
       ]
     },
     {
-      "id": "m3-c5", "module": "Automation fundamentals", "order": 5, "level": "core",
+      "id": "m3-c5", "slug": "waiting-and-synchronisation", "module": "Automation fundamentals", "order": 5, "level": "core",
       "concept": "Waiting and synchronisation",
       "definition": "Synchronisation makes the test act only when the application is ready.",
       "practice": "Wait for a condition, never for a fixed time. Playwright runs actionability checks (visible, stable, enabled, receives events) before each action. Selenium offers implicit and explicit waits and warns 'Do not mix implicit and explicit waits'. Cypress lists arbitrary cy.wait(Number) as an anti-pattern.",
@@ -268,7 +268,7 @@
       ]
     },
     {
-      "id": "m3-c6", "module": "Automation fundamentals", "order": 6, "level": "core",
+      "id": "m3-c6", "slug": "assertions-that-retry", "module": "Automation fundamentals", "order": 6, "level": "core",
       "concept": "Assertions that retry and fail clearly",
       "definition": "An assertion states the expected outcome; a retrying assertion keeps checking until it holds or times out.",
       "practice": "Assert on what the user sees and use the tool's retrying form. Playwright calls these web-first assertions (await expect(locator).toBeVisible()) and warns against reading a value once and asserting on it. Google's guidance: test state, not interactions, and write clear failure messages.",
@@ -281,7 +281,7 @@
       ]
     },
     {
-      "id": "m3-c7", "module": "Automation fundamentals", "order": 7, "level": "core",
+      "id": "m3-c7", "slug": "flaky-tests", "module": "Automation fundamentals", "order": 7, "level": "core",
       "concept": "Flaky tests: causes and fixes",
       "definition": "A flaky test passes and fails on the same code.",
       "practice": "Find the cause before reaching for a retry. Fowler lists five causes: lack of isolation, asynchronous behaviour, remote services, time, resource leaks. pytest's docs tie flakiness to uncontrolled system state. Quarantine a flaky test quickly so the suite stays trusted, then fix it. Control the clock when a test depends on time.",
@@ -297,7 +297,7 @@
       ]
     },
     {
-      "id": "m3-c8", "module": "Automation fundamentals", "order": 8, "level": "core",
+      "id": "m3-c8", "slug": "test-doubles", "module": "Automation fundamentals", "order": 8, "level": "core",
       "concept": "Test doubles: dummies, stubs, spies, mocks and fakes",
       "definition": "A test double replaces a real dependency so the test can run faster, more reliably or in a controlled state.",
       "practice": "Use the names from Meszaros (dummy, fake, stub, spy, mock) and know that 'mock' is often used loosely for all of them. Prefer the real thing or a fake when it is fast and deterministic; double what you do not control, such as third-party services. Fowler's 2007 article explains the classical (state verification) and mockist (behaviour verification) schools.",
@@ -315,7 +315,7 @@
     },
 
     {
-      "id": "m4-c1", "module": "Framework design", "order": 1, "level": "core",
+      "id": "m4-c1", "slug": "page-object-model", "module": "Framework design", "order": 1, "level": "core",
       "concept": "Page Object Model",
       "definition": "A page object wraps a page or part of a page in a class, so tests call its methods instead of touching selectors.",
       "practice": "Keep selectors and page actions in the object and intent in the test. Model components (header, form, table row), not only whole pages. Decide your assertion rule and say why: Selenium says page objects 'should never make verifications or assertions', Fowler favours none, and Playwright's own example asserts inside a page object method. Playwright still documents page objects as 'one such approach' for large suites.",
@@ -329,7 +329,7 @@
       ]
     },
     {
-      "id": "m4-c2", "module": "Framework design", "order": 2, "level": "extended",
+      "id": "m4-c2", "slug": "beyond-page-objects", "module": "Framework design", "order": 2, "level": "extended",
       "concept": "Beyond page objects: component objects, Screenplay, app actions and DSLs",
       "definition": "These are other ways to structure UI test code: by component, by actor and task, by direct calls into the app, or by a domain language.",
       "practice": "Know what each one solves. Page component objects split large pages. Screenplay models actors with abilities performing tasks and asking questions, and aims at large suites. App actions (Cypress) set state by calling application code and skip the UI for setup. Selenium's docs also describe a domain-specific language and LoadableComponent.",
@@ -344,7 +344,7 @@
       ]
     },
     {
-      "id": "m4-c3", "module": "Framework design", "order": 3, "level": "core",
+      "id": "m4-c3", "slug": "fixtures-and-setup", "module": "Framework design", "order": 3, "level": "core",
       "concept": "Fixtures and setup/teardown",
       "definition": "A fixture provides what a test needs and cleans it up afterwards.",
       "practice": "Prefer fixtures to before/after hooks for shared setup. Playwright lists the advantages: setup and teardown sit together, fixtures are reusable across files, created on demand, composable and flexible. pytest fixtures use yield for teardown and scopes for cost. For one-time setup such as login, Playwright recommends project dependencies over globalSetup.",
@@ -357,7 +357,7 @@
       ]
     },
     {
-      "id": "m4-c4", "module": "Framework design", "order": 4, "level": "core",
+      "id": "m4-c4", "slug": "test-data", "module": "Framework design", "order": 4, "level": "core",
       "concept": "Test data: builders, object mothers and seeding through APIs",
       "definition": "Test data management is how each test gets the records it needs in a known state.",
       "practice": "Create data per test through an API or the database, not through the UI. Selenium's docs say 'Selenium should not be used to prepare a test case'. In code, a test data builder gives sensible defaults and lets each test override what matters; Fowler notes that object mothers couple many tests to the same standard data.",
@@ -371,7 +371,7 @@
       ]
     },
     {
-      "id": "m4-c5", "module": "Framework design", "order": 5, "level": "extended",
+      "id": "m4-c5", "slug": "parameterised-tests", "module": "Framework design", "order": 5, "level": "extended",
       "concept": "Parameterised and data-driven tests",
       "definition": "A parameterised test runs the same steps with different inputs and expected results.",
       "practice": "Use it for one behaviour with many data rows, and give each row a readable name. Playwright generates tests in a loop or from projects; pytest uses @pytest.mark.parametrize; JUnit 5 uses @ParameterizedTest (its newer @ParameterizedClass is marked experimental); Gherkin uses Scenario Outline with Examples.",
@@ -381,11 +381,13 @@
         {"url": "https://playwright.dev/docs/test-parameterize", "type": "primary"},
         {"url": "https://docs.pytest.org/en/stable/how-to/parametrize.html", "type": "primary"},
         {"url": "https://docs.junit.org/current/writing-tests/parameterized-classes-and-tests.html", "type": "primary"},
-        {"url": "https://cucumber.io/docs/gherkin/reference/", "type": "primary"}
+        {"url": "https://cucumber.io/docs/gherkin/reference/", "type": "primary"},
+        {"url": "https://docs.junit.org/5.13.0/release-notes/", "type": "primary", "note": "Added 2026-11-27 after review, HTTP 200. 5.13.0, released 30 May 2025, introduced @ParameterizedClass."},
+        {"url": "https://docs.pytest.org/en/stable/reference/reference.html#pytest.param", "type": "primary", "note": "Added 2026-11-27 after review, HTTP 200. Documents the id argument of pytest.param."}
       ]
     },
     {
-      "id": "m4-c6", "module": "Framework design", "order": 6, "level": "extended",
+      "id": "m4-c6", "slug": "configuration-and-secrets", "module": "Framework design", "order": 6, "level": "extended",
       "concept": "Configuration, environments and secrets",
       "definition": "Configuration is everything that changes between environments; secrets are the parts that must never be committed.",
       "practice": "Keep config out of code and read it from the environment. The twelve-factor test: could the repository be made public without leaking a credential? In Playwright, use projects for browser and environment variants and keep stored auth state in a gitignored folder. In CI, pass secrets through the platform's secret store, which redacts them from logs.",
@@ -399,7 +401,7 @@
       ]
     },
     {
-      "id": "m4-c7", "module": "Framework design", "order": 7, "level": "extended",
+      "id": "m4-c7", "slug": "bdd-and-keyword-driven", "module": "Framework design", "order": 7, "level": "extended",
       "concept": "BDD, Gherkin and keyword-driven tests",
       "definition": "BDD is a way for business and technical people to agree on behaviour through examples; Gherkin is the Given/When/Then syntax that records them.",
       "practice": "Treat BDD as collaboration first. Cucumber's docs describe three practices: Discovery, Formulation, Automation. Write declarative scenarios (what, not how) and avoid feature-coupled step definitions. If nobody outside the test team reads the feature files, plain code tests are usually cheaper. Robot Framework offers the related keyword-driven style.",
@@ -419,7 +421,7 @@
     },
 
     {
-      "id": "m5-c1", "module": "Playwright with TypeScript", "order": 1, "level": "core",
+      "id": "m5-c1", "slug": "locators-and-auto-waiting", "module": "Playwright with TypeScript", "order": 1, "level": "core",
       "concept": "Playwright locators and auto-waiting",
       "definition": "A Playwright Locator describes how to find an element at the moment of use, and every action waits until the element is actionable.",
       "practice": "Use getByRole, getByLabel, getByText and getByTestId, and narrow with chaining and filtering instead of long CSS. Let auto-waiting do the waiting; do not add manual waits before actions. Use codegen to suggest a locator, then review it.",
@@ -434,7 +436,7 @@
       ]
     },
     {
-      "id": "m5-c2", "module": "Playwright with TypeScript", "order": 2, "level": "core",
+      "id": "m5-c2", "slug": "web-first-assertions", "module": "Playwright with TypeScript", "order": 2, "level": "core",
       "concept": "Web-first assertions and timeouts",
       "definition": "Web-first assertions are async expect matchers that retry until the condition holds or the expect timeout ends.",
       "practice": "Always await expect(locator) matchers. Know the two default limits: 30 seconds per test and 5 seconds per expect. Change a timeout for a known slow step, not globally. Turn on the no-floating-promises lint rule so a missing await is caught.",
@@ -447,7 +449,7 @@
       ]
     },
     {
-      "id": "m5-c3", "module": "Playwright with TypeScript", "order": 3, "level": "core",
+      "id": "m5-c3", "slug": "custom-fixtures", "module": "Playwright with TypeScript", "order": 3, "level": "core",
       "concept": "Custom fixtures in Playwright Test",
       "definition": "test.extend adds your own fixtures (page objects, API clients, seeded data) that tests request by name.",
       "practice": "Hand page objects and data to tests through fixtures, with teardown after the use() call. Use worker-scoped fixtures for costly shared resources and mergeTests to combine fixture sets from several modules.",
@@ -459,7 +461,7 @@
       ]
     },
     {
-      "id": "m5-c4", "module": "Playwright with TypeScript", "order": 4, "level": "core",
+      "id": "m5-c4", "slug": "contexts-and-auth-state", "module": "Playwright with TypeScript", "order": 4, "level": "core",
       "concept": "Browser contexts and authentication state",
       "definition": "A BrowserContext is an isolated browser profile; storageState saves a logged-in session so tests can reuse it.",
       "practice": "Log in once in a setup project, save storageState under playwright/.auth, add that folder to .gitignore, and load it in the test projects. When tests change server-side state, use one account per parallel worker.",
@@ -472,7 +474,7 @@
       ]
     },
     {
-      "id": "m5-c5", "module": "Playwright with TypeScript", "order": 5, "level": "extended",
+      "id": "m5-c5", "slug": "network-mocking-and-api-calls", "module": "Playwright with TypeScript", "order": 5, "level": "extended",
       "concept": "Network mocking and API calls from tests",
       "definition": "page.route intercepts browser requests; the request fixture sends HTTP calls directly.",
       "practice": "Mock third-party services and hard-to-reach states (errors, empty lists). Use API calls to seed and clean data and to check server state after a UI action. Playwright's best practices say to test only what you control.",
@@ -486,7 +488,7 @@
       ]
     },
     {
-      "id": "m5-c6", "module": "Playwright with TypeScript", "order": 6, "level": "extended",
+      "id": "m5-c6", "slug": "projects-and-sharding", "module": "Playwright with TypeScript", "order": 6, "level": "extended",
       "concept": "Projects, parallel workers and sharding",
       "definition": "Projects run the same tests under different configurations; workers run tests in parallel on one machine; shards split a run across machines.",
       "practice": "Use projects for browsers, devices and setup dependencies. Tests must be isolated before you raise workers. Split long suites with --shard=1/3 and merge the blob reports. Note the CI doc's default advice: workers: 1 on CI for stability unless the runner is powerful.",
@@ -500,7 +502,7 @@
       ]
     },
     {
-      "id": "m5-c7", "module": "Playwright with TypeScript", "order": 7, "level": "core",
+      "id": "m5-c7", "slug": "traces-reports-and-retries", "module": "Playwright with TypeScript", "order": 7, "level": "core",
       "concept": "Debugging with traces, reports and retries",
       "definition": "A trace is a recording of a test run (actions, DOM snapshots, network, console) that opens in the Trace Viewer.",
       "practice": "Set trace: 'on-first-retry' in CI and open the trace before rerunning anything. Use the HTML reporter locally and a CI-friendly reporter in the pipeline. Treat a test that passed on retry as a bug to investigate.",
@@ -513,7 +515,7 @@
       ]
     },
     {
-      "id": "m5-c8", "module": "Playwright with TypeScript", "order": 8, "level": "extended",
+      "id": "m5-c8", "slug": "visual-and-aria-snapshots", "module": "Playwright with TypeScript", "order": 8, "level": "extended",
       "concept": "Visual and ARIA snapshots",
       "definition": "A visual snapshot compares screenshots; an ARIA snapshot compares the page's accessibility tree as text.",
       "practice": "Use toHaveScreenshot for layout and styling regressions and generate baselines in the same environment as CI, because rendering differs by OS and browser. Use toMatchAriaSnapshot to check structure with less noise than pixels.",
@@ -528,7 +530,7 @@
     },
 
     {
-      "id": "m6-c1", "module": "Selenium 4 with Java and Python", "order": 1, "level": "core",
+      "id": "m6-c1", "slug": "webdriver-classic-and-bidi", "module": "Selenium 4 with Java and Python", "order": 1, "level": "core",
       "concept": "WebDriver Classic and WebDriver BiDi",
       "definition": "WebDriver Classic is the request/response protocol Selenium drives browsers with; WebDriver BiDi adds a two-way channel so the browser can push events.",
       "practice": "Know both and where things are heading. Selenium's docs call BiDi the W3C standard and 'the cross-browser replacement for the Chrome DevTools Protocol', and say CDP support is temporary. Enable BiDi with the webSocketUrl capability and prefer it to CDP-only code for logs, network events and interception. The spec is still a W3C Editor's Draft.",
@@ -544,7 +546,7 @@
       ]
     },
     {
-      "id": "m6-c2", "module": "Selenium 4 with Java and Python", "order": 2, "level": "extended",
+      "id": "m6-c2", "slug": "selenium-locators", "module": "Selenium 4 with Java and Python", "order": 2, "level": "extended",
       "concept": "Selenium locators",
       "definition": "Selenium finds elements with By strategies (id, name, CSS selector, XPath, link text and others) plus relative locators.",
       "practice": "Follow Selenium's own order: a unique id first, then a CSS selector, with XPath as the last choice. Ask developers for stable ids or data attributes where none exist.",
@@ -556,7 +558,7 @@
       ]
     },
     {
-      "id": "m6-c3", "module": "Selenium 4 with Java and Python", "order": 3, "level": "core",
+      "id": "m6-c3", "slug": "selenium-waits", "module": "Selenium 4 with Java and Python", "order": 3, "level": "core",
       "concept": "Selenium waits",
       "definition": "Selenium does not wait for elements by default; implicit waits apply globally and explicit waits poll for a stated condition.",
       "practice": "Use explicit waits (WebDriverWait with a condition) and leave the implicit wait at zero. The docs warn: 'Do not mix implicit and explicit waits', because the combined wait time becomes unpredictable.",
@@ -567,7 +569,7 @@
       ]
     },
     {
-      "id": "m6-c4", "module": "Selenium 4 with Java and Python", "order": 4, "level": "extended",
+      "id": "m6-c4", "slug": "page-objects-and-loadable-component", "module": "Selenium 4 with Java and Python", "order": 4, "level": "extended",
       "concept": "Page objects and LoadableComponent in Selenium",
       "definition": "Selenium's documented way to structure UI tests: page objects, page component objects and the LoadableComponent base class.",
       "practice": "Keep assertions in tests, with one exception: the page object may verify that the right page loaded. Return the next page object from navigation methods. Use page component objects for repeated parts of a page.",
@@ -579,7 +581,7 @@
       ]
     },
     {
-      "id": "m6-c5", "module": "Selenium 4 with Java and Python", "order": 5, "level": "extended",
+      "id": "m6-c5", "slug": "grid-and-clean-sessions", "module": "Selenium 4 with Java and Python", "order": 5, "level": "extended",
       "concept": "Selenium Grid and clean sessions",
       "definition": "Grid routes WebDriver sessions to remote browsers so tests run in parallel across machines and browser versions.",
       "practice": "Use Grid for parallel and cross-browser runs, and start each test with a fresh browser session. Parallel runs only work when tests share no state.",
@@ -591,7 +593,7 @@
       ]
     },
     {
-      "id": "m6-c6", "module": "Selenium 4 with Java and Python", "order": 6, "level": "extended",
+      "id": "m6-c6", "slug": "pytest-and-junit-runners", "module": "Selenium 4 with Java and Python", "order": 6, "level": "extended",
       "concept": "Runner features: pytest and JUnit 5",
       "definition": "Selenium is a browser library; the test runner supplies fixtures, parameters, ordering and reports.",
       "practice": "In Python, create and quit the driver in a pytest fixture with yield, and parametrize data. In Java, use JUnit 5 lifecycle methods and @ParameterizedTest. Keep the driver per test, not static and shared.",
@@ -605,7 +607,7 @@
     },
 
     {
-      "id": "m7-c1", "module": "API, contract and database testing", "order": 1, "level": "core",
+      "id": "m7-c1", "slug": "http-semantics", "module": "API, contract and database testing", "order": 1, "level": "core",
       "concept": "HTTP semantics for testers",
       "definition": "HTTP defines what each method and status code means, including which methods are safe and which are idempotent.",
       "practice": "Learn the definitions from RFC 9110: safe methods are essentially read-only, and an idempotent method has the same intended effect when repeated. Test that the API honours them: repeat a PUT or DELETE, check status code classes, check headers such as Content-Type.",
@@ -617,7 +619,7 @@
       ]
     },
     {
-      "id": "m7-c2", "module": "API, contract and database testing", "order": 2, "level": "core",
+      "id": "m7-c2", "slug": "api-test-design", "module": "API, contract and database testing", "order": 2, "level": "core",
       "concept": "API test design: what to assert",
       "definition": "An API test sends a request and checks the status, body, headers and side effects against the contract.",
       "practice": "Cover the happy path, validation errors, authentication and authorisation, and state changes. Check object-level authorisation by asking for another user's resource: it is first on the OWASP API Security Top 10 (2023). Derive cases from the OpenAPI description where one exists.",
@@ -630,7 +632,7 @@
       ]
     },
     {
-      "id": "m7-c3", "module": "API, contract and database testing", "order": 3, "level": "extended",
+      "id": "m7-c3", "slug": "api-tests-in-code", "module": "API, contract and database testing", "order": 3, "level": "extended",
       "concept": "API tests in code: REST Assured and Playwright requests",
       "definition": "REST Assured is a Java library with a given/when/then style for HTTP tests; Playwright's APIRequestContext does the same job in TypeScript.",
       "practice": "In REST Assured, put shared base URI, headers and expectations in RequestSpecBuilder and ResponseSpecBuilder. In Playwright, use the request fixture for pure API tests and for setup inside UI tests. Keep auth and base URL in configuration.",
@@ -645,7 +647,7 @@
       ]
     },
     {
-      "id": "m7-c4", "module": "API, contract and database testing", "order": 4, "level": "extended",
+      "id": "m7-c4", "slug": "schema-validation", "module": "API, contract and database testing", "order": 4, "level": "extended",
       "concept": "Schema validation with OpenAPI and JSON Schema",
       "definition": "OpenAPI describes an HTTP API in a language-neutral document; JSON Schema describes and validates the shape of JSON.",
       "practice": "Validate responses against a schema to catch missing fields, wrong types and broken required rules, and keep value assertions for business logic.",
@@ -658,7 +660,7 @@
       ]
     },
     {
-      "id": "m7-c5", "module": "API, contract and database testing", "order": 5, "level": "extended",
+      "id": "m7-c5", "slug": "contract-testing", "module": "API, contract and database testing", "order": 5, "level": "extended",
       "concept": "Consumer-driven contract testing",
       "definition": "A contract test checks that the messages a consumer expects match what the provider really sends, without running both together.",
       "practice": "Use Pact when your team owns or works closely with both sides. Consumer tests generate the contract and the provider verifies it. Keep contract tests about message shape; Pact's docs separate them from functional tests that check side effects.",
@@ -672,7 +674,7 @@
       ]
     },
     {
-      "id": "m7-c6", "module": "API, contract and database testing", "order": 6, "level": "extended",
+      "id": "m7-c6", "slug": "mocks-or-real-dependencies", "module": "API, contract and database testing", "order": 6, "level": "extended",
       "concept": "Mocks or real dependencies at the service boundary",
       "definition": "The choice between replacing a dependency with a stub server and running a real instance of it in the test.",
       "practice": "Run dependencies you own for real when you can do it quickly and repeatably, for example a database in a throwaway container. Stub services you do not control, and back the stubs with contract tests so they stay honest. Fowler's pairing is narrow integration tests plus contract tests.",
@@ -689,7 +691,7 @@
       ]
     },
     {
-      "id": "m7-c7", "module": "API, contract and database testing", "order": 7, "level": "core",
+      "id": "m7-c7", "slug": "sql-joins-and-aggregates", "module": "API, contract and database testing", "order": 7, "level": "core",
       "concept": "SQL for testers: joins and aggregates",
       "definition": "SQL lets a tester read the database to verify what the application stored.",
       "practice": "Be fluent in SELECT with WHERE, inner and left outer joins, GROUP BY with aggregates, and HAVING. Use a left join to find orphans and missing rows, and GROUP BY with HAVING count(*) > 1 to find duplicates.",
@@ -701,7 +703,7 @@
       ]
     },
     {
-      "id": "m7-c8", "module": "API, contract and database testing", "order": 8, "level": "extended",
+      "id": "m7-c8", "slug": "data-integrity", "module": "API, contract and database testing", "order": 8, "level": "extended",
       "concept": "Data integrity: constraints and transactions",
       "definition": "Constraints (NOT NULL, UNIQUE, primary key, foreign key, CHECK) and transactions keep stored data valid.",
       "practice": "Test that invalid data is rejected at the database as well as the UI, and that multi-step operations are all-or-nothing: a failure part way through leaves no partial rows. PostgreSQL's tutorial describes a transaction as bundling steps into 'a single, all-or-nothing operation'.",
@@ -714,7 +716,7 @@
     },
 
     {
-      "id": "m8-c1", "module": "CI and running at scale", "order": 1, "level": "core",
+      "id": "m8-c1", "slug": "tests-in-ci", "module": "CI and running at scale", "order": 1, "level": "core",
       "concept": "Tests in the CI pipeline",
       "definition": "Continuous integration builds and tests every push so a broken change is found within minutes.",
       "practice": "Make the build self-testing, keep it fast, and fix a broken build straight away (Fowler's practices). Run fast checks on every push and slower suites on merge or on a schedule. Playwright's CI guide covers installing browsers and running the suite on common CI providers.",
@@ -727,7 +729,7 @@
       ]
     },
     {
-      "id": "m8-c2", "module": "CI and running at scale", "order": 2, "level": "extended",
+      "id": "m8-c2", "slug": "parallelism-and-sharding", "module": "CI and running at scale", "order": 2, "level": "extended",
       "concept": "Parallelism and sharding in CI",
       "definition": "Parallelism runs tests at the same time on one machine; sharding splits the suite across machines.",
       "practice": "Shard with a CI matrix and merge the reports. In Playwright, run each shard with --shard=x/y and the blob reporter, then merge-reports. Set fail-fast deliberately: leaving shards running shows all failures. In Selenium, a Grid provides the parallel sessions.",
@@ -741,7 +743,7 @@
       ]
     },
     {
-      "id": "m8-c3", "module": "CI and running at scale", "order": 3, "level": "extended",
+      "id": "m8-c3", "slug": "retry-and-quarantine", "module": "CI and running at scale", "order": 3, "level": "extended",
       "concept": "Retry and quarantine policy",
       "definition": "A policy for what happens when a test fails intermittently in CI.",
       "practice": "Allow a small number of CI retries so one flake does not block a merge, report every test that needed a retry, and give each one an owner and a deadline. Quarantine blocks nothing but must be emptied.",
@@ -756,7 +758,7 @@
       ]
     },
     {
-      "id": "m8-c4", "module": "CI and running at scale", "order": 4, "level": "extended",
+      "id": "m8-c4", "slug": "reports-and-artefacts", "module": "CI and running at scale", "order": 4, "level": "extended",
       "concept": "Reports, traces and artefacts",
       "definition": "The evidence a pipeline keeps after a run: results, logs, traces, screenshots, videos.",
       "practice": "Publish an HTML report and upload traces for failed tests as CI artefacts, so a failure can be diagnosed without a rerun. Pick reporters per audience: list or dot for the log, HTML for people, JUnit XML or JSON for other tools.",
@@ -769,7 +771,7 @@
       ]
     },
     {
-      "id": "m8-c5", "module": "CI and running at scale", "order": 5, "level": "extended",
+      "id": "m8-c5", "slug": "hermetic-environments", "module": "CI and running at scale", "order": 5, "level": "extended",
       "concept": "Hermetic test environments",
       "definition": "A hermetic test brings up everything it needs itself and depends on nothing shared or external.",
       "practice": "Start the system under test and its dependencies on the test machine or in containers, with seeded data, and block outside network calls. Google describes a hermetic server as one that starts on a single machine with no network connection and still works. Higher fidelity costs speed and reliability, so keep the largest tests few.",
@@ -783,7 +785,7 @@
     },
 
     {
-      "id": "m9-c1", "module": "Accessibility, performance and security", "order": 1, "level": "core",
+      "id": "m9-c1", "slug": "accessibility-testing", "module": "Accessibility, performance and security", "order": 1, "level": "core",
       "concept": "Accessibility testing",
       "definition": "Accessibility testing checks that people with disabilities can perceive, operate and understand the product, measured against WCAG.",
       "practice": "Run an automated scan (axe-core, for example through @axe-core/playwright) in the suite and add manual checks with keyboard and screen reader. W3C WAI states that no tool alone can determine conformance. axe-core says it finds on average 57% of WCAG issues automatically.",
@@ -798,7 +800,7 @@
       ]
     },
     {
-      "id": "m9-c2", "module": "Accessibility, performance and security", "order": 2, "level": "extended",
+      "id": "m9-c2", "slug": "load-and-performance", "module": "Accessibility, performance and security", "order": 2, "level": "extended",
       "concept": "Load and performance testing",
       "definition": "Performance testing measures how the system behaves under a defined load.",
       "practice": "Name the test type and its purpose: smoke, average-load, stress, soak, spike, breakpoint (k6's terms). Set thresholds as pass/fail criteria tied to service level objectives, such as an error rate and a 95th percentile response time. Do not measure performance with UI automation; Selenium's docs discourage it.",
@@ -811,7 +813,7 @@
       ]
     },
     {
-      "id": "m9-c3", "module": "Accessibility, performance and security", "order": 3, "level": "extended",
+      "id": "m9-c3", "slug": "core-web-vitals", "module": "Accessibility, performance and security", "order": 3, "level": "extended",
       "concept": "Web performance: Core Web Vitals",
       "definition": "Core Web Vitals are Google's user-centred page metrics: LCP for loading, INP for interactivity, CLS for visual stability.",
       "practice": "Know the 'good' thresholds: LCP within 2.5 seconds, INP of 200 milliseconds or less, CLS of 0.1 or less, judged at the 75th percentile of page loads across mobile and desktop.",
@@ -822,7 +824,7 @@
       ]
     },
     {
-      "id": "m9-c4", "module": "Accessibility, performance and security", "order": 4, "level": "extended",
+      "id": "m9-c4", "slug": "security-testing-basics", "module": "Accessibility, performance and security", "order": 4, "level": "extended",
       "concept": "Security testing basics",
       "definition": "Security testing looks for weaknesses an attacker could use, guided by shared risk lists and test guides.",
       "practice": "Know the OWASP Top 10 as an awareness list (current release: 2025, led by Broken Access Control), use the Web Security Testing Guide for how to test, and ASVS for requirements to verify against. A QA engineer should at least test access control and input handling on every feature.",
@@ -837,7 +839,7 @@
       ]
     },
     {
-      "id": "m9-c5", "module": "Accessibility, performance and security", "order": 5, "level": "extended",
+      "id": "m9-c5", "slug": "api-security-testing", "module": "Accessibility, performance and security", "order": 5, "level": "extended",
       "concept": "API security testing",
       "definition": "API security testing checks that an API enforces who may do what to which object.",
       "practice": "Start with the OWASP API Security Top 10 (2023). API1 is Broken Object Level Authorization: request another user's object id and expect a refusal. Add tests for authentication, excessive data in responses and rate limits.",
@@ -849,7 +851,7 @@
     },
 
     {
-      "id": "m10-c1", "module": "AI-assisted testing", "order": 1, "level": "core",
+      "id": "m10-c1", "slug": "ai-test-agents", "module": "AI-assisted testing", "order": 1, "level": "core",
       "concept": "AI test agents: plan, generate, heal",
       "definition": "Test agents are LLM-driven helpers that explore an app, write tests from a plan and repair failing ones.",
       "practice": "Playwright ships three agents (planner, generator, healer), set up with npx playwright init-agents. Give the planner a clear request and a seed test, read the plan before generating, and review generated tests like any other code. A healer that changes a test to make it pass can hide a real defect, so review every heal.",
@@ -862,7 +864,7 @@
       ]
     },
     {
-      "id": "m10-c2", "module": "AI-assisted testing", "order": 2, "level": "extended",
+      "id": "m10-c2", "slug": "browser-control-through-mcp", "module": "AI-assisted testing", "order": 2, "level": "extended",
       "concept": "Browser control through MCP",
       "definition": "The Playwright MCP server lets an LLM drive a browser through the Model Context Protocol.",
       "practice": "Know how it works: the model receives structured accessibility snapshots of the page, not screenshots, so it needs no vision model. This is the same accessibility tree that role locators and ARIA snapshots use, so accessible markup helps both people and agents.",
@@ -874,7 +876,7 @@
       ]
     },
     {
-      "id": "m10-c3", "module": "AI-assisted testing", "order": 3, "level": "extended",
+      "id": "m10-c3", "slug": "reviewing-ai-written-tests", "module": "AI-assisted testing", "order": 3, "level": "extended",
       "concept": "Reviewing AI-written tests",
       "definition": "A review checklist for tests produced by a code generator or an assistant.",
       "practice": "Check the same things as for human-written tests: does it assert user-visible behaviour, is it isolated, are the locators user-facing, are assertions web-first, would it fail if the feature broke? ISTQB's automation risks apply directly: relying on a tool too much and 'ignoring the need of human critical thinking'. The checklist itself is our synthesis of these sources, not a published standard.",
@@ -887,7 +889,7 @@
       ]
     },
     {
-      "id": "m10-c4", "module": "AI-assisted testing", "order": 4, "level": "extended",
+      "id": "m10-c4", "slug": "testing-llm-features", "module": "AI-assisted testing", "order": 4, "level": "extended",
       "concept": "Testing LLM features",
       "definition": "Testing a product feature built on a large language model, where output varies and new risks apply.",
       "practice": "Use the OWASP Top 10 for LLM Applications (2025) as the risk list: LLM01 Prompt Injection, LLM02 Sensitive Information Disclosure, LLM06 Excessive Agency, LLM07 System Prompt Leakage and others. Test with hostile inputs, check what the feature is allowed to do, and assert on properties of the output instead of exact text.",

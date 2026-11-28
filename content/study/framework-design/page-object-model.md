@@ -11,11 +11,10 @@ outcomes:
   - Model a part that repeats across screens, such as a header or a table row, as its own object.
   - Explain both views on whether a page object should contain assertions.
 useWhen:
-  - Several tests use the same screens, and selector changes keep costing you time.
+  - Many tests drive the same screens, and their markup changes often.
 avoidWhen:
-  - A small suite, where a class for every page adds more code than it saves.
-  - Page classes that grow into deep inheritance chains and hide what a test does.
-practiceTopics: [test-code-review]
+  - The suite is small enough that the extra classes cost more than they save.
+  - Page classes extend each other until a reader cannot tell what a test does.
 questionTopics: [framework-design, automation-strategy]
 examples:
   - title: Assertions stay in the test
@@ -48,8 +47,15 @@ examples:
       - lang: java
         label: Selenium with JUnit 5
         code: |
+          import java.time.Duration;
+
+          import org.junit.jupiter.api.Test;
           import org.openqa.selenium.By;
           import org.openqa.selenium.WebDriver;
+          import org.openqa.selenium.support.ui.ExpectedConditions;
+          import org.openqa.selenium.support.ui.WebDriverWait;
+
+          import static org.junit.jupiter.api.Assertions.assertEquals;
 
           class SignInPage {
             private final WebDriver driver;
@@ -65,16 +71,24 @@ examples:
             }
 
             String errorText() {
-              return driver.findElement(By.cssSelector("[role=alert]")).getText();
+              return new WebDriverWait(driver, Duration.ofSeconds(5))
+                  .until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[role=alert]")))
+                  .getText();
             }
           }
 
-          @Test
-          void wrongPasswordShowsAnError() {
-            driver.get(baseUrl + "/sign-in");
-            SignInPage signIn = new SignInPage(driver);
-            signIn.signIn("ada@example.com", "wrong-password");
-            assertEquals("Email or password is wrong.", signIn.errorText());
+          class SignInTest {
+            // Setup code, not shown, starts the browser and sets both fields before each test.
+            WebDriver driver;
+            String baseUrl;
+
+            @Test
+            void wrongPasswordShowsAnError() {
+              driver.get(baseUrl + "/sign-in");
+              SignInPage signIn = new SignInPage(driver);
+              signIn.signIn("ada@example.com", "wrong-password");
+              assertEquals("Email or password is wrong.", signIn.errorText());
+            }
           }
   - title: An assertion inside the page object
     variants:
@@ -109,14 +123,18 @@ sources:
   - { label: "Martin Fowler: PageObject", url: "https://martinfowler.com/bliki/PageObject.html", type: practitioner }
 expertsDisagree:
   - question: Should a page object contain assertions?
-    note: No study compares the two styles. Both rest on the experience of the people who wrote them.
+    note: We found no study that compares the two styles. The one study Fowler cites, from 2013, compared a suite with page objects against one without them.
     positions:
-      - view: No. Selenium's documentation says a page object should never make assertions, except a check that the right page has loaded. Martin Fowler also prefers none.
+      - view: "No, as a rule. Selenium's guide says a page object should never make assertions, apart from checking that the right page loaded. Its summary puts it as \"generally\". Fowler also prefers none, but he allows checks of what must always be true on a page. For checks that repeat, he suggests shared assertion helpers."
         holdsWhen: You want every check in the test itself, and page objects that tests with different expected results can share.
-        source: https://www.selenium.dev/documentation/test_practices/encouraged/page_object_models/
-      - view: Yes, when the check belongs to the screen. Playwright's own page object example calls `expect` inside a page object method.
+        source:
+          - https://www.selenium.dev/documentation/test_practices/encouraged/page_object_models/
+          - https://martinfowler.com/bliki/PageObject.html
+      - view: "Yes, for checks the screen owns. Fowler records the reasons its supporters give: less repeated assertion code and clearer failure messages. Playwright's guide calls `expect` in a page object method to confirm a navigation finished."
         holdsWhen: Many tests repeat the same check, and the team prefers one named method over the same lines in each test.
-        source: https://playwright.dev/docs/pom
+        source:
+          - https://martinfowler.com/bliki/PageObject.html
+          - https://playwright.dev/docs/pom
 ---
 ## What it is
 
@@ -124,15 +142,17 @@ A page object is a class that stands for one screen, or one part of a screen. It
 
 ## How it works
 
-Put two things in the class: the locators, and methods named after user actions. The test keeps the intent, which is what the user does and what should happen. When a button label changes, you fix one locator in one class. Every test that uses it keeps working.
+Put the locators in the class, with methods for what a user can do there and what a user can see. The test keeps the intent, which is what the user does and what should happen. When a button label changes, you fix one locator in one class. Every test that uses it keeps working.
 
 Model the parts that repeat, not only whole pages. A header, a search form or a table row that appears on many screens can be its own small object. A page object can then hold these component objects.
 
-Teams disagree about one rule: whether a page object may contain assertions. Decide your rule, write down why, and apply it to the whole suite. The examples below show both forms.
+One rule is openly disputed: whether a page object may contain assertions. Decide your rule, write down why, and apply it to the whole suite. The examples below show both forms.
+
+Fowler records a second dispute: whether an action that opens another screen should return that screen's page object. Selenium's guide does return it, and gives each result its own method, such as `loginAs` and `loginAsExpectingError`. The Beyond page objects page, later in this module, covers the patterns teams use instead.
 
 ## Why it helps
 
-A selector change costs one edit instead of one edit per test. Tests read as a list of user steps, so a reviewer can check the intent without reading locators. New tests reuse the same methods and stay short. Playwright still documents page objects as one way to structure a large suite.
+A selector change costs one edit instead of one edit per test. Tests read as a list of user steps, so a reviewer can check the intent without reading locators. New tests reuse the same methods and stay short. Playwright documents page objects as one way to structure a large suite.
 
 ## When not to use it
 

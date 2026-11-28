@@ -1,4 +1,4 @@
-import { formatDay, onStudyChange, readStudy, setRead, type ReadMap } from './read-state';
+import { formatDay, onStudyChange, readStudy, setRead, studyStorage, type ReadMap } from './read-state';
 
 const idsOf = (element: HTMLElement) => (element.dataset.ids ?? '').split(' ').filter(Boolean);
 
@@ -34,6 +34,11 @@ export function setupReadMarks() {
   onStudyChange(() => paint(readStudy()));
 }
 
+const unavailable = {
+  blocked: 'This browser is not saving data for this site, so pages cannot be marked as read.',
+  newer: 'A newer version of this site saved your read marks. Reload the page to change them.',
+} as const;
+
 /** The page's Mark as read control: the one filled button, then "Read on <day>" with Mark as unread. */
 export function setupReadToggle() {
   const control = document.querySelector<HTMLElement>('[data-study-read-control]');
@@ -44,21 +49,37 @@ export function setupReadToggle() {
   const done = control.querySelector<HTMLElement>('[data-study-done]');
   const day = control.querySelector<HTMLElement>('[data-study-day]');
   const unmark = control.querySelector<HTMLButtonElement>('[data-study-unmark]');
+  const note = control.querySelector<HTMLElement>('[data-study-unavailable]');
   const status = control.querySelector<HTMLElement>('[data-study-announce]');
   const error = control.querySelector<HTMLElement>('[data-study-error]');
-  if (!mark || !unread || !done || !day || !unmark || !status || !error) return;
+  if (!mark || !unread || !done || !day || !unmark || !note || !status || !error) return;
 
   const show = () => {
-    const date = readStudy()[id];
-    unread.hidden = Boolean(date);
+    const focused = document.activeElement;
+    const storage = studyStorage();
+    const date = storage === 'ready' ? readStudy()[id] : undefined;
+    // When storage cannot be written, a note takes the place of both buttons.
+    unread.hidden = storage !== 'ready' || Boolean(date);
     done.hidden = !date;
+    note.hidden = storage === 'ready';
+    if (storage !== 'ready') note.textContent = unavailable[storage];
     if (date) day.textContent = `Read on ${formatDay(date, new Date().getFullYear())}`;
+    // Another tab can flip the mark while one of the two buttons has focus; keep focus on the
+    // button that took its place instead of losing it to the page.
+    if (focused === unmark && done.hidden && !unread.hidden) mark.focus();
+    if (focused === mark && unread.hidden && !done.hidden) unmark.focus();
   };
   const toggle = (read: boolean) => {
     error.hidden = true;
     try {
       setRead(id, read);
     } catch {
+      show();
+      if (!note.hidden) {
+        // Storage went away since the page loaded: the note replaces the buttons and takes focus.
+        note.focus();
+        return;
+      }
       error.textContent = 'The browser could not save this. Check its storage settings and try again.';
       error.hidden = false;
       return;

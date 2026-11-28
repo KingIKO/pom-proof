@@ -13,7 +13,7 @@ const { modules, current, page } = Astro.props;
 const currentTitle = modules.find(({ id }) => id === current)?.title;
 ---
 <div class="study-layout">
-  <aside class="study-sidebar" aria-label="Study sidebar">
+  <div class="study-sidebar">
     <details class="filter-disclosure study-nav-disclosure" open data-study-nav>
       <summary>
         <span>Modules<span class="muted">: {currentTitle}</span></span>
@@ -53,7 +53,10 @@ const currentTitle = modules.find(({ id }) => id === current)?.title;
         ))}
       </nav>
     </details>
-  </aside>
+    {/* Runs as the parser reaches it, before the first paint, so a phone never draws the list open
+        and then closes it. The built HTML keeps it open for readers without scripts. */}
+    <script is:inline>document.currentScript.previousElementSibling.open = matchMedia('(min-width: 60rem)').matches;</script>
+  </div>
   <div class="study-main">
     <slot />
   </div>
