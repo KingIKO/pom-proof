@@ -3,8 +3,9 @@ import { render, type CollectionEntry } from 'astro:content';
 import CodeExamples from '../../../components/questions/CodeExamples.astro';
 import TitleBand from '../../../components/shell/TitleBand.astro';
 import StudyShell from '../../../components/study/StudyShell.astro';
+import Diagram from '../../../components/study/diagrams/Diagram.astro';
 import {
-  checkedDate, inline, levelLabel, plural, practiceLinks, prerequisitesOf, studyCatalog, studyModuleUrl,
+  checkedDate, inline, levelLabel, plural, practiceLinks, prerequisitesOf, studyBodyParts, studyCatalog, studyModuleUrl,
   studyPageUrl, type StudyModule, type StudyPageSummary,
 } from '../../../components/study/study';
 import Base from '../../../layouts/Base.astro';
@@ -30,7 +31,10 @@ interface Props {
 }
 
 const { entry, modules, previous, next } = Astro.props;
-const { Content } = await render(entry);
+// Rendering records the entry as this page's content dependency; the body itself comes from its
+// HTML, split at the diagram markers.
+await render(entry);
+const bodyParts = studyBodyParts(entry);
 const data = entry.data;
 const module = modules.find(({ id }) => id === data.module)!;
 const moduleTitle = (id: string) => modules.find((candidate) => candidate.id === id)?.title;
@@ -71,7 +75,7 @@ const sourceLabel = new Map(data.sources.map(({ url, label }) => [url, label]));
         </div>
       </div>
 
-      <div class="study-body prose"><Content /></div>
+      <div class="study-body prose">{bodyParts.map((part) => (part.kind === 'html' ? <Fragment set:html={part.html} /> : <Diagram diagram={part.diagram} />))}</div>
 
       {data.examples && (
         <section class="study-section">

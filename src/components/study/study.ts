@@ -143,6 +143,41 @@ export async function practiceLinks(page: PageEntry) {
   };
 }
 
+type StudyDiagram = NonNullable<PageEntry['data']['diagrams']>[number];
+
+/** The body as it renders: HTML runs with each diagram figure in its marker's place. */
+export type StudyBodyPart = { kind: 'html'; html: string } | { kind: 'diagram'; diagram: StudyDiagram };
+
+/** A ```diagram fence holding one id, as the Markdown processor renders it with highlighting off. */
+const diagramMarker = /<pre><code class="language-diagram">([^<]*)<\/code><\/pre>/g;
+
+/**
+ * Splits a page's rendered body at its ```diagram markers. Throws on a marker naming a diagram the
+ * page does not define, a diagram used by no marker or by two, and any `language-diagram` block the
+ * split did not consume, so a broken page fails the build.
+ */
+export function studyBodyParts(page: PageEntry): StudyBodyPart[] {
+  if (page.rendered?.metadata?.imagePaths?.length) fail(`Study page "${page.id}" has images, and Study pages hold none`);
+  const html = page.rendered?.html ?? fail(`Study page "${page.id}" has no rendered body`);
+  const diagrams = new Map((page.data.diagrams ?? []).map((diagram) => [diagram.id, diagram]));
+  const used = new Set<string>();
+  const parts: StudyBodyPart[] = [];
+  let from = 0;
+  for (const match of html.matchAll(diagramMarker)) {
+    const id = match[1].trim();
+    const diagram = diagrams.get(id) ?? fail(`Study page "${page.id}" has a diagram marker for "${id}", which its diagrams do not define`);
+    if (used.has(id)) fail(`Study page "${page.id}" places diagram "${id}" twice`);
+    used.add(id);
+    parts.push({ kind: 'html', html: html.slice(from, match.index) }, { kind: 'diagram', diagram });
+    from = match.index + match[0].length;
+  }
+  parts.push({ kind: 'html', html: html.slice(from) });
+  for (const id of diagrams.keys()) if (!used.has(id)) fail(`Study page "${page.id}" defines diagram "${id}" but no marker places it`);
+  const kept = parts.flatMap((part) => (part.kind === 'html' ? [part.html] : []));
+  if (kept.some((part) => part.includes('language-diagram'))) fail(`Study page "${page.id}" has a diagram block that is not one bare id`);
+  return parts.filter((part) => part.kind === 'diagram' || part.html);
+}
+
 const entities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
 /** Frontmatter text as HTML: escaped, with `backtick` spans shown as code. */

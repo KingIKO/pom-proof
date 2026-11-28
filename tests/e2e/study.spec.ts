@@ -234,6 +234,150 @@ test('the page object page gives both sides of the assertion dispute, with their
   await expect(page.getByRole('link', { name: /^Framework design: \d+ questions$/ })).toBeVisible();
 });
 
+// Concept diagrams (diagram plan, section 4): one figure per frontmatter entry, each after body
+// content other than a heading, captioned from the frontmatter, with no marker left in the page. At
+// 1280, 360 and 320px the page never scrolls sideways and no part of a figure spills out of the
+// figure or its box. With 200% text on a phone, a part may use the card padding but not cross the
+// card edge, and no bar draws wider than its shape's widest.
+
+interface DiagramData {
+  id: string;
+  type: string;
+  title: string;
+  note?: string;
+  shapes?: Array<{ name: string; layers: Array<{ label: string; widest?: boolean }> }>;
+}
+const withDiagrams = pages.filter(({ frontmatter }) => Array.isArray(frontmatter.diagrams));
+const diagramsOf = (study: (typeof pages)[number]) => study.frontmatter.diagrams as DiagramData[];
+
+/**
+ * Parts that spill out of their figure, and boxes whose content is wider than they are. With
+ * `edgeOnly`, only a part that crosses the figure's outer edge counts, so content may use the padding.
+ */
+function figureOverflow(edgeOnly: boolean) {
+  const name = (element: Element) => {
+    const className = element.getAttribute('class');
+    return `${element.tagName.toLowerCase()}${className ? `.${className.split(' ')[0]}` : ''} "${(element.textContent ?? '').trim().slice(0, 30)}"`;
+  };
+  return [...document.querySelectorAll('figure[data-diagram]')].flatMap((figure) => {
+    const box = figure.getBoundingClientRect();
+    const found: string[] = [];
+    if (!edgeOnly && figure.scrollWidth > figure.clientWidth) found.push(`${name(figure)} scrolls ${figure.scrollWidth - figure.clientWidth}px sideways`);
+    for (const part of figure.querySelectorAll('*')) {
+      if (part.closest('.visually-hidden')) continue;
+      const rect = part.getBoundingClientRect();
+      if (!rect.width && !rect.height) continue;
+      if (rect.left < box.left - 0.5 || rect.right > box.right + 0.5) found.push(`${name(part)} spills out of its figure`);
+      if (!edgeOnly && part.clientWidth && part.scrollWidth > part.clientWidth + 1) found.push(`${name(part)} holds content ${part.scrollWidth - part.clientWidth}px wider than its box`);
+    }
+    return found;
+  });
+}
+
+/** Each layer stack's shapes: where they sit, and the drawn width of the widest bar and the others. */
+function layerWidths() {
+  return [...document.querySelectorAll('figure[data-diagram="layer-stack"]')].map((figure) => [...figure.querySelectorAll('.dg-shape')].map((shape) => ({
+    name: (shape.querySelector('.dg-shape-name')?.textContent ?? '').trim(),
+    top: Math.round(shape.getBoundingClientRect().top),
+    widest: Math.round(shape.querySelector('li[data-widest]')!.getBoundingClientRect().width),
+    others: [...shape.querySelectorAll('li:not([data-widest])')].map((bar) => Math.round(bar.getBoundingClientRect().width)),
+  })));
+}
+type Shapes = ReturnType<typeof layerWidths>;
+
+/** Shapes whose widest layer does not draw widest. With `allowTie`, a bar as wide as the widest passes. */
+const notWidest = (figures: Shapes, allowTie: boolean) => figures.flat()
+  .filter(({ widest, others }) => others.some((bar) => (allowTie ? bar > widest : bar >= widest)))
+  .map(({ name, widest, others }) => `${name}: widest ${widest}px, others ${others.join(', ')}px`);
+
+/** Sets the root text size to 200%, as a reader's text zoom does. */
+const doubleText = () => { document.documentElement.style.fontSize = '200%'; };
+
+test('at least one Study page has a concept diagram', () => {
+  expect(withDiagrams.length).toBeGreaterThan(0);
+});
+
+for (const study of withDiagrams) {
+  test(`/${study.path} shows each diagram once, after a paragraph, captioned from its frontmatter`, async ({ page }) => {
+    await page.goto(study.path);
+    const body = page.locator('.study-body');
+    await expect(body.locator('figure[data-diagram]')).toHaveCount(diagramsOf(study).length);
+    await expect(page.locator('.language-diagram')).toHaveCount(0);
+    await expect(page.getByText(/```diagram/)).toHaveCount(0);
+    for (const { id, type, title, note, shapes } of diagramsOf(study)) {
+      const figure = page.locator(`.study-body > figure[data-diagram="${type}"]:has(> figcaption#dg-${id})`);
+      await expect(figure, `figure ${id} is a direct part of the body`).toHaveCount(1);
+      // The same rule as study.test.ts: any body content may come first, except a heading.
+      const before = await figure.evaluate((element) => element.previousElementSibling?.tagName ?? '');
+      expect(before, `figure ${id} follows body content`).not.toBe('');
+      expect(before, `figure ${id} does not sit directly after a heading`).not.toMatch(/^H[1-6]$/);
+      await expect(figure.locator('.dg-title')).toHaveText(title);
+      if (note) await expect(figure.locator('.dg-note')).toHaveText(note);
+      await expect(page.getByRole('figure', { name: new RegExp(`^${title}`) })).toHaveCount(1);
+      // A layer stack is one named list per shape, top to bottom, with the widest layer said in words.
+      for (const { name, layers } of shapes ?? []) {
+        await expect(figure.getByRole('list', { name, exact: true }).getByRole('listitem'))
+          .toHaveText(layers.map(({ label, widest }) => `${label}${widest ? ', widest' : ''}`));
+      }
+    }
+  });
+
+  for (const width of [1280, 360, 320]) {
+    test(`/${study.path} figures fit at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(study.path);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
+      expect(await page.evaluate(figureOverflow, false)).toEqual([]);
+      // Each shape's widest layer still draws widest, and the shapes sit side by side only on a wide figure.
+      const figures = await page.evaluate(layerWidths);
+      expect(notWidest(figures, false), 'the widest layer draws widest').toEqual([]);
+      for (const shapes of figures.filter((list) => list.length > 1)) {
+        const sideBySide = new Set(shapes.map(({ top }) => top)).size === 1;
+        expect(sideBySide, width >= 1280 ? 'shapes side by side' : 'shapes stacked').toBe(width >= 1280);
+      }
+    });
+  }
+
+  for (const width of [360, 320]) {
+    test(`/${study.path} figures stay inside their card at ${width}px with 200% text`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(study.path);
+      await page.evaluate(doubleText);
+      expect(await page.evaluate(figureOverflow, true), 'no part crosses the card edge').toEqual([]);
+      expect(notWidest(await page.evaluate(layerWidths), true), 'no bar draws wider than its widest').toEqual([]);
+    });
+  }
+}
+
+test('a diagram part wider than its figure is reported', async ({ page }) => {
+  const study = withDiagrams[0];
+  expect(study, 'a page with a diagram').toBeDefined();
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto(study.path);
+  expect(await page.evaluate(figureOverflow, false)).toEqual([]);
+  await page.addStyleTag({ content: 'figure[data-diagram] li { min-inline-size: 0; inline-size: 1.5rem; overflow: hidden; }' });
+  expect((await page.evaluate(figureOverflow, false)).join('\n')).toMatch(/holds content \d+px wider than its box/);
+  await page.addStyleTag({ content: 'figure[data-diagram] .dg-layers { max-inline-size: none; inline-size: 40rem; }' });
+  expect((await page.evaluate(figureOverflow, false)).join('\n')).toMatch(/spills out of its figure/);
+});
+
+test('with 200% text, a part past the card edge and a bar wider than the widest are reported', async ({ page }) => {
+  const study = withDiagrams.find((entry) => diagramsOf(entry).some(({ type }) => type === 'layer-stack'));
+  expect(study, 'a page with a layer stack').toBeDefined();
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto(study!.path);
+  await page.evaluate(doubleText);
+  expect(await page.evaluate(figureOverflow, true)).toEqual([]);
+  expect(notWidest(await page.evaluate(layerWidths), true)).toEqual([]);
+  // Other bars wider than the widest, still inside the card: only the width check reports it.
+  await page.addStyleTag({ content: 'figure[data-diagram] li { inline-size: 100%; } figure[data-diagram] li[data-widest] { inline-size: 90%; }' });
+  expect(await page.evaluate(figureOverflow, true)).toEqual([]);
+  expect(notWidest(await page.evaluate(layerWidths), true).join('\n')).toMatch(/widest \d+px, others/);
+  // Content in the padding alone is allowed; this plant widens the bars until they pass the edge.
+  await page.addStyleTag({ content: 'figure[data-diagram] .dg-layers { max-inline-size: none; inline-size: calc(100% + 4rem); margin-inline: 0; }' });
+  expect((await page.evaluate(figureOverflow, true)).join('\n')).toMatch(/spills out of its figure/);
+});
+
 test.describe('at 360px', () => {
   test.use({ viewport: { width: 360, height: 760 } });
 

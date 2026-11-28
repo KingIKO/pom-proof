@@ -1,0 +1,84 @@
+/* Study concept diagrams (docs/design/study-diagrams/spec.md, B2 "tinted and calm"). Colours come only
+   from the --dg-* tokens in tokens.css and the site's text tokens. Parts are square: the figure card
+   is the only rounded thing in a diagram. */
+
+figure[data-diagram] {
+  /* Narrow layouts follow the figure's own width, so a figure in a narrower column behaves the same. */
+  container-type: inline-size;
+  margin: var(--space-32) 0;
+  padding: var(--space-24);
+  /* The prose column breaks long words anywhere; labels inside a figure wrap at spaces only. */
+  overflow-wrap: normal;
+}
+.dg-caption { margin-block-end: var(--space-24); }
+.dg-title { display: block; font-size: var(--type-16); font-weight: var(--weight-bold); line-height: 1.3; }
+.dg-note {
+  display: block;
+  max-inline-size: 60ch;
+  margin-block-start: var(--space-4);
+  color: var(--text2);
+  font-size: var(--type-14);
+  line-height: 1.45;
+}
+/* A hyphenated term such as End-to-end stays on one line. */
+.dg-word { white-space: nowrap; }
+
+/* Layer stack: centred bars on one width scale, broad tests at the top. The widest layer of each
+   shape is a step stronger and bold, so width and weight both carry it. */
+.dg-shapes {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--space-32);
+}
+.dg-shape { display: grid; grid-template-rows: auto 1fr; gap: var(--space-8); min-inline-size: 0; }
+.dg-shape-name {
+  margin: 0;
+  font-size: var(--type-14);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+  text-align: center;
+}
+.dg-layers {
+  display: grid;
+  align-content: end;
+  gap: var(--space-8);
+  inline-size: 100%;
+  max-inline-size: 16rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.dg-layers > li {
+  display: grid;
+  place-items: center;
+  inline-size: calc(var(--dg-width) * 100%);
+  /* A narrow bar grows to its longest word rather than letting the label spill out. */
+  min-inline-size: min-content;
+  min-block-size: 2rem;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-8);
+  border: 1px solid var(--dg-part-edge);
+  background: var(--dg-part);
+  color: var(--text);
+  font-size: var(--type-13);
+  line-height: 1.2;
+  text-align: center;
+}
+/* Width 1 is .3, not .2, so the narrowest bar still reads as a layer rather than a tag. */
+.dg-layers > li[data-width="1"] { --dg-width: .3; }
+.dg-layers > li[data-width="2"] { --dg-width: .4; }
+.dg-layers > li[data-width="3"] { --dg-width: .6; }
+.dg-layers > li[data-width="4"] { --dg-width: .8; }
+.dg-layers > li[data-width="5"] { --dg-width: 1; }
+.dg-layers > li[data-widest] { background: var(--dg-part-strong); font-weight: var(--weight-bold); }
+
+@container (width < 34rem) {
+  .dg-shapes { grid-auto-flow: row; }
+}
+
+/* Phones: the figure gives its side padding to the diagram. */
+@media (width < 36rem) {
+  figure[data-diagram] { padding: var(--space-16); }
+  .dg-caption { margin-block-end: var(--space-16); }
+}

@@ -1,0 +1,4 @@
+/* Specimen page only, not part of the design: labels each excerpt with the Study page it comes from. */
+.excerpt + .excerpt { margin-block-start: var(--space-48); padding-block-start: var(--space-24); border-block-start: 1px dashed var(--borderControl); }
+.excerpt-from { margin: 0; color: var(--text3); font-size: var(--type-13); }
+.excerpt .study-body > :first-child { margin-block-start: var(--space-8); }

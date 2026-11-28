@@ -1,6 +1,7 @@
 import { defineCollection, reference } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { diagramsSchema } from './lib/diagram-schema';
 import { idSchema, problemSchema, roleSchema, textSchema } from './lib/problem-schema';
 
 const load = (base: string, extension: 'md' | 'yaml') => glob({
@@ -109,6 +110,7 @@ export const collections = {
       practiceTopics: z.array(idSchema).default([]),
       questionTopics: z.array(questionTopic).default([]),
       examples: z.array(exampleSchema).min(1).max(2).optional(),
+      diagrams: diagramsSchema.optional(),
       sources: z.array(studySource).min(1)
         .refine((sources) => sources.some(({ type }) => type === 'primary'), 'List at least one primary source')
         .refine((sources) => new Set(sources.map(({ url }) => url)).size === sources.length, 'List each source once'),

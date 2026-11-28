@@ -1,0 +1,213 @@
+{
+  "checked": "2026-11-28",
+  "source": "content/study at origin/main 975f06d",
+  "note": "origin/main holds 19 study pages, not 18: 18 core pages plus parameterised-tests (level: extended). All 19 are listed. Placement names the heading and the paragraph the figure follows. Batch 1 is the first set worth building; batch 2 is worth building later; none means text does the job.",
+  "pages": [
+    {
+      "page": "testing-foundations/why-we-test",
+      "visuals": [
+        {
+          "what": "Four-step causal chain for the booking example: root cause (unclear cutoff rule) -> error (developer misreads it) -> defect (wrong comparison in code) -> failure (user turned away). Each step labelled with where it lives: the requirement, a person, the code, the running product.",
+          "type": "process chain (styled ordered list)",
+          "placement": "How it works, directly after the first paragraph"
+        }
+      ],
+      "reason": "Batch 2. Error, defect and failure are a classic mix-up, and the chain adds the 'where it lives' dimension that the four sentences leave implicit. The seven principles are a list and gain nothing from a picture."
+    },
+    {
+      "page": "testing-foundations/test-levels-and-types",
+      "visuals": [
+        {
+          "what": "Nested scope boxes for the booking app: component (cutoff calculation) inside component integration (booking creation plus cutoff) inside system (whole app); a link from the system box to the email provider for system integration; reception staff around the outside for acceptance.",
+          "type": "structure and nesting",
+          "placement": "How it works, directly after the numbered list of five levels"
+        },
+        {
+          "what": "Level-by-size grid: rows are ISTQB levels, columns are Google sizes (small, medium, large), with the page's two examples placed in their cells (booking plus cutoff check: component integration, small; browser run on one machine: system, medium).",
+          "type": "matrix (HTML table)",
+          "placement": "Why it helps, after the worked example"
+        }
+      ],
+      "reason": "Batch 1 for the nesting, batch 2 for the grid. Scope is spatial, so nesting shows containment in one look. The grid shows that level and size are independent axes, which is the page's third outcome and is hard to hold in prose."
+    },
+    {
+      "page": "testing-foundations/test-shapes",
+      "visuals": [
+        {
+          "what": "Pyramid, trophy and honeycomb side by side on one scale: stacked centred bars whose width is the share of effort, each layer labelled in text (pyramid: unit, service, UI; trophy: static, unit, integration, end-to-end; honeycomb: implementation detail, integration, integrated).",
+          "type": "shape and proportion",
+          "placement": "What it is, directly after the first paragraph, before How it works"
+        },
+        {
+          "what": "SMURF trade-off table: the page's two delivery-fee checks (direct calculation check, order saved to a real test database) rated on Speed, Maintainability, Utilization, Reliability and Fidelity.",
+          "type": "comparison table",
+          "placement": "Why it helps, after the delivery-fee example"
+        }
+      ],
+      "reason": "Batch 1 for the shapes: the concept is a picture, and the owner named it. Batch 2 for the table, and only after the ratings are checked against Google's SMURF post, which this research did not open."
+    },
+    {
+      "page": "testing-foundations/risk-based-testing",
+      "visuals": [
+        {
+          "what": "3 by 3 likelihood by impact matrix with the risk level written in every cell, and the page's two risks placed in it (double charge on a retried payment, receipt layout change).",
+          "type": "matrix (HTML table)",
+          "placement": "How it works, directly after the paragraph that introduces the matrix"
+        }
+      ],
+      "reason": "Batch 1. The text describes a grid in words; the grid itself is the thing to learn. The writer has to assign the two ratings, which the page does not state today."
+    },
+    {
+      "page": "test-design/equivalence-and-boundaries",
+      "visuals": [
+        {
+          "what": "Number line from 5 to 25 with three partitions (reject 9 or less, accept 10 to 20, reject 21 or more), the two boundaries marked, one row of markers for 2-value BVA (9, 10, 20, 21) and a second row for the values 3-value BVA adds (8, 11, 19, 22).",
+          "type": "number line",
+          "placement": "How it works, between the partition table and the BVA paragraph"
+        }
+      ],
+      "reason": "Batch 1. Ordered partitions and 'nearest neighbour across the edge' are positions on a line. The existing partition table stays as the text equivalent of the partitions; the two value lists in the paragraph are the equivalent of the markers."
+    },
+    {
+      "page": "test-design/exploratory-testing",
+      "visuals": [],
+      "reason": "None. The idea is a short loop (try, observe, choose the next test) that the delivery-quote example already carries. A cycle diagram would repeat the paragraph."
+    },
+    {
+      "page": "test-design/defect-reports",
+      "visuals": [
+        {
+          "what": "Severity by priority 2 by 2 grid with one short example defect in each quadrant, including the page's rescheduled-booking defect.",
+          "type": "matrix (HTML table)",
+          "placement": "How it works, directly after the severity and priority paragraph"
+        }
+      ],
+      "reason": "Batch 2. The grid shows the two ratings vary independently, a common interview question. It needs three new examples written and sourced. A defect lifecycle state diagram is not recommended: the page does not teach status transitions, so the diagram would add unsupported content."
+    },
+    {
+      "page": "automation-fundamentals/what-to-automate",
+      "visuals": [],
+      "reason": "None. The page is a chain of judgement calls on one checkout example. Test shapes, its prerequisite, already carries the picture of where checks sit."
+    },
+    {
+      "page": "automation-fundamentals/test-anatomy",
+      "visuals": [
+        {
+          "what": "Alignment table with four columns (set up, act, check, clean up) and three rows: Arrange-Act-Assert, Given-When-Then, Four-Phase Test. The clean-up cell is empty for the first two rows.",
+          "type": "comparison table",
+          "placement": "How it works, after the Given, When and Then paragraph"
+        }
+      ],
+      "reason": "Batch 2. Three vocabularies for one structure line up better in a table than across three paragraphs. No sequence diagram: the code example with its Arrange, Act and Assert comments already is the signalled worked example."
+    },
+    {
+      "page": "automation-fundamentals/test-independence",
+      "visuals": [
+        {
+          "what": "Two layers: on top, test A and test B each in its own browser context box (cookies, storage); underneath, one shared server database holding both tests' orders. A fresh context resets the top layer only.",
+          "type": "structure and layering",
+          "placement": "How it works, directly after 'A fresh context clears cookies and storage. It does not touch orders saved on the server.'"
+        }
+      ],
+      "reason": "Batch 1. The page's first outcome is a where-does-state-live misconception, and a two-layer picture answers it at a glance."
+    },
+    {
+      "page": "automation-fundamentals/locator-strategy",
+      "visuals": [
+        {
+          "what": "Matrix of locator kind (role and name, test ID, CSS or XPath through structure, position) against change (label text edited, markup moved, order changed, role changed), each cell saying 'breaks' or 'keeps working'.",
+          "type": "comparison matrix (HTML table)",
+          "placement": "Why it helps, after the first paragraph"
+        }
+      ],
+      "reason": "Batch 2. The page's advice is 'decide which changes should break this test'; a matrix lets a reader compare four locators on four changes, which prose cannot do compactly. Each cell needs checking against the cited tool docs."
+    },
+    {
+      "page": "automation-fundamentals/waiting-and-synchronisation",
+      "visuals": [
+        {
+          "what": "Two-lane timeline (fast run, slow run) of one Save click: button appears, becomes enabled, click, saving, success message. A fixed pause is drawn on both lanes (wasted time on the fast run, too short on the slow run) against a condition wait that ends when the state arrives. Readiness wait before the click and result wait after it are labelled.",
+          "type": "timeline",
+          "placement": "Why it helps, after the paragraph; or When not to use it, beside the fixed-pause sentence"
+        }
+      ],
+      "reason": "Batch 1. The concept is about time and the page has no code example, so nothing else shows it."
+    },
+    {
+      "page": "automation-fundamentals/assertions-that-retry",
+      "visuals": [
+        {
+          "what": "Timeline of the status text in the example: Draft, click, Saving, Order saved at 150 ms. One lane shows a one-time read taken straight after the click (sees Saving, fails). The other shows a retrying assertion reading again until the text matches or the 5 second limit.",
+          "type": "timeline",
+          "placement": "How it works, after the second paragraph"
+        }
+      ],
+      "reason": "Batch 1. 'Reading once' against 'reading again' is a sampling-in-time idea. It reuses the timeline component from the waiting page."
+    },
+    {
+      "page": "automation-fundamentals/flaky-tests",
+      "visuals": [],
+      "reason": "None. The page is conditional advice plus a dispute that the Experts disagree cards already structure. A triage flowchart would restate the text and pick a side."
+    },
+    {
+      "page": "automation-fundamentals/test-doubles",
+      "visuals": [
+        {
+          "what": "Feature matrix of the five doubles (dummy, stub, spy, mock, fake) against four questions: returns prepared answers, records calls, fails the test on wrong calls, has working logic.",
+          "type": "comparison matrix (HTML table)",
+          "placement": "How it works, directly after the five-item list"
+        }
+      ],
+      "reason": "Batch 1. Telling the five apart is the first outcome and a standard interview question; a matrix shows the differences that five separate sentences hide."
+    },
+    {
+      "page": "framework-design/page-object-model",
+      "visuals": [
+        {
+          "what": "Before and after: three tests each holding the Sign in selector, against three tests calling one SignInPage that holds the selector, with the page under it. A label change touches three places before and one place after.",
+          "type": "structure and layering",
+          "placement": "How it works, after the first paragraph"
+        }
+      ],
+      "reason": "Batch 1. The benefit is structural (one edit instead of one per test), and the layer between test and page is the pattern itself."
+    },
+    {
+      "page": "framework-design/fixtures-and-setup",
+      "visuals": [
+        {
+          "what": "Lifetime bars over a row of four tests in two workers: a test-scoped fixture drawn as four short bars, a worker-scoped fixture as one bar per worker, a session-scoped fixture as one bar across everything.",
+          "type": "timeline (lifetime bars)",
+          "placement": "When not to use it, after the two paragraphs on scope"
+        },
+        {
+          "what": "Setup, test body, teardown as one bracket, with a three-row table mapping each framework to it: Playwright (before and after use), pytest (before and after yield), JUnit (@BeforeEach and @AfterEach).",
+          "type": "sequence with mapping table",
+          "placement": "How it works, after the third paragraph"
+        }
+      ],
+      "reason": "Batch 1 for the lifetime bars: scope is a duration, and shared state risk follows from the overlap. Batch 2 for the mapping, which the three code variants partly cover."
+    },
+    {
+      "page": "framework-design/test-data",
+      "visuals": [
+        {
+          "what": "Three-lane sequence for the example: the test builds the data, POSTs it to the API and gets an id; the browser opens /reports/id and checks the status; the test deletes that id.",
+          "type": "sequence",
+          "placement": "How it works, after the second paragraph"
+        }
+      ],
+      "reason": "Batch 2. The example is long because of its cleanup handling; a short sequence shows the three actors and the one id that ties them together."
+    },
+    {
+      "page": "framework-design/parameterised-tests",
+      "visuals": [
+        {
+          "what": "Two mock report listings for the same three rows with the second row failing: parameterised shows three named results, one failed; a loop inside one test shows a single failed test and the third row never ran.",
+          "type": "comparison (two labelled lists)",
+          "placement": "How it works, after the first paragraph"
+        }
+      ],
+      "reason": "Batch 2. The difference is what the report looks like, so showing two reports teaches it directly. Extended-level page, so lower priority."
+    }
+  ]
+}
