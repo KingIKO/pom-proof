@@ -7,7 +7,7 @@ import {
   writePracticeContext, type PracticeContext,
 } from '../../lib/practice-context';
 import {
-  addPracticeSet, changePracticeSet, checkSetName, choosePracticeSet, deletePracticeSet, findPracticeSet,
+  addPracticeSet, changePracticeSet, checkSetName, choosePracticeSet, deletePracticeSet, findMatchingSet, findPracticeSet,
   onPracticeSetsChange, readPracticeSets, writePracticeSets, type PracticeSets,
 } from '../../lib/practice-sets';
 import { bestScores, onProgressChange, readProgress } from '../../lib/progress';
@@ -255,10 +255,10 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
     }
   }
 
-  /** The saved set that lists the same problems as these filters. */
-  function matchingSet(state: PracticeSets, next: Filters) {
+  /** The saved set that lists the same problems as these filters: the active one when several do. */
+  function matchingSet(state: PracticeSets, next: Filters, tabSelection: string | null) {
     const key = filterKey(next);
-    return state.sets.find((set) => filterKey(readFilters(topics, set.query)) === key);
+    return findMatchingSet(state, (set) => filterKey(readFilters(topics, set.query)) === key, tabSelection);
   }
 
   useEffect(() => {
@@ -278,7 +278,8 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
           window.history.replaceState(window.history.state, '', location);
           selection = active.id;
         } else if (stored && !filtersOff(restored)) {
-          const match = matchingSet(stored, restored);
+          // A page load starts with no set chosen in this tab.
+          const match = matchingSet(stored, restored, null);
           selection = match?.id ?? null;
           if (match && stored.activeId !== match.id) {
             const chosen = choosePracticeSet(stored, match.id);
@@ -346,7 +347,7 @@ export default function PracticeList({ problems }: { problems: CatalogProblem[] 
     applyFilters(next);
     setRowStatus('');
     if (!sets || selectedId !== null || filtersOff(next)) return;
-    const match = matchingSet(sets, next);
+    const match = matchingSet(sets, next, selectedId);
     if (match) selectSet(match.id);
   }
 

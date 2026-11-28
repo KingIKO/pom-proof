@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { progressStorageKey, type ProgressAttempt } from '../../src/lib/contracts';
 import {
   addPracticeSet, changePracticeSet, checkSetName, choosePracticeSet, decodePracticeSets, deletePracticeSet,
-  noPracticeSets, practiceSetsKey, readPracticeSets, writePracticeSets, type PracticeSet, type PracticeSets,
+  findMatchingSet, noPracticeSets, practiceSetsKey, readPracticeSets, writePracticeSets, type PracticeSet, type PracticeSets,
 } from '../../src/lib/practice-sets';
 import { createProgressStore } from '../../src/lib/progress';
 
@@ -112,6 +112,30 @@ describe('changing sets', () => {
     expect(choosePracticeSet(stored, sql.id).activeId).toBe(sql.id);
     expect(choosePracticeSet(stored, null).activeId).toBeNull();
     expect(choosePracticeSet(stored, 'gone').activeId).toBeNull();
+  });
+});
+
+describe('finding the set that holds some filters', () => {
+  const holds = (query: string) => (set: PracticeSet) => set.query === query;
+
+  it('finds the active set when an older set holds the same filters', () => {
+    // Set B, saved after A, is updated to A's filters and stays active, as Update set leaves it.
+    const a = addPracticeSet(noPracticeSets(), 'Set A', 'topic=playwright', { id: 'a-000001' });
+    const both = addPracticeSet(a, 'Set B', 'topic=playwright%2Capi', { id: 'b-000002' });
+    const updated = changePracticeSet(both, 'b-000002', { query: 'topic=playwright' });
+    expect(updated.activeId).toBe('b-000002');
+    expect(findMatchingSet(updated, holds('topic=playwright'))?.name).toBe('Set B');
+  });
+
+  it('prefers the active set, then the set the tab has chosen, then the first saved', () => {
+    const third: PracticeSet = { ...sql, id: 'mf3k2a-000003', name: 'SQL again' };
+    const twins: PracticeSets = { version: 1, activeId: null, sets: [sql, third] };
+    expect(findMatchingSet(twins, holds(sql.query))?.id).toBe(sql.id);
+    expect(findMatchingSet(twins, holds(sql.query), third.id)?.id).toBe(third.id);
+    expect(findMatchingSet({ ...twins, activeId: third.id }, holds(sql.query), sql.id)?.id).toBe(third.id);
+    // An active set that does not hold the filters is passed over.
+    expect(findMatchingSet({ ...twins, activeId: playwright.id, sets: [playwright, ...twins.sets] }, holds(sql.query))?.id).toBe(sql.id);
+    expect(findMatchingSet(twins, holds('topic=none'), sql.id)).toBeUndefined();
   });
 });
 

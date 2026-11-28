@@ -239,6 +239,43 @@ test('editing a set never writes over another set whose filters it passes throug
   expect(errors, 'page errors').toEqual([]);
 });
 
+test('of two sets with the same filters, a reload and the way back keep the active one', async ({ page }) => {
+  const errors = watchErrors(page);
+  await openList(page);
+  await saveOneTopic(page, pair[0], 'Set A');
+  await topicBox(page, pair[1]).check();
+  await button(page, 'Save as new set').click();
+  await nameField(page).fill('Set B');
+  await button(page, 'Save set').click();
+  await expect(status(page)).toHaveText('Saved “Set B”.');
+
+  // Updating B to A's filters leaves two sets with the same filters, with B active.
+  await topicBox(page, pair[1]).uncheck();
+  await button(page, 'Update set').click();
+  await expect(status(page)).toHaveText('Updated “Set B”.');
+  const both = await stored(page);
+  expect(both.sets.map(({ query }: { query: string }) => query)).toEqual([`topic=${pair[0]}`, `topic=${pair[0]}`]);
+  const [a, b] = both.sets.map(({ id }: { id: string }) => id);
+  expect(both.activeId).toBe(b);
+
+  await page.reload();
+  await expect(picker(page).locator('option:checked')).toHaveText('Set B');
+  await rows(page).first().getByRole('link').click();
+  await expect(position(page)).toHaveText(`Set B: 1 of ${counts.get(pair[0])}`);
+  await neighbours(page).getByRole('link', { name: 'Back to Set B', exact: true }).click();
+  await expect(picker(page).locator('option:checked')).toHaveText('Set B');
+  expect((await stored(page)).activeId).toBe(b);
+
+  await button(page, 'Rename').click();
+  await expect(nameField(page)).toHaveValue('Set B');
+  await nameField(page).fill('Renamed B');
+  await button(page, 'Rename set').click();
+  await expect(status(page)).toHaveText('Renamed to “Renamed B”.');
+  expect((await stored(page)).sets.map(({ id, name }: { id: string; name: string }) => [id, name]))
+    .toEqual([[a, 'Set A'], [b, 'Renamed B']]);
+  expect(errors, 'page errors').toEqual([]);
+});
+
 test('a set stays chosen while every filter is cleared, until Clear filters or All problems', async ({ page }) => {
   await openList(page);
   await saveOneTopic(page, pair[0], 'One topic');

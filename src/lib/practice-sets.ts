@@ -120,6 +120,15 @@ export function findPracticeSet(state: PracticeSets, id: string | null | undefin
   return id ? state.sets.find((set) => set.id === id) : undefined;
 }
 
+/**
+ * The saved set whose filters `matches` accepts. Only names must differ, so two sets can hold the
+ * same filters: the active set wins, then the set the tab has chosen, then the first saved.
+ */
+export function findMatchingSet(state: PracticeSets, matches: (set: PracticeSet) => boolean, selectedId: string | null = null) {
+  const found = state.sets.filter(matches);
+  return found.find(({ id }) => id === state.activeId) ?? found.find(({ id }) => id === selectedId) ?? found[0];
+}
+
 /** Adds a set with a name already checked by `checkSetName` and makes it the active one. */
 export function addPracticeSet(state: PracticeSets, name: string, query: string, { id = newSetId(), now = new Date() } = {}): PracticeSets {
   return { version: 1, activeId: id, sets: [...state.sets, { id, name: name.trim(), query, createdAt: now.toISOString() }] };
