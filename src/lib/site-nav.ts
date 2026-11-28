@@ -1,11 +1,10 @@
 /**
  * The site's sections, in header order. The header and the 404 page both list them.
  *
- * Study stays out of both until the first 18 core pages, stages A and B, are written and
- * reviewed (owner decision, 2026-11-27). Its pages still build and open by address. Setting
- * `showStudyInNav` to true is the whole change that adds it.
+ * Study joined the header once its first 18 core pages, stages A and B, were written and
+ * reviewed (owner decision, 2026-11-27). Setting `showStudyInNav` to false hides it again.
  */
-export const showStudyInNav = false;
+export const showStudyInNav = true;
 
 const allSections = [
   { id: 'practice', label: 'Practice', path: '/' },
