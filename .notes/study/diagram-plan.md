@@ -238,17 +238,23 @@ One drawing, from the test fixture:
 - Parts sit inside boxes. A box inside a box has no approved drawing and fails the build.
 ## 3. Components
 
-`src/components/study/diagrams/`: `Diagram.astro` shell switching on `type`, one component per type. Styles `src/styles/diagrams.css` from the B2 block with new class names; `--dg-*` tokens in `src/styles/tokens.css` under `figure[data-diagram]`.
+`src/components/study/diagrams/`: `Diagram.astro` shell switching on `type`, one component per type (`Blocks.astro` draws its rows with `BlockTiers.astro`, `NumberLine.astro` with `NumberLineRow.astro`). Shell and layer stack styles in `src/styles/diagrams.css`, each other kind in its own `src/styles/diagram-<kind>.css`; `--dg-*` tokens in `src/styles/tokens.css` under `figure[data-diagram]`.
 
-Shell: `<figure data-diagram={type} data-card>`, `<figcaption id>` first (title and note spans), then the description as `.visually-hidden` paragraph, then the drawing. `container-type: inline-size`, 34rem switch as a container query. `overflow-wrap: normal` inside the figure.
+Shell: `<figure data-diagram={type} data-card>`, `<figcaption id>` first (title and note spans), then the description as one `.visually-hidden` paragraph per text, then the drawing. `container-type: inline-size`, 34rem switch as a container query. `overflow-wrap: normal` inside the figure.
 
 | Type | HTML | Accessibility |
 |---|---|---|
 | layer-stack | One block per shape: name, then `ol` of bars top to bottom, width from `width` | Each `ol` `aria-labelledby` its name; widest bar bold with hidden text |
 | matrix | Real `table`, `th scope=col/row`, axis names, level word in every cell | `aria-labelledby` the figcaption; never `role="img"`; scrolls in its own box if needed |
-| number-line | Two-entry legend `ul`, band row, `ol` of values, boundary lines as borders | Hidden labels such as "9, 2-value check"; narrow layout is a second rendering toggled with `display:none` |
-| timeline | One block per lane: name, `ol` of spans on a shared grid, 2px lines for moments | Hidden start/end text per span; stacks below 34rem |
-| blocks | Nested `div`/`ul`, 1px edge where extent matters, → or ↓ between neighbours | DOM order follows containment; arrows `aria-hidden` with relation in hidden text |
+| number-line | Two-entry legend `ul`, band row, `ol` of values, boundary lines as borders | Hidden labels such as "9, 2-value BVA"; narrow layout is a second rendering toggled with `display:none` |
+| timeline | One block per lane: its name, then an `ol` with one `li` per row (name and second line, bars, outcome). Every row repeats the same columns, a name column and equal steps, so all bars share one scale. Tick and group heads above the lanes, the moment's label and 2px line per lane, "Time →" under a scale without ticks | Each bar says its start and end in hidden text ("from the start until App ready", "Worker 1, from Test 1 to Test 2"). The `ol` is labelled by its lane name, or by the figcaption when the lane has none. Heads, the moment's line and "Time →" are `aria-hidden`; the moment's label is read |
+| blocks | One `ul` per row of boxes, each box an `li` with its title and a `ul` of its parts; 1px edge on a box, none on a part. A → has its own column between two boxes, and the ↓ arrows have their own row under the boxes. A pair is two panels (name, drawing, result line) side by side, 32px apart | Reading order follows containment. Arrows are `aria-hidden`, and the box says the link after its title ("Test 1, calls Sign-in page object"). Each panel is a `group` labelled by its name |
+
+Where the timeline and blocks change with the figure's width (its content box, in the reader's text size):
+
+- Below 36.25rem: panels of boxes side by side take the narrow paddings (box 8px, part 4px), because a word such as locator no longer fits its part with 12px.
+- Below 34rem: the timeline's name column narrows to 5.25rem, and names and outcomes wrap. Blocks keep their boxes side by side with the narrow gaps and paddings, and two panels stack, before first.
+- Below 14.5rem, which needs enlarged text on a phone: a timeline row's name and outcome take their own lines and its bars keep the whole width, with each group head on a line of its own. Boxes and parts stack, → turns down, and the ↓ arrows stand together under the last box.
 
 SVG exception (only if needed): one Astro component per drawing in `diagrams/svg/`, labels from frontmatter, colours only through classes in `diagrams.css` (no `fill`/`stroke`/`style` attributes), `vector-effect: non-scaling-stroke`, `aria-labelledby` the figcaption and description ids; unit test scans `diagrams/svg/*.astro` for hex colours, colour attributes and banned elements.
 
@@ -265,7 +271,7 @@ study.test.ts `pageProblems`: unique slug ids, ≤2 per page; each id named by e
 
 study.spec.ts: one `figure[data-diagram]` per entry, each a direct child of `.study-body` that follows body content other than a heading (the same rule as study.test.ts); caption matches frontmatter; no `language-diagram` left.
 
-study-diagrams.spec.ts (scrollbars shown, text enlarged through the browser's default font size): at 1280, 1024, 768, 360 and 320 px no horizontal scroll and no figure part overflows; at those widths, at 360 and 320 px with 150% and 200% text, at 1280 px with 200% text or the SC 1.4.12 overrides, and at 320 px with both, nothing crosses the card edge and bars draw strictly in the order of their widths across the figure; bars with the same width draw equal, within the differences the spec accepts (1.8 px at 1024, 10 px at 1280 with 200% text, 3.3 px at 1280 with the overrides; not checked at 320 px with 200% text and the overrides together). Plants for each check, and a check that the scrollbar is showing.
+study-diagrams.spec.ts (scrollbars shown, text enlarged through the browser's default font size): at 1280, 1024, 768, 360 and 320 px no horizontal scroll and no figure part overflows; at those widths and 641 px (the tightest wide layout), at 360 and 320 px with 150% and 200% text or the SC 1.4.12 overrides, at 1280 px with 200% text or the overrides, and at 320 px with both, nothing crosses the card edge and bars draw strictly in the order of their widths across the figure; bars with the same width draw equal, within the differences the spec accepts (1.8 px at 1024, 10 px at 1280 with 200% text, 3.3 px at 1280 with the overrides; not checked at 641 px, or at 320 px with 200% text and the overrides together). Plants for each check, and a check that the scrollbar is showing. The states, the scrollbar setup and the checks are in `tests/support/diagrams.ts`; the specs of the number line, matrix, timeline and blocks run their drawing checks in the same states, on the pages and on the fixture sites.
 
 a11y.spec.ts: test shapes page at desktop and 320 px.
 
