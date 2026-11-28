@@ -19,6 +19,9 @@ Chosen on 2026-11-28: B, refined into B2 (tinted and calm) after Kingsley said B
 - PNGs: `option-{a-outline,b-tinted,c-drawn}-desktop.png` (1280 px wide), `option-…-360.png` (360 px wide), `compare-desktop.png` (1920 px wide).
 - B2: `option-b2.html`, `compare-b-vs-b2.html`, `option-b2-desktop.png` (1280 px), `option-b2-360.png` (360 px), `compare-b-vs-b2.png` (1440 px). Its styles are the `[data-style="b2"]` and `.dg2-*` rules at the end of `diagrams.css`.
 - More B2 kinds, drawn after Kingsley approved B2: `b2-timeline.html`, `b2-blocks.html` and `b2-yes-no-matrix.html` (real page text around each figure), with PNGs `b2-<kind>-desktop.png` (1280 px), `b2-<kind>-360.png` and `b2-<kind>-320.png`. `compare-timeline.html`, `compare-blocks.html` and `compare-yes-no-matrix.html` show each figure at the 738 px desktop column and at the 313 px and 273 px figure widths of 360 and 320 px phones, as `compare-<kind>.png` (1500 px). Their styles are the `.tl-*`, `.bk-*` and `.yn*` rules at the end of `diagrams.css`.
+- Layer stack width limits (approved 2026-11-28, for iko-flow to build): `layer-stack-limits.css` (the CSS change), `layer-stack-limits-{before,after}-{1280,360,320,320-200}.png` (the live test shapes figure without and with that CSS, `320-200` at 320 px with 200% text), `compare-layer-stack-limits.html` and `compare-layer-stack-limits.png`.
+- Test levels, first drawings (not approved): `test-levels-peers.html` (version 1) and `test-levels-objects.html` (version 2) in the real page, `test-levels.css`, `test-levels-{peers,objects}-{desktop,360,320}.png`, `compare-test-levels.html` and `compare-test-levels.png`.
+- Test levels, rows over one picture (proposed, the redraw): `test-levels-rows.html` (the page with the figure and the trimmed list), `test-levels-rows.css`, page PNGs `test-levels-rows-{desktop,360,320}.png`, figure PNGs `test-levels-rows-figure-{desktop,360,320,320-200}.png`, the text around it as `test-levels-rows-text-{desktop,360}.png`, and `compare-test-levels-rows.html` and `compare-test-levels-rows.png` (the peers version beside the rows version, desktop and 360 px).
 - `spec.md`: the B2 visual spec (tokens, measured contrast, type, spacing, narrow layouts, the SVG rule, banned items, rules for writers), now covering all five kinds.
 
 To view the HTML, serve the folder over HTTP (`python -m http.server --directory docs/design 8765`) and open `http://localhost:8765/study-diagrams/compare.html`.
@@ -43,5 +46,19 @@ Timeline, blocks and yes/no matrix, checked the same day on the three `b2-<kind>
 - The page object figure works as HTML blocks; it does not need SVG.
 
 The test-doubles answers, the pytest-xdist session lane in the fixtures figure, the four test-doubles questions and the three tests in the page object figure are placeholders or examples for the writer to source or confirm.
+
+Layer stack width limits and test levels, checked the same day:
+
+- Slop guard from `tests/ui/slop-guard.spec.ts` at origin/main cc302d3 (with the `clip-path` rule): 0 violations on the live test shapes page with the proposed CSS, on both `test-levels-*.html` pages at 1280, 360 and 320 px, and on `compare-test-levels.html`.
+- Contrast: lowest text 5.51:1 (part item), lowest line 3.26:1 (bar and box edge).
+- Reflow: nothing spills at 1280, 1024, 768, 360 or 320 px, with or without the text-spacing overrides. The measured bar widths and the large-text limits are in `spec.md`.
+- The live Test levels page already scrolls 3 px sideways at 320 px with 200% text and 50 px at 600 px with the text-spacing overrides, with no figure on it. Adding either figure leaves both numbers unchanged.
+
+Test levels rows, checked the same day:
+
+- Slop guard: 0 violations on `test-levels-rows.html` at 1280, 360 and 320 px and on `compare-test-levels-rows.html`.
+- Contrast: lowest text 6.28:1 (level words), lowest line or block 3.26:1 (target block and box edges); every target edge meets white.
+- Reflow: nothing spills at 1280, 1024, 768, 600, 360 or 320 px. With the text-spacing overrides the figure scrolls 31 px inside its own box at 320 px only. 200% text switches 320 and 360 px to the words layout.
+- Height at 360 px: 377 px, against 720 px for the peers version.
 
 The risk ratings in the matrix (a double charge rated medium likelihood and high impact, the receipt layout medium likelihood and low impact) and the 3 by 3 level mapping are examples. The page writer has to confirm them. The widths of the test shape layers show relative testing effort, as the page's sources describe it, and are not measured.

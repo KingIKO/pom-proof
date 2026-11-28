@@ -61,7 +61,7 @@ for (const width of [1280, 360, 320]) {
     await open(page, width);
     await expect(page.locator('figure[data-diagram]')).toHaveCount(figures.length);
     expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
-    expect(await page.evaluate(figureOverflow, false)).toEqual([]);
+    expect(await page.evaluate(figureOverflow, true)).toEqual([]);
     expect(await drawingProblems(page)).toEqual([]);
     await expectNoViolations(page, `${width}px`);
   });
@@ -70,14 +70,14 @@ for (const width of [1280, 360, 320]) {
     await open(page, width);
     await page.addStyleTag({ content: textSpacing });
     expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
-    expect(await page.evaluate(figureOverflow, false)).toEqual([]);
+    expect(await page.evaluate(figureOverflow, true)).toEqual([]);
     expect(await drawingProblems(page)).toEqual([]);
   });
 
   test(`every figure stays inside its card at ${width}px with 200% text`, async ({ page }) => {
     await open(page, width);
     await page.evaluate(doubleText);
-    expect(await page.evaluate(figureOverflow, true), 'no part crosses the card edge').toEqual([]);
+    expect(await page.evaluate(figureOverflow, false), 'no part crosses the card edge').toEqual([]);
     expect(await drawingProblems(page)).toEqual([]);
     await expectNoViolations(page, `${width}px, 200% text`);
   });

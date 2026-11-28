@@ -1,0 +1,85 @@
+/* Test levels, rows over one picture (spec.md, "Test levels, rows"). The booking app is drawn once at the top; each
+   level is a row on the same columns, and a solid block marks what that level targets. Existing tokens only. */
+
+/* The approved blocks parts, as in test-levels.css. */
+.bk-title { color: var(--text); font-size: var(--type-14); font-weight: var(--weight-medium); line-height: 1.3; }
+.bk-part { min-inline-size: 0; background: var(--dg-part); color: var(--text); font-size: var(--type-13); font-weight: var(--weight-medium); line-height: 1.25; }
+
+/* Columns, the same in the picture and in every row:
+   1 level name | 2 app edge | 3 Booking creation | 4 link | 5 Cutoff calculation | 6 | 7 rest of the app | 8 app edge
+   | 9 link to the other system | 10 Email provider */
+.lr {
+  display: grid;
+  grid-template-columns:
+    10.5rem var(--space-8) minmax(min-content, 1fr) var(--space-32) minmax(min-content, 1fr) 2px minmax(min-content, .8fr)
+    var(--space-8) var(--space-48) minmax(min-content, 1fr);
+  row-gap: var(--space-12);
+}
+.lr-map { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; grid-template-rows: auto auto; row-gap: var(--space-8); margin-block-end: var(--space-4); }
+/* The app is a box; its parts are tinted blocks inside it. The email provider is a second box, another system. */
+.lr-app, .lr-other { grid-row: 1 / 3; border: 1px solid var(--dg-part-edge); background: var(--surface); }
+.lr-app { grid-column: 2 / 9; }
+.lr-other { grid-column: 10; display: grid; align-content: center; padding: var(--space-8); }
+.lr-app-title { grid-column: 3 / 8; grid-row: 1; padding-block-start: var(--space-8); }
+.lr-map .bk-part { grid-row: 2; display: grid; align-items: center; margin-block-end: var(--space-8); padding: var(--space-4) var(--space-8); }
+.lr-map [data-at="c1"] { grid-column: 3; }
+.lr-map [data-at="g1"] { grid-column: 4; }
+.lr-map [data-at="c2"] { grid-column: 5; }
+.lr-map [data-at="c3"] { grid-column: 7; }
+.lr-map [data-at="g3"] { grid-column: 9; grid-row: 1 / 3; }
+.lr-map .lr-link { grid-row: 2; align-self: center; margin-block-end: var(--space-8); }
+.lr-map .lr-link[data-at="g3"] { grid-row: 1 / 3; margin: 0; }
+.lr-link { color: var(--text2); font-size: var(--type-16); line-height: 1; text-align: center; }
+
+figure[data-diagram] ol.lr-rows { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; row-gap: var(--space-12); margin: 0; padding: 0; list-style: none; }
+.lr-rows > li { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; margin: 0; }
+.lr-label { grid-column: 1; display: grid; padding-inline-end: var(--space-16); line-height: 1.25; }
+.lr-name { color: var(--text); font-size: var(--type-14); font-weight: var(--weight-medium); }
+.lr-what { color: var(--text2); font-size: var(--type-13); }
+/* On a phone the short description wraps as a whole onto its own line rather than leaving one word behind. */
+.lr-track { display: contents; }
+.lr-track > i { grid-row: 1; block-size: var(--space-24); background: var(--dg-part); font-style: normal; }
+/* The target: a solid block in the bar-edge colour, at least 3:1 against white. Pale blocks are not the target; they
+   may still run. */
+.lr-track > i[data-target] { background: var(--dg-part-edge); }
+.lr-track > i.lr-link { display: grid; place-items: center; color: var(--text); }
+/* A 2px white gap at each end of a link, so every edge of a target meets white (3.26:1), never a pale block. */
+.lr-track > [data-at="g1"], .lr-track > [data-at="g3"] { margin-inline: 2px; }
+.lr-track > [data-at="c1"] { grid-column: 3; }
+.lr-track > [data-at="g1"] { grid-column: 4; }
+.lr-track > [data-at="c2"] { grid-column: 5; }
+.lr-track > [data-at="c3"] { grid-column: 7; }
+.lr-track > [data-at="app"] { grid-column: 2 / 9; }
+.lr-track > [data-at="g3"] { grid-column: 9; }
+.lr-track > [data-at="c4"] { grid-column: 10; }
+.lr-text { display: none; }
+
+/* Phones: the name sits above its row, and the rest-of-app part drops out; the app box still covers it. If the
+   columns still cannot fit (text-spacing overrides at 320 px), the figure scrolls inside its own box. */
+@container (width < 34rem) {
+  .lr { grid-template-columns: 0 2px minmax(min-content, 1fr) var(--space-16) minmax(min-content, 1fr) 0 0 2px var(--space-16) minmax(min-content, 1fr); row-gap: var(--space-8); overflow-x: auto; }
+  .lr [data-at="c3"] { display: none; }
+  .lr-map { row-gap: var(--space-4); }
+  .lr-map .bk-part { padding: var(--space-4); margin-block-end: 2px; }
+  .lr-map .lr-link { margin-block-end: 2px; }
+  .lr-other { padding: var(--space-4); }
+  .lr-app-title { padding: var(--space-4) 0 0 var(--space-4); grid-column: 2 / 9; }
+  .lr-rows > li { grid-template-rows: auto auto; row-gap: 2px; }
+  .lr-label { grid-column: 1 / -1; grid-row: 1; display: block; padding: 0; }
+  .lr-name { margin-inline-end: var(--space-8); }
+  .lr-what { display: inline-block; }
+  .lr-label { line-height: 1.2; }
+  figure[data-diagram] ol.lr-rows { row-gap: var(--space-8); }
+  /* Bars are 12px tall; the arrow stays in the picture above, so the link block carries no glyph. */
+  .lr-track > i { grid-row: 2; block-size: var(--space-12); }
+  .lr-track > i.lr-link { font-size: 0; }
+}
+/* Large text on a narrow screen: the columns no longer fit, so each row names its target in words instead. */
+@container (width < 14rem) {
+  .lr { display: block; overflow: visible; }
+  .lr-map, .lr-track { display: none; }
+  figure[data-diagram] ol.lr-rows { display: grid; gap: var(--space-12); }
+  .lr-rows > li { display: block; }
+  .lr-name { display: block; }
+  .lr-text { display: block; margin-block-start: var(--space-4); padding: var(--space-4) var(--space-8); background: var(--dg-part); color: var(--text); font-size: var(--type-13); font-weight: var(--weight-medium); }
+}

@@ -1,11 +1,11 @@
 /** Checks the diagram specs run in the page. Each runs in the browser, so it uses nothing from this module. */
 
 /**
- * Parts that spill out of their figure, and boxes whose content is wider than they are. With
- * `edgeOnly`, only a part that crosses the figure's outer edge counts, so content may use the padding,
- * and what sits inside a box that scrolls by itself is left to that box.
+ * Parts that cross their figure's outer edge: elements, the text inside them, and drawn bars, which
+ * may be a bar's own box or its ::after. With `strict`, also a box whose content is wider than it is.
+ * Without it, what sits inside a box that scrolls by itself is left to that box.
  */
-export function figureOverflow(edgeOnly: boolean) {
+export function figureOverflow(strict: boolean) {
   const name = (element: Element) => {
     const className = element.getAttribute('class');
     return `${element.tagName.toLowerCase()}${className ? `.${className.split(' ')[0]}` : ''} "${(element.textContent ?? '').trim().slice(0, 30)}"`;
@@ -13,16 +13,31 @@ export function figureOverflow(edgeOnly: boolean) {
   return [...document.querySelectorAll('figure[data-diagram]')].flatMap((figure) => {
     const box = figure.getBoundingClientRect();
     const found: string[] = [];
-    if (!edgeOnly && figure.scrollWidth > figure.clientWidth) found.push(`${name(figure)} scrolls ${figure.scrollWidth - figure.clientWidth}px sideways`);
+    const past = (left: number, right: number) => Math.max(box.left - left, right - box.right);
+    if (strict && figure.scrollWidth > figure.clientWidth) found.push(`${name(figure)} scrolls ${figure.scrollWidth - figure.clientWidth}px sideways`);
     for (const part of figure.querySelectorAll('*')) {
       if (part.closest('.visually-hidden')) continue;
-      if (edgeOnly && part.parentElement?.closest('.dg-scroll')) continue;
+      if (!strict && part.parentElement?.closest('.dg-scroll')) continue;
       const rect = part.getBoundingClientRect();
       if (!rect.width && !rect.height) continue;
-      if (rect.left < box.left - 0.5 || rect.right > box.right + 0.5) found.push(`${name(part)} spills out of its figure`);
+      // The element's own text, which can run past a box that is narrower than a long word.
+      const ink = [...part.childNodes].filter((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()).map((node) => {
+        const range = document.createRange();
+        range.selectNode(node);
+        const { left, right } = range.getBoundingClientRect();
+        return past(left, right);
+      });
+      const over = Math.max(past(rect.left, rect.right), ...ink);
+      if (over > 0.5) found.push(`${name(part)} passes the card edge by ${over.toFixed(1)}px`);
       // The corner axis name of a narrow matrix reaches over the first column on purpose (spec, narrow matrix).
-      if (part.matches('.dg-axis-side')) continue;
-      if (!edgeOnly && part.clientWidth && part.scrollWidth > part.clientWidth + 1) found.push(`${name(part)} holds content ${part.scrollWidth - part.clientWidth}px wider than its box`);
+      if (strict && !part.matches('.dg-axis-side') && part.clientWidth && part.scrollWidth > part.clientWidth + 1) found.push(`${name(part)} holds content ${part.scrollWidth - part.clientWidth}px wider than its box`);
+      const after = getComputedStyle(part, '::after');
+      if (after.content !== 'none' && after.content !== 'normal') {
+        const width = parseFloat(after.width);
+        const centre = rect.left + rect.width / 2;
+        const barOver = past(centre - width / 2, centre + width / 2);
+        if (barOver > 0.5) found.push(`${name(part)} draws its bar past the card edge by ${barOver.toFixed(1)}px`);
+      }
     }
     return found;
   });

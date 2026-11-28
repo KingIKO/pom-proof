@@ -35,11 +35,11 @@ for (const { path, figure } of drawn) {
       expect(await drawingProblems(page, figure)).toEqual([]);
       await page.addStyleTag({ content: textSpacing });
       expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
-      expect(await page.evaluate(figureOverflow, false), 'wide text spacing').toEqual([]);
+      expect(await page.evaluate(figureOverflow, true), 'wide text spacing').toEqual([]);
       expect(await drawingProblems(page, figure), 'wide text spacing').toEqual([]);
       await page.goto(path);
       await page.evaluate(doubleText);
-      expect(await page.evaluate(figureOverflow, true), '200% text').toEqual([]);
+      expect(await page.evaluate(figureOverflow, false), '200% text').toEqual([]);
       expect(await drawingProblems(page, figure), '200% text').toEqual([]);
     });
   }

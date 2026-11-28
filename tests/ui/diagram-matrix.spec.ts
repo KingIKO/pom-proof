@@ -102,7 +102,7 @@ for (const width of [1280, 360, 320]) {
   test(`both matrices fit at ${width}px without scrolling, and have no axe violations`, async ({ page }) => {
     await open(page, width);
     expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
-    expect(await page.evaluate(figureOverflow, false)).toEqual([]);
+    expect(await page.evaluate(figureOverflow, true)).toEqual([]);
     expect(await page.evaluate(scrolled)).toEqual([]);
     expect(await page.evaluate(overlappingHeads)).toEqual([]);
     await expectNoViolations(page, `${width}px`);
@@ -112,7 +112,7 @@ for (const width of [1280, 360, 320]) {
     await open(page, width);
     await page.addStyleTag({ content: textSpacing });
     expect(await page.evaluate(() => document.documentElement.scrollWidth), 'no sideways page scroll').toBe(width);
-    expect(await page.evaluate(figureOverflow, true)).toEqual([]);
+    expect(await page.evaluate(figureOverflow, false)).toEqual([]);
     expect(await page.evaluate(overlappingHeads)).toEqual([]);
     // At 320px the spec lets the risk matrix scroll inside its own box.
     if (width > 320) expect(await page.evaluate(scrolled)).toEqual([]);
@@ -123,7 +123,7 @@ for (const width of [360, 320]) {
   test(`both matrices stay inside their card at ${width}px with 200% text, and a keyboard can scroll them`, async ({ page }) => {
     await open(page, width);
     await page.evaluate(doubleText);
-    expect(await page.evaluate(figureOverflow, true), 'no part crosses the card edge').toEqual([]);
+    expect(await page.evaluate(figureOverflow, false), 'no part crosses the card edge').toEqual([]);
     expect(await page.evaluate(overlappingHeads)).toEqual([]);
     expect((await page.evaluate(scrolled)).length, 'boxes that scroll').toBe(2);
     await expectNoViolations(page, `${width}px, 200% text`);
@@ -139,9 +139,9 @@ for (const width of [360, 320]) {
 
 test('the fit and overlap checks report planted faults', async ({ page }) => {
   await open(page, 320);
-  expect(await page.evaluate(figureOverflow, false)).toEqual([]);
+  expect(await page.evaluate(figureOverflow, true)).toEqual([]);
   await page.addStyleTag({ content: '.dg-matrix td { min-inline-size: 9rem; }' });
-  expect((await page.evaluate(figureOverflow, false)).join('\n')).toMatch(/div\.dg-scroll .* holds content \d+px wider than its box/);
+  expect((await page.evaluate(figureOverflow, true)).join('\n')).toMatch(/div\.dg-scroll .* holds content \d+px wider than its box/);
   await open(page, 320);
   expect(await page.evaluate(overlappingHeads)).toEqual([]);
   await page.addStyleTag({ content: '.dg-axis-side > span { inset-inline-start: 30px !important; }' });

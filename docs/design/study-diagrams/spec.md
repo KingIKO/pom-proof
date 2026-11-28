@@ -98,7 +98,7 @@ The measuring script also flags some pairs as failing that are not real failures
 - Centred bars, top to bottom from broad tests to narrow ones, all three shapes on one width scale (the column, at most 16rem).
 - Bar: `--dg-part` fill, 1px `--dg-part-edge`, 0 radius, at least 32px tall, 4px by 8px padding, label centred.
 - The widest layer of each shape: `--dg-part-strong` and bold. Width already shows it; the bold is the non-colour signal.
-- A bar never gets narrower than its longest word. Compound terms stay whole: the component keeps a hyphenated word such as End-to-end on one line, so the content writes plain hyphens.
+- Width steps, padding and the large-text layout follow "Layer stack width limits" below (approved 2026-11-28). A bar may still grow to its longest word where the steps cannot hold it; the limits section lists where. Compound terms stay whole: the component keeps a hyphenated word such as End-to-end on one line, so the content writes plain hyphens.
 - Widths show relative testing effort and are not measured. The caption says so.
 - Each layer's width comes from what the page's sources say about that layer, never from the mockup's symmetry. Layers the sources do not rank against each other get the same width.
 
@@ -150,6 +150,85 @@ Samples: browser contexts over a shared database (test independence), and tests 
 - Arrows: ↓ (U+2193) or → (U+2192) in `--text2` at 16px, one per source column, centred, between neighbours only. Arrows are `aria-hidden`; the description states the relation.
 - Before and after: two panels side by side, 32px apart, before on the left. Each panel has a 14px medium heading and ends with a result line in 16px bold ink ("3 edits", "1 edit"), aligned across the two panels.
 - Nesting stops at a part inside a box. A box inside a box (the test levels figure) is not drawn yet and needs its own mockup.
+
+### Layer stack width limits (approved 2026-11-28)
+
+Kingsley approved this on 2026-11-28 ("Yes, use the fix"). The change is CSS only and sits in `layer-stack-limits.css`, written against `src/styles/diagrams.css` at cc302d3. The markup, the data and the tokens stay the same. It replaces the old width steps (.3, .4, .6, .8, 1) and the 8px side padding.
+
+1. Width steps become .4, .5, .6, .8 and 1 (were .3, .4, .6, .8 and 1). The order is the same. Only widths 1 and 2 change.
+2. Bars have 4px side padding (was 8px), so a tight label does not push its bar past its width.
+3. `.dg-layers` gets `grid-template-columns: minmax(0, 1fr)`, so one long word no longer widens the whole stack.
+4. When the figure's content is narrower than 12rem, which needs large text on a phone, each label sits above its own bar. The bar is 12px tall, has the same fill and 1px edge, and keeps its true width. The widest layer keeps `--dg-part-strong` and its bold label. Labels are 4px above their bars and layers are 12px apart. At the default text size a 320 px screen has 239 px of content, so this layout does not show there.
+
+Measured on 2026-11-28 on the live test shapes page with and without the CSS. "200%" means the browser's default font size set to 32 px.
+
+| Screen | Built now | Proposed |
+|---|---|---|
+| 1280 | UI 62.4 and Integrated 79.0 for the same width | UI and Integrated both 83.3 |
+| 1024 | UI 51.9, Integrated 79.0; Implementation detail 109.9 against 103.8 for Service | UI 69.2, Integrated 71.0; all width 3 bars 103.8 |
+| 768, 360, 320 | UI and Integrated differ by 19.9, 2.2 and 7.3 px | Equal |
+| 1280 at 200% | UI 97.5, Integrated 156.0; Implementation detail 217.8 against 195.0 | UI 130.0, Integrated 140.0; Implementation detail 201.8 against 195.0 |
+| 360 at 200% | Integration and Implementation detail both 217.8; End-to-end (width 2) 169.6, wider than Unit and Static (width 3) at 129.0 | Every bar at its true width |
+| 320 at 150% | End-to-end 127.7, wider than Unit and Static at 124.2 | Every bar at its true width |
+| 320 at 200% | Integration and Implementation detail both 217.8, past the card edge by 9.8 px; End-to-end 169.6 against 105.0 for Unit and Static | Every bar at its true width; the word "Implementation" runs 4.4 px into the 32 px card padding and stays inside the card |
+
+Limits that stay, accepted: 1.8 px between UI and Integrated at 1024, 10 px at 1280 with 200% text, and 3.3 px at 1280 with the text-spacing overrides. The order within a shape held in every state measured. With 200% text and the overrides together at 320 px, labels run up to 31.1 px into the card padding and stay inside the card.
+
+Contrast: label on white 17.24, thin bar edge on white 3.26. Guard: 0 violations at 1280, 360 and 320 px.
+
+### Test levels, rows over one picture (proposed, not approved yet)
+
+The redraw after Kingsley's answer on the peers version below: "too long on a phone. and its not clear enough to me". The peers version showed five separate examples with no shared picture, repeated the list above it and ran 720 px tall at 360 px. Files: `test-levels-rows.css`, `test-levels-rows.html` (the page with the trimmed list), the `test-levels-rows-*.png` files and `compare-test-levels-rows.png`.
+
+The idea: the booking app is drawn once, and each level is a row on the same columns. A solid block in the row marks that level's target, under the part or the arrow it targets. Component integration's block sits under the arrow inside the app; system integration's sits under the arrow that leaves it. The levels stay peers in the list's order, and none sits inside another.
+
+- Picture, at the top: the Booking app as a box (1px `--dg-part-edge`, title 14px medium ink) holding three parts in `--dg-part` (Booking creation → Cutoff calculation, Rest of app), then a → and the Email provider as a second box, another system. Part names 13px medium ink, arrows 16px `--text2`.
+- Rows: the level name in 14px medium ink, then a few words in 13px `--text2`: one part on its own, between parts, whole app, between systems, whole app, for user needs. The words give the difference; colour never carries it alone. System and Acceptance draw the same block, and only "for user needs" separates them.
+- Track: pale `--dg-part` blocks for what is not the target, one solid `--dg-part-edge` block for the target (3.26:1 against white). Links sit in the arrow columns with a 2px white gap at each end, so every edge of a target meets white. On desktop a link holds the → in ink (5.28:1). Pale only means not the target; the note never says the pale parts do not run.
+- Caption: "What each test level targets", note "The solid block is the target."
+- Desktop: names in a 10.5rem column on the left, tracks 24px tall, rows 12px apart; columns are shared by subgrid. Columns: name, 8px app edge, Booking creation, 32px link, Cutoff calculation, 2px, Rest of app, 8px app edge, 48px link, Email provider.
+- Below 34rem: each name sits above its track, with its words wrapping as one piece. Tracks are 12px tall with no glyph in the links, and Rest of app drops out (the app box still covers it in the whole-app rows). If the columns still cannot fit, which happens only at 320 px with the text-spacing overrides, the figure scrolls 31px inside its own box, as the risk matrix does.
+- Below 14rem (large text on a phone): the picture and tracks hide, and each row names its target in words in a pale block ("Booking creation to cutoff calculation", "Booking app to email provider"). Screen readers always get these words; the picture and tracks are `aria-hidden`, and a hidden sentence describes the app.
+
+The list after it keeps only what the figure does not show. The intro sentence ends with a full stop instead of a colon, the figure follows, and then "One check at each level:" with five short items: also called unit, booking creation uses the cutoff result, the customer booking and account, the request to the email provider, and the whole acceptance item. "One part on its own", "how parts of the same system work together", "the whole app" and "a connection to another system" move into the figure as its row words and picture. Every fact on the page stays, in the list or the figure.
+
+Measured on 2026-11-28 (figure border box, default text):
+
+| Screen | Peers version | Rows version |
+|---|---|---|
+| 1280 | 343 px | 435 px |
+| 360 | 720 px | 377 px (52%) |
+| 320 | 752 px | 396 px (53%) |
+
+Contrast: level name 17.24, words 6.28, part names 15.11, target block and box edges 3.26, arrow on a target 5.28, target words in the large-text layout 15.11. Pale blocks (1.14) are fills that carry no meaning on their own: the picture names each column. Guard: 0 violations at 1280, 360 and 320 px. Reflow: nothing spills at 1280, 1024, 768, 600, 360 or 320 px. With the text-spacing overrides, nothing spills, except the 31px scroll inside the figure at 320 px. With 200% text, 320 and 360 px show the words layout, and 768 and 1280 px show the picture, with nothing spilling. On the live page, with the figure and the trimmed list injected, the page gains no sideways scroll at 320 px (plain, with the overrides, with 200% text), at 360 px (with the overrides, with 200% text) or at 1280 px. It already scrolls 3px at 320 px with 200% text, without the figure.
+
+For iko-flow, if approved: the figure is a new kind that does not fit `blocks`. It needs rows with a name, words, the target position (part, link or whole app) and the target in words, plus the picture's parts and systems. It also uses subgrid, which no built figure uses yet. The scroll box at 320 px with the overrides needs the same keyboard access as the matrix's.
+
+### Test levels, first drawings (not approved)
+
+Kingsley picked version 1 and then said "too long on a phone. and its not clear enough to me". The rows version above replaces both. Kept as the record.
+
+Two versions of the figure for Test levels, types and sizes. Both sit right after the five-item list and use blocks parts and existing tokens. The earlier idea of boxes holding levels, with Acceptance around System, is dropped. The plan's sourcing found that ISTQB CTFL 4.0.1 section 2.2.1 lists five peer levels and never says that one contains another.
+
+Version 1, peers (picked, then not approved):
+
+- An ordered list of five boxes in the list's order: Component, Component integration, System, System integration, Acceptance. Equal columns, 8px apart, no arrows between them and no numerals, so nothing reads as a sequence or as containment.
+- Box: 8px padding, title 14px medium ink, then a note in 13px `--text2` saying what the level tests ("Interfaces between components"), then the booking app parts.
+- Parts: 4px by 8px padding, name 13px medium ink, optional item in 13px `--text2` ("Full day's schedule"). The arrow ↓ between two parts is the interface under test, and it appears only in the two integration boxes.
+- Titles, notes and parts line up across the five boxes (subgrid rows). No strong part.
+- Below 36rem of figure width the boxes stack in one column in the same order.
+- Description for screen readers: "Booking creation uses the cutoff calculation. The booking app uses the email provider." The list itself says the rest.
+
+Version 2, test objects:
+
+- Boxes are the things under test, not the levels: One component inside Components together inside Whole system. Each title is the object, and the second line in 13px `--text2` names the level.
+- An arrow labelled System integration testing points from the whole system to External service (Email provider). Business needs, for acceptance testing, is a separate box.
+- The note must say that the levels are peers: "Boxes show what is under test. The levels themselves are peers."
+- Below 34rem the arrow turns down and everything stacks. Below 12rem each nested box keeps only its leading edge.
+
+Why version 1: each level is its own box, as in the source, and the two interfaces are drawn as the target. The same booking app sits in System and Acceptance with a different aim, and nothing has to be explained away. Version 2 draws containment and then asks the note to cancel it. Its Acceptance box is also not a test object. Both versions repeat facts from the list above the figure, so the writer should check the list against rule 8 before publishing either.
+
+Measured on 2026-11-28: contrast passes in both (lowest text: part item, 5.51; lowest line: box edge, 3.26; box note 6.28; arrow 6.28). Nothing spills at 1280, 1024, 768, 600, 360 or 320 px, with or without the text-spacing overrides. At 320 px with 200% text, version 1 fits and one title in version 2 runs 6.9 px into the card padding. With 200% text and the overrides together at 320 px, version 1 stays inside the card and version 2 passes its edge. Guard: 0 violations at 1280, 360 and 320 px.
 
 ## Typography
 
@@ -286,5 +365,6 @@ These rules follow the approach the request named from the Kubernetes documentat
 - Writer: every test-doubles cell is a placeholder until checked against Meszaros and Fowler, in particular Can for a spy and a mock under "Returns prepared answers" and Yes for a mock under "Stores calls". The four questions are the designer's reading of the page's list.
 - Writer: the fixtures figure draws a pytest session-scoped fixture once per worker under pytest-xdist, and labels that lane "pytest with xdist". That comes from the plan's note and is not sourced yet. If the sources do not support it, drop the lane or draw one bar across all four tests for a run without xdist.
 - iko-flow: the plan's data sketches need these fields to draw what the mockups show. Timeline: rows inside a lane (name, second line, bars, strong, outcome), a moment per lane with its label side, optional group and tick header rows, and a gap between groups that run at the same time. Blocks: box, part, strong, items, a row of arrows, and a before and after pair with a result line per panel. Matrix: a cell kind for yes/no answers, and the turned rendering below 34rem.
-- A box inside a box (the test levels figure: component inside component integration inside system, with acceptance around them) has no mockup yet.
+- iko-flow: build the approved layer stack width limits change from `layer-stack-limits.css`.
+- Kingsley: approve or refuse the test levels rows version. If approved, the writer checks its row words and the trimmed list against the page's source, and iko-flow builds it as a new kind.
 - Not yet tested with real learners.
