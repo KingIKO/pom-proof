@@ -1,6 +1,8 @@
 import { z } from 'astro/zod';
 import { base, description } from './diagram-base';
 import { blocks } from './diagram-blocks';
+import { matrix } from './diagram-matrix';
+import { numberLine } from './diagram-number-line';
 import { timeline } from './diagram-timeline';
 import { textSchema } from './problem-schema';
 
@@ -35,7 +37,7 @@ const layerStack = z.strictObject({
   })).min(1).max(3),
 });
 
-export const diagramSchema = z.discriminatedUnion('type', [layerStack, timeline, blocks]);
+export const diagramSchema = z.discriminatedUnion('type', [layerStack, matrix, numberLine, timeline, blocks]);
 export type Diagram = z.infer<typeof diagramSchema>;
 
 export const diagramsSchema = z.array(diagramSchema).min(1).max(2)

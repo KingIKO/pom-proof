@@ -3,6 +3,8 @@ import type { Diagram } from '../../../lib/diagram-schema';
 import { inline } from '../study';
 import Blocks from './Blocks.astro';
 import LayerStack from './LayerStack.astro';
+import Matrix from './Matrix.astro';
+import NumberLine from './NumberLine.astro';
 import Timeline from './Timeline.astro';
 import '../../../styles/diagrams.css';
 
@@ -20,6 +22,8 @@ const description = [diagram.description ?? []].flat();
 // that reaches this page with an unknown kind fails the build instead of drawing an empty figure.
 const components = {
   'layer-stack': LayerStack,
+  matrix: Matrix,
+  'number-line': NumberLine,
   timeline: Timeline,
   blocks: Blocks,
 } satisfies Record<Diagram['type'], unknown>;

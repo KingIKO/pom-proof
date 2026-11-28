@@ -1,0 +1,42 @@
+---
+import type { Diagram } from '../../../lib/diagram-schema';
+import { boundaries } from '../../../lib/diagram-number-line';
+import { inline } from '../study';
+
+interface Props {
+  diagram: Extract<Diagram, { type: 'number-line' }>;
+  /** The values to draw: the whole line, or one narrow segment. */
+  from: number;
+  to: number;
+}
+
+// The bands over the values, with a line where the rule changes. A band's range and a boxed value's
+// reason are read out, because position and the box are visual only. Each part carries its place in
+// custom properties, so the stylesheet can turn the line upright when the text is very large.
+const { diagram, from, to } = Astro.props;
+const bands = diagram.bands
+  .filter((band) => band.from <= to && band.to >= from)
+  .map((band) => ({ ...band, from: Math.max(band.from, from), to: Math.min(band.to, to) }));
+const values = Array.from({ length: to - from + 1 }, (_, index) => from + index);
+const mark = (value: number) => (diagram.twoValue.includes(value) ? 'two' : diagram.threeValue?.includes(value) ? 'three' : undefined);
+const said = { two: ', 2-value BVA', three: ', added by 3-value BVA' };
+const place = (value: number) => value - from + 1;
+---
+<div class="dg-line" style={`--dg-count:${values.length}`}>
+  <ul class="dg-bands" role="list">
+    {bands.map((band) => (
+      <li data-kind={band.kind} style={`--dg-from:${place(band.from)};--dg-to:${place(band.to) + 1}`}>
+        <span set:html={inline(band.label)} /><span class="visually-hidden">, {band.from} to {band.to}</span>
+      </li>
+    ))}
+  </ul>
+  <ol class="dg-values" role="list">
+    {values.map((value) => {
+      const kind = mark(value);
+      return <li data-mark={kind}>{value}{kind && <span class="visually-hidden">{said[kind]}</span>}</li>;
+    })}
+  </ol>
+  {boundaries(diagram.bands).filter((line) => from < line && line <= to).map((line) => (
+    <span class="dg-boundary" style={`--dg-from:${place(line)}`} aria-hidden="true" />
+  ))}
+</div>

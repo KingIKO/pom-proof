@@ -1,0 +1,114 @@
+/* Number line (diagram spec, Number line): tinted bands for the expected result over the values in
+   order, with the checked values boxed in place. The 2px lines, not the fills, show where the rule
+   changes. A filled box and a hollow box differ in shape, so neither depends on colour. */
+
+.dg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-24);
+  margin: 0 0 var(--space-16);
+  padding: 0;
+  color: var(--text2);
+  font-size: var(--type-13);
+  line-height: 1.3;
+  list-style: none;
+}
+.dg-legend > li { display: inline-flex; align-items: center; gap: var(--space-8); margin: 0; }
+.dg-key { flex: none; inline-size: .875rem; block-size: .875rem; }
+
+.dg-line {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--dg-count), minmax(0, 1fr));
+  row-gap: var(--space-8);
+}
+.dg-bands, .dg-values {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(var(--dg-count), minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* Set rows: the lines span both, so auto-placement would push the lists below them. */
+.dg-bands { grid-row: 1; }
+.dg-values { grid-row: 2; }
+.dg-bands > li {
+  grid-row: 1;
+  grid-column: var(--dg-from) / var(--dg-to);
+  display: grid;
+  place-content: center;
+  min-block-size: 2rem;
+  margin: 0 var(--space-4);
+  padding: var(--space-4);
+  font-size: var(--type-13);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  text-align: center;
+}
+.dg-bands > li[data-kind="accept"] { background: var(--dg-accept-bg); color: var(--dg-accept-text); }
+.dg-bands > li[data-kind="reject"] { background: var(--dg-reject-bg); color: var(--dg-reject-text); }
+.dg-values > li {
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  /* 26px, or less where the columns are tight, so a boundary line keeps clear space on both sides. */
+  inline-size: min(1.625rem, 100% - var(--space-4));
+  aspect-ratio: 1;
+  margin: 0;
+  color: var(--text2);
+  font-size: var(--type-13);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.dg-values > li[data-mark] { font-weight: var(--weight-bold); }
+.dg-line [data-mark="two"], .dg-key[data-mark="two"] { background: var(--dg-mark); color: var(--surface); }
+.dg-line [data-mark="three"], .dg-key[data-mark="three"] { border: 2px solid var(--dg-mark); color: var(--text); }
+.dg-boundary {
+  grid-row: 1 / 3;
+  grid-column: var(--dg-from);
+  justify-self: start;
+  inline-size: 0;
+  margin-inline-start: -1px;
+  border-inline-start: 2px solid var(--dg-edge);
+}
+/* High-contrast themes drop background colours, which would leave a filled box with no box. */
+@media (forced-colors: active) {
+  .dg-line [data-mark="two"], .dg-key[data-mark="two"] { forced-color-adjust: none; background: CanvasText; color: Canvas; }
+}
+
+/* Narrow: one segment per edge, each with its own bands and line. */
+.dg-line-narrow { display: none; }
+.dg-segment + .dg-segment { margin-block-start: var(--space-16); }
+.dg-segment-name {
+  margin: 0 0 var(--space-8);
+  color: var(--text2);
+  font-size: var(--type-13);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+}
+@container (width < 34rem) {
+  .dg-line-wide { display: none; }
+  .dg-line-narrow { display: block; }
+}
+
+/* Enlarged text on a phone: six 1.625rem markers need 9.75rem, and below that they would overlap. The
+   segment turns upright instead, the values down the side and the bands beside them. */
+@container (width < 10rem) {
+  .dg-line { grid-template: repeat(var(--dg-count), 2rem) / auto minmax(0, 1fr); gap: 0 var(--space-4); }
+  .dg-bands, .dg-values { grid-row: 1 / -1; grid-template: repeat(var(--dg-count), 2rem) / minmax(0, 1fr); }
+  .dg-bands { grid-column: 2; }
+  .dg-values { grid-column: 1; align-items: center; }
+  .dg-values > li { inline-size: 1.625rem; }
+  .dg-bands > li { grid-row: var(--dg-from) / var(--dg-to); grid-column: 1; margin: var(--space-4) 0; }
+  .dg-boundary {
+    grid-row: var(--dg-from);
+    grid-column: 1 / -1;
+    align-self: start;
+    justify-self: stretch;
+    inline-size: auto;
+    margin: -1px 0 0;
+    border-inline-start: 0;
+    border-block-start: 2px solid var(--dg-edge);
+  }
+}

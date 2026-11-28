@@ -161,6 +161,32 @@ describe('palette A contrast', () => {
     });
   });
 
+  // The number line and matrix tokens: band words, filled and hollow markers, and the level fills.
+  test.each([
+    ['dg-accept-bg', 'color-mix(in srgb, var(--pass) 30%, var(--surface))', 'dg-accept-text on dg-accept-bg'],
+    ['dg-accept-text', '#2E9E94', 'dg-accept-text on dg-accept-bg'],
+    ['dg-reject-bg', 'color-mix(in srgb, var(--fail) 30%, var(--surface))', 'dg-reject-text on dg-reject-bg'],
+    ['dg-reject-text', '#E0627F', 'dg-reject-text on dg-reject-bg'],
+    ['dg-mark', '#8A93AA', 'white on dg-mark'],
+    ['dg-mark', '#AEB8D4', 'dg-mark on surface'],
+    ['dg-edge', '#AEB8D4', 'dg-edge on surface'],
+    ['dg-low', 'var(--disabled)', 'text2 on dg-low'],
+    ['dg-high', 'color-mix(in srgb, var(--fail) 35%, var(--surface))', 'text2 on dg-high'],
+    ['dg-high', 'var(--fail)', 'text on dg-high'],
+  ])('a weakened number line or matrix token %s (%s) is reported', (token, value, pair) => {
+    const planted = tokensCss.replace(new RegExp(`(--${token}\\s*:\\s*)[^;]+;`), `$1${value};`);
+    expect(planted, `${token} was replaced`).not.toBe(tokensCss);
+    expect(contrastFailures(tokensCss).some((failure) => failure.startsWith(`${pair}:`)), `${pair} before the plant`).toBe(false);
+    expect(contrastFailures(planted).some((failure) => failure.startsWith(`${pair}:`)), pair).toBe(true);
+  });
+
+  test('the accept and reject tokens resolve to the values the spec measured', () => {
+    const tokens = readTokens(tokensCss);
+    const hex = (name: string) => `#${tokens[name].map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+    expect(Object.fromEntries(['dg-accept-bg', 'dg-accept-text', 'dg-reject-bg', 'dg-reject-text'].map((name) => [name, hex(name)])))
+      .toEqual({ 'dg-accept-bg': '#ECF4F3', 'dg-accept-text': '#0F766E', 'dg-reject-bg': '#FAECEF', 'dg-reject-text': '#BE123C' });
+  });
+
   test('a token removed from the stylesheet is reported, not skipped', () => {
     const planted = tokensCss.replace(/--badgeText\s*:[^;]+;/, '');
     expect(contrastFailures(planted)).toContain('badgeText on badgeBg: token missing');
