@@ -21,9 +21,7 @@ diagrams:
     type: timeline
     title: A fixed pause and a condition wait
     note: The condition wait ends when its condition is met, here before its timeout. Lengths are not measured.
-    description:
-      - Both runs share one time scale, and the fixed pause is the same length in both. The app is ready later in the slow run.
-      - In both runs the condition wait lasts until the app is ready, before its timeout.
+    description: Both runs share one time scale, and the fixed pause is the same length in both. The app is ready later in the slow run.
     steps: 10
     lanes:
       - name: Fast run
@@ -63,4 +61,4 @@ pause-and-condition
 
 ## When not to use it
 
-Skip a separate wait if the action already checks the same condition. Avoid pauses of a fixed length, because one length can be too short on a slow run and too long on a fast run. Cypress gives the same advice about arbitrary calls to its `cy.wait()` command with a number.
+Skip a separate wait if the action already checks the same condition. Avoid pauses of a fixed length, because one length can be too short on a slow run and waste time on a fast run. Cypress gives the same advice about arbitrary calls to its `cy.wait()` command with a number.

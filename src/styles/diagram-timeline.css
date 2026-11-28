@@ -46,7 +46,8 @@
 .dg-lane-rows > [data-strong] > .dg-row-name > :first-child { font-weight: var(--weight-bold); }
 .dg-lane-rows > [data-strong] > .dg-span { background: var(--dg-part-strong); }
 .dg-outcome { display: flex; padding-inline-end: var(--space-4); color: var(--text2); font-size: var(--type-13); line-height: 1.25; }
-/* 8px from the bar, or as little as 4px where the longest word would otherwise reach the moment's line.
+/* With the bar's own 2px, 10px from the bar, or as little as 6px where the longest word would otherwise
+   reach the moment's line.
    The words wrap first, and only then does the gap shrink. */
 .dg-outcome::before { content: ""; flex: 0 1 var(--space-8); min-inline-size: var(--space-4); }
 .dg-outcome > :last-child { flex-shrink: 1000; }

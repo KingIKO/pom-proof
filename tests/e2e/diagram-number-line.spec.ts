@@ -59,7 +59,7 @@ for (const { path, line } of pages) {
 
 test('the description on the equivalence and boundaries page gives the ranges its table gives', async ({ page }) => {
   await openAt(page, 'study/test-design/equivalence-and-boundaries/', { width: 1280, text: 100 });
-  await expect(linesOf(page).locator('> p')).toHaveText('The expected result is Reject for 9 or less, Accept for 10 to 20 and Reject for 21 or more.');
+  await expect(linesOf(page).locator('> p')).toHaveText('The expected result is Reject for 9 or less, Accept for 10 through 20 and Reject for 21 or more.');
   await expect(page.locator('.study-body table').getByRole('row')).toContainText(['Partition', /9 or less[^]*Reject/, /10 through 20[^]*Accept/, /21 or more[^]*Reject/]);
 });
 

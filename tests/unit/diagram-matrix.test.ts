@@ -59,7 +59,7 @@ describe('the matrix schema', () => {
     ['a qualified word with no note', { note: undefined }, 'the note must say what "Can" means'],
     ['a qualified answer of two words', { note: 'Can be means it may do this.', entries: doubles.entries.map(({ head, cells: words }) => ({ head, cells: words.map((word) => (word === 'Can' ? 'Can be' : word)) })) }, 'cell "Can be" must be one word'],
     ['an axis name', { columnAxis: 'Question' }, 'an answers matrix has no axis names and no placed items'],
-    ['a placed item', { placed: [{ label: 'Rate store', row: 'Fake', column: 'Keeps calls for the test' }] }, 'an answers matrix has no axis names and no placed items'],
+    ['a placed item', { placed: [{ label: 'Rate store', row: 'Fake', column: 'Stores calls for the test' }] }, 'an answers matrix has no axis names and no placed items'],
   ])('rejects an answers matrix with %s', (_name, changes, message) => {
     expect(problems(doubles)).toBe('');
     expect(problems({ ...doubles, ...changes })).toContain(message);

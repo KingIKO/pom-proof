@@ -29,8 +29,8 @@ export const doubles = {
   type: 'matrix',
   kind: 'answers',
   title: 'What each test double does',
-  note: 'Can means it may do this, which Meszaros calls optional. Fowler counts a spy as a stub, so his answer there is Yes.',
-  columns: ['Returns prepared answers', 'Keeps calls for the test', 'Checks expected calls', 'Works in a simpler way'],
+  note: "Can means it may do this, which Meszaros calls optional. For Fowler a spy is a kind of stub, so a spy's answer under Returns prepared answers would be Yes.",
+  columns: ['Returns prepared answers', 'Stores calls for the test', 'Checks expected calls', 'Has a simpler working version'],
   entries: [
     { head: 'Dummy', cells: ['No', 'No', 'No', 'No'] },
     { head: 'Stub', cells: ['Yes', 'No', 'No', 'No'] },
