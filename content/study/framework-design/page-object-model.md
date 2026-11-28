@@ -64,10 +64,12 @@ examples:
               this.driver = driver;
             }
 
-            void signIn(String email, String password) {
+            // A failed sign-in stays on this page, so the method returns this page object.
+            SignInPage loginAsExpectingError(String email, String password) {
               driver.findElement(By.id("email")).sendKeys(email);
               driver.findElement(By.id("password")).sendKeys(password);
               driver.findElement(By.cssSelector("button[type=submit]")).click();
+              return this;
             }
 
             String errorText() {
@@ -85,8 +87,7 @@ examples:
             @Test
             void wrongPasswordShowsAnError() {
               driver.get(baseUrl + "/sign-in");
-              SignInPage signIn = new SignInPage(driver);
-              signIn.signIn("ada@example.com", "wrong-password");
+              var signIn = new SignInPage(driver).loginAsExpectingError("ada@example.com", "wrong-password");
               assertEquals("Email or password is wrong.", signIn.errorText());
             }
           }
@@ -130,7 +131,7 @@ expertsDisagree:
         source:
           - https://www.selenium.dev/documentation/test_practices/encouraged/page_object_models/
           - https://martinfowler.com/bliki/PageObject.html
-      - view: "Yes, for checks the screen owns. Fowler records the reasons its supporters give: less repeated assertion code and clearer failure messages. Playwright's guide calls `expect` in a page object method to confirm a navigation finished."
+      - view: "Yes, for checks the screen owns. Fowler records reasons its supporters give: less repeated assertion code and clearer failure messages. Playwright's guide calls `expect` in a page object method to confirm a navigation finished."
         holdsWhen: Many tests repeat the same check, and the team prefers one named method over the same lines in each test.
         source:
           - https://martinfowler.com/bliki/PageObject.html
@@ -148,7 +149,7 @@ Model the parts that repeat, not only whole pages. A header, a search form or a 
 
 One rule is openly disputed: whether a page object may contain assertions. Decide your rule, write down why, and apply it to the whole suite. The examples below show both forms.
 
-Fowler records a second dispute: whether an action that opens another screen should return that screen's page object. Selenium's guide does return it, and gives each result its own method, such as `loginAs` and `loginAsExpectingError`. The Beyond page objects page, later in this module, covers the patterns teams use instead.
+Fowler records a second dispute: whether an action that opens another screen should return that screen's page object. Selenium's guide does return it, and gives each result its own method, such as `loginAs` and `loginAsExpectingError`. Some teams use other patterns instead, such as Screenplay, or Cypress app actions that set up state through the app's own code.
 
 ## Why it helps
 

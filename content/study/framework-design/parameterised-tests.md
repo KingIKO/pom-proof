@@ -60,9 +60,11 @@ A parameterised test runs the same steps once for each row of data. Each row hol
 
 ## How it works
 
-You write the test body once and list the rows beside it. Each row then runs as its own test. A loop inside one test body is different: it stops at the first failing row and reports one test. Give each row a name that says what it covers. The report then shows "exactly at the free limit" instead of "row 2".
+You write the test body once and list the rows beside it. Each row then runs as its own test. With ordinary assertions, a loop inside one test body is different: it stops at the first failing row and reports one test. Give each row a name that says what it covers. The report then shows "exactly at the free limit" instead of "row 2".
 
-Each tool has its own syntax. Playwright Test calls `test()` inside a loop, and each title must be unique. It can also run a whole suite once per project, with different options. pytest uses the `@pytest.mark.parametrize` decorator, and `pytest.param` names a row with `id`. JUnit uses `@ParameterizedTest` with a source such as `@CsvSource`, and its `name` attribute labels each row. Gherkin, the plain-text format that Cucumber runs, uses a `Scenario Outline` with an `Examples` table.
+Each tool has its own syntax. In Playwright Test, you call `test()` inside a loop, and each title must be unique. Playwright Test can also run a whole suite once per project, with different options.
+
+In pytest, the `@pytest.mark.parametrize` decorator lists the rows, and `pytest.param` names a row with `id`. JUnit uses `@ParameterizedTest` with a source such as `@CsvSource`, and the `name` attribute of `@ParameterizedTest` labels each row. Gherkin, the plain-text format that Cucumber runs, uses a `Scenario Outline` with an `Examples` table.
 
 ## Why it helps
 
