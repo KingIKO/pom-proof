@@ -70,7 +70,7 @@ test('the module page lists its pages in order and the left nav opens only the c
 test('a reading page opens with outcomes and the recap, and ends with sources, practice, the read mark and the pager', async ({ page }) => {
   await page.goto(parameterised);
   await expect(page.locator('.study-article h2')).toHaveText([
-    'After this page, you can', 'Use it when', 'Avoid it when',
+    'Read first', 'After this page, you can', 'Use it when', 'Avoid it when',
     'What it is', 'How it works', 'Why it helps', 'When not to use it',
     'Example', 'What changed', 'Sources', 'Practice this',
   ]);
@@ -80,8 +80,10 @@ test('a reading page opens with outcomes and the recap, and ends with sources, p
     .map((element) => element.querySelector('h2')?.textContent
       ?? (element.matches('[data-study-read-control]') ? 'read mark' : element.matches('.study-pager') ? 'pager' : element.className)));
   expect(order.slice(-4)).toEqual(['Sources', 'Practice this', 'read mark', 'pager']);
-  // No prerequisite is written yet, so Read first stays out.
-  await expect(page.getByRole('heading', { name: 'Read first' })).toHaveCount(0);
+  // Both prerequisites are written, so Read first links to them.
+  const readFirst = page.locator('.study-read-first');
+  await expect(readFirst.getByRole('link')).toHaveCount(2);
+  await expect(readFirst.getByRole('link').first()).toHaveAttribute('href', /\/study\/test-design\/equivalence-and-boundaries\/$/);
 });
 
 test('the summary, code and boxes share one right edge, and a long code line scrolls inside its box', async ({ page }) => {
