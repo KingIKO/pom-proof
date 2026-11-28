@@ -35,35 +35,207 @@ Existing tests: headings/word counts unaffected (`withoutFences` strips the mark
 
 ## 2. Data model
 
-Optional frontmatter `diagrams` in `src/content.config.ts`; schemas in new `src/lib/diagram-schema.ts`.
+Built on 2026-11-28 for all five kinds. A page lists its figures in the frontmatter field `diagrams` and places each one with a ```diagram fence that holds its id (section 1). The schemas are in `src/lib/`: `diagram-schema.ts` (the layer stack and the list of kinds), `diagram-number-line.ts`, `diagram-matrix.ts`, `diagram-timeline.ts` and `diagram-blocks.ts`, with the fields every kind shares in `diagram-base.ts`. The examples below come from the built pages and the test fixtures, so they pass as written. The matrix, the scope timeline and the shared database are placeholder data: source every fact before a page uses them.
 
-```ts
-const base = {
-  id: idSchema, title: textSchema, note: textSchema.optional(),
-  description: z.union([textSchema, z.array(textSchema).min(1)]).optional(),
-};
-const diagram = z.discriminatedUnion('type', [
-  z.strictObject({ ...base, type: z.literal('layer-stack'), shapes: z.array(z.strictObject({
-    name: textSchema,
-    layers: z.array(z.strictObject({ label: textSchema, width: z.number().int().min(1).max(5),
-      widest: z.boolean().optional() })).min(2),
-  })).min(1).max(3) }),
-  z.strictObject({ ...base, type: z.literal('matrix'), columnAxis: textSchema.optional(),
-    rowAxis: textSchema.optional(), columns: z.array(textSchema).min(2),
-    entries: z.array(z.strictObject({ head: textSchema, cells: z.array(z.strictObject({
-      text: textSchema, level: z.enum(['low', 'medium', 'high']).optional(),
-      items: z.array(textSchema).optional() })) })).min(2) }),
-  // number-line: min, max, bands[{from,to,label,kind: accept|reject}], twoValue[], threeValue[], segments[{title,from,to}]
-  // timeline: ticks[{label}], groups[{label,from,to}]?, lanes[{name, spans[{label,from,to,strong?}], marks[{label,at}]}]
-  // blocks: recursive {title, items[]?, children[]?, linkTo?: {label, target}}, rows for stacked layouts
-]);
-diagrams: z.array(diagram).min(1).max(2).optional()   // plus a unique-id refine
+Fields of every kind:
+
+- `id`: lowercase words joined by hyphens, once per page. The fence names it.
+- `type`: `layer-stack`, `number-line`, `matrix`, `timeline` or `blocks`.
+- `title`: at most 7 words, no full stop, no "Figure 1", "Diagram of" or "This shows".
+- `note`: optional, at most 2 sentences.
+- `description`: one text or a list of texts that a screen reader hears in place of the drawing. It says in words what position, width or length shows. Every kind needs it except `matrix`, whose table is its own text.
+- A page has 1 or 2 figures. A figure adds no words to the body and nothing to `minutes`.
+
+What gets checked:
+
+- Data that would draw a wrong picture stops the build (`npm run build` fails and names the field and the fix). An unknown field does too, so a typo cannot be skipped.
+- The words are checked by `npm run verify` (`tests/support/diagram-rules.ts`, one rule per kind, and `tests/content/study.test.ts`). A label is 1 to 3 words, and a closing letter or number, as in "Test A", does not count. Every text follows the plain-language rules, and none uses backticks.
+- A list of rows is called `entries`, never `rows`, because the plain-language scan skips a key called `rows`.
+
+### Layer stack
+
+From the test shapes page.
+
+```yaml
+diagrams:
+  - id: test-shapes
+    type: layer-stack
+    title: Where each shape puts the effort
+    note: Wider bars mean more testing effort. The widths are not measured.
+    description:
+      - Each list gives a shape's layers from the top of the drawing to the bottom. A wider bar means more effort at that layer.
+      - In the pyramid, Unit is widest, Service is narrower and UI is narrowest.
+    shapes:
+      - name: Pyramid
+        layers:
+          - { label: UI, width: 1 }
+          - { label: Service, width: 3 }
+          - { label: Unit, width: 5, widest: true }
 ```
 
-- `description` required except for `matrix` (the table is the structured equivalent); it states what position, width or length shows.
-- Matrix key is `entries`, not `rows` (`rows` is a code key in `tests/support/prose.ts:9-11`).
-- Diagram text gets plain-language rules with no test change. It does not count toward 200-450 words or `minutes`.
+- 1 to 3 `shapes`, each with a `name` and at least 2 `layers`, listed top to bottom.
+- `width` is a whole number from 1 to 5. It is relative effort from the page's sources, never measured.
+- Exactly one layer per shape has `widest: true`, and it is the only one at the largest width.
 
+### Number line
+
+From the equivalence and boundaries page.
+
+```yaml
+diagrams:
+  - id: boundary-values
+    type: number-line
+    title: Partitions and boundary values
+    note: Each band is the expected result. The rule changes at the lines.
+    description:
+      - The expected result is Reject for 5 to 9, Accept for 10 to 20 and Reject for 21 to 25.
+      - One line falls between 9 and 10. The other falls between 20 and 21.
+    min: 5
+    max: 25
+    bands:
+      - { from: 5, to: 9, label: Reject, kind: reject }
+      - { from: 10, to: 20, label: Accept, kind: accept }
+      - { from: 21, to: 25, label: Reject, kind: reject }
+    twoValue: [9, 10, 20, 21]
+    threeValue: [8, 11, 19, 22]
+    segments:
+      - { title: Lower edge, from: 7, to: 12 }
+      - { title: Upper edge, from: 18, to: 23 }
+```
+
+- Whole numbers only, `min` below `max`, at most 21 values from `min` to `max`.
+- At least 2 `bands`. They run from `min` to `max` in order, with no gap and no overlap. A line is drawn wherever the band changes, so two bands next to each other never share a label, and a label is always the same `kind` (`accept` or `reject`).
+- `twoValue` is exactly the values on both sides of every line. `threeValue` is optional and, when given, exactly their other neighbours.
+- `segments` are what a narrow screen draws: one around each line, in order, at most 6 values each, and together they hold every checked value.
+- A band label is one word, and it and every checked value appear in the page body. A segment title is at most 3 words.
+
+### Matrix
+
+Two uses, told apart by `kind`. Placeholder data from the test fixtures.
+
+```yaml
+diagrams:
+  - id: risk
+    type: matrix
+    kind: levels
+    title: Likelihood and impact set the risk level
+    note: The two checkout risks, with example ratings. Test the high cells first.
+    columnAxis: Impact
+    rowAxis: Likelihood
+    columns: [Low, Medium, High]
+    entries:
+      - { head: High, cells: [Medium, High, High] }
+      - { head: Medium, cells: [Low, Medium, High] }
+      - { head: Low, cells: [Low, Low, Medium] }
+    placed:
+      - { label: Receipt layout, row: Medium, column: Low }
+      - { label: Double charge, row: Medium, column: High }
+  - id: doubles
+    type: matrix
+    kind: answers
+    title: What each test double does
+    note: Can means it may do this, but that is not what defines it.
+    columns: [Returns prepared answers, Stores calls, Checks expected calls, Works like the real thing]
+    entries:
+      - { head: Dummy, cells: [No, No, No, No] }
+      - { head: Spy, cells: [Can, Yes, No, No] }
+```
+
+- At least 2 `columns` and 2 `entries`. Each entry has one cell per column, and no column or row head repeats.
+- `levels`: every cell is Low, Medium or High. `columnAxis` and `rowAxis` are required. `placed` is optional, and each item names a row and a column the matrix has, once.
+- `answers`: cells are Yes, No and at most one other single word, which the note defines (Can above). No axis names and no placed items. A question may be 5 words.
+- `description` is optional, because the table is the text.
+
+### Timeline
+
+From the waiting and synchronisation page.
+
+```yaml
+diagrams:
+  - id: pause-and-condition
+    type: timeline
+    title: A fixed pause against a condition
+    note: Both runs use the same pause. The condition wait ends when the app is ready.
+    description:
+      - Two runs on one time scale.
+      - In the fast run the app is ready early. The fixed pause carries on after that and wastes time. The condition wait ends as soon as the app is ready.
+    steps: 10
+    lanes:
+      - name: Fast run
+        mark: { label: App ready, at: 3 }
+        entries:
+          - { name: Fixed pause, spans: [{ from: 0, to: 5 }], outcome: Wastes time }
+          - { name: Condition wait, spans: [{ from: 0, to: 3 }], strong: true }
+      - name: Slow run
+        mark: { label: App ready, at: 8 }
+        entries:
+          - { name: Fixed pause, spans: [{ from: 0, to: 5 }], outcome: Too short }
+          - { name: Condition wait, spans: [{ from: 0, to: 8 }], strong: true }
+```
+
+A labelled scale with workers running at the same time, from the test fixture:
+
+```yaml
+    ticks: { name: Test, labels: ['1', '2', '3', '4'] }
+    groups:
+      - { label: Worker 1, from: 0, to: 2 }
+      - { label: Worker 2, from: 2, to: 4 }
+    parallel: true
+    lanes:
+      - entries:
+          - { name: Worker, detail: Playwright, spans: [{ from: 0, to: 2 }, { from: 2, to: 4 }] }
+```
+
+- The scale is `steps` (equal columns of time, drawn without labels) or `ticks` (labelled columns, with the `name` that heads the row names), never both. A position counts column edges: 0 is the start and the number of columns is the end, so a span from 0 to 2 covers the first two columns.
+- `groups` is optional: at least 2, in order, covering the whole scale. `parallel: true` says they run at the same time and draws a gap between them.
+- Every lane has at least one row in `entries`, and a `name` when there is more than one lane. A lane with no ticks, groups or `mark` cannot say where a bar starts, so it fails.
+- A row has a `name`, an optional second line `detail`, at least one span, an optional `outcome` of 1 to 3 words after its last bar, and `strong: true` on at most one row per lane. Spans run in order without overlap, each ends after it starts, and none passes the end of the scale. An outcome needs room after the last bar.
+- `mark` is one moment per lane, at a position on the scale. Its label sits on the side of the line with more room.
+- On a time scale no text gives a duration (500 ms, 2 s, 30-second). Lengths are relative.
+
+### Blocks
+
+From the page object page, a before and after pair.
+
+```yaml
+diagrams:
+  - id: locator-change
+    type: blocks
+    title: Where a locator change lands
+    note: When the button label changes, each copy of its locator needs an edit. Three tests is an example.
+    description:
+      - Without a page object, three tests each hold their own copy of the button locator. A label change takes 3 edits.
+      - With a page object, the three tests call one sign-in page object that holds the only copy. The same change takes 1 edit, and every test keeps working.
+    panels:
+      - name: Each test holds the locator
+        tiers:
+          - - { title: Test 1, parts: [{ name: Button locator, strong: true }] }
+            - { title: Test 2, parts: [{ name: Button locator, strong: true }] }
+            - { title: Test 3, parts: [{ name: Button locator, strong: true }] }
+        result: 3 edits
+      - name: Tests call one page object
+        tiers:
+          - - { title: Test 1, linkTo: { label: calls, target: sign-in } }
+            - { title: Test 2, linkTo: { label: calls, target: sign-in } }
+            - { title: Test 3, linkTo: { label: calls, target: sign-in } }
+          - - { id: sign-in, title: Sign-in page object, parts: [{ name: Button locator, strong: true }] }
+        result: 1 edit
+```
+
+One drawing, from the test fixture:
+
+```yaml
+    tiers:
+      - - { title: Test A, parts: [{ name: Browser context, items: [Cookies, Storage] }], linkTo: { label: saves to, target: database } }
+        - { title: Test B, parts: [{ name: Browser context, items: [Cookies, Storage] }], linkTo: { label: saves to, target: database } }
+      - - { id: database, title: Server database, strong: true, parts: [{ name: Order for Test A }, { name: Order for Test B }] }
+```
+
+- `tiers` (one drawing) or `panels` (exactly 2, before then after, each with a `name`, its `tiers` and a `result` such as "3 edits"), never both.
+- A tier is one row of 1 to 3 boxes, top to bottom. A box has a `title`, optional `parts` (each a `name`, optional `items` and optional `strong`), optional `strong`, and an `id` only when another box links to it.
+- `linkTo` draws an arrow and is read out as "Test 1, calls Sign-in page object". It points to the next box in the same row (→) or to the only box of the row below (↓). Arrows down come from every box of a row or from its last box only, because on a phone with large text the row stacks and the arrows stand under its last box. Ids are unique within a drawing.
+- One kind of thing per figure is strong: boxes or parts, not both.
+- Parts sit inside boxes. A box inside a box has no approved drawing and fails the build.
 ## 3. Components
 
 `src/components/study/diagrams/`: `Diagram.astro` shell switching on `type`, one component per type. Styles `src/styles/diagrams.css` from the B2 block with new class names; `--dg-*` tokens in `src/styles/tokens.css` under `figure[data-diagram]`.
