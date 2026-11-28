@@ -41,6 +41,8 @@ figure[data-diagram] {
 }
 .dg-layers {
   display: grid;
+  /* One column the stack's own width, so a long word cannot widen the whole stack. */
+  grid-template-columns: minmax(0, 1fr);
   align-content: end;
   gap: var(--space-8);
   inline-size: 100%;
@@ -53,11 +55,12 @@ figure[data-diagram] {
   display: grid;
   place-items: center;
   inline-size: calc(var(--dg-width) * 100%);
-  /* A narrow bar grows to its longest word rather than letting the label spill out. */
+  /* A narrow bar grows to its longest word rather than letting the label spill out. The side padding
+     is 4px so a tight label does not push its bar past the width it stands for. */
   min-inline-size: min-content;
   min-block-size: 2rem;
   margin: 0 auto;
-  padding: var(--space-4) var(--space-8);
+  padding: var(--space-4);
   border: 1px solid var(--dg-part-edge);
   background: var(--dg-part);
   color: var(--text);
@@ -65,9 +68,10 @@ figure[data-diagram] {
   line-height: 1.2;
   text-align: center;
 }
-/* Width 1 is .3, not .2, so the narrowest bar still reads as a layer rather than a tag. */
-.dg-layers > li[data-width="1"] { --dg-width: .3; }
-.dg-layers > li[data-width="2"] { --dg-width: .4; }
+/* The two narrowest steps are wide enough for their labels at the default text size, so bars with the
+   same width draw the same in every shape (spec, "Layer stack width limits"). */
+.dg-layers > li[data-width="1"] { --dg-width: .4; }
+.dg-layers > li[data-width="2"] { --dg-width: .5; }
 .dg-layers > li[data-width="3"] { --dg-width: .6; }
 .dg-layers > li[data-width="4"] { --dg-width: .8; }
 .dg-layers > li[data-width="5"] { --dg-width: 1; }
@@ -75,6 +79,31 @@ figure[data-diagram] {
 
 @container (width < 34rem) {
   .dg-shapes { grid-auto-flow: row; }
+}
+
+/* Large text on a narrow figure: a label no longer fits its bar, so it sits above a thin bar that
+   keeps its true width. At the default text size even a 320px screen stays above 12rem. */
+@container (width < 12rem) {
+  .dg-layers { gap: var(--space-12); }
+  .dg-layers > li,
+  .dg-layers > li[data-widest] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .dg-layers > li::after {
+    content: "";
+    inline-size: calc(var(--dg-width) * 100%);
+    block-size: var(--space-12);
+    border: 1px solid var(--dg-part-edge);
+    background: var(--dg-part);
+  }
+  .dg-layers > li[data-widest]::after { background: var(--dg-part-strong); }
 }
 
 /* Phones: the figure gives its side padding to the diagram. */

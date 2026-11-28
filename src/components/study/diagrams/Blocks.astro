@@ -1,0 +1,28 @@
+---
+import type { Diagram } from '../../../lib/diagram-schema';
+import BlockTiers from './BlockTiers.astro';
+import { label } from './label';
+import '../../../styles/diagram-blocks.css';
+
+interface Props {
+  diagram: Extract<Diagram, { type: 'blocks' }>;
+  /** The caption id, which prefixes the panel name ids. */
+  idPrefix: string;
+}
+
+// One drawing, or a before and after pair: two named groups, each ending with its result line.
+const { diagram, idPrefix } = Astro.props;
+const panelId = (index: number) => `${idPrefix}-panel-${index + 1}`;
+---
+{diagram.tiers && <BlockTiers tiers={diagram.tiers} />}
+{diagram.panels && (
+  <div class="dg-panels">
+    {diagram.panels.map(({ name, tiers, result }, index) => (
+      <div class="dg-panel" role="group" aria-labelledby={panelId(index)}>
+        <div class="dg-panel-name" id={panelId(index)} set:html={label(name)} />
+        <BlockTiers tiers={tiers} />
+        <div class="dg-result" set:html={label(result)} />
+      </div>
+    ))}
+  </div>
+)}

@@ -21,8 +21,12 @@ const pages = [
   // The two pilot pages: one with a dispute and two examples, one with a "what changed" box.
   { name: 'study page object page', url: 'study/framework-design/page-object-model/' },
   { name: 'study parameterised tests page', url: 'study/framework-design/parameterised-tests/' },
+  // The timeline; the page object page above has the blocks. Both are checked at 320px below.
+  { name: 'study waiting page', url: 'study/automation-fundamentals/waiting-and-synchronisation/' },
   // The first concept diagram; the 320px check is below.
   { name: 'study test shapes page', url: 'study/testing-foundations/test-shapes/' },
+  // The number line; its narrow layout is checked below.
+  { name: 'study equivalence and boundaries page', url: 'study/test-design/equivalence-and-boundaries/' },
   { name: '404 page', url: 'this-page-does-not-exist/', status: 404 },
 ];
 
@@ -141,6 +145,13 @@ test('the test shapes diagram at 320px, stacked, has no serious or critical axe 
   await open(page, 'study/testing-foundations/test-shapes/');
   await expect(page.locator('figure[data-diagram]')).toBeVisible();
   await expectNoSeriousViolations(page, testInfo, 'test shapes at 320px');
+});
+
+test('the number line at 320px, in two segments, has no serious or critical axe violations', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 320, height: 760 });
+  await open(page, 'study/test-design/equivalence-and-boundaries/');
+  await expect(page.getByRole('group', { name: 'Lower edge' })).toBeVisible();
+  await expectNoSeriousViolations(page, testInfo, 'number line at 320px');
 });
 
 test('code run results have no serious or critical axe violations', async ({ page }, testInfo) => {

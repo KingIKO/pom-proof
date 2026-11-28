@@ -1,0 +1,62 @@
+/* Matrix (diagram spec, Matrix and Yes/no matrix): a table of tinted blocks with no grid lines. Every
+   cell writes its word in ink or secondary text, so a tint never carries a level or answer alone. */
+
+.dg-scroll { overflow-x: auto; }
+.dg-matrix {
+  inline-size: 100%;
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: var(--space-4);
+  table-layout: fixed;
+}
+.dg-matrix :is(th, td) { padding: var(--space-8); border: 0; font-size: var(--type-14); line-height: 1.3; }
+.dg-matrix th { color: var(--text2); font-size: var(--type-13); font-weight: var(--weight-medium); }
+.dg-matrix thead th { text-align: center; vertical-align: bottom; }
+.dg-matrix-heads { inline-size: 5.5rem; }
+.dg-matrix tbody td { background: var(--dg-low); }
+
+/* Levels: the level word at the top of the cell, example items under it. */
+.dg-matrix thead th.dg-axis-top { padding-block: 0 var(--space-4); }
+.dg-matrix thead th.dg-axis-side { text-align: end; }
+.dg-matrix-levels tbody th { text-align: end; vertical-align: middle; }
+.dg-matrix-levels tbody td { block-size: 5.25rem; color: var(--text); vertical-align: top; }
+.dg-matrix td[data-level="medium"] { background: var(--dg-medium); }
+.dg-matrix td[data-level="high"] { background: var(--dg-high); }
+.dg-level { display: block; font-weight: var(--weight-medium); }
+td[data-level="high"] > .dg-level { font-weight: var(--weight-bold); }
+.dg-placed { display: block; margin-block-start: var(--space-4); color: var(--text2); font-size: var(--type-13); line-height: 1.25; }
+
+/* Answers: Yes and the qualified word sit on the part tint, and Yes is bold. */
+.dg-matrix-answers tbody th { text-align: start; }
+.dg-matrix-answers tbody th[scope="row"] { color: var(--text); font-size: var(--type-14); }
+.dg-matrix-answers tbody td { block-size: 2.75rem; color: var(--text2); text-align: center; }
+.dg-matrix tbody td:is([data-answer="yes"], [data-answer="qualified"]) { background: var(--dg-part); color: var(--text); }
+.dg-matrix td[data-answer="yes"] { font-weight: var(--weight-bold); }
+.dg-matrix-narrow { display: none; }
+
+@container (width < 34rem) {
+  .dg-matrix { border-spacing: 2px; }
+
+  /* The columns size to their words. If the text still does not fit, the table scrolls in its box. */
+  .dg-matrix-levels { table-layout: auto; }
+  .dg-matrix-levels :is(th, td) { padding: var(--space-4) 2px; }
+  .dg-matrix-levels tbody td { padding-inline: var(--space-4); block-size: 4.5rem; font-size: var(--type-13); }
+  .dg-matrix-levels .dg-matrix-heads { inline-size: 3.25rem; }
+  /* The row heads set the first column. The longer axis name may reach into the empty space above the
+     first column of cells instead of widening the grid. */
+  .dg-axis-side { position: relative; }
+  .dg-axis-side > span { position: absolute; inset-inline-start: 2px; inset-block-end: var(--space-4); white-space: nowrap; }
+
+  /* Turned: the items become the columns and each question heads its own row of answers. */
+  .dg-matrix-wide { display: none; }
+  .dg-matrix-narrow { display: block; }
+  .dg-matrix-answers { table-layout: auto; }
+  .dg-matrix-answers :is(th, td) { padding: var(--space-4) 2px; font-size: var(--type-13); }
+  .dg-matrix-answers thead th { color: var(--text); }
+  .dg-matrix-answers tbody td { block-size: 2.25rem; }
+  .dg-matrix-answers tbody th[scope="rowgroup"] { padding: var(--space-12) 0 var(--space-4); }
+  /* A question stays in view while its answers scroll: held at the start of the box, and as wide as the
+     box at most, less the table's spacing on both sides. */
+  .dg-question { position: sticky; inset-inline-start: 0; display: inline-block; max-inline-size: calc(100cqi - 4px); }
+  .dg-matrix-answers tbody:first-of-type th[scope="rowgroup"] { padding-block-start: var(--space-8); }
+}

@@ -1,0 +1,24 @@
+---
+// The two uses of the matrix kind, drawn by the real components in the real page frame. The data is the
+// data of ../../matrices, which says what is sourced and what is an example. This page is never deployed.
+import Diagram from '../../../../../src/components/study/diagrams/Diagram.astro';
+import '../../../../../src/components/study/study.css';
+import Base from '../../../../../src/layouts/Base.astro';
+import { diagramsSchema } from '../../../../../src/lib/diagram-schema';
+import { matrices } from '../../matrices';
+
+const diagrams = diagramsSchema.parse(matrices);
+---
+<Base title="Diagram fixture" wide>
+  <div class="study-layout">
+    <div class="study-sidebar"></div>
+    <div class="study-main">
+      <article class="study-article">
+        <h1>Diagram fixture</h1>
+        <div class="study-body prose">
+          {diagrams.map((diagram) => <Fragment><p>The paragraph before the figure.</p><Diagram diagram={diagram} /></Fragment>)}
+        </div>
+      </article>
+    </div>
+  </div>
+</Base>

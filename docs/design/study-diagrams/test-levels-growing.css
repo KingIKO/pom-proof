@@ -1,0 +1,93 @@
+/* Test levels, growing pictures of one booking app (spec.md, "Test levels, growing pictures"). The same app is drawn at
+   the same scale at every step, so a bigger drawing has more under test. Plain HTML, existing tokens only. */
+
+figure[data-diagram] ol.lg { display: flex; flex-wrap: wrap; column-gap: var(--space-12); row-gap: var(--space-12); margin: 0; padding: 0; list-style: none; }
+.lg > li { display: flex; flex-direction: column; justify-content: flex-end; min-inline-size: 0; margin: 0; }
+/* The drawings sit on one line at the foot of their row, so a step grows up from the same base, and each label sits
+   right above its own drawing. */
+.lg-pic { display: flex; align-items: flex-end; padding-block-start: 6px; }
+.lg-label { display: grid; line-height: 1.2; }
+.lg-name { color: var(--text); font-size: var(--type-14); font-weight: var(--weight-medium); }
+.lg-what { color: var(--text2); font-size: var(--type-13); }
+
+/* The app, drawn as the screen a customer sees. Lines are 1px in the part edge (3.26:1 on white). */
+.lg-field, .lg-button, .lg-app, .lg-mail, .lg-staff { border: 1px solid var(--dg-part-edge); background: var(--surface); }
+.lg-field, .lg-button, .lg-bar, .lg-mail-body, .lg-staff { font-size: var(--type-13); font-weight: var(--weight-medium); line-height: 1.25; color: var(--text); }
+.lg-field { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); inline-size: var(--lg-part); min-block-size: var(--lg-field); padding: 1px var(--space-4) 1px 6px; }
+.lg-field > span { color: var(--text2); font-weight: 400; }
+.lg-button { display: grid; place-items: center; min-block-size: var(--lg-field); background: var(--dg-part-strong); font-weight: var(--weight-bold); }
+.lg-app { display: grid; inline-size: var(--lg-app); background: var(--surface); }
+.lg-bar { padding: 1px 6px; background: var(--dg-part-strong); border-block-end: 1px solid var(--dg-part-edge); }
+.lg-body { display: grid; gap: var(--space-4); padding: 5px; justify-items: stretch; }
+.lg-body .lg-field { inline-size: auto; }
+.lg-stack { display: grid; justify-items: start; }
+/* The connection under test: a solid block, drawn only at the two steps whose target is the connection. */
+.lg-join { display: grid; place-items: center; background: var(--dg-part-edge); color: var(--text); font-size: var(--type-13); line-height: 1; }
+.lg-stack > .lg-join { justify-self: center; inline-size: 1.375rem; block-size: var(--lg-join); }
+.lg-scene { display: flex; align-items: center; }
+.lg-scene > .lg-join { flex: none; inline-size: var(--lg-link); block-size: 1.375rem; }
+.lg-mail { display: grid; flex: none; inline-size: var(--lg-mail); min-inline-size: 0; align-self: center; }
+.lg-mail > .lg-bar { color: var(--text2); font-weight: 400; background: var(--dg-low); }
+.lg-mail-body { padding: 4px 6px; font-weight: var(--weight-medium); }
+
+/* Acceptance, set apart under the four drawings: a person, not a bigger piece of the app. */
+.lg > li.lg-5 { flex: 1 0 100%; margin-block-start: -4px; padding-block-start: 8px; border-block-start: 1px solid var(--dg-part-edge); }
+.lg-5 .lg-pic { align-items: stretch; margin: 0; }
+.lg-staff { flex: none; display: grid; place-items: center; padding: var(--space-4) var(--space-8); background: var(--surface); }
+.lg-say { flex: 1; min-inline-size: 0; display: grid; align-items: center; padding: var(--space-4) var(--space-12); background: var(--dg-part); color: var(--text); font-size: var(--type-13); font-weight: var(--weight-medium); line-height: 1.25; }
+
+/* Compact sizes: phones, and the four-column row until there is room. */
+.lg { --lg-field: 1.25rem; --lg-part: 4.875rem; --lg-app: 5.75rem; --lg-link: 1.125rem; --lg-join: .875rem; --lg-mail: 3.75rem; }
+.lg-1 { flex: 0 0 7rem; }
+.lg-2 { flex: 1 1 9.5rem; }
+.lg-3 { flex: 0 0 6rem; }
+.lg-4 { flex: 1 0 10.625rem; }
+/* On a phone the acceptance words run on after the name. */
+@container (width < 35rem) {
+  .lg-5 .lg-label { display: block; }
+  .lg-5 .lg-name { margin-inline-end: var(--space-8); }
+  .lg-5 .lg-what { display: inline-block; }
+}
+
+/* 320 px: the pair of small steps stays side by side; System and System integration take a row each, and System's
+   words sit beside its window. */
+@container (width < 17rem) {
+  .lg-1, .lg-2 { flex: 1 1 45%; }
+  .lg-3, .lg-4 { flex: 1 1 100%; }
+  .lg > li.lg-3 { flex-direction: row-reverse; justify-content: flex-end; align-items: center; gap: var(--space-12); }
+  .lg-3 .lg-pic { margin: 0; padding: 0; }
+}
+/* Large text on a narrow screen: one drawing per row, as wide as the text needs. */
+@container (width < 14rem) {
+  .lg > li { flex: 1 1 100%; }
+  .lg > li.lg-3 { flex-direction: column; align-items: stretch; gap: 0; }
+  .lg-3 .lg-pic { padding-block-start: 6px; }
+  .lg { --lg-part: 100%; --lg-app: 100%; }
+  .lg-stack { justify-items: stretch; inline-size: 100%; }
+  .lg-scene { flex-direction: column; align-items: stretch; inline-size: 100%; }
+  .lg-scene > .lg-join { align-self: center; inline-size: 1.375rem; block-size: var(--lg-join); }
+  .lg-scene > .lg-join > span { display: none; }
+  .lg-scene > .lg-join::before { content: "\2193"; }
+  .lg-mail { inline-size: 100%; align-self: stretch; }
+  .lg-5 .lg-pic { flex-direction: column; }
+}
+/* Between a phone and four across: two by two. */
+@container (24rem <= width < 35rem) {
+  .lg-1, .lg-2, .lg-3, .lg-4 { flex: 1 1 40%; }
+}
+/* Four across from 35rem. */
+@container (width >= 35rem) {
+  figure[data-diagram] ol.lg { flex-wrap: wrap; column-gap: var(--space-8); }
+  .lg > li { flex: 1 1 auto; }
+  .lg > li.lg-5 { flex: 0 0 100%; }
+  .lg-5 .lg-label { display: block; }
+  .lg-5 .lg-name { margin-inline-end: var(--space-8); }
+}
+@container (width >= 42.5rem) {
+  .lg { --lg-field: 1.75rem; --lg-part: 6.5rem; --lg-app: 8.25rem; --lg-link: 1.75rem; --lg-join: 1.25rem; --lg-mail: 6rem; }
+  .lg-body { gap: var(--space-8); padding: var(--space-8); }
+  .lg > .lg-1 { flex: 0 0 7rem; }
+  .lg > .lg-2 { flex: 0 0 9.625rem; }
+  .lg > .lg-3 { flex: 0 0 8.25rem; }
+  .lg > .lg-4 { flex: 0 0 16rem; }
+}

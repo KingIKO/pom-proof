@@ -16,6 +16,26 @@ avoidWhen:
   - The suite is small enough that the extra classes cost more than they save.
   - Page classes extend each other until a reader cannot tell what a test does.
 questionTopics: [framework-design, automation-strategy]
+diagrams:
+  - id: locator-change
+    type: blocks
+    title: Edits after a button label change
+    note: In this example of three tests, the locator no longer matches the new button label. Every copy of it needs an edit.
+    description: With a page object, the three tests use one sign-in page object class, and none of them changes.
+    panels:
+      - name: Each test holds the locator
+        tiers:
+          - - { title: Test 1, parts: [{ name: Button locator, strong: true }] }
+            - { title: Test 2, parts: [{ name: Button locator, strong: true }] }
+            - { title: Test 3, parts: [{ name: Button locator, strong: true }] }
+        result: 3 edits
+      - name: Tests call one page object
+        tiers:
+          - - { title: Test 1, linkTo: { label: calls, target: sign-in } }
+            - { title: Test 2, linkTo: { label: calls, target: sign-in } }
+            - { title: Test 3, linkTo: { label: calls, target: sign-in } }
+          - - { id: sign-in, title: Sign-in page object, parts: [{ name: Button locator, strong: true }] }
+        result: 1 edit
 examples:
   - title: Assertions stay in the test
     variants:
@@ -143,7 +163,11 @@ A page object is a class that stands for one screen, or one part of a screen. It
 
 ## How it works
 
-Put the locators in the class, with methods for what a user can do there and what a user can see. The test keeps the intent, which is what the user does and what should happen. When a button label changes, you fix one locator in one class. Every test that uses it keeps working.
+Put the locators in the class, with methods for what a user can do there and what a user can see. The test keeps the intent, which is what the user does and what should happen. If a locator stops matching because a button's label changed, you fix one locator in one class. The tests that use the class do not change.
+
+```diagram
+locator-change
+```
 
 Model the parts that repeat, not only whole pages. A header, a search form or a table row that appears on many screens can be its own small object. A page object can then hold these component objects.
 

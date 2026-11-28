@@ -90,6 +90,9 @@ const pairs: Array<{ fg: string; bg: string; min: number }> = [
   { fg: 'dg-reject-text', bg: 'dg-reject-bg', min: text },
   { fg: white, bg: 'dg-mark', min: text },
   ...['dg-part-edge', 'dg-edge', 'dg-mark'].map((fg) => ({ fg, bg: 'surface', min: nonText })),
+  // Blocks: the items of a strong part. Timeline: a moment's line where it crosses or meets a bar.
+  { fg: 'text2', bg: 'dg-part-strong', min: text },
+  ...['dg-part', 'dg-part-strong'].map((bg) => ({ fg: 'dg-edge', bg, min: nonText })),
 ];
 
 /** Every pair below its minimum, or naming a token the stylesheet does not define. */
@@ -138,6 +141,9 @@ describe('palette A contrast', () => {
     ['dg-part-edge', 'color-mix(in srgb, var(--primary) 40%, var(--surface))', 'dg-part-edge on surface'],
     ['dg-medium', 'var(--accent)', 'text2 on dg-medium'],
     ['dg-part', 'var(--text3)', 'text2 on dg-part'],
+    ['dg-part-strong', 'color-mix(in srgb, var(--primary) 45%, var(--surface))', 'text2 on dg-part-strong'],
+    ['dg-part-strong', 'var(--primary)', 'dg-edge on dg-part-strong'],
+    ['dg-edge', 'var(--dg-part-edge)', 'dg-edge on dg-part'],
   ])('a weakened diagram token %s (%s) is reported', (token, value, pair) => {
     const planted = tokensCss.replace(new RegExp(`(--${token}\\s*:\\s*)[^;]+;`), `$1${value};`);
     expect(planted, `${token} was replaced`).not.toBe(tokensCss);
@@ -153,6 +159,32 @@ describe('palette A contrast', () => {
       'dg-part': '#EAF0FF', 'dg-part-strong': '#DBE3F9', 'dg-part-edge': '#6A8BE5', 'dg-low': '#F5F7FC',
       'dg-medium': '#FFEACB', 'dg-high': '#F7E0E6', 'dg-edge': '#55607A', 'dg-mark': '#101A33',
     });
+  });
+
+  // The number line and matrix tokens: band words, filled and hollow markers, and the level fills.
+  test.each([
+    ['dg-accept-bg', 'color-mix(in srgb, var(--pass) 30%, var(--surface))', 'dg-accept-text on dg-accept-bg'],
+    ['dg-accept-text', '#2E9E94', 'dg-accept-text on dg-accept-bg'],
+    ['dg-reject-bg', 'color-mix(in srgb, var(--fail) 30%, var(--surface))', 'dg-reject-text on dg-reject-bg'],
+    ['dg-reject-text', '#E0627F', 'dg-reject-text on dg-reject-bg'],
+    ['dg-mark', '#8A93AA', 'white on dg-mark'],
+    ['dg-mark', '#AEB8D4', 'dg-mark on surface'],
+    ['dg-edge', '#AEB8D4', 'dg-edge on surface'],
+    ['dg-low', 'var(--disabled)', 'text2 on dg-low'],
+    ['dg-high', 'color-mix(in srgb, var(--fail) 35%, var(--surface))', 'text2 on dg-high'],
+    ['dg-high', 'var(--fail)', 'text on dg-high'],
+  ])('a weakened number line or matrix token %s (%s) is reported', (token, value, pair) => {
+    const planted = tokensCss.replace(new RegExp(`(--${token}\\s*:\\s*)[^;]+;`), `$1${value};`);
+    expect(planted, `${token} was replaced`).not.toBe(tokensCss);
+    expect(contrastFailures(tokensCss).some((failure) => failure.startsWith(`${pair}:`)), `${pair} before the plant`).toBe(false);
+    expect(contrastFailures(planted).some((failure) => failure.startsWith(`${pair}:`)), pair).toBe(true);
+  });
+
+  test('the accept and reject tokens resolve to the values the spec measured', () => {
+    const tokens = readTokens(tokensCss);
+    const hex = (name: string) => `#${tokens[name].map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+    expect(Object.fromEntries(['dg-accept-bg', 'dg-accept-text', 'dg-reject-bg', 'dg-reject-text'].map((name) => [name, hex(name)])))
+      .toEqual({ 'dg-accept-bg': '#ECF4F3', 'dg-accept-text': '#0F766E', 'dg-reject-bg': '#FAECEF', 'dg-reject-text': '#BE123C' });
   });
 
   test('a token removed from the stylesheet is reported, not skipped', () => {
