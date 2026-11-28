@@ -57,7 +57,7 @@ const nav = siteSections.map(({ id, label, path }) => ({ id, label, href: url(pa
   import { practiceContextEvent, practiceListHref, readPracticeContext, type PracticeContext } from '../lib/practice-context';
 
   // The header Practice link reopens the list with the filters last used in this tab.
-  // The brand link stays plain, so it always opens every problem.
+  // The brand link stays plain. A plain visit opens the active practice set, or every problem when none is active.
   const home = document.querySelector<HTMLAnchorElement>('a[data-practice-home]');
   if (home) {
     const update = (context = readPracticeContext()) => {
