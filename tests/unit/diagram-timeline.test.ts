@@ -25,6 +25,10 @@ describe('the timeline schema', () => {
     for (const figure of [waits, scope, states]) expect(problems(figure)).toBe('');
   });
 
+  it('rejects a span past the last labelled tick', () => {
+    expect(problems({ ...scope, ticks: { name: 'Test', labels: ['1', '2', '3'] } })).toContain('a span of "Test" ends at 4, past the last tick at 3');
+  });
+
   it('accepts a bar across both parallel groups, for a run on one worker', () => {
     expect(problems({ ...scope, lanes: [{ entries: [{ name: 'Session', spans: [{ from: 0, to: 4 }] }] }] })).toBe('');
   });

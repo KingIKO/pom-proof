@@ -10,7 +10,6 @@ import {
   discoverStudyModules, discoverStudyPages, plannedPages, readTopicMap, topicMapUrls,
   type DiscoveredStudyModule, type DiscoveredStudyPage, type TopicMap, type TopicMapConcept,
 } from '../support/study';
-import { timelineBlocksProblems } from '../support/diagram-rules-timeline-blocks';
 
 /**
  * The Study authoring rules (practice and study plan, sections 3 and 4), checked from the files
@@ -112,7 +111,6 @@ function diagramProblems(data: Record<string, unknown>, body: string): string[] 
     for (const [where, text] of diagramTexts(diagram, at)) {
       if (text.includes('`')) add(`${where} uses backticks; write diagram text as plain words`);
     }
-    for (const problem of timelineBlocksProblems(diagram)) add(`${at} ${problem}`);
   });
 
   const placed = new Map<string, number>();
@@ -634,8 +632,8 @@ describe('the Study checks catch planted mistakes', () => {
     });
 
     it.each([
-      ['a timeline span that ends before it starts', 'automation-fundamentals/waiting-and-synchronisation', '"from":0,"to":3', '"from":5,"to":3', 'diagrams[0] a span of "Condition wait" runs from 5 to 3'],
-      ['a blocks link to a missing box', 'framework-design/page-object-model', '"target":"sign-in"', '"target":"sign-out"', 'diagrams[0] "Test 1" links to "sign-out", which 0 boxes have as their id'],
+      ['a duration in a timeline', 'automation-fundamentals/waiting-and-synchronisation', '"Wastes time"', '"Wastes 500 ms"', 'diagrams[0] "Wastes 500 ms" gives a duration'],
+      ['a four-word result', 'framework-design/page-object-model', '"1 edit"', '"Only one edit needed"', 'diagrams[0] result "Only one edit needed" has 4 words'],
     ])('reports %s in the page file', (_name, id, written, planted, message) => {
       const page = pages.find((candidate) => candidate.id === id);
       expect(page, id).toBeDefined();

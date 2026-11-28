@@ -37,6 +37,7 @@ describe('the blocks schema', () => {
     ['a link to itself', single([{ id: 'build', title: 'Build', linkTo: link('build') }]), '"Build" links to "build", which is not the next box'],
     ['a link up', single([{ id: 'build', title: 'Build' }], [{ title: 'Test', linkTo: link('build') }]), '"Test" links to "build", which is not the next box'],
     ['a link across a corner', single([{ title: 'Build', linkTo: link('log') }, { title: 'Test' }], [{ title: 'Report' }, { id: 'log', title: 'Log' }]), '"Build" links to "log", which is not the next box'],
+    ['a link over a row', single([{ title: 'Build', linkTo: link('log') }], [{ title: 'Test' }], [{ id: 'log', title: 'Log' }]), '"Build" links to "log", which is not the next box'],
     ['a link down into a row of boxes', single([{ title: 'Build', linkTo: link('log') }, { title: 'Test' }], [{ id: 'log', title: 'Log' }, { title: 'Report' }]), '"Build" links to "log", which is not the next box in its row or the one box of the row below'],
     ['a link down from the first box only', single([{ title: 'Test A', linkTo: link('log') }, { title: 'Test B' }], [{ id: 'log', title: 'Log' }]), 'tiers.0 link down from every box of a row, or only from its last one'],
     ['a link down from two boxes of three', single([{ title: 'Test A' }, { title: 'Test B', linkTo: link('log') }, { title: 'Test C', linkTo: link('log') }], [{ id: 'log', title: 'Log' }]), 'tiers.0 link down from every box'],
